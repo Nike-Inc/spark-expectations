@@ -1,0 +1,158 @@
+site_name: Spark-Expectations
+site_author: Ashok Singamaneni
+copyright: Nike
+site_description: Spark-Expectations is a framework for running data quality rules inflight of spark job.
+site_url: https://github.com/Nike-Inc/spark-expectations
+repo_name: nike/spark-expectations
+repo_url: https://github.com/Nike-Inc/spark-expectations
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - content.code.annotate
+    - content.tooltips
+    - navigation.expand
+    - navigation.indexes
+    - navigation.instant
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
+    - search.share
+    - search.suggest
+    - toc.follow
+  font:
+    text: Roboto
+    code: Roboto Mono
+  language: en
+
+
+nav:
+  - Home: 'index.md'
+  - Setup: getting-started/setup.md
+  - Python API:
+      - Core:
+          Init: api/core_init.md
+          Context: api/context.md
+          Exceptions: api/exceptions.md
+          Expectations: api/expectations.md
+      - Sinks:
+          Init: api/sinks_init.md
+          Base_Writer_Plugin: api/base_sink_plugin.md
+          Delta_Sink_Plugin: api/delta_sink_plugin.md
+          NSP_Sink_plugin: api/nsp_sink_plugin.md
+          Utils:
+            - Writer: api/writer.md
+            - Sink_Decorater: api/sinks_decorater
+      - Notification:
+          Init: api/notifications_init.md
+          Base_Notification_plugin: api/base_notification_plugin.md
+          Email_Notification_plugin: api/email_plugin.md
+          Slack_Notification_plugin: api/slack_plugin.md
+          Push:
+          - Notification_Decorater: api/notifications_decorater
+      - Utils:
+          Actions: api/actions.md
+          Reader: api/reader.md
+          Regulate_flow: api/regulate_flow.md
+          Udf: api/udf.md
+      - Examples:
+          Base_Setup: api/base_setup.md
+          Sample_DQ: api/sample_dq.md
+
+  - Examples:
+      Rules: configurations/rules.md
+      Configure_Rules: configurations/configure_rules.md
+      Initialization_Examples: examples.md
+
+  - Adoption_Guide:
+      - comparision: configurations/adoption_versions_comparsion.md
+
+
+plugins:
+  - search:
+      lang: en
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [ "spark_expectations" ]
+          options:
+            show_source: true
+            show_root_heading: false
+            heading_level: 1
+            merge_init_into_class: true
+            show_if_no_docstring: true
+            show_root_full_path: true
+            show_root_members_full_path: true
+            show_root_toc_entry: false
+            show_category_heading: true
+            show_signature_annotations: true
+            separate_signature: false
+
+markdown_extensions:
+  - abbr
+  - admonition
+  - mkdocs-click
+  - attr_list
+  - def_list
+  - footnotes
+  - md_in_html
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:materialx.emoji.twemoji
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: squidfunk
+      repo: mkdocs-material
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+
+
+watch:
+  - spark_expectations
+
+extra_css:
+  - css/custom.css
+
+extra:
+  generator: false
+  version:
+    provider: mike
+    default: latest

@@ -1,0 +1,125 @@
+# Spark-Expectations
+
+![Spark Expectations](./docs/se_diagrams/logo_1.png)
+
+The documentation for spark-expectations can be found [here]()
+
+# What is Spark Expectations?
+#### Spark Expectations is a Data quality framework built in Pyspark as a solution for the following problem statements:
+
+1. The existing data quality tools validates the data in a table at rest and provides the success and error metrics. Users need to manually check the metrics to identify the error records
+2. The error data is not quarantined to an error table or there are no corrective actions taken to send only the valid data to downstream
+3. Users further downstream must consume the same data incorrectly, or they must perform additional calculations to eliminate records that don't comply with the data quality rules.
+4. Another process is required as a corrective action to rectify the errors in the data and lot of planning is usually required for this acitivity
+
+#### Spark Expectations solves these issues using the following principles:
+
+1. All the records which fail one or more data quality rules, are by default quarantined in an _error table along with the metadata on rules that failed, job information etc. This makes it easier for analysts or product teams to view the incorrect data and collaborate with the teams responsible for correcting and reprocessing it.
+2. Aggregated metrics are provided for the raw data and the cleansed data for each run along with the required metadata to prevent recalculation or computation.
+3. The data that doesn't meet the data quality contract or the standards is not moved to the next level or iterations unless or otherwise specified. 
+
+---
+# Features Of Spark Expectations
+
+Please find the spark-expectations flow and feature diagrams below
+
+![Flow](./docs/se_diagrams/flow.png)
+
+![Features](./docs/se_diagrams/features.png)
+
+
+# Spark - Expectations Setup
+
+### Configurations
+
+In order to establish the global configuration parameter for DQ Spark Expectations, you must define and complete the 
+required fields within a variable. This involves creating a variable and ensuring that all the necessary information 
+is provided in the appropriate fields.
+
+```python
+from spark_expectations.config.user_config import *
+
+se_global_spark_Conf = {
+    se_notifications_enable_email: False,
+    se_notifications_email_smtp_host: "mailhost.nike.com",
+    se_notifications_email_smtp_port: 25,
+    se_notifications_email_from: "<sender_email_id>",
+    se_notifications_email_to_other_nike_mail_id: "<receiver_email_id's>",
+    se_notifications_email_subject: "spark expectations - data quality - notifications", 
+    se_notifications_enable_slack: True,
+    se_notifications_slack_webhook_url: "<slack-webhook-url>", 
+    se_notifications_on_start: True, 
+    se_notifications_on_completion: True,
+    se_notifications_on_fail: True,
+    se_notifications_on_error_drop_exceeds_threshold_breach: True, 
+    se_notifications_on_error_drop_threshold: 15,
+}
+```
+
+### Spark Expectations Initialization 
+
+For all the below examples the below import and SparkExpectations class instantiation is mandatory
+
+```python
+from spark_expectations.core.expectations import SparkExpectations
+
+
+# product_id should match with the "product_id" in the rules table
+se: SparkExpectations = SparkExpectations(product_id="your-products-id")
+```
+
+1. Instantiate `SparkExpectations` class which has all the required functions for running data quality rules
+
+
+```python
+from spark_expectations.config.user_config import * 
+
+
+@se.with_expectations( 
+    se.reader.get_rules_from_table(
+        product_rules_table="pilot_nonpub.dq.dq_rules",
+        table_name="pilot_nonpub.dq_employee.employee",  
+        dq_stats_table_name="pilot_nonpub.dq.dq_stats" 
+    ),
+    write_to_table=True, 
+    write_to_temp_table=True,
+    row_dq=True, 
+    agg_dq={
+        se_agg_dq: True,  
+        se_source_agg_dq: True,  
+        se_final_agg_dq: True, 
+    },
+    query_dq={ 
+        se_query_dq: True,  
+        se_source_query_dq: True, 
+        se_final_query_dq: True, 
+        se_target_table_view: "order", 
+    },
+    spark_conf=se_global_spark_Conf,
+
+)
+def build_new() -> DataFrame:
+    _df_order: DataFrame = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
+    )
+    _df_order.createOrReplaceTempView("order")  
+
+    _df_product: DataFrame = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(os.path.join(os.path.dirname(__file__), "resources/product.csv"))
+    )
+    _df_product.createOrReplaceTempView("product") 
+
+    _df_customer: DataFrame = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(os.path.join(os.path.dirname(__file__), "resources/customer.csv"))
+    )
+
+    _df_customer.createOrReplaceTempView("customer") 
+
+    return _df_order 
+```
