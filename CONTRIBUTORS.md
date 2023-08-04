@@ -1,9 +1,9 @@
 # Authors
 * [Ashok Singamaneni](https://github.com/asingamaneni)
+* [Umesh](https://github.com/Umeshsp22)
 
 # Contributors
 Thanks to the contributors who helped on this project apart from the authors
-* [Umesh](https://github.com/Umeshsp22)
 * [Teja Dogiparthi](https://github.com/Tejadogiparthi)
 
 # Honorary Mentions
