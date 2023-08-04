@@ -1,6 +1,6 @@
 # Spark-Expectations
 
-![Spark Expectations](./docs/se_diagrams/logo_1.png)
+<img src="./docs/se_diagrams/logo.png" width="300" height="300">
 
 The documentation for spark-expectations can be found [here]()
 
@@ -23,9 +23,9 @@ The documentation for spark-expectations can be found [here]()
 
 Please find the spark-expectations flow and feature diagrams below
 
-![Flow](./docs/se_diagrams/flow.png)
+<img src="./docs/se_diagrams/flow.png" width=1000>
 
-![Features](./docs/se_diagrams/features.png)
+<img src="./docs/se_diagrams/features.png" width=1000>
 
 
 # Spark - Expectations Setup
