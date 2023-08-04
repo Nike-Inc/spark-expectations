@@ -22,6 +22,7 @@ def get_spark_session() -> SparkSession:
             )
             .config("spark.sql.warehouse.dir", "/tmp/hive/warehouse")
             .config("spark.driver.extraJavaOptions", "-Dderby.system.home=/tmp/derby")
+            .config("spark.jars.ivy", "/tmp/ivy2")
             .config(  # below jars are used only in the local env, not coupled with databricks or EMR
                 "spark.jars",
                 f"{current_dir}/../../jars/spark-sql-kafka-0-10_2.12-3.0.0.jar,"
