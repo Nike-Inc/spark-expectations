@@ -17,7 +17,7 @@ jobs:
 
     env:
       HADOOP_USER_HOME: 'hadoop'
-      UNIT_TESTING_ENV: 'spark_expectations_unit_testing_on_jenkins_bmx_server'
+      UNIT_TESTING_ENV: 'spark_expectations_unit_testing_on_github_actions'
 
     steps:
       - uses: actions/checkout@v3 # use latest version of the checkout action

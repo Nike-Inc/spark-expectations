@@ -10,7 +10,7 @@ def get_spark_session() -> SparkSession:
 
     if (
         os.environ.get("UNIT_TESTING_ENV")
-        == "spark_expectations_unit_testing_on_jenkins_bmx_server"
+        == "spark_expectations_unit_testing_on_github_actions"
     ) or (os.environ.get("SPARKEXPECTATIONS_ENV") == "local"):
         builder = (
             builder.config(

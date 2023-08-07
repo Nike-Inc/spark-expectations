@@ -1,5 +1,9 @@
 # Spark-Expectations
 
+[![CodeQL](https://github.com/Nike-Inc/spark-expectations/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Nike-Inc/spark-expectations/actions/workflows/codeql-analysis.yml)
+[![build](https://github.com/Nike-Inc/spark-expectations/actions/workflows/onpush.yml/badge.svg?branch=main)](https://github.com/Nike-Inc/spark-expectations/actions/workflows/onpush.yml)
+
+
 <img src="./docs/se_diagrams/logo.png" width="300" height="300">
 
 The documentation for spark-expectations can be found [here]()

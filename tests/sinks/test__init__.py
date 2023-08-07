@@ -32,7 +32,7 @@ def fixture_create_database():
 def fixture_setup_local_nsp_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    if os.getenv('UNIT_TESTING_ENV') != "spark_expectations_unit_testing_on_jenkins_bmx_server":
+    if os.getenv('UNIT_TESTING_ENV') != "spark_expectations_unit_testing_on_github_actions":
 
         # remove if docker conatiner is running
         os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_nsp_stop_script.sh")
