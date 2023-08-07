@@ -11,7 +11,7 @@ mypy:
 	@poetry run mypy -p spark_expectations --exclude venv --exclude dist --exclude .idea
 
 kafka-cluster-start:
-                   ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_jenkins_bmx_server)
+                   ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_github_actions)
 	                   . ./spark_expectations/examples/docker_scripts/kafka_cluster_start.sh
 	                   sleep 30
 	                   . ./spark_expectations/examples/docker_scripts/delete_kafka_topic.sh
@@ -19,7 +19,7 @@ kafka-cluster-start:
                    endif
 
 kafka-cluster-stop:
-                  ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_jenkins_bmx_server)
+                  ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_github_actions)
 	                   . ./spark_expectations/examples/docker_scripts/delete_kafka_topic.sh
 	                   . ./spark_expectations/examples/docker_scripts/kafka_cluster_stop.sh
 	                   rm -rf /tmp/kafka-logs
