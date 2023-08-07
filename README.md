@@ -1,7 +1,9 @@
 # Spark-Expectations
 
 [![CodeQL](https://github.com/Nike-Inc/spark-expectations/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Nike-Inc/spark-expectations/actions/workflows/codeql-analysis.yml)
-[![build](https://github.com/Nike-Inc/spark-expectations/actions/workflows/onpush.yml/badge.svg?branch=main)](https://github.com/Nike-Inc/spark-expectations/actions/workflows/onpush.yml)
+[![build](https://github.com/Nike-Inc/spark-expectations/actions/workflows/onpush.yml/badge.svg)](https://github.com/Nike-Inc/spark-expectations/actions/workflows/onpush.yml)
+[![codecov](https://codecov.io/gh/Nike-Inc/spark-expectations/branch/main/graph/badge.svg)](https://codecov.io/gh/Nike-Inc/spark-expectations)
+
 
 
 <img src="./docs/se_diagrams/logo.png" width="300" height="300">

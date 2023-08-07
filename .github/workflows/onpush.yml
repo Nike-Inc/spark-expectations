@@ -57,6 +57,12 @@ jobs:
           export GITHUB_ACTIONS=true
           make cov
 
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+
 #      - name: Publish test coverage
 #        uses: codecov/codecov-action@v3
 #        with:
