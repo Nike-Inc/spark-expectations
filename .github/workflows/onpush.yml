@@ -9,6 +9,11 @@ on:
 jobs:
   unittesting:
     runs-on: ${{ matrix.os }}
+    strategy:
+      max-parallel: 1
+      matrix:
+        python-version: [ '3.9' ]
+        os: [ ubuntu-latest ]
 
     env:
       HADOOP_USER_HOME: 'hadoop'
