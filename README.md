@@ -6,12 +6,12 @@ The documentation for spark-expectations can be found [here]()
 
 ### Contributors
 
-Thanks to all the [contributors](CONTRIBUTORS.md) who have helped ideate, develop and take it to the end line 
+Thanks to all the [contributors](CONTRIBUTORS.md) who have helped ideate, develop and bring it to its current state 
 
 ### Contributing
 
 We're delighted that you're interested in contributing to our project! To get started, 
-please carefully read and follow the guidelines provided in our [here](CONTRIBUTING.md) document
+please carefully read and follow the guidelines provided in our [contributing](CONTRIBUTING.md) document
 
 # What is Spark Expectations?
 #### Spark Expectations is a Data quality framework built in Pyspark as a solution for the following problem statements:

@@ -9,14 +9,7 @@ on:
 jobs:
   unittesting:
     runs-on: ${{ matrix.os }}
-    container:
-      image: python:${{ matrix.python-version }}
-      options: --user 1001 # run as the runner user instead of root
-    strategy:
-      max-parallel: 2
-      matrix:
-        python-version: [ '3.9' ]
-        os: [ ubuntu-latest ]
+
     env:
       HADOOP_USER_HOME: 'hadoop'
       UNIT_TESTING_ENV: 'spark_expectations_unit_testing_on_jenkins_bmx_server'
@@ -52,7 +45,6 @@ jobs:
         run: |
           export PATH=$PATH:$HOME/.local/bin
           make poetry
-          sudo echo '1001:x:1001:0:anonymous uid:/opt/spark:/bin/false' | tee -a /etc/passwd
 
       - name: Install, lint and test
         run: |
