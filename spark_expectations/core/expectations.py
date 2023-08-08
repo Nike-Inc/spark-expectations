@@ -141,7 +141,7 @@ class SparkExpectations:
                 user_config.se_enable_streaming: True,
                 user_config.secret_type: "databricks",
                 user_config.dbx_workspace_url: "https://workspace.cloud.databricks.com",
-                user_config.dbx_secret_scope: "spark-expectations-1",
+                user_config.dbx_secret_scope: "sole_common_prod",
                 user_config.dbx_kafka_server_url: "se_streaming_server_url_secret_key",
                 user_config.dbx_secret_token_url: "se_streaming_auth_secret_token_url_key",
                 user_config.dbx_secret_app_name: "se_streaming_auth_secret_appid_key",

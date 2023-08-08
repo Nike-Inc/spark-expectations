@@ -52,7 +52,7 @@ stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
                 user_config.se_enable_streaming: True, # (1)!
                 user_config.secret_type: "databricks", # (2)!
                 user_config.dbx_workspace_url  : "https://workspace.cloud.databricks.com", # (3)!
-                user_config.dbx_secret_scope: "spark-expectations-1", # (4)!
+                user_config.dbx_secret_scope: "sole_common_prod", # (4)!
                 user_config.dbx_kafka_server_url: "se_streaming_server_url_secret_key", # (5)!
                 user_config.dbx_secret_token_url: "se_streaming_auth_secret_token_url_key", # (6)!
                 user_config.dbx_secret_app_name: "se_streaming_auth_secret_appid_key", # (7)!
