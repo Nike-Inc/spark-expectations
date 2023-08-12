@@ -5,6 +5,8 @@ on:
     types: [ opened, synchronize ]
   push:
     branches: [ main ]
+  release:
+    types: [ created ]
 
 jobs:
   unittesting:
