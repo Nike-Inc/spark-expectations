@@ -1,5 +1,5 @@
 # Authors
-* [Ashok Singamaneni](https://github.com/asingamaneni)
+* [Ashok Singamaneni](https://www.linkedin.com/in/ashok-singamaneni-193b1a32/)
 * [Umesh](https://github.com/Umeshsp22)
 
 # Contributors
@@ -11,7 +11,7 @@ Thanks to the team below for invaluable insights and support throughout the init
 
 * [Joe Hollow](https://www.linkedin.com/in/joe-hollow-23088b1/)
 * [Rakesh Dikshit](https://www.linkedin.com/in/rakesh-dikshit-867209b/)
-* [Aditya Chaturvedi](https://github.com/aditya-chaturvedi)
-* [Scott Haines](https://github.com/newfront)
+* [Aditya Chaturvedi](https://www.linkedin.com/in/chaturvediaditya/)
+* [Scott Haines](https://www.linkedin.com/in/scotthaines/)
 * [Arijit Banerjee](https://www.linkedin.com/in/massborn/)
-* [Sarath Chandra Bandaru](https://github.com/sarathchandrabandaru)
+* [Sarath Chandra Bandaru](https://www.linkedin.com/in/sarath-chandra-bandaru/)

@@ -6,21 +6,32 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 [![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+![PYPI version](https://img.shields.io/pypi/v/spark-expectations.svg)
 
 
+<p align="center">
+Spark Expectations is a specialized tool designed with the primary goal of maintaining data integrity within your processing pipeline.
+By identifying and preventing malformed or incorrect data from reaching the target destination, it ensues that only quality data is
+passed through. Any erroneous records are not simply ignored but are filtered into a separate error table, allowing for 
+detailed analysis and reporting. Additionally, Spark Expectations provides valuable statistical data on the filtered content, 
+empowering you with insights into your data quality.
+</p>
 
-<img src="./docs/se_diagrams/logo.png" width="300" height="300">
+<p align="center">
+<img src=https://github.com/Nike-Inc/spark-expectations/blob/main/docs/se_diagrams/logo.png?raw=true width="400" height="400"></p>
 
-The documentation for spark-expectations can be found [here]()
+---
+
+The documentation for spark-expectations can be found [here](https://engineering.nike.com/spark-expectations/)
 
 ### Contributors
 
-Thanks to all the [contributors](CONTRIBUTORS.md) who have helped ideate, develop and bring it to its current state 
+Thanks to all the [contributors](https://github.com/Nike-Inc/spark-expectations/blob/main/CONTRIBUTORS.md) who have helped ideate, develop and bring it to its current state 
 
 ### Contributing
 
 We're delighted that you're interested in contributing to our project! To get started, 
-please carefully read and follow the guidelines provided in our [contributing](CONTRIBUTING.md) document
+please carefully read and follow the guidelines provided in our [contributing](https://github.com/Nike-Inc/spark-expectations/blob/main/CONTRIBUTING.md) document
 
 # What is Spark Expectations?
 #### Spark Expectations is a Data quality framework built in Pyspark as a solution for the following problem statements:
@@ -41,9 +52,11 @@ please carefully read and follow the guidelines provided in our [contributing](C
 
 Please find the spark-expectations flow and feature diagrams below
 
-<img src="./docs/se_diagrams/flow.png" width=1000>
+<p align="center">
+<img src=https://github.com/Nike-Inc/spark-expectations/blob/main/docs/se_diagrams/flow.png?raw=true width=1000></p>
 
-<img src="./docs/se_diagrams/features.png" width=1000>
+<p align="center">
+<img src=https://github.com/Nike-Inc/spark-expectations/blob/main/docs/se_diagrams/features.png?raw=true width=1000></p>
 
 
 # Spark - Expectations Setup
