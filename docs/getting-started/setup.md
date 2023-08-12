@@ -1,9 +1,9 @@
 ## Installation
-The library is available in the artifactory and can be installed in your environment using the below command or 
+The library is available in the pypi and can be installed in your environment using the below command or 
 please add the library "spark-expectations" into the requirements.txt or poetry dependencies.
 
 ```shell
-pip install -U spark-expectations --extra-index-url https://artifactory.nike.com/artifactory/api/pypi/python-local/simple
+pip install -U spark-expectations
 ```
 
 ## Required Tables
