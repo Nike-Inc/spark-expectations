@@ -68,7 +68,7 @@ jobs:
     name: Deploy to PyPi
     runs-on: ubuntu-latest
     needs:
-      - test-pipeline
+      - unittesting
     if: github.event_name == 'release'
     steps:
       - uses: actions/checkout@v3 # use latest version of the checkout action
