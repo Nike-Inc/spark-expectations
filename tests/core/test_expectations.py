@@ -1340,7 +1340,7 @@ def fixture_create_stats_table():
                                                  "rule_type": "agg_dq",
                                                  "rule": "stddev_col3_threshold",
                                                  "column_name": "col3",
-                                                 "expectation": "stddev(col3) > 0",
+                                                 "expectation": "stddev(col3) is null or stddev(col3) > 0",
                                                  "enable_for_source_dq_validation": True,
                                                  "enable_for_target_dq_validation": True,
                                                  "action_if_failed": "fail",
