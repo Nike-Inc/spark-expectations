@@ -467,7 +467,7 @@ class SparkExpectations:
                                 _,
                                 status,
                             ) = func_process(
-                                _df,
+                                _row_dq_df,
                                 self._context.get_agg_dq_rule_type_name,
                                 final_agg_dq_flag=True,
                                 error_count=_error_count,
@@ -510,7 +510,7 @@ class SparkExpectations:
                                 _,
                                 status,
                             ) = func_process(
-                                _df,
+                                _row_dq_df,
                                 self._context.get_query_dq_rule_type_name,
                                 final_query_dq_flag=True,
                                 error_count=_error_count,
