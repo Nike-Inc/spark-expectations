@@ -337,7 +337,7 @@ class SparkExpectationsWriter:
                     else {}
                 )
             )
-            df.show(truncate=False)
+
             _sink_hook.writer(
                 _write_args={
                     "product_id": self.product_id,
