@@ -1343,6 +1343,7 @@ def fixture_create_stats_table():
                                              # row meets all row_dq_expectations
                                              {"col1": 3, "col2": "c", "col3": 6},
                                              # row meets all row_dq_expectations
+                                             {"col1": 2, "col2": "d", "col3": 7}
                                          ]
                                      ),
                                      {  # expectations rules
@@ -1391,8 +1392,21 @@ def fixture_create_stats_table():
                                                  "rule_type": "agg_dq",
                                                  "rule": "stddev_col3_threshold",
                                                  "column_name": "col3",
-                                                 "expectation": "stddev(col3) > 0",
+                                                 "expectation": "stddev(col3) > 1",
                                                  "enable_for_source_dq_validation": True,
+                                                 "enable_for_target_dq_validation": False,
+                                                 "action_if_failed": "fail",
+                                                 "tag": "validity",
+                                                 "description": "stddev of col3 value must be greater than one"
+                                             },
+                                             {
+                                                 "product_id": "product1",
+                                                 "target_table_name": "dq_spark.test_table",
+                                                 "rule_type": "agg_dq",
+                                                 "rule": "stddev_col3_threshold",
+                                                 "column_name": "col3",
+                                                 "expectation": "stddev(col3) < 1",
+                                                 "enable_for_source_dq_validation": False,
                                                  "enable_for_target_dq_validation": True,
                                                  "action_if_failed": "fail",
                                                  "tag": "validity",
@@ -1412,11 +1426,12 @@ def fixture_create_stats_table():
                                      False,  # source_query_dq
                                      False,  # final_query_dq
                                      spark.createDataFrame([  # expected_output
-                                         {"col1": 3, "col2": "c", "col3": 6}
+                                         {"col1": 3, "col2": "c", "col3": 6},
+                                         {"col1": 2, "col2": "d", "col3": 7}
                                      ]),  # expected result
-                                     3,  # input count
-                                     2,  # error count
-                                     1,  # output count
+                                     4,  # input count
+                                     3,  # error count
+                                     2,  # output count
                                      [{"description": "avg of col1 value must be greater than 4",
                                        "rule": "avg_col1_threshold",
                                        "rule_type": "agg_dq", "action_if_failed": "ignore", "tag": "validity"}],
@@ -1427,10 +1442,10 @@ def fixture_create_stats_table():
                                      # final_agg_result
                                      None,  # source_query_dq_res
                                      None,  # final_query_dq_res
-                                     {"rules": {"num_dq_rules": 4, "num_row_dq_rules": 2},
+                                     {"rules": {"num_dq_rules": 5, "num_row_dq_rules": 2},
                                       "query_dq_rules": {"num_final_query_dq_rules": 0, "num_source_query_dq_rules": 0,
                                                          "num_query_dq_rules": 0},  # dq_rules
-                                      "agg_dq_rules": {"num_source_agg_dq_rules": 2, "num_agg_dq_rules": 2,
+                                      "agg_dq_rules": {"num_source_agg_dq_rules": 2, "num_agg_dq_rules": 3,
                                                        "num_final_agg_dq_rules": 2}},
                                      {"row_dq_status": "Passed", "source_agg_dq_status": "Passed",
                                       "final_agg_dq_status": "Passed", "run_status": "Passed",
