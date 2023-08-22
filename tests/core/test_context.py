@@ -567,13 +567,13 @@ def test_get_table_name_expection():
         context.get_table_name
 
 
-def test_get_input_count():
-    context = SparkExpectationsContext(product_id="product1")
-    context._input_count = 0
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="The spark expectations context is not set completely, please assign "
-                             "'_input_count' before \n            accessing it"):
-        context.get_input_count
+# def test_get_input_count():
+#     context = SparkExpectationsContext(product_id="product1")
+#     context._input_count = 0
+#     with pytest.raises(SparkExpectationsMiscException,
+#                        match="The spark expectations context is not set completely, please assign "
+#                              "'_input_count' before \n            accessing it"):
+#         context.get_input_count
 
 
 # def test_get_nsp_stats_topic_name_exception():
@@ -1311,3 +1311,46 @@ def test_get_se_streaming_stats_topic_name_exception():
             '_se_streaming_stats_topic_name' before 
             accessing it"""):
         context.get_se_streaming_stats_topic_name
+
+def test_set_rules_exceeds_threshold():
+    context = SparkExpectationsContext(product_id="product1")
+    context.set_rules_exceeds_threshold([
+        {
+            "rule_name": 'rule_1',
+            "action_if_failed": 'ignore',
+            "description": 'description1',
+            "rule_type": 'row_dq',
+            "error_drop_threshold": '10',
+            "error_drop_percentage": '10.0',
+        }
+    ])
+    assert context.get_rules_exceeds_threshold == [{
+        "rule_name": 'rule_1',
+        "action_if_failed": 'ignore',
+        "description": 'description1',
+        "rule_type": 'row_dq',
+        "error_drop_threshold": '10',
+        "error_drop_percentage": '10.0',
+    }]
+
+def test_get_rules_exceds_threshold():
+    context = SparkExpectationsContext(product_id="product1")
+    context._rules_error_per=[
+        {
+            "rule_name": 'rule_1',
+            "action_if_failed": 'ignore',
+            "description": 'description1',
+            "rule_type": 'row_dq',
+            "error_drop_threshold": '10',
+            "error_drop_percentage": '10.0',
+        }
+    ]
+
+    assert context.get_rules_exceeds_threshold == [{
+        "rule_name": 'rule_1',
+        "action_if_failed": 'ignore',
+        "description": 'description1',
+        "rule_type": 'row_dq',
+        "error_drop_threshold": '10',
+        "error_drop_percentage": '10.0',
+    }]

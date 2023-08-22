@@ -8,7 +8,7 @@ from pyspark.sql.functions import (
     when,
     array,
     to_timestamp,
-    round,
+    round as sql_round,
     create_map,
     explode,
 )
@@ -184,6 +184,7 @@ class SparkExpectationsWriter:
                     if final_query_dq_result and len(final_query_dq_result) > 0
                     else None,
                     self._context.get_summarised_row_dq_res,
+                    self._context.get_rules_exceeds_threshold,
                     {
                         "run_status": self._context.get_dq_run_status,
                         "source_agg_dq": self._context.get_source_agg_dq_status,
@@ -266,6 +267,11 @@ class SparkExpectationsWriter:
                         ArrayType(MapType(StringType(), StringType())),
                         True,
                     ),
+                    StructField(
+                        "row_dq_error_threshold",
+                        ArrayType(MapType(StringType(), StringType())),
+                        True,
+                    ),
                     StructField("dq_status", MapType(StringType(), StringType()), True),
                     StructField(
                         "dq_run_time", MapType(StringType(), FloatType()), True
@@ -287,9 +293,9 @@ class SparkExpectationsWriter:
             self._context.print_dataframe_with_debugger(df)
 
             df = (
-                df.withColumn("output_percentage", round(df.output_percentage, 2))
-                .withColumn("success_percentage", round(df.success_percentage, 2))
-                .withColumn("error_percentage", round(df.error_percentage, 2))
+                df.withColumn("output_percentage", sql_round(df.output_percentage, 2))
+                .withColumn("success_percentage", sql_round(df.success_percentage, 2))
+                .withColumn("error_percentage", sql_round(df.error_percentage, 2))
             )
             _log.info(
                 "Writing metrics to the stats table: %s, started",
@@ -331,7 +337,7 @@ class SparkExpectationsWriter:
                     else {}
                 )
             )
-
+            df.show(truncate=False)
             _sink_hook.writer(
                 _write_args={
                     "product_id": self.product_id,
@@ -456,7 +462,7 @@ class SparkExpectationsWriter:
                 .rdd.map(
                     lambda rule_meta_dict: (
                         rule_meta_dict[0]["rule"],
-                        rule_meta_dict[0],
+                        {**rule_meta_dict[0], "failed_row_count": 1},
                     )
                 )
                 .reduceByKey(lambda acc, itr: update_dict(acc))
@@ -469,4 +475,60 @@ class SparkExpectationsWriter:
         except Exception as e:
             raise SparkExpectationsMiscException(
                 f"error occurred created summarised row dq statistics {e}"
+            )
+
+    def generate_rules_exceeds_threshold(self, rules: dict) -> None:
+        """
+        This function implements/supports summarising row dq error threshold
+        Args:
+            rules: accepts rule metadata within dict
+        Returns:
+            None
+        """
+        try:
+            error_threshold_list = []
+            rules_failed_row_count: Dict[str, int] = {}
+            if self._context.get_summarised_row_dq_res is None:
+                return None
+
+            rules_failed_row_count = {
+                itr["rule"]: int(itr["failed_row_count"])
+                for itr in self._context.get_summarised_row_dq_res
+            }
+
+            for rule in rules[f"{self._context.get_row_dq_rule_type_name}_rules"]:
+                # if (
+                #         not rule["enable_error_drop_alert"]
+                #         or rule["rule"] not in rules_failed_row_count.keys()
+                # ):
+                #     continue  # pragma: no cover
+
+                rule_name = rule["rule"]
+                rule_action = rule["action_if_failed"]
+                if rule_name in rules_failed_row_count.keys():
+                    failed_row_count = int(rules_failed_row_count[rule_name])
+                else:
+                    failed_row_count = 0
+
+                if failed_row_count is not None and failed_row_count > 0:
+                    error_drop_percentage = round(
+                        (failed_row_count / self._context.get_input_count) * 100, 2
+                    )
+                    error_threshold_list.append(
+                        {
+                            "rule_name": rule_name,
+                            "action_if_failed": rule_action,
+                            "description": rule["description"],
+                            "rule_type": rule["rule_type"],
+                            "error_drop_threshold": str(rule["error_drop_threshold"]),
+                            "error_drop_percentage": str(error_drop_percentage),
+                        }
+                    )
+
+            if len(error_threshold_list) > 0:
+                self._context.set_rules_exceeds_threshold(error_threshold_list)
+
+        except Exception as e:
+            raise SparkExpectationsMiscException(
+                f"An error occurred while creating error threshold list : {e}"
             )

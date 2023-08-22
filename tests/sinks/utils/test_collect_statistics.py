@@ -56,6 +56,7 @@ def fixture_create_stats_table():
     source_query_dq_results array<map<string, string>>,
     final_query_dq_results array<map<string, string>>,
     row_dq_res_summary array<map<string, string>>,
+    row_dq_error_threshold array<map<string, string>>,
     dq_status map<string, string>,
     dq_run_time map<string, float>,
     dq_rules map<string, map<string,int>>,
@@ -96,6 +97,14 @@ def fixture_create_stats_table():
              {"rule_name": "rule1", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 10},
              {"rule_name": "rule2", "action_if_failed": "drop", "rule_type": "row_dq", "failed_count": 5},
              {"rule_name": "rule3", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 3}],
+"row_dq_error_threshold": [
+             {"rule_name": "rule1", "action_if_failed": "drop", "description": "description1",
+              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "10.0"},
+             {"rule_name": "rule2", "action_if_failed": "drop", "description": "description2",
+              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "5.0"},
+             {"rule_name": "rule3", "action_if_failed": "drop", "description": "description3",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.0"}
+         ],
          "dq_run_time": {"final_query_dq_run_time": 22.7, "source_agg_dq_run_time": 17.2, "row_dq_run_time": 29.3,
                          "source_query_dq_run_time": 22.4, "final_agg_dq_run_time": 11.0, "run_time": 108.5},
          "dq_rules": {"rules": {"num_dq_rules": 17, "num_row_dq_rules": 5},
@@ -124,6 +133,14 @@ def fixture_create_stats_table():
              {"rule_name": "rule1", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 10},
              {"rule_name": "rule2", "action_if_failed": "drop", "rule_type": "row_dq", "failed_count": 7},
              {"rule_name": "rule3", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 8}],
+"row_dq_error_threshold": [
+             {"rule_name": "rule1", "action_if_failed": "drop", "description": "description1",
+              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "10.0"},
+             {"rule_name": "rule2", "action_if_failed": "drop", "description": "description2",
+              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "5.0"},
+             {"rule_name": "rule3", "action_if_failed": "drop", "description": "description3",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.0"}
+         ],
          "dq_run_time": {"final_query_dq_run_time": 0.0, "source_agg_dq_run_time": 0.0, "row_dq_run_time": 29.3,
                          "source_query_dq_run_time": 0.0, "final_agg_dq_run_time": 11.0, "run_time": 108.5},
          "dq_rules": {"rules": {"num_dq_rules": 14, "num_row_dq_rules": 3},
@@ -154,6 +171,14 @@ def fixture_create_stats_table():
              {"rule_name": "rule1", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 10},
              {"rule_name": "rule2", "action_if_failed": "drop", "rule_type": "row_dq", "failed_count": 7},
              {"rule_name": "rule3", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 8}],
+"row_dq_error_threshold": [
+             {"rule_name": "rule1", "action_if_failed": "drop", "description": "description1",
+              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "10.0"},
+             {"rule_name": "rule2", "action_if_failed": "drop", "description": "description2",
+              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "5.0"},
+             {"rule_name": "rule3", "action_if_failed": "drop", "description": "description3",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.0"}
+         ],
          "dq_run_time": {"final_query_dq_run_time": 22.7, "source_agg_dq_run_time": 17.2, "row_dq_run_time": 29.3,
                          "source_query_dq_run_time": 0.0, "final_agg_dq_run_time": 0.0, "run_time": 108.5},
          "dq_rules": {"rules": {"num_dq_rules": 17, "num_row_dq_rules": 10},
@@ -203,6 +228,7 @@ def test_collect_stats_on_success_failure(_mock_context, input_record,
     setattr(_mock_context, "get_source_query_dq_result", input_record.get("source_query_dq_results"))
     setattr(_mock_context, "get_final_query_dq_result", input_record.get("final_query_dq_results"))
     setattr(_mock_context, "get_summarised_row_dq_res", input_record.get("row_dq_res_summary"))
+    setattr(_mock_context, "get_rules_exceeds_threshold", input_record.get("row_dq_error_threshold"))
 
     setattr(_mock_context, "get_dq_run_time", round(input_record.get("dq_run_time").get("run_time"), 1))
     setattr(_mock_context, "get_source_agg_dq_run_time",
@@ -279,6 +305,14 @@ def test_collect_stats_on_success_failure(_mock_context, input_record,
              {"rule_name": "rule1", "action_if_failed": "fail", "rule_type": "row_dq", "failed_count": 10},
              {"rule_name": "rule2", "action_if_failed": "drop", "rule_type": "row_dq", "failed_count": 7},
              {"rule_name": "rule3", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 8}],
+"row_dq_error_threshold": [
+             {"rule_name": "rule1", "action_if_failed": "drop", "description": "description1",
+              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "10.0"},
+             {"rule_name": "rule2", "action_if_failed": "drop", "description": "description2",
+              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "5.0"},
+             {"rule_name": "rule3", "action_if_failed": "drop", "description": "description3",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.0"}
+         ],
          "dq_run_time": {"final_query_dq_run_time": 0.7, "source_agg_dq_run_time": 17.2, "row_dq_run_time": 29.3,
                          "source_query_dq_run_time": 0.0, "final_agg_dq_run_time": 0.0, "run_time": 118.5},
          "dq_rules": {"rules": {"num_dq_rules": 18, "num_row_dq_rules": 5},
@@ -311,6 +345,14 @@ def test_collect_stats_on_success_failure(_mock_context, input_record,
              {"rule_name": "rule1", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 100},
              {"rule_name": "rule2", "action_if_failed": "drop", "rule_type": "row_dq", "failed_count": 100},
              {"rule_name": "rule3", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 88}],
+"row_dq_error_threshold": [
+             {"rule_name": "rule1", "action_if_failed": "drop", "description": "description1",
+              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "10.0"},
+             {"rule_name": "rule2", "action_if_failed": "drop", "description": "description2",
+              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "5.0"},
+             {"rule_name": "rule3", "action_if_failed": "drop", "description": "description3",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.0"}
+         ],
          "dq_run_time": {"final_query_dq_run_time": 22.7, "source_agg_dq_run_time": 0.0, "row_dq_run_time": 29.3,
                          "source_query_dq_run_time": 10.8, "final_agg_dq_run_time": 0.0, "run_time": 108.5},
          "dq_rules": {"rules": {"num_dq_rules": 18, "num_row_dq_rules": 8},
@@ -338,6 +380,14 @@ def test_collect_stats_on_success_failure(_mock_context, input_record,
              {"rule_name": "rule2", "action_if_failed": "drop", "rule_type": "row_dq", "failed_count": 100},
              {"rule_name": "rule3", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 88},
              {"rule_name": "rule4", "action_if_failed": "fail", "rule_type": "row_dq", "failed_count": 60}],
+"row_dq_error_threshold": [
+             {"rule_name": "rule1", "action_if_failed": "drop", "description": "description1",
+              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "10.0"},
+             {"rule_name": "rule2", "action_if_failed": "drop", "description": "description2",
+              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "5.0"},
+             {"rule_name": "rule3", "action_if_failed": "drop", "description": "description3",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.0"}
+         ],
          "dq_run_time": {"final_query_dq_run_time": 0.0, "source_agg_dq_run_time": 0.0, "row_dq_run_time": 29.3,
                          "source_query_dq_run_time": 0.0, "final_agg_dq_run_time": 0.0, "run_time": 108.5},
          "dq_rules": {"rules": {"num_dq_rules": 23, "num_row_dq_rules": 5},
@@ -386,6 +436,7 @@ def test_collect_stats_on_success_failure_exception(_mock_context, input_record,
     setattr(_mock_context, "get_source_query_dq_result", input_record.get("source_query_dq_results"))
     setattr(_mock_context, "get_final_query_dq_result", input_record.get("final_query_dq_results"))
     setattr(_mock_context, "get_summarised_row_dq_res", input_record.get("row_dq_res_summary"))
+    setattr(_mock_context, "get_rules_exceeds_threshold", input_record.get("row_dq_error_threshold"))
 
     setattr(_mock_context, "get_dq_run_time", round(input_record.get("dq_run_time").get("run_time"), 1))
     setattr(_mock_context, "get_source_agg_dq_run_time",

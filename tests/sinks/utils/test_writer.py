@@ -13,6 +13,7 @@ from spark_expectations.core.exceptions import (
 
 spark = get_spark_session()
 
+
 @pytest.fixture(name="_fixture_local_nsp_topic")
 def fixture_setup_local_nsp_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -95,6 +96,7 @@ def fixture_create_stats_table():
     source_query_dq_results array<map<string, string>>,
     final_query_dq_results array<map<string, string>>,
     row_dq_res_summary array<map<string, string>>,
+    row_dq_error_threshold array<map<string, string>>,
     dq_status map<string, string>,
     dq_run_time map<string, float>,
     dq_rules map<string, map<string,int>>,
@@ -169,7 +171,6 @@ def test_save_df_as_table(table_name,
     # _spark_set.assert_called_with('spark.sql.session.timeZone', 'Etc/UTC')
 
 
-
 @pytest.mark.parametrize('table_name, options',
                          [('employee_table', {'mode': 'overwrite',
                                               'partitionBy': ['department'],
@@ -214,6 +215,15 @@ def test_write_df_to_table(save_df_as_table,
              {"rule_name": "rule1", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 10},
              {"rule_name": "rule2", "action_if_failed": "drop", "rule_type": "row_dq", "failed_count": 5},
              {"rule_name": "rule3", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 3}],
+         "row_dq_error_threshold": [
+             {"rule_name": "rule1", "action_if_failed": "drop", "description": "description1",
+              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "10.0"},
+             {"rule_name": "rule2", "action_if_failed": "drop", "description": "description2",
+              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "5.0"},
+             {"rule_name": "rule3", "action_if_failed": "drop", "description": "description3",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.0"}
+         ],
+
          "dq_run_time": {"final_query_dq_run_time": 22.7, "source_agg_dq_run_time": 17.2, "row_dq_run_time": 29.3,
                          "source_query_dq_run_time": 22.4, "final_agg_dq_run_time": 11.0, "run_time": 108.5},
          "dq_rules": {"rules": {"num_dq_rules": 17, "num_row_dq_rules": 5},
@@ -242,6 +252,14 @@ def test_write_df_to_table(save_df_as_table,
              {"rule_name": "rule1", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 10},
              {"rule_name": "rule2", "action_if_failed": "drop", "rule_type": "row_dq", "failed_count": 7},
              {"rule_name": "rule3", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 8}],
+         "row_dq_error_threshold": [
+             {"rule_name": "rule1", "action_if_failed": "drop", "description": "description1",
+              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "10.0"},
+             {"rule_name": "rule2", "action_if_failed": "drop", "description": "description2",
+              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "5.0"},
+             {"rule_name": "rule3", "action_if_failed": "drop", "description": "description3",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.0"}
+         ],
          "dq_run_time": {"final_query_dq_run_time": 0.0, "source_agg_dq_run_time": 0.0, "row_dq_run_time": 29.3,
                          "source_query_dq_run_time": 0.0, "final_agg_dq_run_time": 11.0, "run_time": 108.5},
          "dq_rules": {"rules": {"num_dq_rules": 14, "num_row_dq_rules": 3},
@@ -272,6 +290,14 @@ def test_write_df_to_table(save_df_as_table,
              {"rule_name": "rule1", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 10},
              {"rule_name": "rule2", "action_if_failed": "drop", "rule_type": "row_dq", "failed_count": 7},
              {"rule_name": "rule3", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 8}],
+         "row_dq_error_threshold": [
+             {"rule_name": "rule1", "action_if_failed": "drop", "description": "description1",
+              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "10.0"},
+             {"rule_name": "rule2", "action_if_failed": "drop", "description": "description2",
+              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "5.0"},
+             {"rule_name": "rule3", "action_if_failed": "drop", "description": "description3",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.0"}
+         ],
          "dq_run_time": {"final_query_dq_run_time": 22.7, "source_agg_dq_run_time": 17.2, "row_dq_run_time": 29.3,
                          "source_query_dq_run_time": 0.0, "final_agg_dq_run_time": 0.0, "run_time": 108.5},
          "dq_rules": {"rules": {"num_dq_rules": 17, "num_row_dq_rules": 10},
@@ -300,6 +326,14 @@ def test_write_df_to_table(save_df_as_table,
              {"rule_name": "rule1", "action_if_failed": "fail", "rule_type": "row_dq", "failed_count": 10},
              {"rule_name": "rule2", "action_if_failed": "drop", "rule_type": "row_dq", "failed_count": 7},
              {"rule_name": "rule3", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 8}],
+         "row_dq_error_threshold": [
+             {"rule_name": "rule1", "action_if_failed": "drop", "description": "description1",
+              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "10.0"},
+             {"rule_name": "rule2", "action_if_failed": "drop", "description": "description2",
+              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "5.0"},
+             {"rule_name": "rule3", "action_if_failed": "drop", "description": "description3",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.0"}
+         ],
          "dq_run_time": {"final_query_dq_run_time": 0.7, "source_agg_dq_run_time": 17.2, "row_dq_run_time": 29.3,
                          "source_query_dq_run_time": 0.0, "final_agg_dq_run_time": 0.0, "run_time": 118.5},
          "dq_rules": {"rules": {"num_dq_rules": 18, "num_row_dq_rules": 5},
@@ -332,6 +366,14 @@ def test_write_df_to_table(save_df_as_table,
              {"rule_name": "rule1", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 100},
              {"rule_name": "rule2", "action_if_failed": "drop", "rule_type": "row_dq", "failed_count": 100},
              {"rule_name": "rule3", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 88}],
+         "row_dq_error_threshold": [
+             {"rule_name": "rule1", "action_if_failed": "drop", "description": "description1",
+              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "10.0"},
+             {"rule_name": "rule2", "action_if_failed": "drop", "description": "description2",
+              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "5.0"},
+             {"rule_name": "rule3", "action_if_failed": "drop", "description": "description3",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.0"}
+         ],
          "dq_run_time": {"final_query_dq_run_time": 22.7, "source_agg_dq_run_time": 0.0, "row_dq_run_time": 29.3,
                          "source_query_dq_run_time": 10.8, "final_agg_dq_run_time": 0.0, "run_time": 108.5},
          "dq_rules": {"rules": {"num_dq_rules": 18, "num_row_dq_rules": 8},
@@ -359,6 +401,14 @@ def test_write_df_to_table(save_df_as_table,
              {"rule_name": "rule2", "action_if_failed": "drop", "rule_type": "row_dq", "failed_count": 100},
              {"rule_name": "rule3", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 88},
              {"rule_name": "rule4", "action_if_failed": "fail", "rule_type": "row_dq", "failed_count": 60}],
+         "row_dq_error_threshold": [
+             {"rule_name": "rule1", "action_if_failed": "drop", "description": "description1",
+              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "10.0"},
+             {"rule_name": "rule2", "action_if_failed": "drop", "description": "description2",
+              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "5.0"},
+             {"rule_name": "rule3", "action_if_failed": "drop", "description": "description3",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.0"}
+         ],
          "dq_run_time": {"final_query_dq_run_time": 0.0, "source_agg_dq_run_time": 0.0, "row_dq_run_time": 29.3,
                          "source_query_dq_run_time": 0.0, "final_agg_dq_run_time": 0.0, "run_time": 108.5},
          "dq_rules": {"rules": {"num_dq_rules": 23, "num_row_dq_rules": 5},
@@ -411,15 +461,18 @@ def test_write_error_stats(_mock_context,
     setattr(_mock_context, "get_source_query_dq_result", input_record.get("source_query_dq_results"))
     setattr(_mock_context, "get_final_query_dq_result", input_record.get("final_query_dq_results"))
     setattr(_mock_context, "get_summarised_row_dq_res", input_record.get("row_dq_res_summary"))
+    setattr(_mock_context, "get_rules_exceeds_threshold", input_record.get("row_dq_error_threshold"))
 
-    setattr(_mock_context, "get_dq_run_time", round(input_record.get("dq_run_time").get("run_time"),1))
-    setattr(_mock_context, "get_source_agg_dq_run_time", round(input_record.get("dq_run_time").get("source_agg_dq_run_time"),1))
+    setattr(_mock_context, "get_dq_run_time", round(input_record.get("dq_run_time").get("run_time"), 1))
+    setattr(_mock_context, "get_source_agg_dq_run_time",
+            round(input_record.get("dq_run_time").get("source_agg_dq_run_time"), 1))
     setattr(_mock_context, "get_source_query_dq_run_time",
-            round(input_record.get("dq_run_time").get("source_query_dq_run_time"),1))
-    setattr(_mock_context, "get_row_dq_run_time", round(input_record.get("dq_run_time").get("row_dq_run_time"),1))
-    setattr(_mock_context, "get_final_agg_dq_run_time", round(input_record.get("dq_run_time").get("final_agg_dq_run_time"),1))
+            round(input_record.get("dq_run_time").get("source_query_dq_run_time"), 1))
+    setattr(_mock_context, "get_row_dq_run_time", round(input_record.get("dq_run_time").get("row_dq_run_time"), 1))
+    setattr(_mock_context, "get_final_agg_dq_run_time",
+            round(input_record.get("dq_run_time").get("final_agg_dq_run_time"), 1))
     setattr(_mock_context, "get_final_query_dq_run_time",
-            round(input_record.get("dq_run_time").get("final_query_dq_run_time"),1))
+            round(input_record.get("dq_run_time").get("final_query_dq_run_time"), 1))
 
     setattr(_mock_context, "get_num_row_dq_rules",
             input_record.get("dq_rules").get("rules").get("num_row_dq_rules"))
@@ -468,7 +521,6 @@ def test_write_error_stats(_mock_context,
 
     # Assert spark conf.set
     # _spark_set.assert_called_with('spark.sql.session.timeZone', 'Etc/UTC')
-
 
 
 @pytest.mark.parametrize('table_name, rule_type, spark_conf, options',
@@ -534,28 +586,29 @@ def test_write_error_records_final_dependent(save_df_as_table,
     assert save_df_args[0][4] == options
     save_df_as_table.assert_called_once_with(_fixture_writer, save_df_args[0][1], table_name, spark_conf, options)
 
+
 @pytest.mark.parametrize("test_data, expected_result", [
-        (
-                [
-                    {"meta_row_dq_results": [{"rule": "rule1"}, {"rule": "rule2"}]},
-                    {"meta_row_dq_results": [{"rule": "rule1"}]},
-                    {"meta_row_dq_results": [{"rule": "rule2"}]},
-                ],
-                [
-                    {"rule": "rule1", "failed_row_count": "2"},
-                    {"rule": "rule2", "failed_row_count": "2"},
-                ]
-        ),
-        (
-                [
-                    {"meta_row_dq_results": [{"rule": "rule1"}]},
-                    {"meta_row_dq_results": [{"rule": "rule1"}]},
-                ],
-                [
-                    {"rule": "rule1", "failed_row_count": "2"},
-                ]
-        )
-    ])
+    (
+            [
+                {"meta_row_dq_results": [{"rule": "rule1"}, {"rule": "rule2"}]},
+                {"meta_row_dq_results": [{"rule": "rule1"}]},
+                {"meta_row_dq_results": [{"rule": "rule2"}]},
+            ],
+            [
+                {"rule": "rule1", "failed_row_count": "2"},
+                {"rule": "rule2", "failed_row_count": "2"},
+            ]
+    ),
+    (
+            [
+                {"meta_row_dq_results": [{"rule": "rule1"}]},
+                {"meta_row_dq_results": [{"rule": "rule1"}]},
+            ],
+            [
+                {"rule": "rule1", "failed_row_count": "2"},
+            ]
+    )
+])
 def test_generate_summarised_row_dq_res(test_data, expected_result):
     context = SparkExpectationsContext("product1")
     writer = SparkExpectationsWriter("product1", context)
@@ -570,14 +623,15 @@ def test_generate_summarised_row_dq_res(test_data, expected_result):
     result = context.get_summarised_row_dq_res
     assert result == expected_result
 
+
 @pytest.mark.parametrize("test_data", [
-        (
-                [
-                    {"row_dq_results": [{"rule": "rule1"}, {"rule": "rule2"}]},
-                    {"row_dq_results": [{"rule": "rule1"}, {"rule": "rule2"}]}
-                ]
-        ),
-    ])
+    (
+            [
+                {"row_dq_results": [{"rule": "rule1"}, {"rule": "rule2"}]},
+                {"row_dq_results": [{"rule": "rule1"}, {"rule": "rule2"}]}
+            ]
+    ),
+])
 def test_generate_summarised_row_dq_res_exception(test_data, _fixture_writer):
     # Create test DataFrame
     test_df = spark.createDataFrame(test_data)
@@ -624,3 +678,152 @@ def test_write_error_records_final_exception(_fixture_employee,
                                                   options={'mode': 'insert',
                                                            "format": "test",
                                                            "mergeSchema": "true"})
+
+
+@pytest.mark.parametrize('dq_rules, summarised_row_dq, expected_result',
+                         [
+                             (
+                                     {
+                                         'row_dq_rules': [
+                                             {
+                                                 "rule": "rule1",
+                                                 "enable_error_drop_alert": True,
+                                                 "action_if_failed": "drop",
+                                                 "description": "description1",
+                                                 "rule_type": "row_dq",
+                                                 "error_drop_threshold": "10",
+                                             }
+
+                                         ]
+
+                                     },
+
+                                     [
+                                         {"rule": "rule1", "failed_row_count": 10}
+                                     ],
+
+                                     [
+                                         {"rule_name": "rule1",
+                                          "action_if_failed": "drop",
+                                          "description": "description1",
+                                          "rule_type": "row_dq",
+                                          "error_drop_threshold": "10",
+                                          "error_drop_percentage": "10.0"}
+                                     ],
+                             ),
+                             (
+                                     {
+                                         'row_dq_rules': [
+                                             {
+                                                 "rule": "rule3",
+                                                 "enable_error_drop_alert": True,
+                                                 "action_if_failed": "ignore",
+                                                 "description": "description3",
+                                                 "rule_type": "row_dq",
+                                                 "error_drop_threshold": "10",
+                                             }
+                                         ]
+
+                                     },
+
+                                     [
+                                         {"rule": "rule3", "failed_row_count": 10}
+                                     ],
+
+                                     [
+                                         {"rule_name": "rule3",
+                                          "action_if_failed": "ignore",
+                                          "description": "description3",
+                                          "rule_type": "row_dq",
+                                          "error_drop_threshold": "10",
+                                          "error_drop_percentage": "10.0"}
+                                     ],
+                             ),
+                             (
+                                     {
+                                         'row_dq_rules': [
+                                             {
+                                                 "rule": "rule4",
+                                                 "enable_error_drop_alert": True,
+                                                 "action_if_failed": "fail",
+                                                 "description": "description4",
+                                                 "rule_type": "row_dq",
+                                                 "error_drop_threshold": "10",
+                                             }
+                                         ]
+
+                                     },
+
+                                     [
+                                         {"rule": "rule4", "failed_row_count": 10}
+                                     ],
+
+                                     [
+                                         {"rule_name": "rule4",
+                                          "action_if_failed": "fail",
+                                          "description": "description4",
+                                          "rule_type": "row_dq",
+                                          "error_drop_threshold": "10",
+                                          "error_drop_percentage": "10.0"}
+                                     ],
+                             ),
+                             (
+                                     {
+                                         'row_dq_rules': [
+                                             {
+                                                 "rule": "rule1",
+                                                 "enable_error_drop_alert": True,
+                                                 "action_if_failed": "drop",
+                                                 "description": "description1",
+                                                 "rule_type": "row_dq",
+                                                 "error_drop_threshold": "10",
+                                             },
+                                             {
+                                                 "rule": "rule2",
+                                                 "enable_error_drop_alert": True,
+                                                 "action_if_failed": "drop",
+                                                 "description": "description2",
+                                                 "rule_type": "row_dq",
+                                                 "error_drop_threshold": "10",
+                                             }
+
+                                         ]
+
+                                     },
+
+                                     [
+                                         {"rule": "rule1", "failed_row_count": 10},
+                                         {"rule": "rule2", "failed_row_count": 20}
+                                     ],
+
+                                     [
+                                         {"rule_name": "rule1",
+                                          "action_if_failed": "drop",
+                                          "description": "description1",
+                                          "rule_type": "row_dq",
+                                          "error_drop_threshold": "10",
+                                          "error_drop_percentage": "10.0"},
+
+                                         {"rule_name": "rule2",
+                                          "action_if_failed": "drop",
+                                          "description": "description2",
+                                          "rule_type": "row_dq",
+                                          "error_drop_threshold": "10",
+                                          "error_drop_percentage": "20.0"}
+
+                                     ],
+                             )
+                         ]
+                         )
+def test_generate_rules_exceeds_threshold(dq_rules,
+                                          summarised_row_dq,
+                                          expected_result,
+                                          ):
+    _context = SparkExpectationsContext("product1")
+    _writer = SparkExpectationsWriter("product1", _context)
+    _context.set_summarised_row_dq_res(summarised_row_dq)
+    _context.set_input_count(100)
+
+    # Check the results
+    _writer.generate_rules_exceeds_threshold(dq_rules)
+    assert _context.get_rules_exceeds_threshold == expected_result

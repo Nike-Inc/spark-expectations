@@ -125,6 +125,7 @@ class SparkExpectationsContext:
         }
         self._num_dq_rules: int = 0
         self._summarised_row_dq_res: Optional[List[Dict[str, str]]] = None
+        self._rules_error_per: Optional[List[dict]] = None
 
     @property
     def get_run_id(self) -> str:
@@ -570,12 +571,7 @@ class SparkExpectationsContext:
             int: Returns _input_count(int)
 
         """
-        if self._input_count:
-            return self._input_count
-        raise SparkExpectationsMiscException(
-            """The spark expectations context is not set completely, please assign '_input_count' before 
-            accessing it"""
-        )
+        return self._input_count
 
     def set_error_count(self, error_count: int = 0) -> None:
         self._error_count = error_count
@@ -730,7 +726,7 @@ class SparkExpectationsContext:
         Returns:
                float: error percentage
         """
-        if self._input_count:
+        if self._input_count > 0:
             return round((self.get_error_count / self.get_input_count) * 100, 2)
         return 0.0
 
@@ -742,7 +738,7 @@ class SparkExpectationsContext:
             float: output percentage
 
         """
-        if self._input_count:
+        if self._input_count > 0:
             return round((self.get_output_count / self.get_input_count) * 100, 2)
         return 0.0
 
@@ -1460,3 +1456,16 @@ class SparkExpectationsContext:
 
         """
         return self._summarised_row_dq_res
+
+    def set_rules_exceeds_threshold(self, rules: Optional[List[dict]] = None) -> None:
+        """
+        This function implements error percentage for each rule type
+        """
+        self._rules_error_per = rules
+
+    @property
+    def get_rules_exceeds_threshold(self) -> Optional[List[dict]]:
+        """
+        This function returns error percentage for each rule
+        """
+        return self._rules_error_per
