@@ -625,63 +625,6 @@ def test_generate_summarised_row_dq_res(test_data, expected_result):
     result = context.get_summarised_row_dq_res
     assert result == expected_result
 
-
-@pytest.mark.parametrize("test_data", [
-    (
-            [
-                {"row_dq_results": [{"rule": "rule1"}, {"rule": "rule2"}]},
-                {"row_dq_results": [{"rule": "rule1"}, {"rule": "rule2"}]}
-            ]
-    ),
-])
-def test_generate_summarised_row_dq_res_exception(test_data, _fixture_writer):
-    # Create test DataFrame
-    test_df = spark.createDataFrame(test_data)
-
-    with pytest.raises(SparkExpectationsMiscException,
-                       match=r"error occurred created summarised row dq statistics .*"):
-        # Call the function under test
-        _fixture_writer.generate_summarised_row_dq_res(test_df, "row_dq")
-
-
-def test_save_df_as_table_exception(_fixture_employee,
-                                    _fixture_writer):
-    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException,
-                       match=r"error occurred while writing data in to the table .*"):
-        _fixture_writer.save_df_as_table(_fixture_employee, "employee_table",
-                                         {"spark.sql.session.timeZone": "Etc/UTC"},
-                                         {'mode': 'insert', "format": "test", "mergeSchema": "true"})
-
-
-def test_write_df_to_table_exception(_fixture_employee,
-                                     _fixture_writer):
-    with pytest.raises(SparkExpectationsMiscException,
-                       match=r"error occurred while writing data in to the table .*"):
-        _fixture_writer.write_df_to_table(_fixture_employee, "employee_table", options={'mode': 'insert',
-                                                                                        "format": "test",
-                                                                                        "mergeSchema": "true"})
-
-
-def test_write_error_stats_exception(_fixture_employee,
-                                     _fixture_writer):
-    with pytest.raises(SparkExpectationsMiscException,
-                       match=r"error occurred while saving the data into the stats table .*"):
-        _fixture_writer.write_error_stats()
-
-
-def test_write_error_records_final_exception(_fixture_employee,
-                                             _fixture_writer,
-                                             _fixture_dq_dataset):
-    with pytest.raises(SparkExpectationsMiscException,
-                       match=r"error occurred while saving data into the final error table .*"):
-        _fixture_writer.write_error_records_final(_fixture_dq_dataset,
-                                                  "employee_table",
-                                                  "row_dq",
-                                                  options={'mode': 'insert',
-                                                           "format": "test",
-                                                           "mergeSchema": "true"})
-
-
 @pytest.mark.parametrize('dq_rules, summarised_row_dq, expected_result',
                          [
                              (
@@ -814,7 +757,21 @@ def test_write_error_records_final_exception(_fixture_employee,
                                           "error_drop_percentage": "20.0"}
 
                                      ],
-                             )
+                             ),
+                             ({
+                                  'row_dq_rules': [
+                                      {
+                                          "rule": "rule1",
+                                          "enable_error_drop_alert": True,
+                                          "action_if_failed": "drop",
+                                          "description": "description1",
+                                          "rule_type": "row_dq",
+                                          "error_drop_threshold": "10",
+                                      },
+                                  ]
+                              },
+                              None,
+                              None)
                          ]
                          )
 def test_generate_rules_exceeds_threshold(dq_rules,
@@ -829,3 +786,68 @@ def test_generate_rules_exceeds_threshold(dq_rules,
     # Check the results
     _writer.generate_rules_exceeds_threshold(dq_rules)
     assert _context.get_rules_exceeds_threshold == expected_result
+
+@pytest.mark.parametrize("test_data", [
+    (
+            [
+                {"row_dq_results": [{"rule": "rule1"}, {"rule": "rule2"}]},
+                {"row_dq_results": [{"rule": "rule1"}, {"rule": "rule2"}]}
+            ]
+    ),
+])
+def test_generate_summarised_row_dq_res_exception(test_data, _fixture_writer):
+    # Create test DataFrame
+    test_df = spark.createDataFrame(test_data)
+
+    with pytest.raises(SparkExpectationsMiscException,
+                       match=r"error occurred created summarised row dq statistics .*"):
+        # Call the function under test
+        _fixture_writer.generate_summarised_row_dq_res(test_df, "row_dq")
+
+
+def test_save_df_as_table_exception(_fixture_employee,
+                                    _fixture_writer):
+    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException,
+                       match=r"error occurred while writing data in to the table .*"):
+        _fixture_writer.save_df_as_table(_fixture_employee, "employee_table",
+                                         {"spark.sql.session.timeZone": "Etc/UTC"},
+                                         {'mode': 'insert', "format": "test", "mergeSchema": "true"})
+
+
+def test_write_df_to_table_exception(_fixture_employee,
+                                     _fixture_writer):
+    with pytest.raises(SparkExpectationsMiscException,
+                       match=r"error occurred while writing data in to the table .*"):
+        _fixture_writer.write_df_to_table(_fixture_employee, "employee_table", options={'mode': 'insert',
+                                                                                        "format": "test",
+                                                                                        "mergeSchema": "true"})
+
+
+def test_write_error_stats_exception(_fixture_employee,
+                                     _fixture_writer):
+    with pytest.raises(SparkExpectationsMiscException,
+                       match=r"error occurred while saving the data into the stats table .*"):
+        _fixture_writer.write_error_stats()
+
+
+def test_write_error_records_final_exception(_fixture_employee,
+                                             _fixture_writer,
+                                             _fixture_dq_dataset):
+    with pytest.raises(SparkExpectationsMiscException,
+                       match=r"error occurred while saving data into the final error table .*"):
+        _fixture_writer.write_error_records_final(_fixture_dq_dataset,
+                                                  "employee_table",
+                                                  "row_dq",
+                                                  options={'mode': 'insert',
+                                                           "format": "test",
+                                                           "mergeSchema": "true"})
+
+def test_generate_rules_exceeds_threshold_exception():
+    _context = SparkExpectationsContext("product1")
+    _writer = SparkExpectationsWriter("product1", _context)
+    _context.set_summarised_row_dq_res([{}])
+    _context.set_input_count(100)
+
+    with pytest.raises(SparkExpectationsMiscException,
+                       match=r"An error occurred while creating error threshold list : .*"):
+        _writer.generate_rules_exceeds_threshold(None)
