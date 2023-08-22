@@ -9,6 +9,7 @@ from spark_expectations.core.exceptions import SparkExpectationsMiscException
 
 spark = get_spark_session()
 
+
 @pytest.fixture(name="_fixture_local_nsp_topic")
 def fixture_setup_local_nsp_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -28,7 +29,6 @@ def fixture_setup_local_nsp_topic():
     else:
         yield "A Kafka server has been launched within a Docker container for the purpose of conducting tests in" \
               " a Jenkins environment"
-
 
 
 @pytest.fixture(name="_fixture_create_stats_table")
@@ -76,6 +76,7 @@ def fixture_create_stats_table():
     # remove database
     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
 
+
 @pytest.mark.parametrize("input_record, expected_result", [
     ({
          "input_count": 100,
@@ -97,13 +98,13 @@ def fixture_create_stats_table():
              {"rule_name": "rule1", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 10},
              {"rule_name": "rule2", "action_if_failed": "drop", "rule_type": "row_dq", "failed_count": 5},
              {"rule_name": "rule3", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 3}],
-"row_dq_error_threshold": [
-             {"rule_name": "rule1", "action_if_failed": "drop", "description": "description1",
-              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "10.0"},
+         "row_dq_error_threshold": [
+             {"rule_name": "rule1", "action_if_failed": "ignore", "description": "description1",
+              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "1.0"},
              {"rule_name": "rule2", "action_if_failed": "drop", "description": "description2",
-              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "5.0"},
-             {"rule_name": "rule3", "action_if_failed": "drop", "description": "description3",
-              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.0"}
+              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "0.5"},
+             {"rule_name": "rule3", "action_if_failed": "ignore", "description": "description3",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.3"}
          ],
          "dq_run_time": {"final_query_dq_run_time": 22.7, "source_agg_dq_run_time": 17.2, "row_dq_run_time": 29.3,
                          "source_query_dq_run_time": 22.4, "final_agg_dq_run_time": 11.0, "run_time": 108.5},
@@ -133,13 +134,13 @@ def fixture_create_stats_table():
              {"rule_name": "rule1", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 10},
              {"rule_name": "rule2", "action_if_failed": "drop", "rule_type": "row_dq", "failed_count": 7},
              {"rule_name": "rule3", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 8}],
-"row_dq_error_threshold": [
-             {"rule_name": "rule1", "action_if_failed": "drop", "description": "description1",
-              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "10.0"},
+         "row_dq_error_threshold": [
+             {"rule_name": "rule1", "action_if_failed": "ignore", "description": "description1",
+              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "1.0"},
              {"rule_name": "rule2", "action_if_failed": "drop", "description": "description2",
-              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "5.0"},
-             {"rule_name": "rule3", "action_if_failed": "drop", "description": "description3",
-              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.0"}
+              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "0.7"},
+             {"rule_name": "rule3", "action_if_failed": "ignore", "description": "description3",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.8"}
          ],
          "dq_run_time": {"final_query_dq_run_time": 0.0, "source_agg_dq_run_time": 0.0, "row_dq_run_time": 29.3,
                          "source_query_dq_run_time": 0.0, "final_agg_dq_run_time": 11.0, "run_time": 108.5},
@@ -171,13 +172,13 @@ def fixture_create_stats_table():
              {"rule_name": "rule1", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 10},
              {"rule_name": "rule2", "action_if_failed": "drop", "rule_type": "row_dq", "failed_count": 7},
              {"rule_name": "rule3", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 8}],
-"row_dq_error_threshold": [
-             {"rule_name": "rule1", "action_if_failed": "drop", "description": "description1",
-              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "10.0"},
+         "row_dq_error_threshold": [
+             {"rule_name": "rule1", "action_if_failed": "ignore", "description": "description1",
+              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "1.0"},
              {"rule_name": "rule2", "action_if_failed": "drop", "description": "description2",
-              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "5.0"},
-             {"rule_name": "rule3", "action_if_failed": "drop", "description": "description3",
-              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.0"}
+              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "0.7"},
+             {"rule_name": "rule3", "action_if_failed": "ignore", "description": "description3",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.8"}
          ],
          "dq_run_time": {"final_query_dq_run_time": 22.7, "source_agg_dq_run_time": 17.2, "row_dq_run_time": 29.3,
                          "source_query_dq_run_time": 0.0, "final_agg_dq_run_time": 0.0, "run_time": 108.5},
@@ -196,7 +197,7 @@ def fixture_create_stats_table():
 ])
 @patch('spark_expectations.sinks.utils.writer.SparkExpectationsContext', autospec=True, spec_set=True)
 def test_collect_stats_on_success_failure(_mock_context, input_record,
-                           expected_result, _fixture_local_nsp_topic, _fixture_create_stats_table):
+                                          expected_result, _fixture_local_nsp_topic, _fixture_create_stats_table):
     # create mock _context object
     setattr(_mock_context, "get_dq_stats_table_name", "test_dq_stats_table")
     setattr(_mock_context, "get_run_date_name", "meta_dq_run_date")
@@ -250,9 +251,8 @@ def test_collect_stats_on_success_failure(_mock_context, input_record,
     setattr(_mock_context, "get_num_query_dq_rules",
             input_record.get("dq_rules").get("query_dq_rules"))
 
-
     writer = SparkExpectationsWriter("product1", _mock_context)
-    statistics_writer_obj= SparkExpectationsCollectStatistics("product1", _mock_context, writer)
+    statistics_writer_obj = SparkExpectationsCollectStatistics("product1", _mock_context, writer)
 
     @statistics_writer_obj.collect_stats_on_success_failure()
     def exec_func():
@@ -290,6 +290,7 @@ def test_collect_stats_on_success_failure(_mock_context, input_record,
     ).load().orderBy(col('timestamp').desc()).limit(1).selectExpr(
         "cast(value as string) as value").collect() == stats_table.selectExpr("to_json(struct(*)) AS value").collect()
 
+
 @pytest.mark.parametrize("input_record, expected_result", [
     ({
          "input_count": 100,
@@ -305,13 +306,13 @@ def test_collect_stats_on_success_failure(_mock_context, input_record,
              {"rule_name": "rule1", "action_if_failed": "fail", "rule_type": "row_dq", "failed_count": 10},
              {"rule_name": "rule2", "action_if_failed": "drop", "rule_type": "row_dq", "failed_count": 7},
              {"rule_name": "rule3", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 8}],
-"row_dq_error_threshold": [
-             {"rule_name": "rule1", "action_if_failed": "drop", "description": "description1",
-              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "10.0"},
+         "row_dq_error_threshold": [
+             {"rule_name": "rule1", "action_if_failed": "fail", "description": "description1",
+              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "1.0"},
              {"rule_name": "rule2", "action_if_failed": "drop", "description": "description2",
-              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "5.0"},
-             {"rule_name": "rule3", "action_if_failed": "drop", "description": "description3",
-              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.0"}
+              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "0.7"},
+             {"rule_name": "rule3", "action_if_failed": "ignore", "description": "description3",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.8"}
          ],
          "dq_run_time": {"final_query_dq_run_time": 0.7, "source_agg_dq_run_time": 17.2, "row_dq_run_time": 29.3,
                          "source_query_dq_run_time": 0.0, "final_agg_dq_run_time": 0.0, "run_time": 118.5},
@@ -345,13 +346,13 @@ def test_collect_stats_on_success_failure(_mock_context, input_record,
              {"rule_name": "rule1", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 100},
              {"rule_name": "rule2", "action_if_failed": "drop", "rule_type": "row_dq", "failed_count": 100},
              {"rule_name": "rule3", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 88}],
-"row_dq_error_threshold": [
-             {"rule_name": "rule1", "action_if_failed": "drop", "description": "description1",
-              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "10.0"},
+         "row_dq_error_threshold": [
+             {"rule_name": "rule1", "action_if_failed": "ignore", "description": "description1",
+              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "100.0"},
              {"rule_name": "rule2", "action_if_failed": "drop", "description": "description2",
-              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "5.0"},
-             {"rule_name": "rule3", "action_if_failed": "drop", "description": "description3",
-              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.0"}
+              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "100.0"},
+             {"rule_name": "rule3", "action_if_failed": "ignore", "description": "description3",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "88.0"}
          ],
          "dq_run_time": {"final_query_dq_run_time": 22.7, "source_agg_dq_run_time": 0.0, "row_dq_run_time": 29.3,
                          "source_query_dq_run_time": 10.8, "final_agg_dq_run_time": 0.0, "run_time": 108.5},
@@ -380,13 +381,15 @@ def test_collect_stats_on_success_failure(_mock_context, input_record,
              {"rule_name": "rule2", "action_if_failed": "drop", "rule_type": "row_dq", "failed_count": 100},
              {"rule_name": "rule3", "action_if_failed": "ignore", "rule_type": "row_dq", "failed_count": 88},
              {"rule_name": "rule4", "action_if_failed": "fail", "rule_type": "row_dq", "failed_count": 60}],
-"row_dq_error_threshold": [
-             {"rule_name": "rule1", "action_if_failed": "drop", "description": "description1",
-              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "10.0"},
+         "row_dq_error_threshold": [
+             {"rule_name": "rule1", "action_if_failed": "ignore", "description": "description1",
+              "rule_type": "row_dq", "error_drop_threshold": "15", "error_drop_percentage": "100.0"},
              {"rule_name": "rule2", "action_if_failed": "drop", "description": "description2",
-              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "5.0"},
-             {"rule_name": "rule3", "action_if_failed": "drop", "description": "description3",
-              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "0.0"}
+              "rule_type": "row_dq", "error_drop_threshold": "10", "error_drop_percentage": "100.0"},
+             {"rule_name": "rule3", "action_if_failed": "ignore", "description": "description3",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "88.0"},
+             {"rule_name": "rule4", "action_if_failed": "ignore", "description": "description4",
+              "rule_type": "row_dq", "error_drop_threshold": "5", "error_drop_percentage": "60.0"}
          ],
          "dq_run_time": {"final_query_dq_run_time": 0.0, "source_agg_dq_run_time": 0.0, "row_dq_run_time": 29.3,
                          "source_query_dq_run_time": 0.0, "final_agg_dq_run_time": 0.0, "run_time": 108.5},
@@ -405,7 +408,8 @@ def test_collect_stats_on_success_failure(_mock_context, input_record,
 ])
 @patch('spark_expectations.sinks.utils.writer.SparkExpectationsContext', autospec=True, spec_set=True)
 def test_collect_stats_on_success_failure_exception(_mock_context, input_record,
-                           expected_result, _fixture_local_nsp_topic, _fixture_create_stats_table):
+                                                    expected_result, _fixture_local_nsp_topic,
+                                                    _fixture_create_stats_table):
     setattr(_mock_context, "get_dq_stats_table_name", "test_dq_stats_table")
     setattr(_mock_context, "get_run_date_name", "meta_dq_run_date")
     setattr(_mock_context, "get_run_date_time_name", "meta_dq_run_datetime")
@@ -459,7 +463,7 @@ def test_collect_stats_on_success_failure_exception(_mock_context, input_record,
             input_record.get("dq_rules").get("query_dq_rules"))
 
     writer = SparkExpectationsWriter("product1", _mock_context)
-    statistics_writer_obj = SparkExpectationsCollectStatistics("product1",_mock_context,  writer)
+    statistics_writer_obj = SparkExpectationsCollectStatistics("product1", _mock_context, writer)
 
     @statistics_writer_obj.collect_stats_on_success_failure()
     def func_exception():
