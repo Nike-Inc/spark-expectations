@@ -264,7 +264,7 @@ class SparkExpectations:
                     _log.info("The function dataframe is getting created")
                     # _df: DataFrame = func(*args, **kwargs)
                     _df: DataFrame = func(*args, **kwargs)
-                    table_name: str = expectations.pop("target_table_name")
+                    table_name: str = self._context.get_table_name
 
                     _input_count = _df.count()
                     _output_count: int = 0

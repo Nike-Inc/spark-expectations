@@ -82,6 +82,7 @@ create table if not exists `catalog`.`schema`.`dq_stats` (
     source_query_dq_results array<map<string, string>>,
     final_query_dq_results array<map<string, string>>,
     row_dq_res_summary array<map<string, string>>,
+    row_dq_error_threshold array<map<string, string>>,
     dq_status map<string, string>,
     dq_run_time map<string, float>,
     dq_rules map<string, map<string,int>>,

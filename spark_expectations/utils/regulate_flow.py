@@ -135,7 +135,9 @@ class SparkExpectationsRegulateFlow:
                         spark_conf,
                         options_error_table,
                     )
-                    _notification.notify_rules_exceeds_threshold(expectations)
+                    if _context.get_summarised_row_dq_res:
+                        _notification.notify_rules_exceeds_threshold(expectations)
+                        _writer.generate_rules_exceeds_threshold(expectations)
 
                     _context.print_dataframe_with_debugger(_error_df)
 

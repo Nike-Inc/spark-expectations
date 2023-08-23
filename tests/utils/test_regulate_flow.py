@@ -26,6 +26,7 @@ def fixture_mock_context():
     sparkexpectations_context.set_dq_stats_table_name("test_dq_stats_table")
     sparkexpectations_context._run_date = "2022-12-27 10:39:44"
     sparkexpectations_context._run_id = "product1_run_test"
+    sparkexpectations_context._input_count = 10
 
     return sparkexpectations_context
 
@@ -62,6 +63,7 @@ def fixture_create_stats_table():
     source_query_dq_results array<map<string, string>>,
     final_query_dq_results array<map<string, string>>,
     row_dq_res_summary array<map<string, string>>,
+    row_dq_error_threshold array<map<string, string>>,
     dq_status map<string, string>,
     dq_run_time map<string, float>,
     dq_rules map<string, map<string,int>>,
@@ -124,7 +126,10 @@ def fixture_create_stats_table():
                                              "expectation": "col1 > 1",
                                              "action_if_failed": "ignore",
                                              "tag": "validity",
-                                             "description": "col1 value must be greater than 1"
+                                             "description": "col1 value must be greater than 1",
+                                             "enable_error_drop_alert": True,
+                                             "error_drop_threshold": "10",
+
                                          }],
                                          "agg_dq_rules": [{}],
                                      },
@@ -181,7 +186,9 @@ def fixture_create_stats_table():
                                              "expectation": "col1 > 1",
                                              "action_if_failed": "drop",
                                              "tag": "validity",
-                                             "description": "col1 value must be greater than 1"
+                                             "description": "col1 value must be greater than 1",
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "5",
                                          }]
                                      },
                                      "row_dq",
@@ -230,7 +237,9 @@ def fixture_create_stats_table():
                                              "expectation": "col1 > 1",
                                              "action_if_failed": "fail",
                                              "tag": "validity",
-                                             "description": "col1 value must be greater than 1"
+                                             "description": "col1 value must be greater than 1",
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "3",
                                          }],
                                      },
                                      "row_dq",  # type of rule
@@ -278,7 +287,9 @@ def fixture_create_stats_table():
                                              "expectation": "col1 > 1",
                                              "action_if_failed": "ignore",
                                              "tag": "validity",
-                                             "description": "col1 value must be greater than 1"
+                                             "description": "col1 value must be greater than 1",
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "1",
                                          },
                                              {
                                                  "product_id": "product1",
@@ -340,7 +351,9 @@ def fixture_create_stats_table():
                                              "expectation": "col1 > 1",
                                              "action_if_failed": "ignore",
                                              "tag": "validity",
-                                             "description": "col1 value must be greater than 1"
+                                             "description": "col1 value must be greater than 1",
+                                             "enable_error_drop_alert": True,
+                                             "error_drop_threshold": "5",
                                          },
                                              {
                                                  "product_id": "product1",
@@ -351,7 +364,9 @@ def fixture_create_stats_table():
                                                  "expectation": "col2 in ('a', 'b')",
                                                  "action_if_failed": "fail",
                                                  "tag": "validity",
-                                                 "description": "col1 value must be greater than 3"
+                                                 "description": "col1 value must be greater than 3",
+                                                 "enable_error_drop_alert": True,
+                                                 "error_drop_threshold": "10",
                                              }],
                                          "agg_dq_rules": [{
                                              "product_id": "product1",
@@ -415,7 +430,9 @@ def fixture_create_stats_table():
                                                  "expectation": "col1 > 2",
                                                  "action_if_failed": "drop",
                                                  "tag": "validity",
-                                                 "description": "col1 value must be greater than 1"
+                                                 "description": "col1 value must be greater than 1",
+                                                 "enable_error_drop_alert": False,
+                                                 "error_drop_threshold": "5",
                                              },
                                              {
                                                  "product_id": "product1",
@@ -426,7 +443,9 @@ def fixture_create_stats_table():
                                                  "expectation": "col2 in ('a', 'b', 'c')",
                                                  "action_if_failed": "fail",
                                                  "tag": "validity",
-                                                 "description": "col1 value must be greater than 3"
+                                                 "description": "col1 value must be greater than 3",
+                                                 "enable_error_drop_alert": True,
+                                                 "error_drop_threshold": "5",
                                              }],
                                          "agg_dq_rules": [{
                                              "product_id": "product1",
@@ -493,7 +512,9 @@ def fixture_create_stats_table():
                                              "expectation": "col3 > 1",
                                              "action_if_failed": "ignore",
                                              "tag": "validity",
-                                             "description": "col1 value must be greater than 1"
+                                             "description": "col1 value must be greater than 1",
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "1",
                                          },
                                              {
                                                  "product_id": "product1",
@@ -504,7 +525,9 @@ def fixture_create_stats_table():
                                                  "expectation": "col1 > 2",
                                                  "action_if_failed": "drop",
                                                  "tag": "validity",
-                                                 "description": "col1 value must be greater than 1"
+                                                 "description": "col1 value must be greater than 1",
+                                                 "enable_error_drop_alert": True,
+                                                 "error_drop_threshold": "10",
                                              },
                                              {
                                                  "product_id": "product1",
@@ -515,7 +538,9 @@ def fixture_create_stats_table():
                                                  "expectation": "col2 in ('a', 'b', 'c')",
                                                  "action_if_failed": "fail",
                                                  "tag": "validity",
-                                                 "description": "col1 value must be greater than 3"
+                                                 "description": "col1 value must be greater than 3",
+                                                 "enable_error_drop_alert": False,
+                                                 "error_drop_threshold": "10",
                                              }]
                                      },
                                      "row_dq",  # type of rule
