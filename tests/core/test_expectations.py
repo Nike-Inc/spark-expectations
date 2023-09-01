@@ -2321,7 +2321,7 @@ def test_with_expectations(input_df,
 #         write_to_table,
 #         agg_dq=None,
 #         query_dq=None,
-#         spark_conf={user_config.se_notifications_on_fail: False},
+#         spark_conf={UserConfig.se_notifications_on_fail: False},
 #         options={'mode': 'overwrite', "format": "delta"},
 #         options_error_table={'mode': 'overwrite', "format": "delta"}
 #     )(mock_func)

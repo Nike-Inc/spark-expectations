@@ -7,7 +7,7 @@ from spark_expectations.secrets import (
     SparkExpectationsSecretPluginSpec,
     CerberusSparkExpectationsSecretPluginImpl,
     SparkExpectationsSecretsBackend)
-from spark_expectations.config.user_config import Constants as user_config
+from spark_expectations.config.user_config import Constants as UserConfig
 
 
 def test_get_secret_value(mocker):
@@ -33,7 +33,7 @@ def test_get_spark_expectations_tasks_hook(caplog):
     assert isinstance(result, pluggy._hooks._HookRelay)
 
 
-@patch("spark_expectations.secrets.CerberusClient", autospec=True, spec_set=True)
+@patch("cerberus.client.CerberusClient", autospec=True, spec_set=True)
 def test_get_secret_value_with_cerberus(mock_cerberus):
     cerberus_se_handler = CerberusSparkExpectationsSecretPluginImpl()
     # Simulate the return value of get_secrets_data
@@ -46,8 +46,8 @@ def test_get_secret_value_with_cerberus(mock_cerberus):
     # Set up the input parameters
     secret_key_path = "my_secret_key"
     secret_dict = {
-        user_config.secret_type: "cerberus",
-        user_config.cbs_url: "https://example.com/cerberus",
+        UserConfig.secret_type: "cerberus",
+        UserConfig.cbs_url: "https://example.com/cerberus",
     }
 
     # Call the function under test
@@ -64,15 +64,15 @@ def test_get_secret_value_with_cerberus_none():
     # Set up the input parameters
     secret_key_path = "my_secret_key"
     secret_dict = {
-        user_config.secret_type: "x",
-        user_config.cbs_url: "https://example.com/cerberus",
+        UserConfig.secret_type: "x",
+        UserConfig.cbs_url: "https://example.com/cerberus",
     }
 
     # Call the function under test
     result = cerberus_se_handler.get_secret_value(secret_key_path, secret_dict)
 
     # Assert the CerberusClient methods were called as expected
-    assert result == None
+    assert result is None
 
 
 @mock.patch("spark_expectations.secrets.get_spark_expectations_tasks_hook")
@@ -121,6 +121,6 @@ def test_get_secret_with_invalid_key(mock_hook):
 def test_get_secret_exception():
     # Create an instance of the class under test
     secret_manager = SparkExpectationsSecretsBackend(secret_dict={"my_secret_key": "my_secret",
-                                                                  user_config.secret_type: "databricks"})
+                                                                  UserConfig.secret_type: "databricks"})
     with pytest.raises(Exception):
         secret_manager.get_secret("my_secret_key")

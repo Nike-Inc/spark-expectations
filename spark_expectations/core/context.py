@@ -859,7 +859,7 @@ class SparkExpectationsContext:
             return self._se_streaming_stats_dict[user_config.secret_type].lower()
         raise SparkExpectationsMiscException(
             """The spark expectations context is not set completely, please assign 
-            'user_config.secret_type' before 
+            'UserConfig.secret_type' before 
             accessing it"""
         )
 
@@ -879,7 +879,7 @@ class SparkExpectationsContext:
             return _server_url_key
         raise SparkExpectationsMiscException(
             """The spark expectations context is not set completely, please assign
-            'user_config.cbs_kafka_server_url' before
+            'UserConfig.cbs_kafka_server_url' before
             accessing it"""
         )
 
@@ -899,7 +899,7 @@ class SparkExpectationsContext:
             return _token_endpoint_url
         raise SparkExpectationsMiscException(
             """The spark expectations context is not set completely, please assign
-            'user_config.cbs_secret_token_url' before
+            'UserConfig.cbs_secret_token_url' before
             accessing it"""
         )
 
@@ -919,7 +919,7 @@ class SparkExpectationsContext:
             return _token
         raise SparkExpectationsMiscException(
             """The spark expectations context is not set completely, please assign
-            'user_config.cbs_secret_token' before
+            'UserConfig.cbs_secret_token' before
             accessing it"""
         )
 
@@ -939,7 +939,7 @@ class SparkExpectationsContext:
             return _client_id
         raise SparkExpectationsMiscException(
             """The spark expectations context is not set completely, please assign
-            'user_config.cbs_secret_app_name' before
+            'UserConfig.cbs_secret_app_name' before
             accessing it"""
         )
 
@@ -959,7 +959,7 @@ class SparkExpectationsContext:
             return _topic_name
         raise SparkExpectationsMiscException(
             """The spark expectations context is not set completely, please assign 
-            'user_config.cbs_topic_name' before 
+            'UserConfig.cbs_topic_name' before 
             accessing it"""
         )
 
