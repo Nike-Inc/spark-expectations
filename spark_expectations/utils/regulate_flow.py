@@ -30,9 +30,7 @@ class SparkExpectationsRegulateFlow:
         expectations: Dict[str, List[dict]],
         table_name: str,
         _input_count: int = 0,
-        write_to_table: bool = False,
         spark_conf: Optional[Dict[str, Any]] = None,
-        options: Optional[Dict[str, str]] = None,
         options_error_table: Optional[Dict[str, str]] = None,
     ) -> Any:
         """
@@ -169,16 +167,6 @@ class SparkExpectationsRegulateFlow:
                     _final_query_dq_flag=final_query_dq_flag,
                 )
                 _context.print_dataframe_with_debugger(df)
-
-                if row_dq_flag and write_to_table:
-                    _log.info("Writing into the final table started")
-                    _writer.write_df_to_table(
-                        df,
-                        f"{table_name}",
-                        spark_conf=spark_conf,
-                        options=options,
-                    )
-                    _log.info("Writing into the final table ended")
 
                 return df, agg_dq_res, _error_count, "Passed"
 

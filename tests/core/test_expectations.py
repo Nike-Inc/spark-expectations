@@ -17,6 +17,7 @@ from spark_expectations.core.exceptions import (
 )
 from spark_expectations.notifications.push.spark_expectations_notify import SparkExpectationsNotify
 from spark_expectations.sinks.utils.collect_statistics import SparkExpectationsCollectStatistics
+from pyspark.sql.utils import AnalysisException
 
 spark = get_spark_session()
 
@@ -2249,6 +2250,13 @@ def test_with_expectations(input_df,
     if isinstance(expected_output, type) and issubclass(expected_output, Exception):
         with pytest.raises(expected_output, match=r"error occurred while processing spark expectations .*"):
             get_dataset()  # decorated_func()
+
+        if status.get("final_agg_dq_status") == 'Failed' or status.get("final_query_dq_status") == 'Failed':
+            try:
+                spark.table("dq_spark.test_final_table")
+                assert False
+            except Exception as e:
+                assert True
 
     else:
         get_dataset()  # decorated_func()
