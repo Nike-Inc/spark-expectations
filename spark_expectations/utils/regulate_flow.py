@@ -41,9 +41,7 @@ class SparkExpectationsRegulateFlow:
             expectations: expectations dictionary which contains rules
             table_name: name of the table
             _input_count: number of records in the source dataframe
-            write_to_table: Mark it as "True" if the dataframe need to be written as table
             spark_conf: spark configurations(which is optional)
-            options: spark configurations to write data into the final table(which is optional)
             options_error_table: spark configurations to write data into the error table(which is optional)
 
         Returns:
