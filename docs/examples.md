@@ -41,7 +41,7 @@ se_global_spark_Conf = {
 
 For all the below examples the below import and SparkExpectations class instantiation is mandatory
 
-When store for sensitive details is Databricks secret scope,construct config dictionary for authentication of kafka/nsp and 
+When store for sensitive details is Databricks secret scope,construct config dictionary for authentication of kafka and 
 avoid duplicate construction every time your project is initialized, you can create a dictionary with the following keys and their appropriate values. 
 This dictionary can be placed in the __init__.py file of your project or declared as a global variable.
 ```python
@@ -65,11 +65,11 @@ stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
 2. The `user_config.secret_type` used to define type of secret store and takes two values (`databricks`, `cererus`) by default will be `databricks`
 3. The `user_config.dbx_workspace_url` used to pass databricks workspace in the format `https://<workspace_name>.cloud.databricks.com`
 4. The `user_config.dbx_secret_scope` captures name of the secret scope
-5. The `user_config.dbx_kafka_server_url` captures secret key for the kafka/nsp url
-6. The ` user_config.dbx_secret_token_url` captures secret key for the kafka/nsp authentication app url
-7. The `user_config.dbx_secret_app_name` captures secret key for the kafka/nsp authentication app name
-8. The `user_config.dbx_secret_token` captures secret key for the kafka/nsp authentication app secret token
-9. The `user_config.dbx_topic_name` captures secret key for the kafka/nsp topic name
+5. The `user_config.dbx_kafka_server_url` captures secret key for the kafka url
+6. The ` user_config.dbx_secret_token_url` captures secret key for the kafka authentication app url
+7. The `user_config.dbx_secret_app_name` captures secret key for the kafka authentication app name
+8. The `user_config.dbx_secret_token` captures secret key for the kafka authentication app secret token
+9. The `user_config.dbx_topic_name` captures secret key for the kafka topic name
 
 Similarly when sensitive store is cerberus: 
 
@@ -94,11 +94,11 @@ stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
 2. The `user_config.secret_type` used to define type of secret store and takes two values (`databricks`, `cererus`) by default will be `databricks`
 3. The `user_config.cbs_url` used to pass cerberus url
 4. The `user_config.cbs_sdb_path` captures cerberus secure data store path
-5. The `user_config.cbs_kafka_server_url` captures path where kafka/nsp url stored in the cerberus sdb
-6. The ` user_config.cbs_secret_token_url` captures path where kafka/nsp authentication app stored in the cerberus sdb
-7. The `user_config.cbs_secret_app_name` captures path where kafka/nsp authentication app name stored in the cerberus sdb
-8. The `user_config.cbs_secret_token` captures path where kafka/nsp authentication app name secret token stored in the cerberus sdb
-9. The `user_config.cbs_topic_name`  captures path where kafka/nsp topic name stored in the cerberus sdb
+5. The `user_config.cbs_kafka_server_url` captures path where kafka url stored in the cerberus sdb
+6. The ` user_config.cbs_secret_token_url` captures path where kafka authentication app stored in the cerberus sdb
+7. The `user_config.cbs_secret_app_name` captures path where kafka authentication app name stored in the cerberus sdb
+8. The `user_config.cbs_secret_token` captures path where kafka authentication app name secret token stored in the cerberus sdb
+9. The `user_config.cbs_topic_name`  captures path where kafka topic name stored in the cerberus sdb
 
 ```python
 from spark_expectations.core.expectations import SparkExpectations

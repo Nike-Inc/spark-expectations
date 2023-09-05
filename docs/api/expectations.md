@@ -1,3 +1,7 @@
+---
+search:
+  exclude: true
+---
 
 ::: spark_expectations.core.expectations
     handler: python

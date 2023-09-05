@@ -2,7 +2,7 @@ site_name: Spark-Expectations
 site_author: Ashok Singamaneni
 copyright: Nike
 site_description: Spark-Expectations is a framework for running data quality rules inflight of spark job.
-site_url: https://github.com/Nike-Inc/spark-expectations
+site_url: https://engineering.nike.com/spark-expectations
 repo_name: nike/spark-expectations
 repo_url: https://github.com/Nike-Inc/spark-expectations
 
@@ -24,6 +24,7 @@ theme:
   features:
     - content.code.annotate
     - content.tooltips
+    - content.code.copy
     - navigation.expand
     - navigation.indexes
     - navigation.instant
@@ -31,6 +32,7 @@ theme:
     - navigation.tabs.sticky
     - navigation.top
     - navigation.tracking
+    - navigation.expand
     - search.highlight
     - search.share
     - search.suggest
@@ -44,6 +46,12 @@ theme:
 nav:
   - Home: 'index.md'
   - Setup: getting-started/setup.md
+  - Adoption_Guide:
+      - comparision: configurations/adoption_versions_comparsion.md
+  - Examples:
+      Rules: configurations/rules.md
+      Configure_Rules: configurations/configure_rules.md
+      Initialization_Examples: examples.md
   - Python API:
       - Core:
           Init: api/core_init.md
@@ -54,7 +62,7 @@ nav:
           Init: api/sinks_init.md
           Base_Writer_Plugin: api/base_sink_plugin.md
           Delta_Sink_Plugin: api/delta_sink_plugin.md
-          NSP_Sink_plugin: api/nsp_sink_plugin.md
+          Kafka_Sink_plugin: api/kafka_sink_plugin.md
           Utils:
             - Writer: api/writer.md
             - Sink_Decorater: api/sinks_decorater
@@ -64,7 +72,7 @@ nav:
           Email_Notification_plugin: api/email_plugin.md
           Slack_Notification_plugin: api/slack_plugin.md
           Push:
-          - Notification_Decorater: api/notifications_decorater
+            - Notification_Decorater: api/notifications_decorater
       - Utils:
           Actions: api/actions.md
           Reader: api/reader.md
@@ -73,14 +81,6 @@ nav:
       - Examples:
           Base_Setup: api/base_setup.md
           Sample_DQ: api/sample_dq.md
-
-  - Examples:
-      Rules: configurations/rules.md
-      Configure_Rules: configurations/configure_rules.md
-      Initialization_Examples: examples.md
-
-  - Adoption_Guide:
-      - comparision: configurations/adoption_versions_comparsion.md
 
 
 plugins:

@@ -14,21 +14,21 @@ from spark_expectations.core.exceptions import (
 spark = get_spark_session()
 
 
-@pytest.fixture(name="_fixture_local_nsp_topic")
+@pytest.fixture(name="_fixture_local_kafka_topic")
 def fixture_setup_local_nsp_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     if os.getenv('UNIT_TESTING_ENV') != "spark_expectations_unit_testing_on_github_actions":
         # remove if docker conatiner is running
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_nsp_stop_script.sh")
+        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
         # start docker container and create the topic
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_nsp_start_script.sh")
+        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
 
         yield "docker container started"
 
         # remove docker container
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_nsp_stop_script.sh")
+        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
     else:
         yield "A Kafka server has been launched within a Docker container for the purpose of conducting tests " \
@@ -431,7 +431,7 @@ def test_write_error_stats(_mock_context,
                            input_record,
                            expected_result,
                            _fixture_create_stats_table,
-                           _fixture_local_nsp_topic):
+                           _fixture_local_kafka_topic):
     # create mock _context object
     setattr(_mock_context, "get_dq_stats_table_name", "test_dq_stats_table")
     setattr(_mock_context, "get_run_date_name", "meta_dq_run_date")

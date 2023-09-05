@@ -4,27 +4,27 @@ from pyspark.sql.functions import col
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType
 from spark_expectations.core import get_spark_session
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
-from spark_expectations.sinks.plugins.nsp_writer import SparkExpectationsNspWritePluginImpl
+from spark_expectations.sinks.plugins.kafka_writer import SparkExpectationsKafkaWritePluginImpl
 
 spark = get_spark_session()
 
 
-@pytest.fixture(name="_fixture_local_nsp_topic")
+@pytest.fixture(name="_fixture_local_kafka_topic")
 def fixture_setup_local_nsp_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     if os.getenv('UNIT_TESTING_ENV') != "spark_expectations_unit_testing_on_github_actions":
 
         # remove if docker conatiner is running
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_nsp_stop_script.sh")
+        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
         # start docker container and create the topic
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_nsp_start_script.sh")
+        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
 
         yield "docker container started"
 
         # remove docker container
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_nsp_stop_script.sh")
+        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
     else:
         yield "A Kafka server has been launched within a Docker container for the purpose of conducting tests in " \
@@ -43,8 +43,8 @@ def fixture_dataset():
     return spark.createDataFrame(data, schema)
 
 
-def test_nsp_writer(_fixture_local_nsp_topic, _fixture_dataset):
-    nsp_writer_handler = SparkExpectationsNspWritePluginImpl()
+def test_kafka_writer(_fixture_local_kafka_topic, _fixture_dataset):
+    kafka_writer_handler = SparkExpectationsKafkaWritePluginImpl()
 
     write_args = {
         "stats_df": _fixture_dataset,
@@ -56,7 +56,7 @@ def test_nsp_writer(_fixture_local_nsp_topic, _fixture_dataset):
         "enable_se_streaming": True,
     }
 
-    nsp_writer_handler.writer(_write_args=write_args)
+    kafka_writer_handler.writer(_write_args=write_args)
 
     expected_df = spark.read.format("kafka").option(
         "kafka.bootstrap.servers", "localhost:9092"
@@ -71,8 +71,8 @@ def test_nsp_writer(_fixture_local_nsp_topic, _fixture_dataset):
         .collect()
 
 
-def test_nsp_writer_exception(_fixture_local_nsp_topic, _fixture_dataset):
-    delta_writer_handler = SparkExpectationsNspWritePluginImpl()
+def test_kafka_writer_exception(_fixture_local_kafka_topic, _fixture_dataset):
+    delta_writer_handler = SparkExpectationsKafkaWritePluginImpl()
 
     write_args = {
         "kafka_write_options": {

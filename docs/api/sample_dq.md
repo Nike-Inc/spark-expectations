@@ -1,3 +1,7 @@
+---
+search:
+  exclude: true
+---
 
 ::: spark_expectations.examples.sample_dq
     handler: python

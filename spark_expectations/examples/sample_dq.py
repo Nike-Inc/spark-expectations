@@ -97,4 +97,4 @@ if __name__ == "__main__":
 
     # remove docker container
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    os.system(f"sh {current_dir}/docker_scripts/docker_nsp_stop_script.sh")
+    os.system(f"sh {current_dir}/docker_scripts/docker_kafka_stop_script.sh")
