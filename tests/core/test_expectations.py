@@ -17,7 +17,6 @@ from spark_expectations.core.exceptions import (
 )
 from spark_expectations.notifications.push.spark_expectations_notify import SparkExpectationsNotify
 from spark_expectations.sinks.utils.collect_statistics import SparkExpectationsCollectStatistics
-from pyspark.sql.utils import AnalysisException
 
 spark = get_spark_session()
 
