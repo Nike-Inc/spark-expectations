@@ -1392,7 +1392,7 @@ Please run the below command to add constriants to the above created rules table
 <h3 id="dq-stats-table">DQ Stats Table<a class="headerlink" href="#dq-stats-table" title="Permanent link">&para;</a></h3>
 <p>In order to collect the stats/metrics for each data quality job run, the spark-expectations job will
 automatically create the stats table if it does not exist. The below sql statement can be used to create the table
-if you want to create it manually.</p>
+if you want to create it manually, but it is not recommended.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">create</span><span class="w"> </span><span class="k">table</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">exists</span><span class="w"> </span><span class="o">`</span><span class="k">catalog</span><span class="o">`</span><span class="p">.</span><span class="o">`</span><span class="k">schema</span><span class="o">`</span><span class="p">.</span><span class="o">`</span><span class="n">dq_stats</span><span class="o">`</span><span class="w"> </span><span class="p">(</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">    </span><span class="n">product_id</span><span class="w"> </span><span class="n">STRING</span><span class="p">,</span>
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">    </span><span class="k">table_name</span><span class="w"> </span><span class="n">STRING</span><span class="p">,</span>
