@@ -5,6 +5,7 @@
 # Contributors
 Thanks to the contributors who helped on this project apart from the authors
 * [Teja Dogiparthi](https://github.com/Tejadogiparthi)
+* [Phani Kumar Vemuri](https://www.linkedin.com/in/vemuriphani/)
 
 # Honorary Mentions
 Thanks to the team below for invaluable insights and support throughout the initial release of this project
