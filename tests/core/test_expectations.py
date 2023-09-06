@@ -21,22 +21,22 @@ from spark_expectations.sinks.utils.collect_statistics import SparkExpectationsC
 spark = get_spark_session()
 
 
-@pytest.fixture(name="_fixture_local_nsp_topic")
-def fixture_setup_local_nsp_topic():
+@pytest.fixture(name="_fixture_local_kafka_topic")
+def fixture_setup_local_kafka_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     if os.getenv('UNIT_TESTING_ENV') != "spark_expectations_unit_testing_on_github_actions":
 
         # remove if docker conatiner is running
-        os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_nsp_stop_script.sh")
+        os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
         # start docker container and create the topic
-        os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_nsp_start_script.sh")
+        os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
 
         yield "docker container started"
 
         # remove docker container
-        os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_nsp_stop_script.sh")
+        os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
     else:
         yield "A Kafka server has been launched within a Docker container for the purpose of conducting tests in " \
@@ -2207,7 +2207,7 @@ def test_with_expectations(input_df,
                            _fixture_spark_expectations,
                            _fixture_context,
                            _fixture_create_stats_table,
-                           _fixture_local_nsp_topic):
+                           _fixture_local_kafka_topic):
     spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
     spark_conf = {"spark.sql.session.timeZone": "Etc/UTC"}
     options = {'mode': 'overwrite', "format": "delta"}
@@ -2306,7 +2306,7 @@ def test_with_expectations(input_df,
 #         _fixture_dq_rules,
 #         _fixture_spark_expectations,
 #         _fixture_create_stats_table,
-#         _fixture_local_nsp_topic):
+#         _fixture_local_kafka_topic):
 #     _fixture_context._num_row_dq_rules = (_fixture_dq_rules.get("rules").get("num_row_dq_rules"))
 #     _fixture_context._num_dq_rules = (_fixture_dq_rules.get("rules").get("num_dq_rules"))
 #     _fixture_context._num_agg_dq_rules = (_fixture_dq_rules.get("agg_dq_rules"))
@@ -2321,7 +2321,7 @@ def test_with_expectations(input_df,
 #         write_to_table,
 #         agg_dq=None,
 #         query_dq=None,
-#         spark_conf={user_config.se_notifications_on_fail: False},
+#         spark_conf={UserConfig.se_notifications_on_fail: False},
 #         options={'mode': 'overwrite', "format": "delta"},
 #         options_error_table={'mode': 'overwrite', "format": "delta"}
 #     )(mock_func)
@@ -2367,7 +2367,7 @@ def test_with_expectations_dataframe_not_returned_exception(_fixture_create_data
                                                             _fixture_spark_expectations,
                                                             _fixture_df,
                                                             _fixture_expectations,
-                                                            _fixture_local_nsp_topic):
+                                                            _fixture_local_kafka_topic):
     partial_func = _fixture_spark_expectations.with_expectations(
         _fixture_expectations,
         spark_conf={user_config.se_notifications_on_fail: False},
@@ -2390,7 +2390,7 @@ def test_with_expectations_exception(_fixture_create_database,
                                      _fixture_df,
                                      _fixture_expectations,
                                      _fixture_create_stats_table,
-                                     _fixture_local_nsp_topic):
+                                     _fixture_local_kafka_topic):
     partial_func = _fixture_spark_expectations.with_expectations(
         _fixture_expectations,
         spark_conf={user_config.se_notifications_on_fail: False}
@@ -2490,7 +2490,7 @@ def test_error_threshold_breach(_mock_notification_hook, _mock_spark_expectation
                                 _fixture_spark_expectations,
                                 _fixture_context,
                                 _fixture_create_stats_table,
-                                _fixture_local_nsp_topic):
+                                _fixture_local_kafka_topic):
     spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
     spark_conf = {"spark.sql.session.timeZone": "Etc/UTC"}
     options = {'mode': 'overwrite', "format": "delta"}
@@ -2633,7 +2633,7 @@ def test_target_table_view_exception(input_df,
                                      _fixture_spark_expectations,
                                      _fixture_context,
                                      _fixture_create_stats_table,
-                                     _fixture_local_nsp_topic):
+                                     _fixture_local_kafka_topic):
     spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
     spark_conf = {"spark.sql.session.timeZone": "Etc/UTC"}
     options = {'mode': 'overwrite', "format": "delta"}
