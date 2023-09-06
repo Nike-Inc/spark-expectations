@@ -1,19 +1,18 @@
 import os
 from pyspark.sql.session import SparkSession
-from delta import configure_spark_with_delta_pip
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 def get_spark_session() -> SparkSession:
-    builder = SparkSession.builder
-
     if (
         os.environ.get("UNIT_TESTING_ENV")
         == "spark_expectations_unit_testing_on_github_actions"
     ) or (os.environ.get("SPARKEXPECTATIONS_ENV") == "local"):
+        from delta import configure_spark_with_delta_pip
+
         builder = (
-            builder.config(
+            SparkSession.builder.config(
                 "spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension"
             )
             .config(
@@ -30,9 +29,7 @@ def get_spark_session() -> SparkSession:
                 f"{current_dir}/../../jars/commons-pool2-2.8.0.jar,"
                 f"{current_dir}/../../jars/spark-token-provider-kafka-0-10_2.12-3.0.0.jar",
             )
-            # .config("spark.databricks.delta.checkLatestSchemaOnRead", "false")
         )
+        return configure_spark_with_delta_pip(builder).getOrCreate()
 
-    spark = configure_spark_with_delta_pip(builder).getOrCreate()
-
-    return spark
+    return SparkSession.getActiveSession()
