@@ -333,9 +333,7 @@ class SparkExpectations:
                             expectations=expectations,
                             table_name=table_name,
                             _input_count=_input_count,
-                            write_to_table=write_to_table,
                             spark_conf=spark_conf,
-                            options=options,
                             options_error_table=options_error_table,
                         )
 
@@ -525,6 +523,17 @@ class SparkExpectations:
                             _log.info(
                                 "ended processing data quality rules for query level expectations on final dataframe"
                             )
+
+                        if row_dq and write_to_table:
+                            _log.info("Writing into the final table started")
+                            self._writer.write_df_to_table(
+                                _row_dq_df,
+                                f"{table_name}",
+                                spark_conf=spark_conf,
+                                options=options,
+                            )
+                            _log.info("Writing into the final table ended")
+
                     else:
                         raise SparkExpectationsDataframeNotReturnedException(
                             "error occurred while processing spark "

@@ -2250,6 +2250,13 @@ def test_with_expectations(input_df,
         with pytest.raises(expected_output, match=r"error occurred while processing spark expectations .*"):
             get_dataset()  # decorated_func()
 
+        if status.get("final_agg_dq_status") == 'Failed' or status.get("final_query_dq_status") == 'Failed':
+            try:
+                spark.table("dq_spark.test_final_table")
+                assert False
+            except Exception as e:
+                assert True
+
     else:
         get_dataset()  # decorated_func()
 

@@ -1591,9 +1591,7 @@ def test_execute_dq_process(_mock_notify,
         expectations,
         "dq_spark.test_final_table",
         input_count,
-        write_to_table,
         spark_conf,
-        options,
         options_error_table
     )
 
@@ -1648,8 +1646,8 @@ def test_execute_dq_process(_mock_notify,
             assert _status == status.get("row_dq_status")
             assert _agg_dq_res == agg_or_query_dq_res
             assert output_count == expected_df.count()
-            if write_to_table is True:
-                assert output_count == spark.table("dq_spark.test_final_table").count()
+            # if write_to_table is True:
+            #     assert output_count == spark.table("dq_spark.test_final_table").count()
 
         elif (rule_type == "agg_dq"):
             # assert dq result for source_agg & final_agg
@@ -1817,9 +1815,7 @@ def test_execute_dq_process_exception(df,
             expectations,
             "dq_spark.test_final_table",
             input_count,
-            write_to_table,
             spark_conf,
-            options,
             options_error_table
         )
 
