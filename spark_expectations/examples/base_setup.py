@@ -17,7 +17,7 @@ def main() -> None:
 
     # run kafka locally in docker
     print("create or run if exist docker container")
-    os.system(f"sh {current_dir}/docker_scripts/docker_nsp_start_script.sh")
+    os.system(f"sh {current_dir}/docker_scripts/docker_kafka_start_script.sh")
 
     # create database
     os.system("rm -rf /tmp/hive/warehouse/dq_spark_local.db")

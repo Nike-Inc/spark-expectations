@@ -7,8 +7,8 @@ from spark_expectations.sinks import get_sink_hook, _sink_hook
 from spark_expectations.sinks.plugins.delta_writer import (
     SparkExpectationsDeltaWritePluginImpl,
 )
-from spark_expectations.sinks.plugins.nsp_writer import (
-    SparkExpectationsNspWritePluginImpl,
+from spark_expectations.sinks.plugins.kafka_writer import (
+    SparkExpectationsKafkaWritePluginImpl,
 )
 
 spark = get_spark_session()
@@ -28,22 +28,22 @@ def fixture_create_database():
     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db/test_dq_stats_table")
 
 
-@pytest.fixture(name="_fixture_local_nsp_topic")
+@pytest.fixture(name="_fixture_local_kafka_topic")
 def fixture_setup_local_nsp_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     if os.getenv('UNIT_TESTING_ENV') != "spark_expectations_unit_testing_on_github_actions":
 
         # remove if docker conatiner is running
-        os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_nsp_stop_script.sh")
+        os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
         # start docker container and create the topic
-        os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_nsp_start_script.sh")
+        os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
 
         yield "docker container started"
 
         # remove docker container
-        os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_nsp_stop_script.sh")
+        os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
     else:
         yield "A Kafka server has been launched within a Docker container for the purpose of conducting tests " \
@@ -71,10 +71,10 @@ def test_get_sink_hook():
 
     # Check that the correct plugins have been registered
     assert isinstance(pm.get_plugin("spark_expectations_delta_write"), SparkExpectationsDeltaWritePluginImpl)
-    assert isinstance(pm.get_plugin("spark_expectations_nsp_write"), SparkExpectationsNspWritePluginImpl)
+    assert isinstance(pm.get_plugin("spark_expectations_kafka_write"), SparkExpectationsKafkaWritePluginImpl)
 
 
-def test_sink_hook_write(_fixture_create_database, _fixture_local_nsp_topic, _fixture_dataset):
+def test_sink_hook_write(_fixture_create_database, _fixture_local_kafka_topic, _fixture_dataset):
     write_args = {
         "stats_df": _fixture_dataset,
         "table_name": "dq_spark.test_table",

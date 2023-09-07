@@ -1,3 +1,8 @@
+---
+search:
+  exclude: true
+---
+
 ::: spark_expectations.sinks.plugins.delta_writer
     handler: python
     options:

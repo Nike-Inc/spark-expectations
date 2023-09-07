@@ -52,7 +52,7 @@ nav:
       Init: api/sinks_init.md
       Base_Writer_Plugin: api/base_sink_plugin.md
       Delta_Sink_Plugin: api/delta_sink_plugin.md
-      NSP_Sink_plugin: api/nsp_sink_plugin.md
+      Kafka_Sink_plugin: api/kafka_sink_plugin.md
       Utils:
       - Writer: api/writer.md
       - Sink_Decorater: api/sinks_decorater

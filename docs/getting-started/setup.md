@@ -64,8 +64,9 @@ ALTER TABLE apla_nd_dq_rules ADD CONSTRAINT action CHECK
 
 ### DQ Stats Table
 
-In order to collect the stats/metrics for each data quality job run, we need to create a stats table. Please use the 
-below template to create the stats table
+In order to collect the stats/metrics for each data quality job run, the spark-expectations job will
+automatically create the stats table if it does not exist. The below sql statement can be used to create the table
+if you want to create it manually, but it is not recommended.
 
 ```sql
 create table if not exists `catalog`.`schema`.`dq_stats` (

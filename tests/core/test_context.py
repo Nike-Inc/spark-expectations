@@ -1158,7 +1158,7 @@ def test_get_secret_type_exception():
 
     with pytest.raises(SparkExpectationsMiscException,
                        match="""The spark expectations context is not set completely, please assign 
-            'user_config.secret_type' before 
+            'UserConfig.secret_type' before 
             accessing it"""):
         context.get_secret_type
 
@@ -1183,7 +1183,7 @@ def test_get_server_url_key_exception():
 
     with pytest.raises(SparkExpectationsMiscException,
                        match="""The spark expectations context is not set completely, please assign
-            'user_config.cbs_kafka_server_url' before
+            'UserConfig.cbs_kafka_server_url' before
             accessing it"""):
         context.get_server_url_key
 
@@ -1208,7 +1208,7 @@ def test_get_token_endpoint_url_exception():
 
     with pytest.raises(SparkExpectationsMiscException,
                        match="""The spark expectations context is not set completely, please assign
-            'user_config.cbs_secret_token_url' before
+            'UserConfig.cbs_secret_token_url' before
             accessing it"""):
         context.get_token_endpoint_url
 
@@ -1233,7 +1233,7 @@ def test_get_token_exception():
 
     with pytest.raises(SparkExpectationsMiscException,
                        match="""The spark expectations context is not set completely, please assign
-            'user_config.cbs_secret_token' before
+            'UserConfig.cbs_secret_token' before
             accessing it"""):
         context.get_token
 
@@ -1258,7 +1258,7 @@ def test_get_client_id_exception():
 
     with pytest.raises(SparkExpectationsMiscException,
                        match="""The spark expectations context is not set completely, please assign
-            'user_config.cbs_secret_app_name' before
+            'UserConfig.cbs_secret_app_name' before
             accessing it"""):
         context.get_client_id
 
@@ -1283,7 +1283,7 @@ def test_get_topic_name_exception():
 
     with pytest.raises(SparkExpectationsMiscException,
                        match="""The spark expectations context is not set completely, please assign 
-            'user_config.cbs_topic_name' before 
+            'UserConfig.cbs_topic_name' before 
             accessing it"""):
         context.get_topic_name
 

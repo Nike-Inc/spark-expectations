@@ -4,8 +4,7 @@ import functools
 from dataclasses import dataclass
 from typing import Optional, Dict
 import pluggy
-from cerberus.client import CerberusClient
-from spark_expectations.config.user_config import Constants as user_config
+from spark_expectations.config.user_config import Constants as UserConfig
 from spark_expectations.core import get_spark_session
 from spark_expectations import _log
 
@@ -56,14 +55,16 @@ class CerberusSparkExpectationsSecretPluginImpl(SparkExpectationsSecretPluginSpe
         """
         This function implemented to get secret value from cerberus
         Args:
-            secret_key: str which accepts url with secret key
+            secret_key_path: str which accepts url with secret key
             secret_dict: dict which contains params for fetch secrets
         Returns:
             str | none : returns secret value in string or none
         """
 
-        if secret_dict[user_config.secret_type].lower() == "cerberus":
-            _client = CerberusClient(secret_dict[user_config.cbs_url])
+        from cerberus.client import CerberusClient
+
+        if secret_dict[UserConfig.secret_type].lower() == "cerberus":
+            _client = CerberusClient(secret_dict[UserConfig.cbs_url])
             data = _client.get_secrets_data(secret_key_path)
             return data
 
@@ -82,12 +83,12 @@ class DatabricksSecretsSparkExpectationsSecretPluginImpl(
          # pragma: no cover
         This function implemented to get secret value from databricks scope
         Args:
-            secret_key: str which accepts url with secret key
+            secret_key_path: str which accepts url with secret key
             secret_dict: dict which contains params for fetch secrets
         Returns:
             str | none : returns secret value in string or none
         """
-        if secret_dict[user_config.secret_type].lower() == "databricks":
+        if secret_dict[UserConfig.secret_type].lower() == "databricks":
             try:
                 from pyspark.dbutils import DBUtils
 
@@ -101,7 +102,7 @@ class DatabricksSecretsSparkExpectationsSecretPluginImpl(
                 )
 
             data = dbutils.secrets.get(
-                scope=secret_dict[user_config.dbx_secret_scope], key=secret_key_path
+                scope=secret_dict[UserConfig.dbx_secret_scope], key=secret_key_path
             )  # pragma: no cover
             return data  # pragma: no cover
         return None  # pragma: no cover

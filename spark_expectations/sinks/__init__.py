@@ -9,8 +9,8 @@ from spark_expectations.sinks.plugins.base_writer import (
 from spark_expectations.sinks.plugins.delta_writer import (
     SparkExpectationsDeltaWritePluginImpl,
 )
-from spark_expectations.sinks.plugins.nsp_writer import (
-    SparkExpectationsNspWritePluginImpl,
+from spark_expectations.sinks.plugins.kafka_writer import (
+    SparkExpectationsKafkaWritePluginImpl,
 )
 
 
@@ -27,7 +27,9 @@ def get_sink_hook() -> pluggy.PluginManager:
     pm.register(
         SparkExpectationsDeltaWritePluginImpl(), "spark_expectations_delta_write"
     )
-    pm.register(SparkExpectationsNspWritePluginImpl(), "spark_expectations_nsp_write")
+    pm.register(
+        SparkExpectationsKafkaWritePluginImpl(), "spark_expectations_kafka_write"
+    )
     for name, plugin_instance in pm.list_name_plugin():
         _log.info(
             "Loaded plugin with name: %s and class: %s",

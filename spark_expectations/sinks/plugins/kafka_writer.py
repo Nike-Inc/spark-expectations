@@ -8,7 +8,7 @@ from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from spark_expectations import _log
 
 
-class SparkExpectationsNspWritePluginImpl(SparkExpectationsSinkWriter):
+class SparkExpectationsKafkaWritePluginImpl(SparkExpectationsSinkWriter):
     """
     class helps to write the stats data into the NSP
     """

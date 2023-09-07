@@ -1,3 +1,8 @@
+---
+search:
+  exclude: true
+---
+
 ::: spark_expectations.notifications.plugins.email
     handler: python
     options:

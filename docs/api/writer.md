@@ -1,3 +1,7 @@
+---
+search:
+  exclude: true
+---
 
 ::: spark_expectations.sinks.utils.writer
     handler: python
