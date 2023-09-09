@@ -4,7 +4,7 @@ from pyspark.sql.functions import filter, size, transform, when, lit, array
 
 def remove_empty_maps(column: Column) -> Column:
     """
-    This Spark UDF takes a column of type array(map(str,str)) and removes empty maps from it
+    This function takes a column of type array(map(str,str)) and removes empty maps from it
     Args:
         column: Provide a column of type array(map(str,str))
         Returns:
@@ -16,12 +16,12 @@ def remove_empty_maps(column: Column) -> Column:
 
 def get_actions_list(column: Column) -> Column:
     """
-    This Spark UDF takes column of type array(map(str,str)) and creates list by picking action_if_failed from dict
+    This function takes column of type array(map(str,str)) and creates list by picking action_if_failed from dict
     Args:
         column: Provide a column of type array(map(str,str))
 
     Returns:
-           list: returns list of action_if_failed from the set expectations rules
+           list: returns a column with list of action_if_failed from the set expectations rules
 
     """
 
