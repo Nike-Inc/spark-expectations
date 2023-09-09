@@ -360,9 +360,6 @@ class SparkExpectations:
                                 self._context.get_agg_dq_rule_type_name,
                                 source_agg_dq_flag=True,
                             )
-                            self._context.set_source_agg_dq_result(
-                                _dq_source_agg_results
-                            )
                             self._context.set_source_agg_dq_status(status)
                             self._context.set_source_agg_dq_end_time()
 
@@ -392,9 +389,6 @@ class SparkExpectations:
                                 _df,
                                 self._context.get_query_dq_rule_type_name,
                                 source_query_dq_flag=True,
-                            )
-                            self._context.set_source_query_dq_result(
-                                _dq_source_query_results
                             )
                             self._context.set_source_query_dq_status(status)
                             self._context.set_source_query_dq_end_time()
@@ -471,7 +465,6 @@ class SparkExpectations:
                                 error_count=_error_count,
                                 output_count=_output_count,
                             )
-                            self._context.set_final_agg_dq_result(_dq_final_agg_results)
                             self._context.set_final_agg_dq_status(status)
                             self._context.set_final_agg_dq_end_time()
                             _log.info(
@@ -513,9 +506,6 @@ class SparkExpectations:
                                 final_query_dq_flag=True,
                                 error_count=_error_count,
                                 output_count=_output_count,
-                            )
-                            self._context.set_final_query_dq_result(
-                                _dq_final_query_results
                             )
                             self._context.set_final_query_dq_status(status)
                             self._context.set_final_query_dq_end_time()
