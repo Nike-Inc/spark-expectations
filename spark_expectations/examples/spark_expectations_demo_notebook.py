@@ -6,7 +6,7 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### Mandatory Kafka(NSP) - Jar - Installation - In - The - Compute - Cluster
+# MAGIC ### Mandatory Kafka - Jar - Installation - In - The - Compute - Cluster
 # MAGIC * Please install the kafka jar using the path `dbfs:/kafka-jars/databricks-shaded-strimzi-kafka-oauth-client-1.1.jar`
 # MAGIC * If the jar is not available in the dbfs location, please raise a ticket with GAP Support team to add the jar to your workspace
 
@@ -340,8 +340,8 @@
 # COMMAND ----------
 
 # MAGIC %md
-# MAGIC ### NSP - Statistics  
-# MAGIC * The statistics for each run will be transmitted to a global NSP `test-us-west-2-general-v2-nike-dq-sparkexpectations-stats` topic using Spark Expectations, for the purpose of global dashboarding
+# MAGIC ### Kafka - Statistics  
+# MAGIC * The statistics for each run will be transmitted to a `dq-sparkexpectations-stats` topic using Spark Expectations, for the purpose of global dashboarding
 
 # COMMAND ----------
 
