@@ -9,6 +9,8 @@ packages = [{ include = "spark_expectations" }]
 [tool.poetry.dependencies]
 python = "^3.8.9"
 pluggy = "1.0.0"
+pyspark = "^3.0.0"
+delta-spark = "^2.1.0"
 
 [tool.poetry.group.dev.dependencies]
 black = "23.3.0"
