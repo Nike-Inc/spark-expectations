@@ -204,8 +204,6 @@ def test_get_rules_dlt(product_id, table_name, action, tag, expected_output, moc
     }, {
         # should be the output of the _get_rules_execution_settings from reader.py
         "row_dq": True,
-        "agg_dq": True,
-        "query_dq": True,
         "source_agg_dq": True,
         "target_agg_dq": True,
         "source_query_dq": True,
