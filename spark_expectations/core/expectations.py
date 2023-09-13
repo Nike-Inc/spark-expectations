@@ -146,13 +146,9 @@ class SparkExpectations:
                 actions_if_failed,
             )
 
-            # TODO agg_dq and query_dq are redundant, we can remove it completely as by default source and
-            #  target checks it
             _row_dq: bool = rules_execution_settings.get("row_dq", False)
-            _agg_dq: bool = rules_execution_settings.get("agg_dq", False)
             _source_agg_dq: bool = rules_execution_settings.get("source_agg_dq", False)
             _target_agg_dq: bool = rules_execution_settings.get("target_agg_dq", False)
-            _query_dq: bool = rules_execution_settings.get("query_dq", False)
             _source_query_dq: bool = rules_execution_settings.get(
                 "source_query_dq", False
             )
@@ -238,7 +234,7 @@ class SparkExpectations:
                     _error_count: int = 0
                     _source_dq_df: Optional[DataFrame] = None
                     _source_query_dq_df: Optional[DataFrame] = None
-                    _row_dq_df: Optional[DataFrame] = None
+                    _row_dq_df: DataFrame = _df
                     _final_dq_df: Optional[DataFrame] = None
                     _final_query_dq_df: Optional[DataFrame] = None
 
@@ -304,7 +300,7 @@ class SparkExpectations:
                             options_error_table=options_error_table,
                         )
 
-                        if _agg_dq is True and _source_agg_dq is True:
+                        if _source_agg_dq is True:
                             _log.info(
                                 "started processing data quality rules for agg level expectations on soure dataframe"
                             )
@@ -334,7 +330,7 @@ class SparkExpectations:
                                 "ended processing data quality rules for agg level expectations on source dataframe"
                             )
 
-                        if _query_dq is True and _source_query_dq is True:
+                        if _source_query_dq is True:
                             _log.info(
                                 "started processing data quality rules for query level expectations on soure dataframe"
                             )
@@ -411,11 +407,7 @@ class SparkExpectations:
                                 "ended processing data quality rules for row level expectations"
                             )
 
-                        if (
-                            _row_dq is True
-                            and _agg_dq is True
-                            and _target_agg_dq is True
-                        ):
+                        if _row_dq is True and _target_agg_dq is True:
                             _log.info(
                                 "started processing data quality rules for agg level expectations on final dataframe"
                             )
@@ -445,11 +437,7 @@ class SparkExpectations:
                                 "ended processing data quality rules for agg level expectations on final dataframe"
                             )
 
-                        if (
-                            _row_dq is True
-                            and _query_dq is True
-                            and _target_query_dq is True
-                        ):
+                        if _row_dq is True and _target_query_dq is True:
                             _log.info(
                                 "started processing data quality rules for query level expectations on final dataframe"
                             )
@@ -488,6 +476,8 @@ class SparkExpectations:
                                 "ended processing data quality rules for query level expectations on final dataframe"
                             )
 
+                        # TODO if row_dq is False and source_agg/source_query is True then we need to write the
+                        #  dataframe into the target table
                         if _row_dq and write_to_table:
                             _log.info("Writing into the final table started")
                             self._writer.write_df_to_table(

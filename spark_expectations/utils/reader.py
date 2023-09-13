@@ -274,8 +274,6 @@ class SparkExpectationsReader:
         df = self.spark.sql(
             """SELECT
                 MAX(CASE WHEN rule_type = 'row_dq' THEN True ELSE False END) AS row_dq,
-                MAX(CASE WHEN rule_type = 'agg_dq' and is_active = true THEN True ELSE False END) AS agg_dq,
-                MAX(CASE WHEN rule_type = 'query_dq' and is_active = true THEN True ELSE False END) AS query_dq,
                 MAX(CASE WHEN rule_type = 'agg_dq' AND enable_for_source_dq_validation = true  
                    THEN True ELSE False END) AS source_agg_dq,
                 MAX(CASE WHEN rule_type = 'query_dq' AND enable_for_source_dq_validation = true 
