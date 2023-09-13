@@ -301,8 +301,7 @@ def test_create_agg_dq_results(input_df,
                                expected_output,
                                _fixture_mock_context):
     # unit test case on create_agg_dq_results
-    assert SparkExpectationsActions().create_agg_dq_results(_fixture_mock_context,
-                                                            input_df, rule_type_name) == expected_output
+    assert SparkExpectationsActions().create_agg_dq_results(input_df, rule_type_name, ) == expected_output
 
 
 @pytest.mark.parametrize("input_df",
@@ -315,7 +314,7 @@ def test_create_agg_dq_results_exception(input_df,
     # faulty user input is given to test the exception functionality of the agg_dq_result
     with pytest.raises(SparkExpectationsMiscException,
                        match=r"error occurred while running create agg dq results .*"):
-        SparkExpectationsActions().create_agg_dq_results(_fixture_mock_context, input_df, "<test>")
+        SparkExpectationsActions().create_agg_dq_results(input_df, "<test>", )
 
 
 def test_run_dq_rules_row(_fixture_df,
@@ -971,7 +970,6 @@ def test_action_on_dq_rules(_mock_set_row_dq_status, _mock_set_source_agg_dq_sta
         with pytest.raises(expected_output, match=r"error occured while taking action on given rules .*"):
             SparkExpectationsActions.action_on_rules(_fixture_mock_context,
                                                      input_df,
-                                                     table_name,
                                                      input_count,
                                                      error_count,
                                                      output_count,

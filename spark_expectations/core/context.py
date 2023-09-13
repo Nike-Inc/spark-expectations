@@ -971,7 +971,7 @@ class SparkExpectationsContext:
     @property
     def get_se_streaming_stats_topic_name(self) -> str:
         """
-        This function returns nsp topic name
+        This function returns kafka topic name
         Returns:
             str: Returns _se_streaming_stats_topic_name
 

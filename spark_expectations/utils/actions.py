@@ -40,10 +40,11 @@ class SparkExpectationsActions:
     ) -> bool:
         """
         Args:
-            rule:
-            _rule_tye_name:
-            _source_dq_enabled:
-            _target_dq_enabled:
+            _context: SparkExpectationsContext class object
+            rule: dict with rule properties
+            _rule_type_name: which determines the type of the rule
+            _source_dq_enabled: Mark it as True when dq running for source dataframe
+            _target_dq_enabled: Mark it as True when dq running for target dataframe
 
         Returns:
 
@@ -93,9 +94,10 @@ class SparkExpectationsActions:
             ]
         )
 
+    @staticmethod
     def create_agg_dq_results(
-        self, _context: SparkExpectationsContext, _df: DataFrame, _rule_type_name: str
-    ) -> List[Dict[str, str]]:
+        _context: SparkExpectationsContext, _df: DataFrame, _rule_type_name: str
+    ) -> Optional[List[Dict[str, str]]]:
         """
         This function helps to collect the aggregation results in to the list
          Args:
@@ -109,13 +111,15 @@ class SparkExpectationsActions:
 
         """
         try:
-            return (
-                _df.first()[f"meta_{_rule_type_name}_results"]
-                if _df
+            first_row = _df.first()
+            if (
+                first_row is not None
                 and f"meta_{_rule_type_name}_results" in _df.columns
-                and len(_df.first()[f"meta_{_rule_type_name}_results"]) > 0
-                else None
-            )
+            ):
+                meta_results = first_row[f"meta_{_rule_type_name}_results"]
+                if meta_results is not None and len(meta_results) > 0:
+                    return meta_results
+            return None
         except Exception as e:
             raise SparkExpectationsMiscException(
                 f"error occurred while running create agg dq results {e}"
@@ -138,6 +142,8 @@ class SparkExpectationsActions:
             df: Input dataframe on which data quality rules need to be applied
             expectations: Provide the dict which has all the rules
             rule_type: identifier for the type of rule to be applied in processing
+            _source_dq_enabled: Mark it as True when dq running for source dataframe
+            _target_dq_enabled: Mark it as True when dq running for target dataframe
 
         Returns:
             DataFrame: Returns a dataframe with all the rules run the input dataframe
@@ -225,7 +231,6 @@ class SparkExpectationsActions:
     def action_on_rules(
         _context: SparkExpectationsContext,
         _df_dq: DataFrame,
-        _table_name: str,
         _input_count: int,
         _error_count: int = 0,
         _output_count: int = 0,
@@ -241,7 +246,6 @@ class SparkExpectationsActions:
         Args:
             _context: Provide SparkExpectationsContext
             _df_dq: Input dataframe on which data quality rules need to be applied
-            table_name: error table name
             _input_count: input dataset count
             _error_count: error count in the dataset
             _output_count: output count in the dataset
@@ -251,11 +255,6 @@ class SparkExpectationsActions:
             _final_agg_dq_flag: Mark it as True when dq running for agg level expectations on final dataframe
             _source_query_dq_flag: Mark it as True when dq running for query level expectations on source dataframe
             _final_query_dq_flag: Mark it as True when dq running for query level expectations on final dataframe
-            _action_on: perform action on different stages in dq
-            _source_agg_dq_result: source aggregated data quality result
-            _final_agg_dq_result: final aggregated data quality result
-            _source_query_dq_result: source query based data quality result
-            _final_query_dq_result: final query based data quality result
         Returns:
                 DataFrame: Returns a dataframe after dropping the error from the dataset
 

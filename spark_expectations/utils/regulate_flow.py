@@ -21,8 +21,8 @@ class SparkExpectationsRegulateFlow:
 
     product_id: str
 
+    @staticmethod
     def execute_dq_process(
-        self,
         _context: SparkExpectationsContext,
         _actions: SparkExpectationsActions,
         _writer: SparkExpectationsWriter,
@@ -36,8 +36,10 @@ class SparkExpectationsRegulateFlow:
         """
         This functions takes required static variable and returns the function
         Args:
+            _context: SparkExpectationsContext class object
             _actions: SparkExpectationsActions class object
             _writer: SparkExpectationsWriter class object
+            _notification: SparkExpectationsNotify class object
             expectations: expectations dictionary which contains rules
             table_name: name of the table
             _input_count: number of records in the source dataframe
@@ -70,7 +72,7 @@ class SparkExpectationsRegulateFlow:
                 final_agg_dq_flag: default false, Mark True tp process agg level data quality on final dataframe
                 source_query_dq_flag: default false, Mark True tp process query level data quality on source dataframe
                 final_query_dq_flag: default false, Mark True tp process query level data quality on final dataframe
-                error_count: number of records error records default zero)
+                error_count: number of records error records (default zero)
                 output_count: number of output records from expectations (default zero)
 
             Returns:
@@ -79,7 +81,6 @@ class SparkExpectationsRegulateFlow:
 
             """
             try:
-                _df_dq: Optional[DataFrame] = None
                 _error_df: Optional[DataFrame] = None
                 _error_count: int = error_count
 
@@ -97,7 +98,7 @@ class SparkExpectationsRegulateFlow:
                     "The data quality dataframe is getting created for expectations"
                 )
 
-                _df_dq = _actions.run_dq_rules(
+                _df_dq: DataFrame = _actions.run_dq_rules(
                     _context,
                     df,
                     expectations,
@@ -153,7 +154,6 @@ class SparkExpectationsRegulateFlow:
                 df = _actions.action_on_rules(
                     _context,
                     _error_df if row_dq_flag else _df_dq,
-                    table_name,
                     _input_count,
                     _error_count=_error_count,
                     _output_count=output_count,

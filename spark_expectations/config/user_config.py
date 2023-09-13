@@ -23,15 +23,6 @@ class Constants:
         "spark.expectations.notifications.slack.webhook_url"
     )
 
-    se_agg_dq = "agg_dq"
-    se_source_agg_dq = "source_agg_dq"
-    se_final_agg_dq = "final_agg_dq"
-
-    se_query_dq = "query_dq"
-    se_source_query_dq = "source_query_dq"
-    se_final_query_dq = "final_query_dq"
-    se_target_table_view = "target_table_view"
-
     se_notifications_on_start = "spark.expectations.notifications.on_start"
     se_notifications_on_completion = "spark.expectations.notifications.on.completion"
     se_notifications_on_fail = "spark.expectations.notifications.on.fail"
