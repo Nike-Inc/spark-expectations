@@ -559,7 +559,7 @@ class WrappedDataFrameWriter:
 
     @classmethod
     def mode(
-        cls: Type["WrappedDataFrameWriter"], saveMode: str
+        cls: Type["WrappedDataFrameWriter"], saveMode: str  # noqa: N803
     ) -> Type["WrappedDataFrameWriter"]:
         """Set the mode for writing."""
         cls._mode = saveMode
@@ -574,7 +574,7 @@ class WrappedDataFrameWriter:
         return cls
 
     @classmethod
-    def partitionBy(
+    def partitionBy(  # noqa: N802
         cls: Type["WrappedDataFrameWriter"], *columns: str
     ) -> Type["WrappedDataFrameWriter"]:
         """Set the columns by which the data should be partitioned."""
@@ -598,7 +598,7 @@ class WrappedDataFrameWriter:
         return cls
 
     @classmethod
-    def bucketBy(
+    def bucketBy(  # noqa: N802
         cls: Type["WrappedDataFrameWriter"], num_buckets: int, *columns: str
     ) -> Type["WrappedDataFrameWriter"]:
         """Set the configuration for bucketing."""
