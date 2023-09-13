@@ -1,6 +1,6 @@
 import functools
 from dataclasses import dataclass
-from typing import Dict, Optional, Any, Union, List
+from typing import Dict, Optional, Any, Union, List, Type
 
 from pyspark.sql import DataFrame
 
@@ -146,6 +146,8 @@ class SparkExpectations:
                 actions_if_failed,
             )
 
+            # TODO agg_dq and query_dq are redundant, we can remove it completely as by default source and
+            #  target checks it
             _row_dq: bool = rules_execution_settings.get("row_dq", False)
             _agg_dq: bool = rules_execution_settings.get("agg_dq", False)
             _source_agg_dq: bool = rules_execution_settings.get("source_agg_dq", False)
@@ -513,3 +515,106 @@ class SparkExpectations:
             return wrapper
 
         return _except
+
+
+class WrappedDataFrameWriter:
+    """
+    A builder pattern class that mimics the functions of PySpark's DataFrameWriter.
+
+    This class allows for chaining methods to set configurations like mode, format, partitioning,
+    options, and bucketing. It does not require a DataFrame object and is designed purely to
+    collect and return configurations.
+
+    Example usage:
+    --------------
+    writer = WrappedDataFrameWriter.mode("overwrite")\
+                                   .format("parquet")\
+                                   .partitionBy("date", "region")\
+                                   .option("compression", "gzip")\
+                                   .options(path="/path/to/output", inferSchema="true")\
+                                   .bucketBy(4, "country", "city")
+
+    config = writer.build()
+    print(config)
+
+    Attributes:
+    -----------
+    _mode : str
+        The mode for writing (e.g., "overwrite", "append").
+    _format : str
+        The format for writing (e.g., "parquet", "csv").
+    _partition_by : list
+        Columns by which the data should be partitioned.
+    _options : dict
+        Additional options for writing.
+    _bucket_by : dict
+        Configuration for bucketing, including number of buckets and columns.
+    """
+
+    _mode: Optional[str] = None
+    _format: Optional[str] = None
+    _partition_by: list = []
+    _options: dict = {}
+    _bucket_by: dict = {}
+
+    @classmethod
+    def mode(
+        cls: Type["WrappedDataFrameWriter"], saveMode: str
+    ) -> Type["WrappedDataFrameWriter"]:
+        """Set the mode for writing."""
+        cls._mode = saveMode
+        return cls
+
+    @classmethod
+    def format(
+        cls: Type["WrappedDataFrameWriter"], source: str
+    ) -> Type["WrappedDataFrameWriter"]:
+        """Set the format for writing."""
+        cls._format = source
+        return cls
+
+    @classmethod
+    def partitionBy(
+        cls: Type["WrappedDataFrameWriter"], *columns: str
+    ) -> Type["WrappedDataFrameWriter"]:
+        """Set the columns by which the data should be partitioned."""
+        cls._partition_by.extend(columns)
+        return cls
+
+    @classmethod
+    def option(
+        cls: Type["WrappedDataFrameWriter"], key: str, value: str
+    ) -> Type["WrappedDataFrameWriter"]:
+        """Set a single option for writing."""
+        cls._options[key] = value
+        return cls
+
+    @classmethod
+    def options(
+        cls: Type["WrappedDataFrameWriter"], **options: str
+    ) -> Type["WrappedDataFrameWriter"]:
+        """Set multiple options for writing."""
+        cls._options.update(options)
+        return cls
+
+    @classmethod
+    def bucketBy(
+        cls: Type["WrappedDataFrameWriter"], num_buckets: int, *columns: str
+    ) -> Type["WrappedDataFrameWriter"]:
+        """Set the configuration for bucketing."""
+        cls._bucket_by["num_buckets"] = num_buckets
+        cls._bucket_by["columns"] = columns
+        return cls
+
+    @classmethod
+    def build(
+        cls: Type["WrappedDataFrameWriter"],
+    ) -> Dict[str, Union[Optional[str], List[str], Dict[str, Union[int, List[str]]]]]:
+        """Return the collected configurations."""
+        return {
+            "mode": cls._mode,
+            "format": cls._format,
+            "partitionBy": cls._partition_by,
+            "options": cls._options,
+            "bucketBy": cls._bucket_by,
+        }

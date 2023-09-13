@@ -9,7 +9,7 @@ from pyspark.sql.types import StringType, IntegerType, StructField, StructType
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.utils.reader import SparkExpectationsReader
 from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
-from spark_expectations.core.expectations import SparkExpectations
+from spark_expectations.core.expectations import SparkExpectations, WrappedDataFrameWriter
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core import get_spark_session
 from spark_expectations.core.exceptions import (
@@ -2665,3 +2665,65 @@ def test_target_table_view_exception(input_df,
 
     with pytest.raises(SparkExpectationsMiscException, match=r"error occurred while processing spark expectations .*"):
         get_dataset()  # decorated_func()
+
+
+# [UnitTests for WrappedDataFrameWriter class]
+
+@pytest.fixture
+def fresh_writer():
+    # Reset the class attributes before each test
+    WrappedDataFrameWriter._mode = None
+    WrappedDataFrameWriter._format = None
+    WrappedDataFrameWriter._partition_by = []
+    WrappedDataFrameWriter._options = {}
+    WrappedDataFrameWriter._bucket_by = {}
+    return WrappedDataFrameWriter
+
+
+def test_mode(fresh_writer):
+    fresh_writer.mode("overwrite")
+    assert fresh_writer._mode == "overwrite"
+
+
+def test_format(fresh_writer):
+    fresh_writer.format("parquet")
+    assert fresh_writer._format == "parquet"
+
+
+def test_partitionBy(fresh_writer):
+    fresh_writer.partitionBy("date", "region")
+    assert fresh_writer._partition_by == ["date", "region"]
+
+
+def test_option(fresh_writer):
+    fresh_writer.option("compression", "gzip")
+    assert fresh_writer._options == {"compression": "gzip"}
+
+
+def test_options(fresh_writer):
+    fresh_writer.options(path="/path/to/output", inferSchema="true")
+    assert fresh_writer._options == {"path": "/path/to/output", "inferSchema": "true"}
+
+
+def test_bucketBy(fresh_writer):
+    fresh_writer.bucketBy(4, "country", "city")
+    assert fresh_writer._bucket_by == {"num_buckets": 4, "columns": ("country", "city")}
+
+
+def test_build(fresh_writer):
+    writer = (
+        fresh_writer.mode("overwrite")
+        .format("parquet")
+        .partitionBy("date", "region")
+        .option("compression", "gzip")
+        .options(path="/path/to/output", inferSchema="true")
+        .bucketBy(4, "country", "city")
+    )
+    expected_config = {
+        "mode": "overwrite",
+        "format": "parquet",
+        "partitionBy": ["date", "region"],
+        "options": {"compression": "gzip", "path": "/path/to/output", "inferSchema": "true"},
+        "bucketBy": {"num_buckets": 4, "columns": ("country", "city")}
+    }
+    assert writer.build() == expected_config
