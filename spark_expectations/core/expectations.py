@@ -1,6 +1,6 @@
 import functools
 from dataclasses import dataclass
-from typing import Dict, Optional, Any, Union
+from typing import Dict, Optional, Any, Union, List
 
 from pyspark.sql import DataFrame
 
@@ -28,9 +28,18 @@ from spark_expectations.utils.regulate_flow import SparkExpectationsRegulateFlow
 class SparkExpectations:
     """
     This class implements/supports running the data quality rules on a dataframe returned by a function
+
+    Args:
+        product_id: Name of the product
+        rules_table: Name of the table which contains the rules
+        stats_table: Name of the table where the stats/audit-info need to be written
+        debugger: Mark it as "True" if the debugger mode need to be enabled, by default is False
+        stats_streaming_options: Provide options to override the defaults, while writing into the stats streaming table
     """
 
     product_id: str
+    rules_table: str
+    stats_table: str
     debugger: bool = False
     stats_streaming_options: Optional[Dict[str, str]] = None
 
@@ -61,68 +70,42 @@ class SparkExpectations:
 
     def with_expectations(
         self,
-        expectations: dict,
+        target_table: str,
         write_to_table: bool = False,
         write_to_temp_table: bool = False,
-        row_dq: bool = True,
-        agg_dq: Optional[Dict[str, bool]] = None,
-        query_dq: Optional[Dict[str, Union[str, bool]]] = None,
         spark_conf: Optional[Dict[str, Any]] = None,
         options: Optional[Dict[str, str]] = None,
         options_error_table: Optional[Dict[str, str]] = None,
+        rules_table: Optional[str] = None,
+        stats_table: Optional[str] = None,
+        target_table_view: Optional[str] = None,
+        actions_if_failed: Optional[List[str]] = None,
     ) -> Any:
         """
         This decorator helps to wrap a function which returns dataframe and apply dataframe rules on it
 
         Args:
-            expectations: Dict of dict's with table and rules as keys
+            target_table: Name of the table where the final dataframe need to be written
             write_to_table: Mark it as "True" if the dataframe need to be written as table
             write_to_temp_table: Mark it as "True" if the input dataframe need to be written to the temp table to break
                                 the spark plan
-            row_dq: Mark it as False to avoid row level expectation, by default is TRUE,
-            agg_dq:  There are several dictionary variables that are used for data quality (DQ) aggregation in both the
-            source and final DQ layers
-                     agg_dq => Mark it as True to run agg level expectation, by default is False
-                     source_agg_dq => Mark it as True to run source agg level expectation, by default is False
-                     final_agg_dq => Mark it as True to run final agg level expectation, by default is False
-            query_dq:  There are several dictionary variables that are used for data quality (DQ) using query in both
-            the source and final DQ layers
-                     query_dq => Mark it as True to run query level expectation, by default is False
-                     source_query_dq => Mark it as True to run query dq level expectation, by default is False
-                     final_query_dq => Mark it as True to run query dq level expectation, by default is False
             spark_conf: Provide SparkConf to override the defaults, while writing into the table & which also contains
             notifications related variables
             options: Provide Options to override the defaults, while writing into the table
             options_error_table: Provide options to override the defaults, while writing into the error table
+            rules_table: Name of the table which contains the rules
+            stats_table: Name of the table where the stats/audit-info need to be written
+            target_table_view: This view is created after the _row_dq process to run the target agg_dq and query_dq.
+                If value is not provided, defaulted to {target_table}_view
+            actions_if_failed: Provide the list of actions to be taken if the expectations failed. Default would be all
+                actions ['ignore', 'drop', 'fail']
+
 
         Returns:
             Any: Returns a function which applied the expectations on dataset
         """
 
         def _except(func: Any) -> Any:
-            # variable used for enabling source agg dq at different level
-            _default_agg_dq_dict: Dict[str, bool] = {
-                user_config.se_agg_dq: False,
-                user_config.se_source_agg_dq: False,
-                user_config.se_final_agg_dq: False,
-            }
-            _agg_dq_dict: Dict[str, bool] = (
-                {**_default_agg_dq_dict, **agg_dq} if agg_dq else _default_agg_dq_dict
-            )
-
-            # variable used for enabling query dq at different level
-            _default_query_dq_dict: Dict[str, Union[str, bool]] = {
-                user_config.se_query_dq: False,
-                user_config.se_source_query_dq: False,
-                user_config.se_final_query_dq: False,
-                user_config.se_target_table_view: "",
-            }
-            _query_dq_dict: Dict[str, Union[str, bool]] = (
-                {**_default_query_dq_dict, **query_dq}
-                if query_dq
-                else _default_query_dq_dict
-            )
-
             # variable used for enabling notification at different level
             _default_notification_dict: Dict[str, Union[str, int, bool]] = {
                 user_config.se_notifications_on_start: False,
@@ -155,45 +138,27 @@ class SparkExpectations:
                 else _default_stats_streaming_dict
             )
 
-            _agg_dq: bool = (
-                _agg_dq_dict[user_config.se_agg_dq]
-                if isinstance(_agg_dq_dict[user_config.se_agg_dq], bool)
-                else False
-            )
-            _source_agg_dq: bool = (
-                _agg_dq_dict[user_config.se_source_agg_dq]
-                if isinstance(_agg_dq_dict[user_config.se_source_agg_dq], bool)
-                else False
-            )
-            _final_agg_dq: bool = (
-                _agg_dq_dict[user_config.se_final_agg_dq]
-                if isinstance(_agg_dq_dict[user_config.se_final_agg_dq], bool)
-                else False
+            # need to call the get_rules_frm_table function to get the rules from the table as expectations
+            expectations, rules_execution_settings = self.reader.get_rules_from_table(
+                self.rules_table if rules_table is None else rules_table,
+                self.stats_table if stats_table is None else stats_table,
+                target_table,
+                actions_if_failed,
             )
 
-            _query_dq: bool = (
-                bool(_query_dq_dict[user_config.se_query_dq])
-                if isinstance(_query_dq_dict[user_config.se_query_dq], bool)
-                else False
+            _row_dq: bool = rules_execution_settings.get("row_dq", False)
+            _agg_dq: bool = rules_execution_settings.get("agg_dq", False)
+            _source_agg_dq: bool = rules_execution_settings.get("source_agg_dq", False)
+            _target_agg_dq: bool = rules_execution_settings.get("target_agg_dq", False)
+            _query_dq: bool = rules_execution_settings.get("query_dq", False)
+            _source_query_dq: bool = rules_execution_settings.get(
+                "source_query_dq", False
             )
-            _source_query_dq: bool = (
-                bool(_query_dq_dict[user_config.se_source_query_dq])
-                if isinstance(_query_dq_dict[user_config.se_source_query_dq], bool)
-                else False
+            _target_query_dq: bool = rules_execution_settings.get(
+                "target_query_dq", False
             )
-            _final_query_dq: bool = (
-                bool(_query_dq_dict[user_config.se_final_query_dq])
-                if isinstance(_query_dq_dict[user_config.se_final_query_dq], bool)
-                else False
-            )
-
             _target_table_view: str = (
-                str(_query_dq_dict[user_config.se_target_table_view])
-                if isinstance(
-                    _query_dq_dict[user_config.se_target_table_view],
-                    str,
-                )
-                else ""
+                target_table_view if target_table_view else f"{target_table}_view"
             )
 
             _notification_on_start: bool = (
@@ -396,7 +361,7 @@ class SparkExpectations:
                                 "ended processing data quality rules for query level expectations on source dataframe"
                             )
 
-                        if row_dq is True:
+                        if _row_dq is True:
                             _log.info(
                                 "started processing data quality rules for row level expectations"
                             )
@@ -416,9 +381,12 @@ class SparkExpectations:
                             self._context.set_error_count(_error_count)
 
                             if _target_table_view:
-                                _row_dq_df.createOrReplaceTempView(_target_table_view)
+                                if _row_dq_df:
+                                    _row_dq_df.createOrReplaceTempView(
+                                        _target_table_view
+                                    )
 
-                            _output_count = _row_dq_df.count()
+                            _output_count = _row_dq_df.count() if _row_dq_df else 0
                             self._context.set_output_count(_output_count)
 
                             self._context.set_row_dq_status(status)
@@ -441,7 +409,11 @@ class SparkExpectations:
                                 "ended processing data quality rules for row level expectations"
                             )
 
-                        if row_dq is True and _agg_dq is True and _final_agg_dq is True:
+                        if (
+                            _row_dq is True
+                            and _agg_dq is True
+                            and _target_agg_dq is True
+                        ):
                             _log.info(
                                 "started processing data quality rules for agg level expectations on final dataframe"
                             )
@@ -472,9 +444,9 @@ class SparkExpectations:
                             )
 
                         if (
-                            row_dq is True
+                            _row_dq is True
                             and _query_dq is True
-                            and _final_query_dq is True
+                            and _target_query_dq is True
                         ):
                             _log.info(
                                 "started processing data quality rules for query level expectations on final dataframe"
@@ -514,7 +486,7 @@ class SparkExpectations:
                                 "ended processing data quality rules for query level expectations on final dataframe"
                             )
 
-                        if row_dq and write_to_table:
+                        if _row_dq and write_to_table:
                             _log.info("Writing into the final table started")
                             self._writer.write_df_to_table(
                                 _row_dq_df,

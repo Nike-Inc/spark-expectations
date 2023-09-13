@@ -34,7 +34,7 @@ class SparkExpectationsKafkaWritePluginImpl(SparkExpectationsSinkWriter):
             # }
 
             if _write_args.pop("enable_se_streaming"):
-                _log.info("started write stats data into nsp stats topic")
+                _log.info("started write stats data into kafka stats topic")
 
                 df: DataFrame = _write_args.get("stats_df")
 
@@ -42,9 +42,9 @@ class SparkExpectationsKafkaWritePluginImpl(SparkExpectationsSinkWriter):
                     "append"
                 ).options(**_write_args.get("kafka_write_options")).save()
 
-                _log.info("ended writing stats data into nsp stats topic")
+                _log.info("ended writing stats data into kafka stats topic")
 
         except Exception as e:
             raise SparkExpectationsMiscException(
-                f"error occurred while saving data into NSP {e}"
+                f"error occurred while saving data into kafka {e}"
             )

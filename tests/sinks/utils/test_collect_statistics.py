@@ -11,7 +11,7 @@ spark = get_spark_session()
 
 
 @pytest.fixture(name="_fixture_local_kafka_topic")
-def fixture_setup_local_nsp_topic():
+def fixture_setup_local_kafka_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     if os.getenv('UNIT_TESTING_ENV') != "spark_expectations_unit_testing_on_github_actions":

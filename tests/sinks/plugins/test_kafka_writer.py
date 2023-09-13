@@ -10,7 +10,7 @@ spark = get_spark_session()
 
 
 @pytest.fixture(name="_fixture_local_kafka_topic")
-def fixture_setup_local_nsp_topic():
+def fixture_setup_local_kafka_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     if os.getenv('UNIT_TESTING_ENV') != "spark_expectations_unit_testing_on_github_actions":
@@ -82,5 +82,5 @@ def test_kafka_writer_exception(_fixture_local_kafka_topic, _fixture_dataset):
         }
     }
 
-    with pytest.raises(SparkExpectationsMiscException, match=r"error occurred while saving data into NSP .*"):
+    with pytest.raises(SparkExpectationsMiscException, match=r"error occurred while saving data into kafka .*"):
         delta_writer_handler.writer(_write_args=write_args)

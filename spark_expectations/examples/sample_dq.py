@@ -8,7 +8,12 @@ from spark_expectations.config.user_config import Constants as user_config
 
 main()
 
-se: SparkExpectations = SparkExpectations(product_id="your_product", debugger=False)
+se: SparkExpectations = SparkExpectations(
+    product_id="your_product",
+    rules_table="dq_spark_local.dq_rules",
+    stats_table="dq_spark_local.dq_stats",
+    debugger=False,
+)
 spark = get_spark_session()
 
 global_spark_Conf = {
@@ -29,25 +34,10 @@ global_spark_Conf = {
 
 
 @se.with_expectations(
-    se.reader.get_rules_from_table(
-        product_rules_table="dq_spark_local.dq_rules",
-        target_table_name="dq_spark_local.customer_order",
-        dq_stats_table_name="dq_spark_local.dq_stats",
-    ),
+    target_table="dq_spark_local.customer_order",
     write_to_table=True,
-    row_dq=True,
-    agg_dq={
-        user_config.se_agg_dq: True,
-        user_config.se_source_agg_dq: True,
-        user_config.se_final_agg_dq: True,
-    },
-    query_dq={
-        user_config.se_query_dq: True,
-        user_config.se_source_query_dq: True,
-        user_config.se_final_query_dq: True,
-        user_config.se_target_table_view: "order",
-    },
     spark_conf=global_spark_Conf,
+    target_table_view="order",
 )
 def build_new() -> DataFrame:
     _df_order: DataFrame = (
@@ -81,7 +71,7 @@ if __name__ == "__main__":
     spark.sql("select * from dq_spark_local.dq_stats").show(truncate=False)
     spark.sql("select * from dq_spark_local.dq_stats").printSchema()
 
-    _log.info("stats data in the nsp topic")
+    _log.info("stats data in the kafka topic")
     # display posted statistics from the kafka topic
     spark.read.format("kafka").option(
         "kafka.bootstrap.servers", "localhost:9092"

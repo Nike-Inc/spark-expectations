@@ -101,30 +101,26 @@ se: SparkExpectations = SparkExpectations(product_id="your-products-id")
 
 1. Instantiate `SparkExpectations` class which has all the required functions for running data quality rules
 
-
 ```python
-from spark_expectations.config.user_config import * 
+from spark_expectations.config.user_config import *
 
 
-@se.with_expectations( 
-    se.reader.get_rules_from_table(
-        product_rules_table="pilot_nonpub.dq.dq_rules",
-        table_name="pilot_nonpub.dq_employee.employee",  
-        dq_stats_table_name="pilot_nonpub.dq.dq_stats" 
-    ),
-    write_to_table=True, 
+@se.with_expectations(
+    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                   target_table=),
+    write_to_table=True,
     write_to_temp_table=True,
-    row_dq=True, 
+    row_dq=True,
     agg_dq={
-        se_agg_dq: True,  
-        se_source_agg_dq: True,  
-        se_final_agg_dq: True, 
+        se_agg_dq: True,
+        se_source_agg_dq: True,
+        se_final_agg_dq: True,
     },
-    query_dq={ 
-        se_query_dq: True,  
-        se_source_query_dq: True, 
-        se_final_query_dq: True, 
-        se_target_table_view: "order", 
+    query_dq={
+        se_query_dq: True,
+        se_source_query_dq: True,
+        se_final_query_dq: True,
+        se_target_table_view: "order",
     },
     spark_conf=se_global_spark_Conf,
 
@@ -135,14 +131,14 @@ def build_new() -> DataFrame:
         .option("inferSchema", "true")
         .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
     )
-    _df_order.createOrReplaceTempView("order")  
+    _df_order.createOrReplaceTempView("order")
 
     _df_product: DataFrame = (
         spark.read.option("header", "true")
         .option("inferSchema", "true")
         .csv(os.path.join(os.path.dirname(__file__), "resources/product.csv"))
     )
-    _df_product.createOrReplaceTempView("product") 
+    _df_product.createOrReplaceTempView("product")
 
     _df_customer: DataFrame = (
         spark.read.option("header", "true")
@@ -150,7 +146,7 @@ def build_new() -> DataFrame:
         .csv(os.path.join(os.path.dirname(__file__), "resources/customer.csv"))
     )
 
-    _df_customer.createOrReplaceTempView("customer") 
+    _df_customer.createOrReplaceTempView("customer")
 
     return _df_order 
 ```

@@ -2226,17 +2226,6 @@ def test_with_expectations(input_df,
         write_to_table,
         write_to_temp_table,
         row_dq,
-        agg_dq={
-            user_config.se_agg_dq: agg_dq,
-            user_config.se_source_agg_dq: source_agg_dq,
-            user_config.se_final_agg_dq: final_agg_dq,
-        },
-        query_dq={
-            user_config.se_query_dq: query_dq,
-            user_config.se_source_query_dq: source_query_dq,
-            user_config.se_final_query_dq: final_query_dq,
-            user_config.se_target_table_view: "target_test_table"
-        },
         spark_conf={**spark_conf, **{user_config.se_notifications_on_fail: False}},
         options=options,
         options_error_table=options_error_table,

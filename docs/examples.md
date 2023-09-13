@@ -118,11 +118,8 @@ from spark_expectations.config.user_config import *  # (7)!
 
 
 @se.with_expectations(  # (6)!
-    se.reader.get_rules_from_table(  # (5)!
-        product_rules_table="pilot_nonpub.dq.dq_rules",  # (1)!
-        table_name="pilot_nonpub.dq_employee.employee",  # (2)!
-        dq_stats_table_name="pilot_nonpub.dq.dq_stats"  # (3)!
-    ),
+    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                   target_table=),
     write_to_table=True,  # (4)!
     write_to_temp_table=True,  # (8)!
     row_dq=True,  # (9)!
@@ -206,13 +203,14 @@ def build_new() -> DataFrame:
 
 ```python
 @se.with_expectations(  # (1)!
-    se.reader.get_rules_from_table(  
-        product_rules_table="pilot_nonpub.dq.dq_rules", 
-        target_table_name="pilot_nonpub.customer_order", 
-        dq_stats_table_name="pilot_nonpub.dq.dq_stats")
-    ),
-   row_dq=True  # (2)!
+    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                   target_table="pilot_nonpub.customer_order")
 )
+
+,
+row_dq = True  # (2)!
+)
+
 def build_new() -> DataFrame:
     _df: DataFrame = (
         spark.read.option("header", "true")
@@ -229,18 +227,15 @@ def build_new() -> DataFrame:
 
 ```python
 @se.with_expectations(  # (1)!
-    se.reader.get_rules_from_table(  
-        product_rules_table="pilot_nonpub.dq.dq_rules", 
-        target_table_name="pilot_nonpub.customer_order", 
-        dq_stats_table_name="pilot_nonpub.dq.dq_stats"
-    ),
-   row_dq=False,  # (2)!
-   agg_dq={
-        user_config.se_agg_dq: True, 
-        user_config.se_source_agg_dq: True, 
-        user_config.se_final_agg_dq: False, 
+    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                   target_table="pilot_nonpub.customer_order"),
+    row_dq=False,  # (2)!
+    agg_dq={
+        user_config.se_agg_dq: True,
+        user_config.se_source_agg_dq: True,
+        user_config.se_final_agg_dq: False,
     }
-   
+
 )
 def build_new() -> DataFrame:
     _df: DataFrame = (
@@ -259,19 +254,16 @@ def build_new() -> DataFrame:
 
 ```python
 @se.with_expectations(  # (1)!
-    se.reader.get_rules_from_table(  
-        product_rules_table="pilot_nonpub.dq.dq_rules", 
-        target_table_name="pilot_nonpub.customer_order", 
-        dq_stats_table_name="pilot_nonpub.dq.dq_stats"
-    ),
-   row_dq=True, 
-   query_dq={  # (2)!
+    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                   target_table="pilot_nonpub.customer_order"),
+    row_dq=True,
+    query_dq={  # (2)!
         user_config.se_query_dq: True,
         user_config.se_source_query_dq: True,
         user_config.se_final_query_dq: True,
         user_config.se_target_table_view: "order",
     },
-   
+
 )
 def build_new() -> DataFrame:
     _df_order: DataFrame = (
@@ -279,11 +271,11 @@ def build_new() -> DataFrame:
         .option("inferSchema", "true")
         .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
     )
-    _df_order.createOrReplaceTempView("order") 
+    _df_order.createOrReplaceTempView("order")
     _df_product: DataFrame = (
         spark.read.option("header", "true")
         .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/product.csv")) 
+        .csv(os.path.join(os.path.dirname(__file__), "resources/product.csv"))
     )
     _df_product.createOrReplaceTempView("product")
 
@@ -306,21 +298,18 @@ def build_new() -> DataFrame:
 
 ```python
 @se.with_expectations(  # (1)!
-    se.reader.get_rules_from_table(  
-        product_rules_table="pilot_nonpub.dq.dq_rules", 
-        target_table_name="pilot_nonpub.customer_order", 
-        dq_stats_table_name="pilot_nonpub.dq.dq_stats"
-    ),
-   row_dq=True, 
-   agg_dq={ # (10)!
-        user_config.user_configse_agg_dq: True, 
+    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                   target_table="pilot_nonpub.customer_order"),
+    row_dq=True,
+    agg_dq={  # (10)!
+        user_config.user_configse_agg_dq: True,
         user_config.se_source_agg_dq: True,
-        user_config.se_final_agg_dq: False, # (2)!
-    }, 
+        user_config.se_final_agg_dq: False,  # (2)!
+    },
 
 )
 def build_new() -> DataFrame:
-   _df_order: DataFrame = (
+    _df_order: DataFrame = (
         spark.read.option("header", "true")
         .option("inferSchema", "true")
         .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
@@ -338,17 +327,15 @@ def build_new() -> DataFrame:
 ```python
 import os
 
+
 @se.with_expectations(
-    se.reader.get_rules_from_table(  
-        product_rules_table="pilot_nonpub.dq.dq_rules", 
-        target_table_name="pilot_nonpub.customer_order", 
-        dq_stats_table_name="pilot_nonpub.dq.dq_stats"
-    ),
-    spark_conf=se_global_spark_Conf, # (2)!
-    
+    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                   target_table="pilot_nonpub.customer_order"),
+    spark_conf=se_global_spark_Conf,  # (2)!
+
 )
 def build_new() -> DataFrame:
-   _df_order: DataFrame = (
+    _df_order: DataFrame = (
         spark.read.option("header", "true")
         .option("inferSchema", "true")
         .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
@@ -365,27 +352,24 @@ def build_new() -> DataFrame:
 #### Example 7
 
 ```python
-@se.with_expectations( # (1)!
-    se.reader.get_rules_from_table(  
-        product_rules_table="pilot_nonpub.dq.dq_rules", 
-        target_table_name="pilot_nonpub.customer_order", 
-        dq_stats_table_name="pilot_nonpub.dq.dq_stats"
-    ),
-   row_dq=False, 
-   agg_dq={ 
+@se.with_expectations(  # (1)!
+    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                   target_table="pilot_nonpub.customer_order"),
+    row_dq=False,
+    agg_dq={
         user_config.se_agg_dq: False,
-        user_config.se_source_agg_dq: False, 
+        user_config.se_source_agg_dq: False,
         user_config.se_final_agg_dq: True,
-    },  
-   query_dq={ 
+    },
+    query_dq={
         user_config.se_query_dq: False,
         user_config.se_source_query_dq: True,
         user_config.se_final_query_dq: True,
-        user_config.se_target_table_view: "order", 
+        user_config.se_target_table_view: "order",
     },
 )
 def build_new() -> DataFrame:
-   _df_order: DataFrame = (
+    _df_order: DataFrame = (
         spark.read.option("header", "true")
         .option("inferSchema", "true")
         .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
@@ -400,16 +384,12 @@ def build_new() -> DataFrame:
 #### Example 8
 
 ```python
-@se.with_expectations( # (1)!
-    se.reader.get_rules_from_table(
-        product_rules_table="pilot_nonpub.dq.dq_rules",
-        target_table_name="pilot_nonpub.customer_order",
-        dq_stats_table_name="pilot_nonpub.dq.dq_stats",
-        actions_if_failed=["drop", "ignore"]  # (1)!
-    )
+@se.with_expectations(  # (1)!
+    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                   target_table="pilot_nonpub.customer_order", actions_if_failed=["drop", "ignore"])
 )
 def build_new() -> DataFrame:
-   _df_order: DataFrame = (
+    _df_order: DataFrame = (
         spark.read.option("header", "true")
         .option("inferSchema", "true")
         .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
@@ -424,39 +404,35 @@ def build_new() -> DataFrame:
 #### Example 9
 
 ```python
-@se.with_expectations( # (1)!
-    se.reader.get_rules_from_table(
-        product_rules_table="pilot_nonpub.dq.dq_rules",
-        target_table_name="pilot_nonpub.customer_order",
-        dq_stats_table_name="pilot_nonpub.dq.dq_stats",
-        actions_if_failed=["drop", "ignore"]  # (1)!
-    ),
+@se.with_expectations(  # (1)!
+    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                   target_table="pilot_nonpub.customer_order", actions_if_failed=["drop", "ignore"]),
     row_dq=True,  # (2)!
-   agg_dq={ 
-        user_config.se_agg_dq: True, 
+    agg_dq={
+        user_config.se_agg_dq: True,
         user_config.se_source_agg_dq: True,
-        user_config.se_final_agg_dq: True, 
-    },  
-   query_dq={ 
+        user_config.se_final_agg_dq: True,
+    },
+    query_dq={
         user_config.se_query_dq: True,
         user_config.se_source_query_dq: True,
         user_config.se_final_query_dq: True,
-        user_config.se_target_table_view: "order", 
+        user_config.se_target_table_view: "order",
     }
-    
+
 )
 def build_new() -> DataFrame:
-   _df_order: DataFrame = (
+    _df_order: DataFrame = (
         spark.read.option("header", "true")
         .option("inferSchema", "true")
         .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
     )
-    _df_order.createOrReplaceTempView("order") 
+    _df_order.createOrReplaceTempView("order")
 
     _df_product: DataFrame = (
         spark.read.option("header", "true")
         .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/product.csv")) 
+        .csv(os.path.join(os.path.dirname(__file__), "resources/product.csv"))
     )
     _df_product.createOrReplaceTempView("product")
 
@@ -466,10 +442,10 @@ def build_new() -> DataFrame:
         .csv(os.path.join(os.path.dirname(__file__), "resources/customer.csv"))
     )
 
-    _df_customer.createOrReplaceTempView("customer") 
+    _df_customer.createOrReplaceTempView("customer")
 
     return _df_order
-   
+
 ```
 
 1. The default options for the action_if_failed field are ["fail", "drop", or "ignore"], but you can specify which of 
@@ -482,15 +458,12 @@ def build_new() -> DataFrame:
 
 ```python
 @se.with_expectations(
-    se.reader.get_rules_from_table(
-        product_rules_table="pilot_nonpub.dq.dq_rules",
-        target_table_name="pilot_nonpub.customer_order",
-        dq_stats_table_name="pilot_nonpub.dq.dq_stats"
-    ),
-   spark_conf={"spark.files.maxPartitionBytes": "134217728"},  # (1)!
-   options={"mode": "overwrite", "partitionBy": "order_month", 
-            "overwriteSchema": "true"},  # (2)!
-   options_error_table={"partition_by": "id"}  # (3)!
+    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                   target_table="pilot_nonpub.customer_order"),
+    spark_conf={"spark.files.maxPartitionBytes": "134217728"},  # (1)!
+    options={"mode": "overwrite", "partitionBy": "order_month",
+             "overwriteSchema": "true"},  # (2)!
+    options_error_table={"partition_by": "id"}  # (3)!
 )
 def build_new() -> DataFrame:
     _df_order: DataFrame = (

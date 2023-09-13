@@ -53,7 +53,7 @@ def test_context_properties():
     context._input_count = 100
     context._error_count = 10
     context._output_count = 90
-    context._nsp_stats_topic_name = "spark_expectations_stats_topic"
+    context._kafka_stats_topic_name = "spark_expectations_stats_topic"
     context._source_agg_dq_result = [
         {"action_if_failed": "ignore", "rule_type": "agg_dq", "rule_name": "sum_of_salary_threshold",
          "rule": "sum(salary)>100"}]
@@ -70,10 +70,10 @@ def test_context_properties():
     context._cerberus_url = "https://xyz"
     context._cerberus_cred_path = "spark-expectations/credentials"
     context._cerberus_token = "xxx"
-    # context._nsp_bootstrap_server_url = "https://boostarp/server"
-    # context._nsp_secret = "xxxx"
-    # context._nsp_token_endpoint_uri = "https://token_uri"
-    # context._nsp_client_id = "spark-expectations"
+    # context._kafka_bootstrap_server_url = "https://boostarp/server"
+    # context._kafka_secret = "xxxx"
+    # context._kafka_token_endpoint_uri = "https://token_uri"
+    # context._kafka_client_id = "spark-expectations"
 
     context._run_id_name = "run_id"
     context._run_date_name = "run_date"
@@ -118,7 +118,7 @@ def test_context_properties():
                                                                 "action_if_failed": "fail",
                                                                 "failed_row_count": 4}]
 
-    context._nsp_row_dq_res_topic_name = "abc"
+    context._kafka_row_dq_res_topic_name = "abc"
 
     context._se_streaming_stats_dict = {"a": "b", "c": "d"}
     context._se_streaming_stats_topic_name = "test_topic"
@@ -150,7 +150,7 @@ def test_context_properties():
     assert context._input_count == 100
     assert context._error_count == 10
     assert context._output_count == 90
-    assert context._nsp_stats_topic_name == "spark_expectations_stats_topic"
+    assert context._kafka_stats_topic_name == "spark_expectations_stats_topic"
     assert context._source_agg_dq_result == [
         {"action_if_failed": "ignore", "rule_type": "agg_dq", "rule_name": "sum_of_salary_threshold",
          "rule": "sum(salary)>100"}]
@@ -170,10 +170,10 @@ def test_context_properties():
     assert context.get_cerberus_cred_path == "spark-expectations/credentials"
     assert context._cerberus_token == "xxx"
     assert context.get_cerberus_token == "xxx"
-    # assert context._nsp_bootstrap_server_url == "https://boostarp/server"
-    # assert context._nsp_secret == "xxxx"
-    # assert context._nsp_token_endpoint_uri == "https://token_uri"
-    # assert context._nsp_client_id == "spark-expectations"
+    # assert context._kafka_bootstrap_server_url == "https://boostarp/server"
+    # assert context._kafka_secret == "xxxx"
+    # assert context._kafka_token_endpoint_uri == "https://token_uri"
+    # assert context._kafka_client_id == "spark-expectations"
 
     assert context._run_id_name == "run_id"
     assert context._run_date_name == "run_date"
@@ -215,7 +215,7 @@ def test_context_properties():
 
     assert context._source_query_dq_status == "Passed"
     assert context._final_query_dq_status == "Skipped"
-    assert context._nsp_row_dq_res_topic_name == "abc"
+    assert context._kafka_row_dq_res_topic_name == "abc"
     assert context._se_streaming_stats_dict == {"a": "b", "c": "d"}
     assert context._se_streaming_stats_topic_name == "test_topic"
 
@@ -471,14 +471,14 @@ def test_set_output_count():
     assert context.get_output_count == 90
 
 
-# def test_set_nsp_stats_topic_name():
+# def test_set_kafka_stats_topic_name():
 #     context = SparkExpectationsContext(product_id="product1")
-#     context.set_nsp_stats_topic_name("spark_expectations_stats_topic")
-#     assert context._nsp_stats_topic_name == "spark_expectations_stats_topic"
-#     assert context.get_nsp_stats_topic_name == "spark_expectations_stats_topic"
+#     context.set_kafka_stats_topic_name("spark_expectations_stats_topic")
+#     assert context._kafka_stats_topic_name == "spark_expectations_stats_topic"
+#     assert context.get_kafka_stats_topic_name == "spark_expectations_stats_topic"
 
 
-def test_set_nsp_source_agg_dq_result():
+def test_set_kafka_source_agg_dq_result():
     context = SparkExpectationsContext(product_id="product1")
     context.set_source_agg_dq_result([
         {"action_if_failed": "ignore", "rule_type": "agg_dq", "rule_name": "sum_of_salary_threshold",
@@ -491,7 +491,7 @@ def test_set_nsp_source_agg_dq_result():
          "rule": "sum(salary)>100"}]
 
 
-def test_set_nsp_final_agg_dq_result():
+def test_set_kafka_final_agg_dq_result():
     context = SparkExpectationsContext(product_id="product1")
     context.set_final_agg_dq_result([
         {"action_if_failed": "ignore", "rule_type": "agg_dq", "rule_name": "sum_of_salary_threshold",
@@ -576,13 +576,13 @@ def test_get_table_name_expection():
 #         context.get_input_count
 
 
-# def test_get_nsp_stats_topic_name_exception():
+# def test_get_kafka_stats_topic_name_exception():
 #     context = SparkExpectationsContext(product_id="product1")
-#     context._nsp_stats_topic_name = None
+#     context._kafka_stats_topic_name = None
 #     with pytest.raises(SparkExpectationsMiscException,
 #                        match="The spark expectations context is not set completely, please assign "
-#                              "'_nsp_stats_topic_name' before \n            accessing it"):
-#         context.get_nsp_stats_topic_name
+#                              "'_kafka_stats_topic_name' before \n            accessing it"):
+#         context.get_kafka_stats_topic_name
 
 
 def test_set_notification_on_start():
@@ -696,68 +696,68 @@ def test_get_cerberus_token_exception():
         context.get_cerberus_token
 
 
-# def test_get_nsp_bootstrap_server_url_exception():
+# def test_get_kafka_bootstrap_server_url_exception():
 #     context = SparkExpectationsContext(product_id="product1")
-#     context._nsp_bootstrap_server_url = None
+#     context._kafka_bootstrap_server_url = None
 #     with pytest.raises(SparkExpectationsMiscException,
-#                        match="""The spark expectations context is not set completely, please assign '_nsp_bootstrap_server_url'  before
+#                        match="""The spark expectations context is not set completely, please assign '_kafka_bootstrap_server_url'  before
 #             accessing it"""):
-#         context.get_nsp_bootstrap_server_url
+#         context.get_kafka_bootstrap_server_url
 
 
-# def test_get_nsp_secret_exception():
+# def test_get_kafka_secret_exception():
 #     context = SparkExpectationsContext(product_id="product1")
-#     context._nsp_secret = None
+#     context._kafka_secret = None
 #     with pytest.raises(SparkExpectationsMiscException,
-#                        match="""The spark expectations context is not set completely, please assign '_nsp_secret'  before
+#                        match="""The spark expectations context is not set completely, please assign '_kafka_secret'  before
 #             accessing it"""):
-#         context.get_nsp_secret
+#         context.get_kafka_secret
 
 
-# def test_get_nsp_token_endpoint_uri_exception():
+# def test_get_kafka_token_endpoint_uri_exception():
 #     context = SparkExpectationsContext(product_id="product1")
-#     context._nsp_token_endpoint_uri = None
+#     context._kafka_token_endpoint_uri = None
 #     with pytest.raises(SparkExpectationsMiscException,
-#                        match="""The spark expectations context is not set completely, please assign '_nsp_token_endpoint_uri'  before
+#                        match="""The spark expectations context is not set completely, please assign '_kafka_token_endpoint_uri'  before
 #             accessing it"""):
-#         context.get_nsp_token_endpoint_uri
+#         context.get_kafka_token_endpoint_uri
 
 
-# def test_get_nsp_client_id_exception():
+# def test_get_kafka_client_id_exception():
 #     context = SparkExpectationsContext(product_id="product1")
-#     context._nsp_client_id = None
+#     context._kafka_client_id = None
 #     with pytest.raises(SparkExpectationsMiscException,
-#                        match="""The spark expectations context is not set completely, please assign '_nsp_client_id'  before
+#                        match="""The spark expectations context is not set completely, please assign '_kafka_client_id'  before
 #             accessing it"""):
-#         context.get_nsp_client_id
+#         context.get_kafka_client_id
 
 
-# def test_set_nsp_bootstrap_server_url():
+# def test_set_kafka_bootstrap_server_url():
 #     context = SparkExpectationsContext(product_id="product1")
-#     context.set_nsp_bootstrap_server_url(nsp_bootstrap_server_url="https://boostarp/server")
-#     assert context._nsp_bootstrap_server_url == "https://boostarp/server"
-#     assert context.get_nsp_bootstrap_server_url == "https://boostarp/server"
+#     context.set_kafka_bootstrap_server_url(kafka_bootstrap_server_url="https://boostarp/server")
+#     assert context._kafka_bootstrap_server_url == "https://boostarp/server"
+#     assert context.get_kafka_bootstrap_server_url == "https://boostarp/server"
 
 
-# def test_nsp_secret():
+# def test_kafka_secret():
 #     context = SparkExpectationsContext(product_id="product1")
-#     context.set_nsp_secret(nsp_secret="xxx")
-#     assert context._nsp_secret == "xxx"
-#     assert context.get_nsp_secret == "xxx"
+#     context.set_kafka_secret(kafka_secret="xxx")
+#     assert context._kafka_secret == "xxx"
+#     assert context.get_kafka_secret == "xxx"
 
 
-# def test_nsp_token_endpoint_uri():
+# def test_kafka_token_endpoint_uri():
 #     context = SparkExpectationsContext(product_id="product1")
-#     context.set_nsp_token_endpoint_uri(nsp_token_endpoint_uri="https://token_uri")
-#     assert context._nsp_token_endpoint_uri == "https://token_uri"
-#     assert context.get_nsp_token_endpoint_uri == "https://token_uri"
+#     context.set_kafka_token_endpoint_uri(kafka_token_endpoint_uri="https://token_uri")
+#     assert context._kafka_token_endpoint_uri == "https://token_uri"
+#     assert context.get_kafka_token_endpoint_uri == "https://token_uri"
 
 
-# def test_set_nsp_client_id():
+# def test_set_kafka_client_id():
 #     context = SparkExpectationsContext(product_id="product1")
-#     context.set_nsp_client_id(nsp_client_id="spark-expectations")
-#     assert context._nsp_client_id == "spark-expectations"
-#     assert context.get_nsp_client_id == "spark-expectations"
+#     context.set_kafka_client_id(kafka_client_id="spark-expectations")
+#     assert context._kafka_client_id == "spark-expectations"
+#     assert context.get_kafka_client_id == "spark-expectations"
 
 
 def test_set_source_agg_dq_start_time():
@@ -987,18 +987,18 @@ def test_set_summarised_row_dq_res():
                                                                            "failed_row_count": 4}]
 
 
-# def test_set_nsp_row_dq_res_topic_name():
+# def test_set_kafka_row_dq_res_topic_name():
 #     context = SparkExpectationsContext(product_id="product1")
-#     context.set_nsp_row_dq_res_topic_name("abc")
-#     assert context.get_nsp_row_dq_res_topic_name == "abc"
+#     context.set_kafka_row_dq_res_topic_name("abc")
+#     assert context.get_kafka_row_dq_res_topic_name == "abc"
 #
-# def test_get_nsp_row_dq_res_topic_name_exception():
+# def test_get_kafka_row_dq_res_topic_name_exception():
 #     context = SparkExpectationsContext(product_id="product1")
-#     context._nsp_row_dq_res_topic_name = None
+#     context._kafka_row_dq_res_topic_name = None
 #     with pytest.raises(SparkExpectationsMiscException,
-#                        match= """The spark expectations context is not set completely, please assign '_nsp_row_dq_res_topic_name' before
+#                        match= """The spark expectations context is not set completely, please assign '_kafka_row_dq_res_topic_name' before
 #             accessing it"""):
-#         context.get_nsp_row_dq_res_topic_name
+#         context.get_kafka_row_dq_res_topic_name
 
 def test_set_source_query_dq_status():
     context = SparkExpectationsContext(product_id="product1")
