@@ -40,7 +40,7 @@ pylint:
 pycodestyle:
   # W293: disabled because we have newlines in docstrings
   # E203: disabled because pep8 and black disagree on whitespace before colon in some cases
-  disable: W293,E203, E203, N803, N802 # conflicts with black formatting
+  disable: W293,E203, E203  # conflicts with black formatting
 
 mccabe:
   disable:
