@@ -188,7 +188,7 @@ def test_write_df_to_table(save_df_as_table,
                            _fixture_writer,
                            _fixture_create_employee_table):
     # Test the function with valid input
-    _fixture_writer.write_df_to_table(_fixture_employee, table_name, options=options)
+    _fixture_writer.sa(_fixture_employee, table_name, options=options)
     save_df_as_table.assert_called_once_with(
         _fixture_writer, _fixture_employee, table_name, {"spark.sql.session.timeZone": "Etc/UTC"}, options
     )

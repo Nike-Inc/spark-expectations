@@ -40,6 +40,8 @@ class SparkExpectations:
     product_id: str
     rules_table: str
     stats_table: str
+    target_and_error_table_writer: Type["WrappedDataFrameWriter"]
+    stats_table_writer: Type["WrappedDataFrameWriter"]
     debugger: bool = False
     stats_streaming_options: Optional[Dict[str, str]] = None
 
@@ -66,20 +68,26 @@ class SparkExpectations:
             _context=self._context,
         )
 
+        self._context.set_target_and_error_table_writer_config(
+            self.target_and_error_table_writer.build()
+        )
+        self._context.set_stats_table_writer_config(self.stats_table_writer.build())
         self._context.set_debugger_mode(self.debugger)
 
+    # TODO Add target_error_table_writer and stats_table_writer as parameters to this function so this takes precedence
+    #  if user provides it
     def with_expectations(
         self,
         target_table: str,
         write_to_table: bool = False,
         write_to_temp_table: bool = False,
-        spark_conf: Optional[Dict[str, Any]] = None,
-        options: Optional[Dict[str, str]] = None,
-        options_error_table: Optional[Dict[str, str]] = None,
+        spark_conf: Optional[Dict[str, Union[str, int, bool]]] = None,
         rules_table: Optional[str] = None,
         stats_table: Optional[str] = None,
         target_table_view: Optional[str] = None,
         actions_if_failed: Optional[List[str]] = None,
+        target_and_error_table_writer: Optional[Type["WrappedDataFrameWriter"]] = None,
+        stats_table_writer: Optional[Type["WrappedDataFrameWriter"]] = None,
     ) -> Any:
         """
         This decorator helps to wrap a function which returns dataframe and apply dataframe rules on it
@@ -89,17 +97,17 @@ class SparkExpectations:
             write_to_table: Mark it as "True" if the dataframe need to be written as table
             write_to_temp_table: Mark it as "True" if the input dataframe need to be written to the temp table to break
                                 the spark plan
-            spark_conf: Provide SparkConf to override the defaults, while writing into the table & which also contains
-            notifications related variables
-            options: Provide Options to override the defaults, while writing into the table
-            options_error_table: Provide options to override the defaults, while writing into the error table
+            spark_conf: Provide options to override the defaults, while writing into the stats streaming table
             rules_table: Name of the table which contains the rules
             stats_table: Name of the table where the stats/audit-info need to be written
             target_table_view: This view is created after the _row_dq process to run the target agg_dq and query_dq.
                 If value is not provided, defaulted to {target_table}_view
             actions_if_failed: Provide the list of actions to be taken if the expectations failed. Default would be all
                 actions ['ignore', 'drop', 'fail']
-
+            target_and_error_table_writer: Provide the writer to write the target and error table,
+                this will take precedence over the class level writer
+            stats_table_writer: Provide the writer to write the stats table,
+                this will take precedence over the class level writer
 
         Returns:
             Any: Returns a function which applied the expectations on dataset
@@ -137,6 +145,14 @@ class SparkExpectations:
                 if self.stats_streaming_options
                 else _default_stats_streaming_dict
             )
+
+            # Overwrite the writers if provided by the user in the with_expectations explicitly
+            if target_and_error_table_writer:
+                self._context.set_target_and_error_table_writer_config(
+                    target_and_error_table_writer.build()
+                )
+            if stats_table_writer:
+                self._context.set_stats_table_writer_config(stats_table_writer.build())
 
             # need to call the get_rules_frm_table function to get the rules from the table as expectations
             expectations, rules_execution_settings = self.reader.get_rules_from_table(
@@ -278,11 +294,10 @@ class SparkExpectations:
                             self.spark.sql(f"drop table if exists {table_name}_temp")
                             _log.info("Dropping to temp table completed")
                             _log.info("Writing to temp table started")
-                            self._writer.write_df_to_table(
+                            self._writer.save_df_as_table(
                                 _df,
                                 f"{table_name}_temp",
-                                spark_conf=spark_conf,
-                                options=options,
+                                self._context.get_target_and_error_table_writer_config,
                             )
                             _log.info("Read from temp table started")
                             _df = self.spark.sql(f"select * from {table_name}_temp")
@@ -296,8 +311,6 @@ class SparkExpectations:
                             expectations=expectations,
                             table_name=table_name,
                             _input_count=_input_count,
-                            spark_conf=spark_conf,
-                            options_error_table=options_error_table,
                         )
 
                         if _source_agg_dq is True:
@@ -480,11 +493,10 @@ class SparkExpectations:
                         #  dataframe into the target table
                         if _row_dq and write_to_table:
                             _log.info("Writing into the final table started")
-                            self._writer.write_df_to_table(
+                            self._writer.save_df_as_table(
                                 _row_dq_df,
                                 f"{table_name}",
-                                spark_conf=spark_conf,
-                                options=options,
+                                self._context.get_target_and_error_table_writer_config,
                             )
                             _log.info("Writing into the final table ended")
 
@@ -544,8 +556,9 @@ class WrappedDataFrameWriter:
     _mode: Optional[str] = None
     _format: Optional[str] = None
     _partition_by: list = []
-    _options: dict = {}
-    _bucket_by: dict = {}
+    _options: dict[str, str] = {}
+    _bucket_by: Dict[str, Union[int, tuple]] = {}
+    _sort_by: list = []
 
     @classmethod
     def mode(
@@ -597,14 +610,41 @@ class WrappedDataFrameWriter:
         return cls
 
     @classmethod
+    def sortBy(  # noqa: N802
+        cls: Type["WrappedDataFrameWriter"], *columns: str
+    ) -> Type["WrappedDataFrameWriter"]:
+        """Set the configuration for bucketing."""
+        cls._sort_by.extend(columns)
+        return cls
+
+    @classmethod
     def build(
-        cls: Type["WrappedDataFrameWriter"],
-    ) -> Dict[str, Union[Optional[str], List[str], Dict[str, Union[int, List[str]]]]]:
+        cls,
+    ) -> Dict[str, Union[str, list, dict, tuple, int, None]]:
         """Return the collected configurations."""
+
         return {
             "mode": cls._mode,
             "format": cls._format,
             "partitionBy": cls._partition_by,
             "options": cls._options,
             "bucketBy": cls._bucket_by,
+            "sortBy": cls._sort_by,
         }
+
+        # config = {}
+        #
+        # if cls._mode:
+        #     config["mode"] = cls._mode
+        # if cls._format:
+        #     config["format"] = cls._format
+        # if cls._partition_by:
+        #     config["partitionBy"] = cls._partition_by
+        # if cls._options:
+        #     config["options"] = cls._options
+        # if cls._bucket_by:
+        #     config["bucketBy"] = cls._bucket_by
+        # if cls._sort_by:
+        #     config["sortBy"] = cls._sort_by
+        #
+        # return config

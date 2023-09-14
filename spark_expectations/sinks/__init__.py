@@ -6,9 +6,6 @@ from spark_expectations.sinks.plugins.base_writer import (
     SPARK_EXPECTATIONS_WRITER_PLUGIN,
 )
 
-from spark_expectations.sinks.plugins.delta_writer import (
-    SparkExpectationsDeltaWritePluginImpl,
-)
 from spark_expectations.sinks.plugins.kafka_writer import (
     SparkExpectationsKafkaWritePluginImpl,
 )
@@ -24,9 +21,6 @@ def get_sink_hook() -> pluggy.PluginManager:
     """
     pm = pluggy.PluginManager(SPARK_EXPECTATIONS_WRITER_PLUGIN)
     pm.add_hookspecs(SparkExpectationsSinkWriter)
-    pm.register(
-        SparkExpectationsDeltaWritePluginImpl(), "spark_expectations_delta_write"
-    )
     pm.register(
         SparkExpectationsKafkaWritePluginImpl(), "spark_expectations_kafka_write"
     )

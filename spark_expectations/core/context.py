@@ -75,10 +75,8 @@ class SparkExpectationsContext:
         self._notification_on_fail: bool = False
         self._error_drop_threshold: int = 100
 
-        self._cerberus_url: str = "https://prod.cerberus.cloud.com"
-        self._cerberus_cred_path: str = (
-            "app/aplaedaengineering-domo/dq-spark-expectations"
-        )
+        self._cerberus_url: str = "your_cerberus_url"
+        self._cerberus_cred_path: str = "your_cerberus_sdb_path"
         self._cerberus_token: Optional[str] = os.environ.get(
             "DQ_SPARK_EXPECTATIONS_CERBERUS_TOKEN"
         )
@@ -86,10 +84,6 @@ class SparkExpectationsContext:
         self._se_streaming_stats_dict: Dict[str, str]
         self._enable_se_streaming: bool = False
         self._se_streaming_secret_env: str = ""
-        # self._se_streaming_bootstrap_server_url_path: str = ""
-        # self._se_streaming_secret_path: str = ""
-        # self._se_streaming_token_endpoint_uri_path: str = ""
-        # self._se_streaming_client_id_path: str = ""
 
         self._debugger_mode: bool = False
         self._supported_df_query_dq: DataFrame = self.set_supported_df_query_dq()
@@ -126,6 +120,9 @@ class SparkExpectationsContext:
         self._num_dq_rules: int = 0
         self._summarised_row_dq_res: Optional[List[Dict[str, str]]] = None
         self._rules_error_per: Optional[List[dict]] = None
+
+        self._target_and_error_table_writer_config: dict = {}
+        self._stats_table_writer_config: dict = {}
 
     @property
     def get_run_id(self) -> str:
@@ -1469,3 +1466,41 @@ class SparkExpectationsContext:
         This function returns error percentage for each rule
         """
         return self._rules_error_per
+
+    def set_target_and_error_table_writer_config(self, config: dict) -> None:
+        """
+        This function sets target and error table writer config
+        Args:
+            config: dict
+        Returns: None
+
+        """
+        self._target_and_error_table_writer_config = config
+
+    @property
+    def get_target_and_error_table_writer_config(self) -> dict:
+        """
+        This function returns target and error table writer config
+        Returns:
+            dict: Returns target_and_error_table_writer_config which in dict
+
+        """
+        return self._target_and_error_table_writer_config
+
+    def set_stats_table_writer_config(self, config: dict) -> None:
+        """
+        This function sets stats table writer config
+        Args:
+            config: dict
+        Returns: None
+        """
+        self._stats_table_writer_config = config
+
+    @property
+    def get_stats_table_writer_config(self) -> dict:
+        """
+        This function returns stats table writer config
+        Returns:
+            dict: Returns stats_table_writer_config which in dict
+        """
+        return self._stats_table_writer_config

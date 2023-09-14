@@ -2711,19 +2711,33 @@ def test_bucketBy(fresh_writer):
 
 
 def test_build(fresh_writer):
-    writer = (
-        fresh_writer.mode("overwrite")
-        .format("parquet")
-        .partitionBy("date", "region")
-        .option("compression", "gzip")
-        .options(path="/path/to/output", inferSchema="true")
-        .bucketBy(4, "country", "city")
-    )
+    writer = fresh_writer.mode("overwrite") \
+            .format("parquet") \
+            .partitionBy("date", "region") \
+            .option("compression", "gzip") \
+            .options(path="/path/to/output", inferSchema="true") \
+            .bucketBy(4, "country", "city") \
+            .sortBy("col1", "col2")
     expected_config = {
         "mode": "overwrite",
         "format": "parquet",
         "partitionBy": ["date", "region"],
         "options": {"compression": "gzip", "path": "/path/to/output", "inferSchema": "true"},
-        "bucketBy": {"num_buckets": 4, "columns": ("country", "city")}
+        "bucketBy": {"num_buckets": 4, "columns": ("country", "city")},
+        "sortBy": ["col1", "col2"],
+    }
+    assert writer.build() == expected_config
+
+
+def test_build_some_values(fresh_writer):
+    writer = fresh_writer.mode("append").format("iceberg")
+
+    expected_config = {
+        "mode": "append",
+        "format": "iceberg",
+        "partitionBy": [],
+        "options": {},
+        "bucketBy": {},
+        "sortBy": []
     }
     assert writer.build() == expected_config
