@@ -4,9 +4,6 @@ from pyspark.sql.functions import col
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType
 from spark_expectations.core import get_spark_session
 from spark_expectations.sinks import get_sink_hook, _sink_hook
-from spark_expectations.sinks.plugins.delta_writer import (
-    SparkExpectationsDeltaWritePluginImpl,
-)
 from spark_expectations.sinks.plugins.kafka_writer import (
     SparkExpectationsKafkaWritePluginImpl,
 )
@@ -67,17 +64,15 @@ def fixture_dataset():
 def test_get_sink_hook():
     pm = get_sink_hook()
     # Check that the correct number of plugins have been registered
-    assert len(pm.list_name_plugin()) == 2
+    assert len(pm.list_name_plugin()) == 1
 
     # Check that the correct plugins have been registered
-    assert isinstance(pm.get_plugin("spark_expectations_delta_write"), SparkExpectationsDeltaWritePluginImpl)
     assert isinstance(pm.get_plugin("spark_expectations_kafka_write"), SparkExpectationsKafkaWritePluginImpl)
 
 
 def test_sink_hook_write(_fixture_create_database, _fixture_local_kafka_topic, _fixture_dataset):
     write_args = {
         "stats_df": _fixture_dataset,
-        "table_name": "dq_spark.test_table",
         "kafka_write_options": {
             "kafka.bootstrap.servers": "localhost:9092",
             "topic": "dq-sparkexpectations-stats-local",
@@ -89,7 +84,7 @@ def test_sink_hook_write(_fixture_create_database, _fixture_local_kafka_topic, _
 
     _sink_hook.writer(_write_args=write_args)
 
-    expected_delta_df = spark.table("dq_spark.test_table")
+    # expected_delta_df = spark.table("dq_spark.test_table")
 
     expected_kafka_df = spark.read.format("kafka").option(
         "kafka.bootstrap.servers", "localhost:9092"
@@ -100,6 +95,6 @@ def test_sink_hook_write(_fixture_create_database, _fixture_local_kafka_topic, _
     ).load().orderBy(col('timestamp').desc()).limit(1).selectExpr(
         "cast(value as string) as stats_records")
 
-    assert expected_delta_df.collect() == _fixture_dataset.collect()
+    # assert expected_delta_df.collect() == _fixture_dataset.collect()
     assert expected_kafka_df.collect() == _fixture_dataset.selectExpr(
         "cast(to_json(struct(*)) as string) AS stats_records").collect()

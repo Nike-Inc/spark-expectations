@@ -315,7 +315,6 @@ class SparkExpectationsWriter:
                     "enable_se_streaming": _se_stats_dict[
                         user_config.se_enable_streaming
                     ],
-                    "table_name": self._context.get_dq_stats_table_name,
                     "kafka_write_options": kafka_write_options,
                     "stats_df": df,
                 }
