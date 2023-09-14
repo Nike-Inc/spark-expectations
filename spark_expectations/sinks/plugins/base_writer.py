@@ -14,7 +14,7 @@ class SparkExpectationsSinkWriter:
         self, _write_args: Dict[Union[str], Union[str, bool, Dict[str, str], DataFrame]]
     ) -> None:
         """
-        function consist signature to write data into delta/nsp, which will be implemented in the child class
+        function consist signature to write data into kafka etc. which will be implemented in the child class
         Args:
             _write_args:
 

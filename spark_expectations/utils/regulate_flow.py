@@ -30,8 +30,6 @@ class SparkExpectationsRegulateFlow:
         expectations: Dict[str, List[dict]],
         table_name: str,
         _input_count: int = 0,
-        spark_conf: Optional[Dict[str, Any]] = None,
-        options_error_table: Optional[Dict[str, str]] = None,
     ) -> Any:
         """
         This functions takes required static variable and returns the function
@@ -43,9 +41,6 @@ class SparkExpectationsRegulateFlow:
             expectations: expectations dictionary which contains rules
             table_name: name of the table
             _input_count: number of records in the source dataframe
-            spark_conf: spark configurations(which is optional)
-            options_error_table: spark configurations to write data into the error table(which is optional)
-
         Returns:
                Any: returns function
 
@@ -129,8 +124,6 @@ class SparkExpectationsRegulateFlow:
                         _df_dq,
                         f"{table_name}_error",
                         _context.get_row_dq_rule_type_name,
-                        spark_conf,
-                        options_error_table,
                     )
                     if _context.get_summarised_row_dq_res:
                         _notification.notify_rules_exceeds_threshold(expectations)
