@@ -7,7 +7,8 @@
 [![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![PYPI version](https://img.shields.io/pypi/v/spark-expectations.svg)
-
+![PYPI - Downloads](https://static.pepy.tech/badge/spark-expectations)
+![PYPI - Python Version](https://img.shields.io/pypi/pyversions/spark-expectations.svg)
 
 <p align="center">
 Spark Expectations is a specialized tool designed with the primary goal of maintaining data integrity within your processing pipeline.
