@@ -1,12 +1,9 @@
 import functools
 from dataclasses import dataclass
-from typing import Dict, Optional, Any, Union, List, Type
-
+from typing import Dict, Optional, Any, Union, Type
 from pyspark.sql import DataFrame
-
 from spark_expectations import _log
 from spark_expectations.config.user_config import Constants as user_config
-from spark_expectations.core import get_spark_session
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException,
@@ -22,6 +19,7 @@ from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
 from spark_expectations.utils.actions import SparkExpectationsActions
 from spark_expectations.utils.reader import SparkExpectationsReader
 from spark_expectations.utils.regulate_flow import SparkExpectationsRegulateFlow
+from pyspark import StorageLevel
 
 
 @dataclass
@@ -31,14 +29,15 @@ class SparkExpectations:
 
     Args:
         product_id: Name of the product
-        rules_table: Name of the table which contains the rules
+        rules_df: DataFrame which contains the rules. User is responsible for reading
+            the rules_table in which ever system it is
         stats_table: Name of the table where the stats/audit-info need to be written
         debugger: Mark it as "True" if the debugger mode need to be enabled, by default is False
         stats_streaming_options: Provide options to override the defaults, while writing into the stats streaming table
     """
 
     product_id: str
-    rules_table: str
+    rules_df: DataFrame
     stats_table: str
     target_and_error_table_writer: Type["WrappedDataFrameWriter"]
     stats_table_writer: Type["WrappedDataFrameWriter"]
@@ -46,9 +45,9 @@ class SparkExpectations:
     stats_streaming_options: Optional[Dict[str, str]] = None
 
     def __post_init__(self) -> None:
-        self.spark = get_spark_session()
+        self.spark = self.rules_df.sparkSession
         self.actions = SparkExpectationsActions()
-        self._context = SparkExpectationsContext(product_id=self.product_id)
+        self._context = SparkExpectationsContext(product_id=self.product_id, spark=self.spark)
 
         self._writer = SparkExpectationsWriter(
             product_id=self.product_id, _context=self._context
@@ -73,6 +72,8 @@ class SparkExpectations:
         )
         self._context.set_stats_table_writer_config(self.stats_table_writer.build())
         self._context.set_debugger_mode(self.debugger)
+        self._context.set_dq_stats_table_name(self.stats_table)
+        self.rules_df = self.rules_df.persist(StorageLevel.MEMORY_AND_DISK)
 
     # TODO Add target_error_table_writer and stats_table_writer as parameters to this function so this takes precedence
     #  if user provides it
@@ -81,13 +82,9 @@ class SparkExpectations:
         target_table: str,
         write_to_table: bool = False,
         write_to_temp_table: bool = False,
-        spark_conf: Optional[Dict[str, Union[str, int, bool]]] = None,
-        rules_table: Optional[str] = None,
-        stats_table: Optional[str] = None,
+        user_conf: Optional[Dict[str, Union[str, int, bool]]] = None,
         target_table_view: Optional[str] = None,
-        actions_if_failed: Optional[List[str]] = None,
         target_and_error_table_writer: Optional[Type["WrappedDataFrameWriter"]] = None,
-        stats_table_writer: Optional[Type["WrappedDataFrameWriter"]] = None,
     ) -> Any:
         """
         This decorator helps to wrap a function which returns dataframe and apply dataframe rules on it
@@ -97,16 +94,10 @@ class SparkExpectations:
             write_to_table: Mark it as "True" if the dataframe need to be written as table
             write_to_temp_table: Mark it as "True" if the input dataframe need to be written to the temp table to break
                                 the spark plan
-            spark_conf: Provide options to override the defaults, while writing into the stats streaming table
-            rules_table: Name of the table which contains the rules
-            stats_table: Name of the table where the stats/audit-info need to be written
+            user_conf: Provide options to override the defaults, while writing into the stats streaming table
             target_table_view: This view is created after the _row_dq process to run the target agg_dq and query_dq.
                 If value is not provided, defaulted to {target_table}_view
-            actions_if_failed: Provide the list of actions to be taken if the expectations failed. Default would be all
-                actions ['ignore', 'drop', 'fail']
             target_and_error_table_writer: Provide the writer to write the target and error table,
-                this will take precedence over the class level writer
-            stats_table_writer: Provide the writer to write the stats table,
                 this will take precedence over the class level writer
 
         Returns:
@@ -115,6 +106,7 @@ class SparkExpectations:
 
         def _except(func: Any) -> Any:
             # variable used for enabling notification at different level
+
             _default_notification_dict: Dict[str, Union[str, int, bool]] = {
                 user_config.se_notifications_on_start: False,
                 user_config.se_notifications_on_completion: False,
@@ -123,11 +115,10 @@ class SparkExpectations:
                 user_config.se_notifications_on_error_drop_threshold: 100,
             }
             _notification_dict: Dict[str, Union[str, int, bool]] = (
-                {**_default_notification_dict, **spark_conf}
-                if spark_conf
+                {**_default_notification_dict, **user_conf}
+                if user_conf
                 else _default_notification_dict
             )
-
             _default_stats_streaming_dict: Dict[str, Union[bool, str]] = {
                 user_config.se_enable_streaming: True,
                 user_config.secret_type: "databricks",
@@ -139,7 +130,6 @@ class SparkExpectations:
                 user_config.dbx_secret_token: "se_streaming_auth_secret_token_key",
                 user_config.dbx_topic_name: "se_streaming_topic_name",
             }
-
             _se_stats_streaming_dict: Dict[str, Any] = (
                 {**self.stats_streaming_options}
                 if self.stats_streaming_options
@@ -151,15 +141,10 @@ class SparkExpectations:
                 self._context.set_target_and_error_table_writer_config(
                     target_and_error_table_writer.build()
                 )
-            if stats_table_writer:
-                self._context.set_stats_table_writer_config(stats_table_writer.build())
 
             # need to call the get_rules_frm_table function to get the rules from the table as expectations
-            expectations, rules_execution_settings = self.reader.get_rules_from_table(
-                self.rules_table if rules_table is None else rules_table,
-                self.stats_table if stats_table is None else stats_table,
-                target_table,
-                actions_if_failed,
+            expectations, rules_execution_settings = self.reader.get_rules_from_df(
+                self.rules_df, target_table
             )
 
             _row_dq: bool = rules_execution_settings.get("row_dq", False)
@@ -228,7 +213,7 @@ class SparkExpectations:
                 else 100
             )
 
-            self.reader.set_notification_param(spark_conf)
+            self.reader.set_notification_param(user_conf)
             self._context.set_notification_on_start(_notification_on_start)
             self._context.set_notification_on_completion(_notification_on_completion)
             self._context.set_notification_on_fail(_notification_on_fail)

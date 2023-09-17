@@ -2226,7 +2226,7 @@ def test_with_expectations(input_df,
         write_to_table,
         write_to_temp_table,
         row_dq,
-        spark_conf={**spark_conf, **{user_config.se_notifications_on_fail: False}},
+        user_conf={**spark_conf, **{user_config.se_notifications_on_fail: False}},
         options=options,
         options_error_table=options_error_table,
     )
@@ -2349,7 +2349,7 @@ def test_with_expectations_patch(_write_error_stats,
         True,
         agg_dq=None,
         query_dq=None,
-        spark_conf={user_config.se_notifications_on_fail: False},
+        user_conf={user_config.se_notifications_on_fail: False},
         options={'mode': 'overwrite', "format": "delta"},
         options_error_table={'mode': 'overwrite', "format": "delta"}
     )(Mock(return_value=_fixture_df))
@@ -2366,7 +2366,7 @@ def test_with_expectations_dataframe_not_returned_exception(_fixture_create_data
                                                             _fixture_local_kafka_topic):
     partial_func = _fixture_spark_expectations.with_expectations(
         _fixture_expectations,
-        spark_conf={user_config.se_notifications_on_fail: False},
+        user_conf={user_config.se_notifications_on_fail: False},
     )
 
     with pytest.raises(SparkExpectationsMiscException,
@@ -2389,7 +2389,7 @@ def test_with_expectations_exception(_fixture_create_database,
                                      _fixture_local_kafka_topic):
     partial_func = _fixture_spark_expectations.with_expectations(
         _fixture_expectations,
-        spark_conf={user_config.se_notifications_on_fail: False}
+        user_conf={user_config.se_notifications_on_fail: False}
     )
 
     with pytest.raises(SparkExpectationsMiscException,
@@ -2510,7 +2510,7 @@ def test_error_threshold_breach(_mock_notification_hook, _mock_spark_expectation
             user_config.se_final_agg_dq: final_agg_dq,
         },
         query_dq=None,
-        spark_conf={
+        user_conf={
             user_config.se_notifications_on_fail: False,
             user_config.se_notifications_on_error_drop_exceeds_threshold_breach: True,
             user_config.se_notifications_on_error_drop_threshold: 10,
@@ -2654,7 +2654,7 @@ def test_target_table_view_exception(input_df,
             user_config.se_final_query_dq: final_query_dq,
             user_config.se_target_table_view: ""
         },
-        spark_conf={**spark_conf, **{user_config.se_notifications_on_fail: False}},
+        user_conf={**spark_conf, **{user_config.se_notifications_on_fail: False}},
         options=options,
         options_error_table=options_error_table,
     )

@@ -11,13 +11,13 @@ from pyspark.sql.functions import (
     round as sql_round,
     create_map,
     explode,
+    to_json
 )
 from spark_expectations import _log
 from spark_expectations.core.exceptions import (
     SparkExpectationsUserInputOrConfigInvalidException,
     SparkExpectationsMiscException,
 )
-from spark_expectations.core import get_spark_session
 from spark_expectations.secrets import SparkExpectationsSecretsBackend
 from spark_expectations.utils.udf import remove_empty_maps
 from spark_expectations.core.context import SparkExpectationsContext
@@ -35,7 +35,7 @@ class SparkExpectationsWriter:
     _context: SparkExpectationsContext
 
     def __post_init__(self) -> None:
-        self.spark = get_spark_session()
+        self.spark = self._context.spark
 
     def save_df_as_table(self, df: DataFrame, table_name: str, config: dict) -> None:
         """
@@ -78,10 +78,13 @@ class SparkExpectationsWriter:
             if config["options"] is not None and config["options"] != {}:
                 _df_writer = _df_writer.options(**config["options"])
 
-            _df_writer.saveAsTable(name=table_name)
-            self.spark.sql(
-                f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = '{self.product_id}')"
-            )
+            if config['format'] == 'bigquery':
+                _df_writer.option('table', table_name).save()
+            else:
+                _df_writer.saveAsTable(name=table_name)
+                self.spark.sql(
+                    f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = '{self.product_id}')"
+                )
             _log.info("finished writing records to table: %s,", table_name)
 
         except Exception as e:
@@ -261,6 +264,9 @@ class SparkExpectationsWriter:
                 "Writing metrics to the stats table: %s, started",
                 self._context.get_dq_stats_table_name,
             )
+            if self._context.get_stats_table_writer_config['format'] == 'bigquery':
+                df = df.withColumn("dq_rules", to_json(df['dq_rules']))
+
 
             self.save_df_as_table(
                 df,

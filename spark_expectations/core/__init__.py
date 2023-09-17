@@ -32,4 +32,4 @@ def get_spark_session() -> SparkSession:
         )
         return configure_spark_with_delta_pip(builder).getOrCreate()
 
-    return SparkSession.builder.getOrCreate()
+    return SparkSession.getActiveSession()

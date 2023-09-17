@@ -107,8 +107,8 @@ from spark_expectations.config.user_config import *
 
 
 @se.with_expectations(
-    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                   target_table=),
+    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                target_table=),
     write_to_table=True,
     write_to_temp_table=True,
     row_dq=True,
@@ -123,7 +123,7 @@ from spark_expectations.config.user_config import *
         se_final_query_dq: True,
         se_target_table_view: "order",
     },
-    spark_conf=se_global_spark_Conf,
+    user_conf=se_global_spark_Conf,
 
 )
 def build_new() -> DataFrame:

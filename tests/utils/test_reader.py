@@ -222,10 +222,10 @@ def test_get_rules_from_table(mock_context, product_id, table_name,
 
     reader_handler = SparkExpectationsReader(product_id, mock_context)
 
-    expectations, rule_execution_settings = reader_handler.get_rules_from_table("product_rules",
+    expectations, rule_execution_settings = reader_handler.get_rules_from_df("product_rules",
                                                                                 "test_dq_stats_table",
-                                                                                table_name,
-                                                                                action)
+                                                                             table_name,
+                                                                             action)
 
     # Assert
     assert expectations == expected_expectations
@@ -251,4 +251,4 @@ def test_get_rules_dlt_exception(_fixture_reader):
 def test_get_rules_from_table_exception(_fixture_reader):
     with pytest.raises(SparkExpectationsMiscException,
                        match=r"error occurred while retrieving rules list from the table .*"):
-        _fixture_reader.get_rules_from_table("mock_rules_table_1", "mock_dq_stats_table", "table1", ["fail", "drop"])
+        _fixture_reader.get_rules_from_df("mock_rules_table_1", "mock_dq_stats_table", "table1", ["fail", "drop"])

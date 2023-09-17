@@ -3,28 +3,26 @@ import os
 
 from pyspark.sql import DataFrame
 from spark_expectations import _log
-from spark_expectations.examples.base_setup import main
-from spark_expectations.core import get_spark_session
+from spark_expectations.examples.base_setup import set_up_iceberg
 from spark_expectations.core.expectations import (
     SparkExpectations,
     WrappedDataFrameWriter,
 )
 from spark_expectations.config.user_config import Constants as user_config
 
-main()
+writer = WrappedDataFrameWriter.mode("append").format("iceberg")
 
-writer = WrappedDataFrameWriter.mode("append").format("delta")
+spark = set_up_iceberg()
 
+print(spark.sparkContext.getConf().getAll())
 se: SparkExpectations = SparkExpectations(
     product_id="your_product",
-    rules_table="dq_spark_local.dq_rules",
+    rules_df=spark.sql("select * from dq_spark_local.dq_rules"),
     stats_table="dq_spark_local.dq_stats",
     stats_table_writer=writer,
     target_and_error_table_writer=writer,
     debugger=False,
 )
-spark = get_spark_session()
-
 
 global_spark_Conf = {
     user_config.se_notifications_enable_email: False,
@@ -46,7 +44,7 @@ global_spark_Conf = {
 @se.with_expectations(
     target_table="dq_spark_local.customer_order",
     write_to_table=True,
-    spark_conf=global_spark_Conf,
+    user_conf=global_spark_Conf,
     target_table_view="order",
 )
 def build_new() -> DataFrame:

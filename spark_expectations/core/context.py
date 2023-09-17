@@ -5,8 +5,7 @@ from datetime import datetime
 from dataclasses import dataclass
 from uuid import uuid1
 from typing import Dict, Optional, List
-from pyspark.sql import DataFrame
-from spark_expectations.core import get_spark_session
+from pyspark.sql import DataFrame, SparkSession
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
 
@@ -20,9 +19,9 @@ class SparkExpectationsContext:
     """
 
     product_id: str
+    spark: SparkSession
 
     def __post_init__(self) -> None:
-        self.spark = get_spark_session()
         self._run_id: str = f"{self.product_id}_{uuid1()}"
         self._run_date: str = self.set_run_date()
         self._dq_stats_table_name: Optional[str] = None

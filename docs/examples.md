@@ -118,8 +118,8 @@ from spark_expectations.config.user_config import *  # (7)!
 
 
 @se.with_expectations(  # (6)!
-    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                   target_table=),
+    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                target_table=),
     write_to_table=True,  # (4)!
     write_to_temp_table=True,  # (8)!
     row_dq=True,  # (9)!
@@ -134,7 +134,7 @@ from spark_expectations.config.user_config import *  # (7)!
         user_config.se_final_query_dq: True,  # (17)!
         user_config.se_target_table_view: "order",  # (18)!
     },
-    spark_conf=se_global_spark_Conf,  # (19)!
+    user_conf=se_global_spark_Conf,  # (19)!
 
 )
 def build_new() -> DataFrame:
@@ -203,8 +203,8 @@ def build_new() -> DataFrame:
 
 ```python
 @se.with_expectations(  # (1)!
-    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                   target_table="pilot_nonpub.customer_order")
+    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                target_table="pilot_nonpub.customer_order")
 )
 
 ,
@@ -227,8 +227,8 @@ def build_new() -> DataFrame:
 
 ```python
 @se.with_expectations(  # (1)!
-    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                   target_table="pilot_nonpub.customer_order"),
+    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                target_table="pilot_nonpub.customer_order"),
     row_dq=False,  # (2)!
     agg_dq={
         user_config.se_agg_dq: True,
@@ -254,8 +254,8 @@ def build_new() -> DataFrame:
 
 ```python
 @se.with_expectations(  # (1)!
-    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                   target_table="pilot_nonpub.customer_order"),
+    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                target_table="pilot_nonpub.customer_order"),
     row_dq=True,
     query_dq={  # (2)!
         user_config.se_query_dq: True,
@@ -298,8 +298,8 @@ def build_new() -> DataFrame:
 
 ```python
 @se.with_expectations(  # (1)!
-    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                   target_table="pilot_nonpub.customer_order"),
+    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                target_table="pilot_nonpub.customer_order"),
     row_dq=True,
     agg_dq={  # (10)!
         user_config.user_configse_agg_dq: True,
@@ -329,9 +329,9 @@ import os
 
 
 @se.with_expectations(
-    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                   target_table="pilot_nonpub.customer_order"),
-    spark_conf=se_global_spark_Conf,  # (2)!
+    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                target_table="pilot_nonpub.customer_order"),
+    user_conf=se_global_spark_Conf,  # (2)!
 
 )
 def build_new() -> DataFrame:
@@ -353,8 +353,8 @@ def build_new() -> DataFrame:
 
 ```python
 @se.with_expectations(  # (1)!
-    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                   target_table="pilot_nonpub.customer_order"),
+    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                target_table="pilot_nonpub.customer_order"),
     row_dq=False,
     agg_dq={
         user_config.se_agg_dq: False,
@@ -385,8 +385,8 @@ def build_new() -> DataFrame:
 
 ```python
 @se.with_expectations(  # (1)!
-    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                   target_table="pilot_nonpub.customer_order", actions_if_failed=["drop", "ignore"])
+    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                target_table="pilot_nonpub.customer_order", actions_if_failed=["drop", "ignore"])
 )
 def build_new() -> DataFrame:
     _df_order: DataFrame = (
@@ -405,8 +405,8 @@ def build_new() -> DataFrame:
 
 ```python
 @se.with_expectations(  # (1)!
-    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                   target_table="pilot_nonpub.customer_order", actions_if_failed=["drop", "ignore"]),
+    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                target_table="pilot_nonpub.customer_order", actions_if_failed=["drop", "ignore"]),
     row_dq=True,  # (2)!
     agg_dq={
         user_config.se_agg_dq: True,
@@ -458,9 +458,9 @@ def build_new() -> DataFrame:
 
 ```python
 @se.with_expectations(
-    se.reader.get_rules_from_table(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                   target_table="pilot_nonpub.customer_order"),
-    spark_conf={"spark.files.maxPartitionBytes": "134217728"},  # (1)!
+    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
+                                target_table="pilot_nonpub.customer_order"),
+    user_conf={"spark.files.maxPartitionBytes": "134217728"},  # (1)!
     options={"mode": "overwrite", "partitionBy": "order_month",
              "overwriteSchema": "true"},  # (2)!
     options_error_table={"partition_by": "id"}  # (3)!
