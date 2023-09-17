@@ -10,9 +10,12 @@ from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.examples.base_setup import set_up_bigquery
 
 
-writer = WrappedDataFrameWriter.mode("overwrite").format("bigquery").\
-    option("createDisposition", "CREATE_IF_NEEDED")\
+writer = (
+    WrappedDataFrameWriter.mode("overwrite")
+    .format("bigquery")
+    .option("createDisposition", "CREATE_IF_NEEDED")
     .option("writeMethod", "direct")
+)
 
 
 # if wanted to use indirect method use below setting and spark session
@@ -28,7 +31,9 @@ spark = set_up_bigquery("<temp_dataset>")
 
 se: SparkExpectations = SparkExpectations(
     product_id="your_product",
-    rules_df=spark.read.format("bigquery").load("<project_id>.<dataset_id>.<rules_table>"),
+    rules_df=spark.read.format("bigquery").load(
+        "<project_id>.<dataset_id>.<rules_table>"
+    ),
     stats_table="<project_id>.<dataset_id>.<rules_table>",
     stats_table_writer=writer,
     target_and_error_table_writer=writer,

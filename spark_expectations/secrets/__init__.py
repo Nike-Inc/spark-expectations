@@ -4,9 +4,9 @@ import functools
 from dataclasses import dataclass
 from typing import Optional, Dict
 import pluggy
-from spark_expectations.config.user_config import Constants as UserConfig
 from pyspark.sql.session import SparkSession
 from spark_expectations import _log
+from spark_expectations.config.user_config import Constants as UserConfig
 
 
 SPARK_EXPECTATIONS_SECRETS_BACKEND = "spark_expectations_secrets_backend"
@@ -91,6 +91,7 @@ class DatabricksSecretsSparkExpectationsSecretPluginImpl(
         if secret_dict[UserConfig.secret_type].lower() == "databricks":
             try:
                 from pyspark.dbutils import DBUtils
+
                 spark = SparkSession.getActiveSession()
                 dbutils = DBUtils(spark)  # pragma: no cover
             except ImportError:

@@ -1,10 +1,9 @@
 import os
-from typing import Optional, Union, List, Dict
+from typing import Optional, Union, Dict
 from dataclasses import dataclass
 
-# from cerberus.client import CerberusClient
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col, lit
+from pyspark.sql.functions import col
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.exceptions import (

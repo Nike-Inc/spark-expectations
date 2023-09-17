@@ -11,7 +11,7 @@ from pyspark.sql.functions import (
     round as sql_round,
     create_map,
     explode,
-    to_json
+    to_json,
 )
 from spark_expectations import _log
 from spark_expectations.core.exceptions import (
@@ -78,8 +78,8 @@ class SparkExpectationsWriter:
             if config["options"] is not None and config["options"] != {}:
                 _df_writer = _df_writer.options(**config["options"])
 
-            if config['format'] == 'bigquery':
-                _df_writer.option('table', table_name).save()
+            if config["format"] == "bigquery":
+                _df_writer.option("table", table_name).save()
             else:
                 _df_writer.saveAsTable(name=table_name)
                 self.spark.sql(
@@ -264,9 +264,8 @@ class SparkExpectationsWriter:
                 "Writing metrics to the stats table: %s, started",
                 self._context.get_dq_stats_table_name,
             )
-            if self._context.get_stats_table_writer_config['format'] == 'bigquery':
-                df = df.withColumn("dq_rules", to_json(df['dq_rules']))
-
+            if self._context.get_stats_table_writer_config["format"] == "bigquery":
+                df = df.withColumn("dq_rules", to_json(df["dq_rules"]))
 
             self.save_df_as_table(
                 df,
@@ -282,49 +281,56 @@ class SparkExpectationsWriter:
             # TODO check if streaming_stats is set to off, if it's enabled only then this should run
 
             _se_stats_dict = self._context.get_se_streaming_stats_dict
-            secret_handler = SparkExpectationsSecretsBackend(secret_dict=_se_stats_dict)
-            kafka_write_options: dict = (
-                {
-                    "kafka.bootstrap.servers": "localhost:9092",
-                    "topic": self._context.get_se_streaming_stats_topic_name,
-                    "failOnDataLoss": "true",
-                }
-                if self._context.get_env == "local"
-                else (
-                    {
-                        "kafka.bootstrap.servers": f"{secret_handler.get_secret(self._context.get_server_url_key)}",
-                        "kafka.security.protocol": "SASL_SSL",
-                        "kafka.sasl.mechanism": "OAUTHBEARER",
-                        "kafka.sasl.jaas.config": "kafkashaded.org.apache.kafka.common.security.oauthbearer."
-                        "OAuthBearerLoginModule required oauth.client.id="
-                        f"'{secret_handler.get_secret(self._context.get_client_id)}'  "
-                        + "oauth.client.secret="
-                        f"'{secret_handler.get_secret(self._context.get_token)}' "
-                        "oauth.token.endpoint.uri="
-                        f"'{secret_handler.get_secret(self._context.get_token_endpoint_url)}'; ",
-                        "kafka.sasl.login.callback.handler.class": "io.strimzi.kafka.oauth.client"
-                        ".JaasClientOauthLoginCallbackHandler",
-                        "topic": (
-                            self._context.get_se_streaming_stats_topic_name
-                            if self._context.get_env == "local"
-                            else secret_handler.get_secret(self._context.get_topic_name)
-                        ),
-                    }
-                    if bool(_se_stats_dict[user_config.se_enable_streaming])
-                    else {}
+            if _se_stats_dict["se.enable.streaming"]:
+                secret_handler = SparkExpectationsSecretsBackend(
+                    secret_dict=_se_stats_dict
                 )
-            )
+                kafka_write_options: dict = (
+                    {
+                        "kafka.bootstrap.servers": "localhost:9092",
+                        "topic": self._context.get_se_streaming_stats_topic_name,
+                        "failOnDataLoss": "true",
+                    }
+                    if self._context.get_env == "local"
+                    else (
+                        {
+                            "kafka.bootstrap.servers": f"{secret_handler.get_secret(self._context.get_server_url_key)}",
+                            "kafka.security.protocol": "SASL_SSL",
+                            "kafka.sasl.mechanism": "OAUTHBEARER",
+                            "kafka.sasl.jaas.config": "kafkashaded.org.apache.kafka.common.security.oauthbearer."
+                            "OAuthBearerLoginModule required oauth.client.id="
+                            f"'{secret_handler.get_secret(self._context.get_client_id)}'  "
+                            + "oauth.client.secret="
+                            f"'{secret_handler.get_secret(self._context.get_token)}' "
+                            "oauth.token.endpoint.uri="
+                            f"'{secret_handler.get_secret(self._context.get_token_endpoint_url)}'; ",
+                            "kafka.sasl.login.callback.handler.class": "io.strimzi.kafka.oauth.client"
+                            ".JaasClientOauthLoginCallbackHandler",
+                            "topic": (
+                                self._context.get_se_streaming_stats_topic_name
+                                if self._context.get_env == "local"
+                                else secret_handler.get_secret(
+                                    self._context.get_topic_name
+                                )
+                            ),
+                        }
+                    )
+                )
 
-            _sink_hook.writer(
-                _write_args={
-                    "product_id": self.product_id,
-                    "enable_se_streaming": _se_stats_dict[
-                        user_config.se_enable_streaming
-                    ],
-                    "kafka_write_options": kafka_write_options,
-                    "stats_df": df,
-                }
-            )
+                _sink_hook.writer(
+                    _write_args={
+                        "product_id": self.product_id,
+                        "enable_se_streaming": _se_stats_dict[
+                            user_config.se_enable_streaming
+                        ],
+                        "kafka_write_options": kafka_write_options,
+                        "stats_df": df,
+                    }
+                )
+            else:
+                _log.info(
+                    "Streaming stats to kafka is disabled, hence skipping writing to kafka"
+                )
 
         except Exception as e:
             raise SparkExpectationsMiscException(

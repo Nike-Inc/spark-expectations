@@ -1,6 +1,7 @@
 import functools
 from dataclasses import dataclass
 from typing import Dict, Optional, Any, Union, Type
+from pyspark import StorageLevel
 from pyspark.sql import DataFrame
 from spark_expectations import _log
 from spark_expectations.config.user_config import Constants as user_config
@@ -19,7 +20,6 @@ from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
 from spark_expectations.utils.actions import SparkExpectationsActions
 from spark_expectations.utils.reader import SparkExpectationsReader
 from spark_expectations.utils.regulate_flow import SparkExpectationsRegulateFlow
-from pyspark import StorageLevel
 
 
 @dataclass
@@ -42,12 +42,14 @@ class SparkExpectations:
     target_and_error_table_writer: Type["WrappedDataFrameWriter"]
     stats_table_writer: Type["WrappedDataFrameWriter"]
     debugger: bool = False
-    stats_streaming_options: Optional[Dict[str, str]] = None
+    stats_streaming_options: Optional[Dict[str, Union[str, bool]]] = None
 
     def __post_init__(self) -> None:
         self.spark = self.rules_df.sparkSession
         self.actions = SparkExpectationsActions()
-        self._context = SparkExpectationsContext(product_id=self.product_id, spark=self.spark)
+        self._context = SparkExpectationsContext(
+            product_id=self.product_id, spark=self.spark
+        )
 
         self._writer = SparkExpectationsWriter(
             product_id=self.product_id, _context=self._context
