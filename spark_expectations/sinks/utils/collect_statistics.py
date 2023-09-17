@@ -12,7 +12,6 @@ class SparkExpectationsCollectStatistics:
     This class implements logging statistics on success and failure
     """
 
-    product_id: str
     _context: SparkExpectationsContext
     _writer: SparkExpectationsWriter
 

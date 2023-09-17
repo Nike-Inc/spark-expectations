@@ -3,7 +3,6 @@ from typing import Optional, Union, Dict
 from dataclasses import dataclass
 
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import col
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.exceptions import (
@@ -17,7 +16,6 @@ class SparkExpectationsReader:
     This class implements/supports reading data from source system
     """
 
-    product_id: str
     _context: SparkExpectationsContext
 
     def __post_init__(self) -> None:
@@ -152,9 +150,9 @@ class SparkExpectationsReader:
             self._context.reset_num_query_dq_rules()
 
             _rules_df = rules_df.filter(
-                (rules_df["product_id"] == self._context.product_id)
-                & (rules_df["table_name"] == target_table)
-                & (rules_df["is_active"])
+                (rules_df.product_id == self._context.product_id)
+                & (rules_df.table_name == target_table)
+                & rules_df.is_active
             )
 
             self._context.print_dataframe_with_debugger(_rules_df)
@@ -163,7 +161,7 @@ class SparkExpectationsReader:
             _rules_execution_settings: dict = {}
             if is_dlt:
                 if tag:
-                    for row in _rules_df.filter(col("tag") == tag).collect():
+                    for row in _rules_df.filter(_rules_df.tag == tag).collect():
                         _expectations[row["rule"]] = row["expectation"]
                 else:
                     for row in _rules_df.collect():

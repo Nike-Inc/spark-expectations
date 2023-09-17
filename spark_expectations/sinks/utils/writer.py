@@ -31,7 +31,6 @@ class SparkExpectationsWriter:
     This class implements/supports writing data into the sink system
     """
 
-    product_id: str
     _context: SparkExpectationsContext
 
     def __post_init__(self) -> None:
@@ -83,7 +82,7 @@ class SparkExpectationsWriter:
             else:
                 _df_writer.saveAsTable(name=table_name)
                 self.spark.sql(
-                    f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = '{self.product_id}')"
+                    f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = '{self._context.product_id}')"
                 )
             _log.info("finished writing records to table: %s,", table_name)
 
@@ -126,7 +125,7 @@ class SparkExpectationsWriter:
 
             error_stats_data = [
                 (
-                    self.product_id,
+                    self._context.product_id,
                     table_name,
                     input_count,
                     error_count,
@@ -319,7 +318,7 @@ class SparkExpectationsWriter:
 
                 _sink_hook.writer(
                     _write_args={
-                        "product_id": self.product_id,
+                        "product_id": self._context.product_id,
                         "enable_se_streaming": _se_stats_dict[
                             user_config.se_enable_streaming
                         ],

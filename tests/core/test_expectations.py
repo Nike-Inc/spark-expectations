@@ -18,6 +18,8 @@ from spark_expectations.core.exceptions import (
 from spark_expectations.notifications.push.spark_expectations_notify import SparkExpectationsNotify
 from spark_expectations.sinks.utils.collect_statistics import SparkExpectationsCollectStatistics
 
+os.environ["UNIT_TESTING_ENV"] = "spark_expectations_unit_testing_on_github_actions"
+
 spark = get_spark_session()
 
 
@@ -65,27 +67,27 @@ def fixture_dq_rules():
                              "num_final_agg_dq_rules": 0}}
 
 
-@pytest.fixture(name="_fixture_expectations")
-def fixture_expectations():
+@pytest.fixture(name="_fixture_rules_df")
+def fixture_rules_df():
     # create a sample input expectations to run on raw dataframe
-    return {  # expectations rules
-        "row_dq_rules": [{
-            "product_id": "product1",
-            "target_table_name": "dq_spark.test_table",
-            "rule_type": "row_dq",
-            "rule": "col1_threshold",
-            "column_name": "col1",
-            "expectation": "col1 > 1",
-            "action_if_failed": "ignore",
-            "tag": "validity",
-            "description": "col1 value must be greater than 1",
-            "enable_error_drop_alert": True,
-            "error_drop_threshold": "10",
-        }],
-        "agg_dq_rules": [{}],
-        "target_table_name": "dq_spark.test_final_table"
-
+    rules_dict = {
+        "product_id": "product1",
+        "table_name": "dq_spark.test_table",
+        "rule_type": "row_dq",
+        "rule": "col1_threshold",
+        "column_name": "col1",
+        "expectation": "col1 > 1",
+        "action_if_failed": "ignore",
+        "tag": "validity",
+        "description": "col1 value must be greater than 1",
+        "enable_for_source_dq_validation": True,
+        "enable_for_target_dq_validation": True,
+        "is_active": True,
+        "enable_error_drop_alert": True,
+        "error_drop_threshold": "10"
     }
+    return spark.createDataFrame([rules_dict])
+
 
 
 @pytest.fixture(name="_fixture_create_database")
@@ -101,39 +103,47 @@ def fixture_create_database():
     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
 
 
-@pytest.fixture(name="_fixture_context")
-def fixture_context():
-    _context: SparkExpectationsContext = SparkExpectationsContext("product_id")
-    _context.set_table_name("dq_spark.test_final_table")
-    _context.set_dq_stats_table_name("dq_spark.test_dq_stats_table")
-    _context.set_final_table_name("dq_spark.test_final_table")
-    _context.set_error_table_name("dq_spark.test_final_table_error")
-    _context._run_date = "2022-12-27 10:39:44"
-    _context._env = "local"
-    _context.set_input_count(100)
-    _context.set_output_count(100)
-    _context.set_error_count(0)
-    _context._run_id = "product1_run_test"
-
-    return _context
+# @pytest.fixture(name="_fixture_context")
+# def fixture_context():
+#     writer = WrappedDataFrameWriter.mode("append").format("delta")
+#     _context: SparkExpectationsContext = SparkExpectationsContext(product_id="product1",
+#                                                                   spark=spark
+#                                                                   )
+#     _context.set_table_name("dq_spark.test_final_table")
+#     _context.set_dq_stats_table_name("dq_spark.test_dq_stats_table")
+#     _context.set_final_table_name("dq_spark.test_final_table")
+#     _context.set_error_table_name("dq_spark.test_final_table_error")
+#     _context._run_date = "2022-12-27 10:39:44"
+#     _context._env = "local"
+#     _context.set_input_count(100)
+#     _context.set_output_count(100)
+#     _context.set_error_count(0)
+#     _context._run_id = "product1_run_test"
+#
+#     return _context
 
 
 @pytest.fixture(name="_fixture_spark_expectations")
-def fixture_spark_expectations(_fixture_context):
+def fixture_spark_expectations(_fixture_rules_df):
     # create a spark expectations class object
-    spark_expectations = SparkExpectations("product1")
+    writer = WrappedDataFrameWriter.mode("append").format("delta")
+    spark_expectations = SparkExpectations(product_id="product1",
+                                           rules_df=_fixture_rules_df,
+                                           stats_table="dq_spark_local.test_dq_stats_table",
+                                           stats_table_writer=writer,
+                                           target_and_error_table_writer=writer,
+                                           debugger=False,
+                                           )
 
     def _error_threshold_exceeds(expectations):
         pass
 
-    spark_expectations._context = _fixture_context
-    spark_expectations.reader = SparkExpectationsReader("product1", _fixture_context)
-    spark_expectations._writer = SparkExpectationsWriter("product1", _fixture_context)
-    spark_expectations._notification = SparkExpectationsNotify("product1", _fixture_context)
-    spark_expectations._notification.notify_rules_exceeds_threshold = _error_threshold_exceeds
-    spark_expectations._statistics_decorator = SparkExpectationsCollectStatistics("product1",
-                                                                                  spark_expectations._context,
-                                                                                  spark_expectations._writer)
+    # spark_expectations.reader = SparkExpectationsReader(spark_expectations._context)
+    # spark_expectations._writer = SparkExpectationsWriter(spark_expectations._context)
+    # spark_expectations._notification = SparkExpectationsNotify( spark_expectations._context)
+    # spark_expectations._notification.notify_rules_exceeds_threshold = _error_threshold_exceeds
+    # spark_expectations._statistics_decorator = SparkExpectationsCollectStatistics(spark_expectations._context,
+    #                                                                               spark_expectations._writer)
     return spark_expectations
 
 
@@ -2297,7 +2307,7 @@ def test_with_expectations(input_df,
 #         write_to_table,
 #         _fixture_create_database,
 #         _fixture_df,
-#         _fixture_expectations,
+#         _fixture_rules_df,
 #         _fixture_context,
 #         _fixture_dq_rules,
 #         _fixture_spark_expectations,
@@ -2313,7 +2323,7 @@ def test_with_expectations(input_df,
 #
 #     # Decorate the mock function with required args
 #     decorated_func = _fixture_spark_expectations.with_expectations(
-#         _fixture_expectations,
+#         _fixture_rules_df,
 #         write_to_table,
 #         agg_dq=None,
 #         query_dq=None,
@@ -2338,14 +2348,14 @@ def test_with_expectations_patch(_write_error_stats,
                                  _fixture_context,
                                  _fixture_dq_rules,
                                  _fixture_df,
-                                 _fixture_expectations):
+                                 _fixture_rules_df):
     _fixture_context._num_row_dq_rules = (_fixture_dq_rules.get("rules").get("num_row_dq_rules"))
     _fixture_context._num_dq_rules = (_fixture_dq_rules.get("rules").get("num_dq_rules"))
     _fixture_context._num_agg_dq_rules = (_fixture_dq_rules.get("agg_dq_rules"))
     _fixture_context._num_query_dq_rules = (_fixture_dq_rules.get("query_dq_rules"))
 
     decorated_func = _fixture_spark_expectations.with_expectations(
-        _fixture_expectations,
+        _fixture_rules_df,
         True,
         agg_dq=None,
         query_dq=None,
@@ -2362,10 +2372,10 @@ def test_with_expectations_patch(_write_error_stats,
 def test_with_expectations_dataframe_not_returned_exception(_fixture_create_database,
                                                             _fixture_spark_expectations,
                                                             _fixture_df,
-                                                            _fixture_expectations,
+                                                            _fixture_rules_df,
                                                             _fixture_local_kafka_topic):
     partial_func = _fixture_spark_expectations.with_expectations(
-        _fixture_expectations,
+        _fixture_rules_df,
         user_conf={user_config.se_notifications_on_fail: False},
     )
 
@@ -2384,11 +2394,12 @@ def test_with_expectations_dataframe_not_returned_exception(_fixture_create_data
 def test_with_expectations_exception(_fixture_create_database,
                                      _fixture_spark_expectations,
                                      _fixture_df,
-                                     _fixture_expectations,
+                                     _fixture_rules_df,
                                      _fixture_create_stats_table,
                                      _fixture_local_kafka_topic):
+    _fixture_rules_df.show(truncate=False)
     partial_func = _fixture_spark_expectations.with_expectations(
-        _fixture_expectations,
+        "dq_spark.test_final_table",
         user_conf={user_config.se_notifications_on_fail: False}
     )
 

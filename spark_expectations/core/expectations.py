@@ -51,23 +51,16 @@ class SparkExpectations:
             product_id=self.product_id, spark=self.spark
         )
 
-        self._writer = SparkExpectationsWriter(
-            product_id=self.product_id, _context=self._context
-        )
+        self._writer = SparkExpectationsWriter(_context=self._context)
         self._process = SparkExpectationsRegulateFlow(product_id=self.product_id)
         self._notification: SparkExpectationsNotify = SparkExpectationsNotify(
-            product_id=self.product_id, _context=self._context
+            _context=self._context
         )
         self._statistics_decorator = SparkExpectationsCollectStatistics(
-            product_id=self.product_id,
             _context=self._context,
             _writer=self._writer,
         )
-
-        self.reader = SparkExpectationsReader(
-            product_id=self.product_id,
-            _context=self._context,
-        )
+        self.reader = SparkExpectationsReader(_context=self._context)
 
         self._context.set_target_and_error_table_writer_config(
             self.target_and_error_table_writer.build()
