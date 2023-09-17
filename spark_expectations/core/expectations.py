@@ -478,7 +478,7 @@ class SparkExpectations:
 
                         # TODO if row_dq is False and source_agg/source_query is True then we need to write the
                         #  dataframe into the target table
-                        if _row_dq and write_to_table:
+                        if write_to_table:
                             _log.info("Writing into the final table started")
                             self._writer.save_df_as_table(
                                 _row_dq_df,

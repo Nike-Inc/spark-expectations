@@ -22,11 +22,10 @@ se: SparkExpectations = SparkExpectations(
     stats_table_writer=writer,
     target_and_error_table_writer=writer,
     debugger=False,
-    stats_streaming_options={user_config.se_enable_streaming: False},
 )
 
 
-global_spark_Conf = {
+user_conf = {
     user_config.se_notifications_enable_email: False,
     user_config.se_notifications_email_smtp_host: "mailhost.com",
     user_config.se_notifications_email_smtp_port: 25,
@@ -46,7 +45,7 @@ global_spark_Conf = {
 @se.with_expectations(
     target_table="dq_spark_local.customer_order",
     write_to_table=True,
-    user_conf=global_spark_Conf,
+    user_conf=user_conf,
     target_table_view="order",
 )
 def build_new() -> DataFrame:
@@ -78,8 +77,13 @@ def build_new() -> DataFrame:
 if __name__ == "__main__":
     build_new()
 
+    spark.sql("use dq_spark_local")
     spark.sql("select * from dq_spark_local.dq_stats").show(truncate=False)
     spark.sql("select * from dq_spark_local.dq_stats").printSchema()
+    spark.sql("select * from dq_spark_local.customer_order").show(truncate=False)
+    spark.sql("select count(*) from dq_spark_local.customer_order_error").show(
+        truncate=False
+    )
 
     _log.info("stats data in the kafka topic")
     # display posted statistics from the kafka topic

@@ -9,14 +9,15 @@ from spark_expectations.core.expectations import (
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.examples.base_setup import set_up_bigquery
 
-
+os.environ[
+    "GOOGLE_APPLICATION_CREDENTIALS"
+] = "path_to_your_json_credential_file"  # This is needed for spark write to bigquery
 writer = (
     WrappedDataFrameWriter.mode("overwrite")
     .format("bigquery")
     .option("createDisposition", "CREATE_IF_NEEDED")
     .option("writeMethod", "direct")
 )
-
 
 # if wanted to use indirect method use below setting and spark session
 # writer = WrappedDataFrameWriter.mode("overwrite").format("bigquery").\
@@ -40,7 +41,7 @@ se: SparkExpectations = SparkExpectations(
     debugger=False,
 )
 
-global_spark_Conf = {
+user_conf = {
     user_config.se_notifications_enable_email: False,
     user_config.se_notifications_email_smtp_host: "mailhost.com",
     user_config.se_notifications_email_smtp_port: 25,
@@ -60,7 +61,7 @@ global_spark_Conf = {
 @se.with_expectations(
     target_table="<project_id>.<dataset_id>.<target_table_name>",
     write_to_table=True,
-    user_conf=global_spark_Conf,
+    user_conf=user_conf,
     target_table_view="<project_id>.<dataset_id>.<target_table_view_name>",
 )
 def build_new() -> DataFrame:
@@ -94,6 +95,10 @@ if __name__ == "__main__":
 
     spark.sql("select * from dq_spark_local.dq_stats").show(truncate=False)
     spark.sql("select * from dq_spark_local.dq_stats").printSchema()
+    spark.sql("select * from dq_spark_local.customer_order").show(truncate=False)
+    spark.sql("select count(*) from dq_spark_local.customer_order_error").show(
+        truncate=False
+    )
 
     _log.info("stats data in the kafka topic")
     # display posted statistics from the kafka topic
