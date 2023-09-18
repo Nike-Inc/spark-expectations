@@ -1,10 +1,11 @@
 # pylint: disable=too-many-lines
 import os
+import datetime
 from unittest.mock import Mock
 from unittest.mock import patch
 import pytest
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import lit, to_timestamp, col
+from pyspark.sql.functions import lit, to_timestamp, col, to_utc_timestamp
 from pyspark.sql.types import StringType, IntegerType, StructField, StructType
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.utils.reader import SparkExpectationsReader
@@ -120,6 +121,21 @@ def fixture_create_database():
 #
 #     return _context
 
+@pytest.fixture(name="_fixture_context")
+def fixture_context():
+    _context: SparkExpectationsContext = SparkExpectationsContext("product_id", spark)
+    _context.set_table_name("dq_spark.test_final_table")
+    _context.set_dq_stats_table_name("dq_spark.test_dq_stats_table")
+    _context.set_final_table_name("dq_spark.test_final_table")
+    _context.set_error_table_name("dq_spark.test_final_table_error")
+    _context._run_date = "2022-12-27 10:39:44"
+    _context._env = "local"
+    _context.set_input_count(100)
+    _context.set_output_count(100)
+    _context.set_error_count(0)
+    _context._run_id = "product1_run_test"
+
+    return _context
 
 @pytest.fixture(name="_fixture_spark_expectations")
 def fixture_spark_expectations(_fixture_rules_df):
@@ -196,12 +212,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                          "expectations, "
                          "write_to_table, "
                          "write_to_temp_table, "
-                         "row_dq, agg_dq, "
-                         "source_agg_dq, "
-                         "final_agg_dq, "
-                         "query_dq, "
-                         "source_query_dq, "
-                         "final_query_dq, "
                          "expected_output, "
                          "input_count, "
                          "error_count, "
@@ -231,10 +241,10 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              # row meets expectations(ignore), log into final table
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "row_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col1_threshold",
                                              "column_name": "col1",
@@ -242,22 +252,15 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "ignore",
                                              "tag": "validity",
                                              "description": "col1 value must be greater than 1",
+                                             "enable_for_source_dq_validation": True,
+                                             "enable_for_target_dq_validation": True,
+                                             "is_active": True,
                                              "enable_error_drop_alert": True,
-                                             "error_drop_threshold": "10",
-                                         }],
-                                         "agg_dq_rules": [{}],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                             "error_drop_threshold": "10"
+                                         }
+                                    ],
                                      True,  # write to table
                                      True,  # write to temp table
-                                     True,  # row_dq
-                                     False,  # agg_dq
-                                     False,  # source_agg_dq
-                                     False,  # final_agg_dq
-                                     False,  # query_dq
-                                     False,  # source_query_dq
-                                     False,  # final_query_dq
                                      # expected res
                                      spark.createDataFrame(
                                          [
@@ -319,13 +322,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      True,  # write to temp table
-                                     True,  # row_dq
-                                     False,  # agg_dq
-                                     False,  # source_agg_dq
-                                     False,  # final_agg_dq
-                                     False,  # query_dq
-                                     False,  # source_query_dq
-                                     False,  # final_query_dq
                                      # expected res
                                      spark.createDataFrame(
                                          [
@@ -388,13 +384,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      True,  # write to temp table
-                                     True,  # row_dq
-                                     False,  # agg_dq
-                                     False,  # source_agg_dq
-                                     False,  # final_agg_dq_dq
-                                     False,  # query_dq
-                                     False,  # source_query_dq
-                                     False,  # final_query_dq
                                      SparkExpectationsMiscException,  # expected res
                                      3,  # input count
                                      3,  # error count
@@ -461,13 +450,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      True,  # write to temp table
-                                     True,  # row_dq
-                                     False,  # agg_dq
-                                     False,  # source_agg_dq
-                                     False,  # final_agg_dq
-                                     False,  # query_dq
-                                     False,  # source_query_dq
-                                     False,  # final_query_dq
                                      # expected res
                                      spark.createDataFrame(
                                          [
@@ -541,13 +523,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      True,  # write to temp table
-                                     True,  # row_dq
-                                     False,  # agg_dq
-                                     False,  # source_agg_dq
-                                     False,  # final_agg_dq
-                                     False,  # query_dq
-                                     False,  # source_query_dq
-                                     False,  # final_query_dq
                                      # expected res
                                      spark.createDataFrame(
                                          [
@@ -621,13 +596,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      True,  # write to temp table
-                                     True,  # row_dq
-                                     False,  # agg_dq
-                                     False,  # source_dq
-                                     False,  # final_dq
-                                     False,  # query_dq
-                                     False,  # source_query_dq
-                                     False,  # final_query_dq
                                      SparkExpectationsMiscException,  # expected res
                                      3,  # input count
                                      3,  # error count
@@ -694,13 +662,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      True,  # write to temp table
-                                     True,  # row_dq
-                                     False,  # agg_dq
-                                     False,  # source_dq
-                                     False,  # final_dq
-                                     False,  # query_dq
-                                     False,  # source_query_dq
-                                     False,  # final_query_dq
                                      # expected res
                                      spark.createDataFrame([], schema=StructType([
                                          StructField("col1", IntegerType()),
@@ -786,13 +747,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      True,  # write_to_temp_table
-                                     True,  # row_dq
-                                     False,  # agg_dq
-                                     False,  # source_dq
-                                     False,  # final_agg_dq
-                                     False,  # query_dq
-                                     False,  # source_query_dq
-                                     False,  # final_query_dq
                                      spark.createDataFrame(  # expected output
                                          [
                                              {"col1": 3, "col2": "c", 'col3': 6},
@@ -847,13 +801,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      True,  # write to temp table
-                                     False,  # row_dq
-                                     True,  # agg_dq
-                                     True,  # source_agg_dq
-                                     False,  # final_agg_dq
-                                     False,  # query_dq
-                                     False,  # source_query_dq
-                                     False,  # final_query_dq
                                      None,  # expected result
                                      3,  # input count
                                      0,  # error count
@@ -905,13 +852,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      True,  # write to temp table
-                                     False,  # row_dq
-                                     True,  # agg_dq
-                                     True,  # source_agg_dq
-                                     False,  # final_agg_dq
-                                     False,  # query_dq
-                                     False,  # source_query_dq
-                                     False,  # final_query_dq
                                      SparkExpectationsMiscException,  # excepted result
                                      3,  # input count
                                      0,  # error count
@@ -975,13 +915,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      True,  # write to temp table
-                                     True,  # row_dq
-                                     True,  # agg_dq
-                                     False,  # source_agg_dq
-                                     True,  # final_agg_dq
-                                     False,  # query_dq
-                                     False,  # source_query_dq
-                                     False,  # final_query_dq
                                      spark.createDataFrame(
                                          [
                                              {"col1": 1, "col2": "a", "col3": 4},
@@ -1057,13 +990,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      True,  # write temp table
-                                     True,  # row_dq
-                                     True,  # agg_dq
-                                     False,  # source_dq_dq
-                                     True,  # final_agg_dq
-                                     False,  # query_dq
-                                     False,  # source_query_dq
-                                     False,  # final_query_dq
                                      SparkExpectationsMiscException,  # expected result
                                      3,  # input count
                                      1,  # error count
@@ -1119,13 +1045,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      True,  # write to temp table
-                                     True,  # row_dq
-                                     False,  # agg_dq
-                                     False,  # source_agg_dq
-                                     False,  # final_agg_dq
-                                     False,  # query_dq
-                                     False,  # source_query_dq
-                                     False,  # final_query_dq
                                      spark.createDataFrame([  # expected_output
                                          {"col1": 2, "col2": "b"},
                                          {"col1": 3, "col2": "c"}
@@ -1208,13 +1127,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      True,  # write to temp table
-                                     True,  # row_dq
-                                     True,  # agg_dq
-                                     True,  # source_agg_dq
-                                     False,  # final_agg_dq
-                                     False,  # query_dq
-                                     False,  # source_query_dq
-                                     False,  # final_query_dq
                                      spark.createDataFrame([  # expected_output
                                          {"col1": 1, "col2": "a", "col3": 4},
                                          {"col1": 2, "col2": "b", "col3": 5},
@@ -1302,13 +1214,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      True,  # write to temp table
-                                     True,  # row_dq
-                                     True,  # agg_dq
-                                     True,  # source_agg_dq
-                                     True,  # final_agg_dq
-                                     False,  # query_dq
-                                     False,  # source_query_dq
-                                     False,  # final_query_dq
                                      spark.createDataFrame([  # expected_output
                                          {"col1": 2, "col2": "b", "col3": 5},
                                          {"col1": 3, "col2": "c", "col3": 6}
@@ -1426,13 +1331,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      True,  # write to temp table
-                                     True,  # row_dq
-                                     True,  # agg_dq
-                                     True,  # source_agg_dq
-                                     True,  # final_agg_dq
-                                     False,  # query_dq
-                                     False,  # source_query_dq
-                                     False,  # final_query_dq
                                      spark.createDataFrame([  # expected_output
                                          {"col1": 3, "col2": "c", "col3": 6},
                                          {"col1": 2, "col2": "d", "col3": 7}
@@ -1477,13 +1375,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,
                                      True,
-                                     True,
-                                     True,
-                                     True,
-                                     True,
-                                     False,  # query_dq
-                                     False,  # source_query_dq
-                                     False,  # final_query_dq
                                      SparkExpectationsMiscException,
                                      3,  # input count
                                      0,  # error count
@@ -1551,13 +1442,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      False,  # write to table
                                      False,  # write to temp table
-                                     False,  # row_dq
-                                     False,  # agg_dq
-                                     False,  # source_agg_dq
-                                     False,  # final_agg_dq
-                                     True,  # query_dq
-                                     True,  # source_query_dq
-                                     False,  # final_query_dq
                                      None,  # expected result
                                      3,  # input count
                                      0,  # error count
@@ -1645,13 +1529,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      False,  # write to temp table
-                                     True,  # row_dq
-                                     False,  # agg_dq
-                                     False,  # source_agg_dq
-                                     False,  # final_agg_dq
-                                     True,  # query_dq
-                                     False,  # source_query_dq
-                                     True,  # final_query_dq
                                      spark.createDataFrame(
                                          [
                                              {"col1": 3, "col2": "c", "col3": 6},
@@ -1727,13 +1604,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      False,  # write to table
                                      False,  # write to temp table
-                                     False,  # row_dq
-                                     False,  # agg_dq
-                                     False,  # source_agg_dq
-                                     False,  # final_agg_dq
-                                     True,  # query_dq
-                                     True,  # source_query_dq
-                                     False,  # final_query_dq
                                      SparkExpectationsMiscException,  # expected result
                                      3,  # input count
                                      0,  # error count
@@ -1820,13 +1690,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      False,  # write to temp table
-                                     True,  # row_dq
-                                     False,  # agg_dq
-                                     False,  # source_agg_dq
-                                     False,  # final_agg_dq
-                                     True,  # query_dq
-                                     False,  # source_query_dq
-                                     True,  # final_query_dq
                                      SparkExpectationsMiscException,  # expected result
                                      3,  # input count
                                      2,  # error count
@@ -1928,13 +1791,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      False,  # write to temp table
-                                     True,  # row_dq
-                                     False,  # agg_dq
-                                     False,  # source_agg_dq
-                                     False,  # final_agg_dq
-                                     True,  # query_dq
-                                     True,  # source_query_dq
-                                     True,  # final_query_dq
                                      spark.createDataFrame(
                                          [
                                              {"col1": 1, "col2": "a", "col3": 4},
@@ -2044,13 +1900,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      False,  # write to temp table
-                                     True,  # row_dq
-                                     False,  # agg_dq
-                                     False,  # source_agg_dq
-                                     False,  # final_agg_dq
-                                     True,  # query_dq
-                                     True,  # source_query_dq
-                                     True,  # final_query_dq
                                      SparkExpectationsMiscException,  # expected result
                                      3,  # input count
                                      1,  # error count
@@ -2154,13 +2003,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      },
                                      True,  # write to table
                                      False,  # write to temp table
-                                     True,  # row_dq
-                                     True,  # agg_dq
-                                     True,  # source_agg_dq
-                                     True,  # final_agg_dq
-                                     True,  # query_dq
-                                     True,  # source_query_dq
-                                     True,  # final_query_dq
                                      spark.createDataFrame(
                                          [
                                              {"col1": 1, "col2": "a", "col3": 4},
@@ -2195,13 +2037,6 @@ def test_with_expectations(input_df,
                            expectations,
                            write_to_table,
                            write_to_temp_table,
-                           row_dq,
-                           agg_dq,
-                           source_agg_dq,
-                           final_agg_dq,
-                           query_dq,
-                           source_query_dq,
-                           final_query_dq,
                            expected_output,
                            input_count,
                            error_count,
@@ -2212,31 +2047,36 @@ def test_with_expectations(input_df,
                            final_query_dq_res,
                            dq_rules,
                            status,
-                           _fixture_spark_expectations,
-                           _fixture_context,
-                           _fixture_create_stats_table,
+                           _fixture_create_database,
                            _fixture_local_kafka_topic):
-    spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
-    spark_conf = {"spark.sql.session.timeZone": "Etc/UTC"}
-    options = {'mode': 'overwrite', "format": "delta"}
-    options_error_table = {'mode': 'overwrite', "format": "delta"}
-
     input_df.createOrReplaceTempView("test_table")
 
-    _fixture_context._num_row_dq_rules = (dq_rules.get("rules").get("num_row_dq_rules"))
-    _fixture_context._num_dq_rules = (dq_rules.get("rules").get("num_dq_rules"))
-    _fixture_context._num_agg_dq_rules = (dq_rules.get("agg_dq_rules"))
-    _fixture_context._num_query_dq_rules = (dq_rules.get("query_dq_rules"))
+    spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
+
+    rules_df = spark.createDataFrame(expectations)
+    rules_df.show(truncate=False)
+
+    writer = WrappedDataFrameWriter.mode("append").format("delta")
+    se = SparkExpectations(product_id="product1",
+                           rules_df=rules_df,
+                           stats_table="dq_spark.test_dq_stats_table",
+                           stats_table_writer=writer,
+                           target_and_error_table_writer=writer,
+                           debugger=False,
+                           )
+    se._context._run_date = "2022-12-27 10:00:00"
+    se._context._env = "local"
+    se._context.set_input_count(100)
+    se._context.set_output_count(100)
+    se._context.set_error_count(0)
+    se._context._run_id = "product1_run_test"
 
     # Decorate the mock function with required args
-    @_fixture_spark_expectations.with_expectations(
-        expectations,
-        write_to_table,
-        write_to_temp_table,
-        row_dq,
-        user_conf={**spark_conf, **{user_config.se_notifications_on_fail: False}},
-        options=options,
-        options_error_table=options_error_table,
+    @se.with_expectations(
+        "dq_spark.test_final_table",
+        user_conf={user_config.se_notifications_on_fail: False},
+        write_to_table=write_to_table,
+        write_to_temp_table=write_to_temp_table
     )
     def get_dataset() -> DataFrame:
         return input_df
@@ -2257,13 +2097,12 @@ def test_with_expectations(input_df,
     else:
         get_dataset()  # decorated_func()
 
-        if row_dq is True and write_to_table is True:
+        if write_to_table is True:
             expected_output_df = expected_output.withColumn("run_id", lit("product1_run_test")) \
-                .withColumn("run_date", to_timestamp(lit("2022-12-27 10:39:44")))
+                .withColumn("run_date", to_timestamp(lit("2022-12-27 10:00:00"))) \
 
             error_table = spark.table("dq_spark.test_final_table_error")
             result_df = spark.table("dq_spark.test_final_table")
-            result_df.show(truncate=False)
 
             assert result_df.orderBy("col2").collect() == expected_output_df.orderBy("col2").collect()
             assert error_table.count() == error_count
@@ -2286,6 +2125,9 @@ def test_with_expectations(input_df,
     assert row.dq_status.get("source_query_dq") == status.get("source_query_dq_status")
     assert row.dq_status.get("final_query_dq") == status.get("final_query_dq_status")
     assert row.dq_status.get("run_status") == status.get("run_status")
+    assert row.meta_dq_run_id == "product1_run_test"
+    assert row.meta_dq_run_date == datetime.date(2022, 12, 27)
+    assert row.meta_dq_run_datetime == datetime.datetime(2022, 12, 27, 10, 00, 00)
 
     assert spark.read.format("kafka").option(
         "kafka.bootstrap.servers", "localhost:9092"
@@ -2295,6 +2137,10 @@ def test_with_expectations(input_df,
         "endingOffsets", "latest"
     ).load().orderBy(col('timestamp').desc()).limit(1).selectExpr(
         "cast(value as string) as value").collect() == stats_table.selectExpr("to_json(struct(*)) AS value").collect()
+
+    spark.sql("select * from dq_spark.test_final_table").show(truncate=False)
+    spark.sql("select * from dq_spark.test_final_table_error").show(truncate=False)
+    spark.sql("select * from dq_spark.test_dq_stats_table").show(truncate=False)
 
     spark.sql("drop table if exists test_final_table_error")
     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db/test_final_table_error")
@@ -2343,23 +2189,12 @@ def test_with_expectations(input_df,
 def test_with_expectations_patch(_write_error_stats,
                                  _fixture_create_database,
                                  _fixture_spark_expectations,
-                                 _fixture_context,
-                                 _fixture_dq_rules,
                                  _fixture_df,
                                  _fixture_rules_df):
-    _fixture_context._num_row_dq_rules = (_fixture_dq_rules.get("rules").get("num_row_dq_rules"))
-    _fixture_context._num_dq_rules = (_fixture_dq_rules.get("rules").get("num_dq_rules"))
-    _fixture_context._num_agg_dq_rules = (_fixture_dq_rules.get("agg_dq_rules"))
-    _fixture_context._num_query_dq_rules = (_fixture_dq_rules.get("query_dq_rules"))
 
     decorated_func = _fixture_spark_expectations.with_expectations(
-        _fixture_rules_df,
-        True,
-        agg_dq=None,
-        query_dq=None,
+        "dq_spark.test_final_table",
         user_conf={user_config.se_notifications_on_fail: False},
-        options={'mode': 'overwrite', "format": "delta"},
-        options_error_table={'mode': 'overwrite', "format": "delta"}
     )(Mock(return_value=_fixture_df))
 
     decorated_func()
@@ -2373,7 +2208,7 @@ def test_with_expectations_dataframe_not_returned_exception(_fixture_create_data
                                                             _fixture_rules_df,
                                                             _fixture_local_kafka_topic):
     partial_func = _fixture_spark_expectations.with_expectations(
-        _fixture_rules_df,
+        "dq_spark.test_final_table",
         user_conf={user_config.se_notifications_on_fail: False},
     )
 

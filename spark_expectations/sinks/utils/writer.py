@@ -36,7 +36,9 @@ class SparkExpectationsWriter:
     def __post_init__(self) -> None:
         self.spark = self._context.spark
 
-    def save_df_as_table(self, df: DataFrame, table_name: str, config: dict) -> None:
+    def save_df_as_table(
+        self, df: DataFrame, table_name: str, config: dict, stats_table: bool = False
+    ) -> None:
         """
         This function takes a dataframe and writes into a table
 
@@ -44,6 +46,7 @@ class SparkExpectationsWriter:
             df: Provide the dataframe which need to be written as a table
             table_name: Provide the table name to which the dataframe need to be written to
             config: Provide the config to write the dataframe into the table
+            stats_table: Provide if this is for writing stats table
 
         Returns:
             None:
@@ -51,15 +54,18 @@ class SparkExpectationsWriter:
         """
         try:
             print("run date ", self._context.get_run_date)
-            _df = df.withColumn(
-                self._context.get_run_id_name, lit(f"{self._context.get_run_id}")
-            ).withColumn(
-                self._context.get_run_date_name,
-                to_timestamp(lit(f"{self._context.get_run_date}")),
-            )
+            if not stats_table:
+                df = df.withColumn(
+                    self._context.get_run_id_name, lit(f"{self._context.get_run_id}")
+                ).withColumn(
+                    self._context.get_run_date_name,
+                    to_timestamp(
+                        lit(f"{self._context.get_run_date}"), "yyyy-MM-dd HH:mm:ss"
+                    ),
+                )
             _log.info("_save_df_as_table started")
 
-            _df_writer = _df.write
+            _df_writer = df.write
 
             if config["mode"] is not None:
                 _df_writer = _df_writer.mode(config["mode"])
@@ -270,6 +276,7 @@ class SparkExpectationsWriter:
                 df,
                 self._context.get_dq_stats_table_name,
                 config=self._context.get_stats_table_writer_config,
+                stats_table=True,
             )
 
             _log.info(

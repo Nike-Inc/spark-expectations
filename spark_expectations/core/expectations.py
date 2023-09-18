@@ -152,7 +152,9 @@ class SparkExpectations:
                 "target_query_dq", False
             )
             _target_table_view: str = (
-                target_table_view if target_table_view else f"{target_table}_view"
+                target_table_view
+                if target_table_view
+                else f"{target_table.split('.')[-1]}_view"
             )
 
             _notification_on_start: bool = (
