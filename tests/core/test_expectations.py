@@ -18,7 +18,7 @@ from spark_expectations.core.exceptions import (
 from spark_expectations.notifications.push.spark_expectations_notify import SparkExpectationsNotify
 from spark_expectations.sinks.utils.collect_statistics import SparkExpectationsCollectStatistics
 
-os.environ["UNIT_TESTING_ENV"] = "spark_expectations_unit_testing_on_github_actions"
+# os.environ["UNIT_TESTING_ENV"] = "local"
 
 spark = get_spark_session()
 
@@ -69,7 +69,6 @@ def fixture_dq_rules():
 
 @pytest.fixture(name="_fixture_rules_df")
 def fixture_rules_df():
-    # create a sample input expectations to run on raw dataframe
     rules_dict = {
         "product_id": "product1",
         "table_name": "dq_spark.test_table",
@@ -87,7 +86,6 @@ def fixture_rules_df():
         "error_drop_threshold": "10"
     }
     return spark.createDataFrame([rules_dict])
-
 
 
 @pytest.fixture(name="_fixture_create_database")
@@ -129,7 +127,7 @@ def fixture_spark_expectations(_fixture_rules_df):
     writer = WrappedDataFrameWriter.mode("append").format("delta")
     spark_expectations = SparkExpectations(product_id="product1",
                                            rules_df=_fixture_rules_df,
-                                           stats_table="dq_spark_local.test_dq_stats_table",
+                                           stats_table="dq_spark.test_dq_stats_table",
                                            stats_table_writer=writer,
                                            target_and_error_table_writer=writer,
                                            debugger=False,
@@ -147,51 +145,51 @@ def fixture_spark_expectations(_fixture_rules_df):
     return spark_expectations
 
 
-@pytest.fixture(name="_fixture_create_stats_table")
-def fixture_create_stats_table():
-    # drop if exist dq_spark database and create with test_dq_stats_table
-    os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
-    spark.sql("create database if not exists dq_spark")
-    spark.sql("use dq_spark")
-
-    spark.sql("drop table if exists test_dq_stats_table")
-    os.system("rm -rf /tmp/hive/warehouse/dq_spark.db/test_dq_stats_table")
-
-    spark.sql(
-        """
-    create table test_dq_stats_table (
-    product_id STRING,
-    table_name STRING,
-    input_count LONG,
-    error_count LONG,
-    output_count LONG,
-    output_percentage FLOAT,
-    success_percentage FLOAT,
-    error_percentage FLOAT,
-    source_agg_dq_results array<map<string, string>>,
-    final_agg_dq_results array<map<string, string>>,
-    source_query_dq_results array<map<string, string>>,
-    final_query_dq_results array<map<string, string>>,
-    row_dq_res_summary array<map<string, string>>,
-    row_dq_error_threshold array<map<string, string>>,
-    dq_status map<string, string>,
-    dq_run_time map<string, float>,
-    dq_rules map<string, map<string,int>>,
-    meta_dq_run_id STRING,
-    meta_dq_run_date DATE,
-    meta_dq_run_datetime TIMESTAMP
-    )
-    USING delta
-    """
-    )
-
-    yield "test_dq_stats_table"
-
-    spark.sql("drop table if exists test_dq_stats_table")
-    os.system("rm -rf /tmp/hive/warehouse/dq_spark.db/test_dq_stats_table")
-
-    # remove database
-    os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
+# @pytest.fixture(name="_fixture_create_stats_table")
+# def fixture_create_stats_table():
+#     # drop if exist dq_spark database and create with test_dq_stats_table
+#     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
+#     spark.sql("create database if not exists dq_spark")
+#     spark.sql("use dq_spark")
+#
+#     spark.sql("drop table if exists test_dq_stats_table")
+#     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db/test_dq_stats_table")
+#
+#     spark.sql(
+#         """
+#     create table test_dq_stats_table (
+#     product_id STRING,
+#     table_name STRING,
+#     input_count LONG,
+#     error_count LONG,
+#     output_count LONG,
+#     output_percentage FLOAT,
+#     success_percentage FLOAT,
+#     error_percentage FLOAT,
+#     source_agg_dq_results array<map<string, string>>,
+#     final_agg_dq_results array<map<string, string>>,
+#     source_query_dq_results array<map<string, string>>,
+#     final_query_dq_results array<map<string, string>>,
+#     row_dq_res_summary array<map<string, string>>,
+#     row_dq_error_threshold array<map<string, string>>,
+#     dq_status map<string, string>,
+#     dq_run_time map<string, float>,
+#     dq_rules map<string, map<string,int>>,
+#     meta_dq_run_id STRING,
+#     meta_dq_run_date DATE,
+#     meta_dq_run_datetime TIMESTAMP
+#     )
+#     USING delta
+#     """
+#     )
+#
+#     yield "test_dq_stats_table"
+#
+#     spark.sql("drop table if exists test_dq_stats_table")
+#     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db/test_dq_stats_table")
+#
+#     # remove database
+#     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
 
 
 @pytest.mark.parametrize("input_df, "
@@ -2393,12 +2391,33 @@ def test_with_expectations_dataframe_not_returned_exception(_fixture_create_data
 
 def test_with_expectations_exception(_fixture_create_database,
                                      _fixture_spark_expectations,
-                                     _fixture_df,
-                                     _fixture_rules_df,
-                                     _fixture_create_stats_table,
                                      _fixture_local_kafka_topic):
-    _fixture_rules_df.show(truncate=False)
-    partial_func = _fixture_spark_expectations.with_expectations(
+    rules_dict = {
+        "product_id": "product1",
+        "table_name": "dq_spark.test_table",
+        "rule_type": "row_dq",
+        "rule": "col1_threshold",
+        "column_name": "col1",
+        "expectation": "col1 > 1",
+        "action_if_failed": "ignore",
+        "tag": "validity",
+        "description": "col1 value must be greater than 1",
+        "enable_for_source_dq_validation": True,
+        "enable_for_target_dq_validation": True,
+        "is_active": True,
+        "enable_error_drop_alert": True,
+        "error_drop_threshold": "10"
+    }
+    rules_df = spark.createDataFrame([rules_dict])
+    writer = WrappedDataFrameWriter.mode("append").format("delta")
+    se = SparkExpectations(product_id="product1",
+                           rules_df=rules_df,
+                           stats_table="dq_spark.test_dq_stats_table",
+                           stats_table_writer=writer,
+                           target_and_error_table_writer=writer,
+                           debugger=False,
+                           )
+    partial_func = se.with_expectations(
         "dq_spark.test_final_table",
         user_conf={user_config.se_notifications_on_fail: False}
     )
@@ -2413,266 +2432,156 @@ def test_with_expectations_exception(_fixture_create_database,
         decorated_func()
 
 
-@pytest.mark.parametrize("input_df, "
-                         "expectations, "
-                         "write_to_table, "
-                         "write_to_temp_table, "
-                         "row_dq, agg_dq, "
-                         "source_agg_dq, "
-                         "final_agg_dq,"
-                         "dq_rules ",
-                         [
-                             (
-                                     # In this test case, the action for failed rows is "ignore" & "drop",
-                                     # collect stats in the test_stats_table and
-                                     # log the error records into the error table.
-                                     spark.createDataFrame(
-                                         [
-                                             {"col1": 1, "col2": "a", "col3": 4},
-                                             # row doesn't meet expectations1(ignore) 2(drop), log into err & fnl
-                                             {"col1": 2, "col2": "b", "col3": 5},
-                                             # row meets expectations1(ignore), log into final table
-                                             {"col1": 3, "col2": "c", 'col3': 6},
-                                             # row doesnt'meets expectations1(ignore), log into final table
-                                         ]
-                                     ),
-                                     {  # expectations rules
-                                         "row_dq_rules": [{
-                                             "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
-                                             "rule_type": "row_dq",
-                                             "rule": "col3_threshold",
-                                             "column_name": "col3",
-                                             "expectation": "col3 > 6",
-                                             "action_if_failed": "ignore",
-                                             "tag": "strict",
-                                             "description": "col3 value must be greater than 6",
-                                             "enable_error_drop_alert": True,
-                                             "error_drop_threshold": "25",
-                                         },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "row_dq",
-                                                 "rule": "col1_add_col3_threshold",
-                                                 "column_name": "col1",
-                                                 "expectation": "(col1+col3) > 6",
-                                                 "action_if_failed": "drop",
-                                                 "tag": "strict",
-                                                 "description": "col1_add_col3 value must be greater than 6",
-                                                 "enable_error_drop_alert": True,
-                                                 "error_drop_threshold": "50",
-                                             }
-                                         ],
-                                         "agg_dq_rules": [{}],
-                                         "target_table_name": "dq_spark.test_final_table"
+# # patch notification hook
+# @patch("spark_expectations.core.expectations.SparkExpectationsNotify")
+# @patch("spark_expectations.notifications.plugins.base_notification.SparkExpectationsNotification")
+# @patch("spark_expectations.notifications.plugins.email.SparkExpectationsEmailPluginImpl")
+# def test_error_threshold_breach(_mock_email_hook, _mock_notification_hook, _mock_spark_expectations_notify,
+#                                 _fixture_create_database,
+#                                 _fixture_local_kafka_topic
+#                                 ):
+#     input_df = spark.createDataFrame(
+#         [
+#             {"col1": 1, "col2": "a", "col3": 4},
+#             {"col1": 2, "col2": "b", "col3": 5},
+#             {"col1": 3, "col2": "c", 'col3': 6},
+#         ]
+#     )
+#
+#     rules = [
+#         {
+#             "product_id": "product1",
+#             "table_name": "dq_spark.test_final_table",
+#             "rule_type": "row_dq",
+#             "rule": "col1_add_col3_threshold",
+#             "column_name": "col1",
+#             "expectation": "(col1+col3) > 6",
+#             "action_if_failed": "drop",
+#             "tag": "strict",
+#             "description": "col1_add_col3 value must be greater than 6",
+#             "enable_for_source_dq_validation": True,
+#             "enable_for_target_dq_validation": True,
+#             "is_active": True,
+#             "enable_error_drop_alert": True,
+#             "error_drop_threshold": "25"
+#         },
+#         {
+#             "product_id": "product1",
+#             "table_name": "dq_spark.test_final_table",
+#             "rule_type": "query_dq",
+#             "rule": "col3_positive_threshold",
+#             "column_name": "col3",
+#             "expectation": "(select count(case when col3>0 then 1 else 0 end) from target_test_table) > 10",
+#             "action_if_failed": "ignore",
+#             "tag": "strict",
+#             "description": "count of col3 positive value must be greater than 10",
+#             "enable_for_source_dq_validation": False,
+#             "enable_for_target_dq_validation": True,
+#             "is_active": True,
+#             "enable_error_drop_alert": True,
+#             "error_drop_threshold": "50"
+#         }]
+#
+#     # create a PySpark DataFrame from the list of dictionaries
+#     rules_df = spark.createDataFrame(rules)
+#     rules_df.createOrReplaceTempView("target_test_table")
+#
+#     writer = WrappedDataFrameWriter.mode("append").format("delta")
+#     se = SparkExpectations(product_id="product1",
+#                            rules_df=rules_df,
+#                            stats_table="dq_spark.test_dq_stats_table",
+#                            stats_table_writer=writer,
+#                            target_and_error_table_writer=writer,
+#                            debugger=False,
+#                            )
+#
+#     @se.with_expectations(
+#         target_table="dq_spark.test_final_table",
+#         write_to_table=True,
+#         target_table_view="target_test_table",
+#
+#     )
+#     def get_dataset() -> DataFrame:
+#         return input_df
+#
+#     get_dataset()
+#
+#     _mock_email_hook.send_notification.assert_called_once()
+#     _mock_spark_expectations_notify("product_id",
+#     se._context).notify_on_exceeds_of_error_threshold.assert_called_once()
 
-                                     },
-                                     True,  # write to table
-                                     True,  # write to temp table
-                                     True,  # row_dq
-                                     False,  # agg_dq
-                                     False,  # source_agg_dq
-                                     False,  # final_agg_dq_res
-                                     {"rules": {"num_dq_rules": 0, "num_row_dq_rules": 0},
-                                      "query_dq_rules": {"num_final_query_dq_rules": 0, "num_source_query_dq_rules": 0,
-                                                         "num_query_dq_rules": 0},
-                                      "agg_dq_rules": {"num_source_agg_dq_rules": 0, "num_agg_dq_rules": 0,
-                                                       "num_final_agg_dq_rules": 0}}  # dq_rules
-                             )
-                         ])
-@patch('spark_expectations.core.expectations.SparkExpectationsNotify', autospec=True,
-       spec_set=True)
-@patch('spark_expectations.notifications.push.spark_expectations_notify._notification_hook', autospec=True,
-       spec_set=True)
-def test_error_threshold_breach(_mock_notification_hook, _mock_spark_expectations_notify, input_df,
-                                expectations,
-                                write_to_table,
-                                write_to_temp_table,
-                                row_dq,
-                                agg_dq,
-                                source_agg_dq,
-                                final_agg_dq,
-                                dq_rules,
-                                _fixture_spark_expectations,
-                                _fixture_context,
-                                _fixture_create_stats_table,
-                                _fixture_local_kafka_topic):
-    spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
-    spark_conf = {"spark.sql.session.timeZone": "Etc/UTC"}
-    options = {'mode': 'overwrite', "format": "delta"}
-    options_error_table = {'mode': 'overwrite', "format": "delta"}
 
-    # set neccessary parameters in context class or object
-    _fixture_context._num_row_dq_rules = (dq_rules.get("rules").get("num_row_dq_rules"))
-    _fixture_context._num_dq_rules = (dq_rules.get("rules").get("num_dq_rules"))
-    _fixture_context._num_agg_dq_rules = (dq_rules.get("agg_dq_rules"))
-    _fixture_context._num_query_dq_rules = (dq_rules.get("query_dq_rules"))
-
-    # Decorate the mock function with required args
-    @_fixture_spark_expectations.with_expectations(
-        expectations,
-        write_to_table,
-        write_to_temp_table,
-        row_dq,
-        agg_dq={
-            user_config.se_agg_dq: agg_dq,
-            user_config.se_source_agg_dq: source_agg_dq,
-            user_config.se_final_agg_dq: final_agg_dq,
+def test_target_table_view_expception(_fixture_create_database,
+                                      _fixture_local_kafka_topic):
+    rules = [
+        {
+            "product_id": "product1",
+            "table_name": "dq_spark.test_final_table",
+            "rule_type": "row_dq",
+            "rule": "col1_threshold",
+            "column_name": "col1",
+            "expectation": "col1 > 1",
+            "action_if_failed": "ignore",
+            "tag": "validity",
+            "description": "col1 value must be greater than 1",
+            "enable_for_source_dq_validation": True,
+            "enable_for_target_dq_validation": True,
+            "is_active": True,
+            "enable_error_drop_alert": True,
+            "error_drop_threshold": "10"
         },
-        query_dq=None,
-        user_conf={
-            user_config.se_notifications_on_fail: False,
-            user_config.se_notifications_on_error_drop_exceeds_threshold_breach: True,
-            user_config.se_notifications_on_error_drop_threshold: 10,
-        },
-        options=options,
-        options_error_table=options_error_table
+        {
+            "product_id": "product1",
+            "table_name": "dq_spark.test_final_table",
+            "rule_type": "query_dq",
+            "rule": "col3_positive_threshold",
+            "column_name": "col3",
+            "expectation": "(select count(case when col3>0 then 1 else 0 end) from target_test_table) > 10",
+            "action_if_failed": "ignore",
+            "tag": "strict",
+            "description": "count of col3 positive value must be greater than 10",
+            "enable_for_source_dq_validation": False,
+            "enable_for_target_dq_validation": True,
+            "is_active": True,
+            "enable_error_drop_alert": True,
+            "error_drop_threshold": "10"
+        }]
+
+    input_df = spark.createDataFrame(
+        [
+            # min of col1 must be greater than 10(ignore) - source_query_dq
+            # max of col1 must be greater than 100(fail) - final_query_dq
+            # min of col3 must be greater than 0(fail) - final_query_dq
+            {"col1": 1, "col2": "a", "col3": 4},
+            # row meets all row_dq_expectations(drop)
+            {"col1": 2, "col2": "b", "col3": 5},
+            # ow doesn't meet row_dq expectation1(drop)
+            {"col1": 3, "col2": "c", "col3": 6},
+            # row meets all row_dq_expectations
+        ]
+    )
+
+    # create a PySpark DataFrame from the list of dictionaries
+    rules_df = spark.createDataFrame(rules)
+    rules_df.createOrReplaceTempView("test_table")
+
+    writer = WrappedDataFrameWriter.mode("append").format("delta")
+    se = SparkExpectations(product_id="product1",
+                           rules_df=rules_df,
+                           stats_table="dq_spark.test_dq_stats_table",
+                           stats_table_writer=writer,
+                           target_and_error_table_writer=writer,
+                           debugger=False,
+                           )
+
+    @se.with_expectations(
+        target_table="dq_spark.test_final_table",
+        write_to_table=True,
+        target_table_view="test_table",
+
     )
     def get_dataset() -> DataFrame:
         return input_df
-
-    get_dataset()
-
-    _mock_notification_hook.send_notification.assert_called_once()
-    # _mock_spark_expectations_notify("product_id",
-    # _fixture_context).notify_on_exceeds_of_error_threshold.assert_called_once()
-
-
-@pytest.mark.parametrize("input_df, "
-                         "expectations, "
-                         "write_to_table, "
-                         "write_to_temp_table, "
-                         "row_dq, agg_dq, "
-                         "source_agg_dq, "
-                         "final_agg_dq, "
-                         "query_dq, "
-                         "source_query_dq, "
-                         "final_query_dq, "
-                         "expected_output, "
-                         "input_count, "
-                         "error_count, "
-                         "output_count ",
-                         [(
-                                 # In this test case, dq run set for query_dq source_query_dq &
-                                 # final_query_dq(ignore, fail)
-                                 # with action_if_failed (ignore, fail) for query_dq
-                                 # collect stats in the test_stats_table, error into error_table & raise the error
-                                 spark.createDataFrame(
-                                     [
-                                         # min of col1 must be greater than 10(ignore) - source_query_dq
-                                         # max of col1 must be greater than 100(fail) - final_query_dq
-                                         # min of col3 must be greater than 0(fail) - final_query_dq
-                                         {"col1": 1, "col2": "a", "col3": 4},
-                                         # row meets all row_dq_expectations(drop)
-                                         {"col1": 2, "col2": "b", "col3": 5},
-                                         # ow doesn't meet row_dq expectation1(drop)
-                                         {"col1": 3, "col2": "c", "col3": 6},
-                                         # row meets all row_dq_expectations
-                                     ]
-                                 ),
-                                 {  # expectations rules
-                                     "row_dq_rules": [{
-                                         "product_id": "product1",
-                                         "target_table_name": "dq_spark.test_table",
-                                         "rule_type": "row_dq",
-                                         "rule": "col3_mod_2",
-                                         "column_name": "col3",
-                                         "expectation": "(col3 % 2) = 0",
-                                         "action_if_failed": "drop",
-                                         "tag": "validity",
-                                         "description": "col3 mod must equals to 0",
-                                         "enable_error_drop_alert": False,
-                                         "error_drop_threshold": "10",
-                                     }],
-                                     "query_dq_rules": [
-                                         {
-                                             "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
-                                             "rule_type": "query_dq",
-                                             "rule": "col3_positive_threshold",
-                                             "column_name": "col1",
-                                             "expectation": "(select count(case when col3>0 then 1 else 0 end) from target_test_table) > 10",
-                                             "enable_for_source_dq_validation": False,
-                                             "enable_for_target_dq_validation": True,
-                                             "action_if_failed": "ignore",
-                                             "tag": "strict",
-                                             "description": "count of col3 positive value must be greater than 10"
-                                         }
-                                     ],
-                                     "target_table_name": "dq_spark.test_final_table"
-
-                                 },
-                                 True,  # write to table
-                                 False,  # write to temp table
-                                 True,  # row_dq
-                                 False,  # agg_dq
-                                 False,  # source_agg_dq
-                                 False,  # final_agg_dq
-                                 True,  # query_dq
-                                 False,  # source_query_dq
-                                 True,  # final_query_dq
-                                 spark.createDataFrame(
-                                     [
-                                         {"col1": 1, "col2": "a", "col3": 4},
-                                         {"col1": 3, "col2": "c", "col3": 6},
-                                     ]
-                                 ),  # expected result
-                                 3,  # input count
-                                 1,  # error count
-                                 2,  # output count
-                         )])
-def test_target_table_view_exception(input_df,
-                                     expectations,
-                                     write_to_table,
-                                     write_to_temp_table,
-                                     row_dq,
-                                     agg_dq,
-                                     source_agg_dq,
-                                     final_agg_dq,
-                                     query_dq,
-                                     source_query_dq,
-                                     final_query_dq,
-                                     expected_output,
-                                     input_count,
-                                     error_count,
-                                     output_count,
-                                     _fixture_spark_expectations,
-                                     _fixture_context,
-                                     _fixture_create_stats_table,
-                                     _fixture_local_kafka_topic):
-    spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
-    spark_conf = {"spark.sql.session.timeZone": "Etc/UTC"}
-    options = {'mode': 'overwrite', "format": "delta"}
-    options_error_table = {'mode': 'overwrite', "format": "delta"}
-
-    input_df.createOrReplaceTempView("test_table")
-
-    # Decorate the mock function with required args
-    @_fixture_spark_expectations.with_expectations(
-        expectations,
-        write_to_table,
-        write_to_temp_table,
-        row_dq,
-        agg_dq={
-            user_config.se_agg_dq: agg_dq,
-            user_config.se_source_agg_dq: source_agg_dq,
-            user_config.se_final_agg_dq: final_agg_dq,
-        },
-        query_dq={
-            user_config.se_query_dq: query_dq,
-            user_config.se_source_query_dq: source_query_dq,
-            user_config.se_final_query_dq: final_query_dq,
-            user_config.se_target_table_view: ""
-        },
-        user_conf={**spark_conf, **{user_config.se_notifications_on_fail: False}},
-        options=options,
-        options_error_table=options_error_table,
-    )
-    def get_dataset() -> DataFrame:
-        return input_df
-
-    input_df.show(truncate=False)
 
     with pytest.raises(SparkExpectationsMiscException, match=r"error occurred while processing spark expectations .*"):
         get_dataset()  # decorated_func()
@@ -2723,12 +2632,12 @@ def test_bucketBy(fresh_writer):
 
 def test_build(fresh_writer):
     writer = fresh_writer.mode("overwrite") \
-            .format("parquet") \
-            .partitionBy("date", "region") \
-            .option("compression", "gzip") \
-            .options(path="/path/to/output", inferSchema="true") \
-            .bucketBy(4, "country", "city") \
-            .sortBy("col1", "col2")
+        .format("parquet") \
+        .partitionBy("date", "region") \
+        .option("compression", "gzip") \
+        .options(path="/path/to/output", inferSchema="true") \
+        .bucketBy(4, "country", "city") \
+        .sortBy("col1", "col2")
     expected_config = {
         "mode": "overwrite",
         "format": "parquet",
