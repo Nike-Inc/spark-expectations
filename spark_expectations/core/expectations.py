@@ -2,7 +2,7 @@ import functools
 from dataclasses import dataclass
 from typing import Dict, Optional, Any, Union, Type
 from pyspark import StorageLevel
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, SparkSession
 from spark_expectations import _log
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.context import SparkExpectationsContext
@@ -45,9 +45,14 @@ class SparkExpectations:
     stats_streaming_options: Optional[Dict[str, Union[str, bool]]] = None
 
     def __post_init__(self) -> None:
-        self.spark = self.rules_df.sparkSession
-        self.actions = SparkExpectationsActions()
-        self._context = SparkExpectationsContext(
+        if isinstance(self.rules_df, DataFrame):
+            self.spark: SparkSession = self.rules_df.sparkSession
+        else:
+            raise SparkExpectationsMiscException(
+                "Input rules_df is not of dataframe type"
+            )
+        self.actions: SparkExpectationsActions = SparkExpectationsActions()
+        self._context: SparkExpectationsContext = SparkExpectationsContext(
             product_id=self.product_id, spark=self.spark
         )
 

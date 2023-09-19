@@ -252,7 +252,11 @@ class SparkExpectationsNotify:
 
                 rule_name = rule["rule"]
                 rule_action = rule["action_if_failed"]
-                failed_row_count = int(rules_failed_row_count[rule_name])
+                failed_row_count = int(
+                    rules_failed_row_count[rule_name]
+                    if rule_name in rules_failed_row_count
+                    else 0
+                )
 
                 if failed_row_count is not None and failed_row_count > 0:
                     set_error_drop_threshold = int(rule["error_drop_threshold"])

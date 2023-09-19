@@ -5,11 +5,9 @@ from unittest.mock import Mock
 from unittest.mock import patch
 import pytest
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import lit, to_timestamp, col, to_utc_timestamp
+from pyspark.sql.functions import lit, to_timestamp, col
 from pyspark.sql.types import StringType, IntegerType, StructField, StructType
 from spark_expectations.core.context import SparkExpectationsContext
-from spark_expectations.utils.reader import SparkExpectationsReader
-from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
 from spark_expectations.core.expectations import SparkExpectations, WrappedDataFrameWriter
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core import get_spark_session
@@ -137,6 +135,7 @@ def fixture_context():
 
     return _context
 
+
 @pytest.fixture(name="_fixture_spark_expectations")
 def fixture_spark_expectations(_fixture_rules_df):
     # create a spark expectations class object
@@ -225,7 +224,7 @@ def fixture_spark_expectations(_fixture_rules_df):
                          [
                              (
                                      # Note: where err: refers error table and fnl: final table
-                                     # test case 1
+                                     # test case 0
                                      # In this test case, the action for failed rows is "ignore",
                                      # so the function should return the input DataFrame with all rows.
                                      # collect stats in the test_stats_table and
@@ -258,7 +257,7 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "enable_error_drop_alert": True,
                                              "error_drop_threshold": "10"
                                          }
-                                    ],
+                                     ],
                                      True,  # write to table
                                      True,  # write to temp table
                                      # expected res
@@ -288,7 +287,7 @@ def fixture_spark_expectations(_fixture_rules_df):
                              ),
 
                              (
-                                     # test case 2
+                                     # test case 1
                                      # In this test case, the action for failed rows is "drop",
                                      # collect stats in the test_stats_table and
                                      # log the error records into the error table.
@@ -302,10 +301,10 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              # row meets expectations(drop), log into final table
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "row_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col2_set",
                                              "column_name": "col2",
@@ -313,13 +312,13 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "drop",
                                              "tag": "strict",
                                              "description": "col2 value must be in ('a', 'b')",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": True,
                                              "error_drop_threshold": "5",
-                                         }],
-                                         "agg_dq_rules": [{}],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                         }
+                                     ],
                                      True,  # write to table
                                      True,  # write to temp table
                                      # expected res
@@ -349,7 +348,7 @@ def fixture_spark_expectations(_fixture_rules_df):
                                       "source_query_dq_status": "Skipped", "final_query_dq_status": "Skipped"},
                              ),
                              (
-                                     # test case 3
+                                     # test case 2
                                      # In this test case, the action for failed rows is "fail",
                                      # spark expectations expected to fail
                                      # collect stats in the test_stats_table and
@@ -364,10 +363,10 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              # row meets doesn't expectations(fail), log into final table
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "row_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col3_threshold",
                                              "column_name": "col3",
@@ -375,13 +374,13 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "fail",
                                              "tag": "strict",
                                              "description": "col3 value must be greater than 6",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": True,
                                              "error_drop_threshold": "15",
-                                         }],
-                                         "agg_dq_rules": [{}],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                         }
+                                     ],
                                      True,  # write to table
                                      True,  # write to temp table
                                      SparkExpectationsMiscException,  # expected res
@@ -402,7 +401,7 @@ def fixture_spark_expectations(_fixture_rules_df):
                                       "final_agg_dq_status": "Skipped", "run_status": "Failed",
                                       "source_query_dq_status": "Skipped", "final_query_dq_status": "Skipped"},
                              ),
-                             (  # test case 4
+                             (  # test case 3
                                      # In this test case, the action for failed rows is "ignore" & "drop",
                                      # collect stats in the test_stats_table and
                                      # log the error records into the error table.
@@ -416,10 +415,10 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              # row doesnt'meets expectations1(ignore), log into final table
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "row_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col3_threshold",
                                              "column_name": "col3",
@@ -427,27 +426,30 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "ignore",
                                              "tag": "strict",
                                              "description": "col3 value must be greater than 6",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": False,
                                              "error_drop_threshold": "10",
                                          },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "row_dq",
-                                                 "rule": "col1_add_col3_threshold",
-                                                 "column_name": "col1",
-                                                 "expectation": "(col1+col3) > 6",
-                                                 "action_if_failed": "drop",
-                                                 "tag": "strict",
-                                                 "description": "col1_add_col3 value must be greater than 6",
-                                                 "enable_error_drop_alert": False,
-                                                 "error_drop_threshold": "15",
-                                             }
-                                         ],
-                                         "agg_dq_rules": [{}],
-                                         "target_table_name": "dq_spark.test_final_table"
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "row_dq",
+                                             "rule": "col1_add_col3_threshold",
+                                             "column_name": "col1",
+                                             "expectation": "(col1+col3) > 6",
+                                             "action_if_failed": "drop",
+                                             "tag": "strict",
+                                             "description": "col1_add_col3 value must be greater than 6",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "15",
+                                         }
+                                     ],
 
-                                     },
                                      True,  # write to table
                                      True,  # write to temp table
                                      # expected res
@@ -475,7 +477,7 @@ def fixture_spark_expectations(_fixture_rules_df):
                                       "source_query_dq_status": "Skipped", "final_query_dq_status": "Skipped"},
                              ),
                              (
-                                     # test case 5
+                                     # test case 4
                                      # In this test case, the action for failed rows is "ignore" & "fail",
                                      # collect stats in the test_stats_table and
                                      # log the error records into the error table.
@@ -489,10 +491,10 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              # row meets expectations1(ignore), log into final table
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "row_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col3_threshold",
                                              "column_name": "col3",
@@ -500,27 +502,29 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "ignore",
                                              "tag": "strict",
                                              "description": "col3 value must be greater than 6",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": True,
                                              "error_drop_threshold": "20",
                                          },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "row_dq",
-                                                 "rule": "col3_minus_col1_threshold",
-                                                 "column_name": "col1",
-                                                 "expectation": "(col3-col1) > 1",
-                                                 "action_if_failed": "fail",
-                                                 "tag": "strict",
-                                                 "description": "col3_minus_col1 value must be greater than 1",
-                                                 "enable_error_drop_alert": True,
-                                                 "error_drop_threshold": "5",
-                                             }
-                                         ],
-                                         "agg_dq_rules": [{}],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "row_dq",
+                                             "rule": "col3_minus_col1_threshold",
+                                             "column_name": "col1",
+                                             "expectation": "(col3-col1) > 1",
+                                             "action_if_failed": "fail",
+                                             "tag": "strict",
+                                             "description": "col3_minus_col1 value must be greater than 1",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": True,
+                                             "error_drop_threshold": "5",
+                                         }
+                                     ],
                                      True,  # write to table
                                      True,  # write to temp table
                                      # expected res
@@ -548,7 +552,8 @@ def fixture_spark_expectations(_fixture_rules_df):
                                       "final_agg_dq_status": "Skipped", "run_status": "Passed",
                                       "source_query_dq_status": "Skipped", "final_query_dq_status": "Skipped"},
                              ),
-                             (  # Test case 6
+                             (
+                                     # Test case 5
                                      # In this test case, the action for failed rows is "drop" & "fail",
                                      # collect stats in the test_stats_table and
                                      # log the error records into the error table.
@@ -562,10 +567,10 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              # row meets expectations1(drop), & 2(fail) log into final table
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "row_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col3_threshold",
                                              "column_name": "col3",
@@ -573,27 +578,29 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "drop",
                                              "tag": "strict",
                                              "description": "col3 value must be greater than 6",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": True,
                                              "error_drop_threshold": "25",
                                          },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "row_dq",
-                                                 "rule": "col3_minus_col1_threshold",
-                                                 "column_name": "col1",
-                                                 "expectation": "(col3-col1) = 1",
-                                                 "action_if_failed": "fail",
-                                                 "tag": "strict",
-                                                 "description": "col3_minus_col1 value must be equals to 1",
-                                                 "enable_error_drop_alert": False,
-                                                 "error_drop_threshold": "25",
-                                             }
-                                         ],
-                                         "agg_dq_rules": [{}],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "row_dq",
+                                             "rule": "col3_minus_col1_threshold",
+                                             "column_name": "col1",
+                                             "expectation": "(col3-col1) = 1",
+                                             "action_if_failed": "fail",
+                                             "tag": "strict",
+                                             "description": "col3_minus_col1 value must be equals to 1",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "25",
+                                         }
+                                     ],
                                      True,  # write to table
                                      True,  # write to temp table
                                      SparkExpectationsMiscException,  # expected res
@@ -628,10 +635,10 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              # row meets expectations1(drop) & meets 2(fail), log into final table
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "row_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col3_threshold",
                                              "column_name": "col3",
@@ -639,27 +646,29 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "drop",
                                              "tag": "strict",
                                              "description": "col3 value must be greater than 6",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": True,
                                              "error_drop_threshold": "10",
                                          },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "row_dq",
-                                                 "rule": "col3_mul_col1_threshold",
-                                                 "column_name": "col1",
-                                                 "expectation": "(col3*col1) > 1",
-                                                 "action_if_failed": "fail",
-                                                 "tag": "strict",
-                                                 "description": "col3_mul_col1 value must be equals to 1",
-                                                 "enable_error_drop_alert": True,
-                                                 "error_drop_threshold": "10",
-                                             }
-                                         ],
-                                         "agg_dq_rules": [{}],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "row_dq",
+                                             "rule": "col3_mul_col1_threshold",
+                                             "column_name": "col1",
+                                             "expectation": "(col3*col1) > 1",
+                                             "action_if_failed": "fail",
+                                             "tag": "strict",
+                                             "description": "col3_mul_col1 value must be equals to 1",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": True,
+                                             "error_drop_threshold": "10",
+                                         }
+                                     ],
                                      True,  # write to table
                                      True,  # write to temp table
                                      # expected res
@@ -701,10 +710,10 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              # row meets all the expectations
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "row_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col1_threshold",
                                              "column_name": "col1",
@@ -712,11 +721,15 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "ignore",
                                              "tag": "strict",
                                              "description": "col1 value must be greater than 1",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": False,
                                              "error_drop_threshold": "0",
-                                         }, {
+                                         },
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col3_threshold",
                                              "column_name": "col3",
@@ -724,27 +737,29 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "drop",
                                              "tag": "strict",
                                              "description": "col3 value must be greater than 5",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": True,
                                              "error_drop_threshold": "10",
                                          },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "row_dq",
-                                                 "rule": "col3_mul_col1_threshold",
-                                                 "column_name": "col1",
-                                                 "expectation": "(col3*col1) > 1",
-                                                 "action_if_failed": "fail",
-                                                 "tag": "strict",
-                                                 "description": "col3_mul_col1 value must be equals to 1",
-                                                 "enable_error_drop_alert": False,
-                                                 "error_drop_threshold": "20",
-                                             }
-                                         ],
-                                         "agg_dq_rules": [{}],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "row_dq",
+                                             "rule": "col3_mul_col1_threshold",
+                                             "column_name": "col1",
+                                             "expectation": "(col3*col1) > 1",
+                                             "action_if_failed": "fail",
+                                             "tag": "strict",
+                                             "description": "col3_mul_col1 value must be equals to 1",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
+                                         }
+                                     ],
                                      True,  # write to table
                                      True,  # write_to_temp_table
                                      spark.createDataFrame(  # expected output
@@ -779,29 +794,33 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              {"col1": 3, "col2": "c", 'col3': 6},
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "agg_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "agg_dq",
                                              "rule": "sum_col3_threshold",
                                              "column_name": "col3",
                                              "expectation": "sum(col3) > 20",
-                                             "enable_for_source_dq_validation": True,
-                                             "enable_for_target_dq_validation": True,
                                              "action_if_failed": "ignore",
                                              "tag": "strict",
                                              "description": "sum col3 value must be greater than 20",
+                                             "enable_for_source_dq_validation": True,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": True,
                                              "error_drop_threshold": "10",
-                                         }],
-                                         "row_dq_rules": [{}],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                         }
+                                     ],
                                      True,  # write to table
                                      True,  # write to temp table
-                                     None,  # expected result
+                                     spark.createDataFrame(
+                                         [
+                                             {"col1": 1, "col2": "a", "col3": 4},
+                                             {"col1": 2, "col2": "b", "col3": 5},
+                                             {"col1": 3, "col2": "c", 'col3': 6},
+                                         ]
+                                     ),  # expected result
                                      3,  # input count
                                      0,  # error count
                                      0,  # output count
@@ -832,24 +851,24 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              {"col1": 3, "col2": "c", 'col3': 6},
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "agg_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "agg_dq",
                                              "rule": "avg_col3_threshold",
                                              "column_name": "col3",
                                              "expectation": "avg(col3) > 25",
-                                             "enable_for_source_dq_validation": True,
-                                             "enable_for_target_dq_validation": True,
                                              "action_if_failed": "fail",
                                              "tag": "strict",
                                              "description": "avg col3 value must be greater than 25",
-                                         }],
-                                         "row_dq_rules": [{}],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                             "enable_for_source_dq_validation": True,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
+                                         }
+                                     ],
                                      True,  # write to table
                                      True,  # write to temp table
                                      SparkExpectationsMiscException,  # excepted result
@@ -883,23 +902,26 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              {"col1": 3, "col2": "c", 'col3': 6},
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "agg_dq_rules": [{
+                                     [{
+                                         "product_id": "product1",
+                                         "table_name": "dq_spark.test_final_table",
+                                         "rule_type": "agg_dq",
+                                         "rule": "min_col1_threshold",
+                                         "column_name": "col1",
+                                         "expectation": "min(col1) > 10",
+                                         "action_if_failed": "ignore",
+                                         "tag": "strict",
+                                         "description": "min col1 value must be greater than 10",
+                                         "enable_for_source_dq_validation": False,
+                                         "enable_for_target_dq_validation": True,
+                                         "is_active": True,
+                                         "enable_error_drop_alert": False,
+                                         "error_drop_threshold": "20",
+
+                                     },
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
-                                             "rule_type": "agg_dq",
-                                             "rule": "min_col1_threshold",
-                                             "column_name": "col1",
-                                             "expectation": "min(col1) > 10",
-                                             "enable_for_source_dq_validation": True,
-                                             "enable_for_target_dq_validation": True,
-                                             "action_if_failed": "ignore",
-                                             "tag": "strict",
-                                             "description": "min col1 value must be greater than 10",
-                                         }],
-                                         "row_dq_rules": [{
-                                             "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col2_set",
                                              "column_name": "col2",
@@ -907,12 +929,13 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "drop",
                                              "tag": "strict",
                                              "description": "col2 value must be in ('a', 'b')",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": False,
                                              "error_drop_threshold": "0",
-                                         }],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                         }
+                                     ],
                                      True,  # write to table
                                      True,  # write to temp table
                                      spark.createDataFrame(
@@ -959,23 +982,26 @@ def fixture_spark_expectations(_fixture_rules_df):
 
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "agg_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "agg_dq",
                                              "rule": "std_col3_threshold",
                                              "column_name": "col3",
                                              "expectation": "stddev(col3) > 10",
-                                             "enable_for_source_dq_validation": True,
-                                             "enable_for_target_dq_validation": True,
                                              "action_if_failed": "fail",
                                              "tag": "strict",
                                              "description": "std col3 value must be greater than 10",
-                                         }],
-                                         "row_dq_rules": [{
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": True,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
+                                         },
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col2_set",
                                              "column_name": "col2",
@@ -983,11 +1009,13 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "drop",
                                              "tag": "strict",
                                              "description": "col2 value must be in ('a', 'b')",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": True,
                                              "error_drop_threshold": "15",
-                                         }],
-                                         "target_table_name": "dq_spark.test_final_table"
-                                     },
+                                         }
+                                     ],
                                      True,  # write to table
                                      True,  # write temp table
                                      SparkExpectationsMiscException,  # expected result
@@ -1027,10 +1055,10 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              # row meets the expectations
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "row_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col1_threshold",
                                              "column_name": "col1",
@@ -1038,11 +1066,13 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "drop",
                                              "tag": "validity",
                                              "description": "col1 value must be greater than 1",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": False,
                                              "error_drop_threshold": "0",
-                                         }],
-                                         "target_table_name": "dq_spark.test_final_table"
-                                     },
+                                         }
+                                     ],
                                      True,  # write to table
                                      True,  # write to temp table
                                      spark.createDataFrame([  # expected_output
@@ -1082,10 +1112,10 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              # row meets all row_dq expectations
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "row_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col1_threshold_1",
                                              "column_name": "col1",
@@ -1093,38 +1123,45 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "ignore",
                                              "tag": "validity",
                                              "description": "col1 value must be greater than 1",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": True,
                                              "error_drop_threshold": "10",
                                          },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "row_dq",
-                                                 "rule": "col2_set",
-                                                 "column_name": "col2",
-                                                 "expectation": "col2 in ('a', 'b', 'c')",
-                                                 "action_if_failed": "drop",
-                                                 "tag": "validity",
-                                                 "description": "col1 value must be greater than 2",
-                                                 "enable_error_drop_alert": True,
-                                                 "error_drop_threshold": "10",
-                                             }],
-                                         "agg_dq_rules": [{
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "row_dq",
+                                             "rule": "col2_set",
+                                             "column_name": "col2",
+                                             "expectation": "col2 in ('a', 'b', 'c')",
+                                             "action_if_failed": "drop",
+                                             "tag": "validity",
+                                             "description": "col1 value must be greater than 2",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": True,
+                                             "error_drop_threshold": "10",
+                                         },
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "agg_dq",
                                              "rule": "distinct_col2_threshold",
                                              "column_name": "col2",
                                              "expectation": "count(distinct col2) > 4",
-                                             "enable_for_source_dq_validation": True,
-                                             "enable_for_target_dq_validation": True,
                                              "action_if_failed": "ignore",
                                              "tag": "validity",
                                              "description": "distinct of col2 value must be greater than 4",
-                                         }],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                             "enable_for_source_dq_validation": True,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
+                                         }
+                                     ],
                                      True,  # write to table
                                      True,  # write to temp table
                                      spark.createDataFrame([  # expected_output
@@ -1150,7 +1187,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      {"row_dq_status": "Passed", "source_agg_dq_status": "Passed",
                                       "final_agg_dq_status": "Skipped", "run_status": "Passed",
                                       "source_query_dq_status": "Skipped", "final_query_dq_status": "Skipped"}  # status
-
                              ),
 
                              (
@@ -1169,10 +1205,10 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              # row meets all row-dq expectations
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "row_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col3_threshold_4",
                                              "column_name": "col3",
@@ -1180,38 +1216,45 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "drop",
                                              "tag": "validity",
                                              "description": "col3 value must be greater than 4",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": True,
                                              "error_drop_threshold": "20",
                                          },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "row_dq",
-                                                 "rule": "col2_set",
-                                                 "column_name": "col2",
-                                                 "expectation": "col2 in ('a', 'b')",
-                                                 "action_if_failed": "ignore",
-                                                 "tag": "validity",
-                                                 "description": "col2 value must be in (a, b)",
-                                                 "enable_error_drop_alert": True,
-                                                 "error_drop_threshold": "2",
-                                             }],
-                                         "agg_dq_rules": [{
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "row_dq",
+                                             "rule": "col2_set",
+                                             "column_name": "col2",
+                                             "expectation": "col2 in ('a', 'b')",
+                                             "action_if_failed": "ignore",
+                                             "tag": "validity",
+                                             "description": "col2 value must be in (a, b)",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": True,
+                                             "error_drop_threshold": "2",
+                                         },
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "agg_dq",
                                              "rule": "avg_col1_threshold",
                                              "column_name": "col1",
                                              "expectation": "avg(col1) > 4",
-                                             "enable_for_source_dq_validation": True,
-                                             "enable_for_target_dq_validation": True,
                                              "action_if_failed": "ignore",
                                              "tag": "accuracy",
                                              "description": "avg of col1 value must be greater than 4",
-                                         }],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                             "enable_for_source_dq_validation": True,
+                                             "enable_for_target_dq_validation": True,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
+                                         }
+                                     ],
                                      True,  # write to table
                                      True,  # write to temp table
                                      spark.createDataFrame([  # expected_output
@@ -1239,7 +1282,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      {"row_dq_status": "Passed", "source_agg_dq_status": "Passed",
                                       "final_agg_dq_status": "Passed", "run_status": "Passed",
                                       "source_query_dq_status": "Skipped", "final_query_dq_status": "Skipped"}  # status
-
                              ),
                              (
                                      # Test case 15
@@ -1259,10 +1301,10 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              {"col1": 2, "col2": "d", "col3": 7}
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "row_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col3_and_col1_threshold_4",
                                              "column_name": "col3, col1",
@@ -1270,65 +1312,61 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "drop",
                                              "tag": "validity",
                                              "description": "col3 and col1 operation value must be greater than 3",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": True,
                                              "error_drop_threshold": "25",
                                          },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "row_dq",
-                                                 "rule": "col2_set",
-                                                 "column_name": "col2",
-                                                 "expectation": "col2 in ('b', 'c')",
-                                                 "action_if_failed": "ignore",
-                                                 "tag": "validity",
-                                                 "description": "col2 value must be in (b, c)",
-                                                 "enable_error_drop_alert": True,
-                                                 "error_drop_threshold": "30",
-                                             }],
-                                         "agg_dq_rules": [{
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "row_dq",
+                                             "rule": "col2_set",
+                                             "column_name": "col2",
+                                             "expectation": "col2 in ('b', 'c')",
+                                             "action_if_failed": "ignore",
+                                             "tag": "validity",
+                                             "description": "col2 value must be in (b, c)",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": True,
+                                             "error_drop_threshold": "30",
+                                         },
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "agg_dq",
                                              "rule": "avg_col1_threshold",
                                              "column_name": "col1",
                                              "expectation": "avg(col1) > 4",
-                                             "enable_for_source_dq_validation": True,
-                                             "enable_for_target_dq_validation": True,
                                              "action_if_failed": "ignore",
                                              "tag": "validity",
                                              "description": "avg of col1 value must be greater than 4",
+                                             "enable_for_source_dq_validation": True,
+                                             "enable_for_target_dq_validation": True,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
                                          },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "agg_dq",
-                                                 "rule": "stddev_col3_threshold",
-                                                 "column_name": "col3",
-                                                 "expectation": "stddev(col3) > 1",
-                                                 "enable_for_source_dq_validation": True,
-                                                 "enable_for_target_dq_validation": False,
-                                                 "action_if_failed": "fail",
-                                                 "tag": "validity",
-                                                 "description": "stddev of col3 value must be greater than one"
-                                             },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "agg_dq",
-                                                 "rule": "stddev_col3_threshold",
-                                                 "column_name": "col3",
-                                                 "expectation": "stddev(col3) < 1",
-                                                 "enable_for_source_dq_validation": False,
-                                                 "enable_for_target_dq_validation": True,
-                                                 "action_if_failed": "fail",
-                                                 "tag": "validity",
-                                                 "description": "avg of col3 value must be greater than 0",
-                                             }
-                                         ],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "agg_dq",
+                                             "rule": "stddev_col3_threshold",
+                                             "column_name": "col3",
+                                             "expectation": "stddev(col3) > 1",
+                                             "action_if_failed": "ignore",
+                                             "tag": "validity",
+                                             "description": "stddev of col3 value must be greater than one",
+                                             "enable_for_source_dq_validation": True,
+                                             "enable_for_target_dq_validation": True,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
+                                         }
+                                     ],
                                      True,  # write to table
                                      True,  # write to temp table
                                      spark.createDataFrame([  # expected_output
@@ -1342,9 +1380,16 @@ def fixture_spark_expectations(_fixture_rules_df):
                                        "rule": "avg_col1_threshold",
                                        "rule_type": "agg_dq", "action_if_failed": "ignore", "tag": "validity"}],
                                      # source_agg_result
-                                     [{"description": "avg of col1 value must be greater than 4",
-                                       "rule": "avg_col1_threshold",
-                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "tag": "validity"}],
+                                     [{'action_if_failed': 'ignore',
+                                       'description': 'avg of col1 value must be greater than 4',
+                                       'rule': 'avg_col1_threshold',
+                                       'rule_type': 'agg_dq',
+                                       'tag': 'validity'},
+                                      {'action_if_failed': 'ignore',
+                                       'description': 'stddev of col3 value must be greater than one',
+                                       'rule': 'stddev_col3_threshold',
+                                       'rule_type': 'agg_dq',
+                                       'tag': 'validity'}],
                                      # final_agg_result
                                      None,  # source_query_dq_res
                                      None,  # final_query_dq_res
@@ -1356,41 +1401,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      {"row_dq_status": "Passed", "source_agg_dq_status": "Passed",
                                       "final_agg_dq_status": "Passed", "run_status": "Passed",
                                       "source_query_dq_status": "Skipped", "final_query_dq_status": "Skipped"}  # status
-
-                             ),
-                             (
-                                     spark.createDataFrame(
-                                         [
-                                             {"col1": 1, "col2": "a", "col3": 4},
-                                             # row doesn't meet expectations(fail),log into error and raise error
-                                             {"col1": 2, "col2": "b", "col3": 5},  # row meet expectations(fail)
-                                             {"col1": 3, "col2": "c", "col3": 6},  # row meet expectations(fail)
-                                         ]
-                                     ),
-                                     {  # expectations rules
-                                         "row_dq_rules": [],
-                                         "agg_dq_rules": [],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
-                                     True,
-                                     True,
-                                     SparkExpectationsMiscException,
-                                     3,  # input count
-                                     0,  # error count
-                                     0,
-                                     None,
-                                     None,
-                                     None,  # source_query_dq_res
-                                     None,  # final_query_dq_res
-                                     {"rules": {"num_dq_rules": 0, "num_row_dq_rules": 0},
-                                      "query_dq_rules": {"num_final_query_dq_rules": 0, "num_source_query_dq_rules": 0,
-                                                         "num_query_dq_rules": 0},
-                                      "agg_dq_rules": {"num_source_agg_dq_rules": 0, "num_agg_dq_rules": 0,
-                                                       "num_final_agg_dq_rules": 0}},  # dq rules
-                                     {"row_dq_status": "Skipped", "source_agg_dq_status": "Failed",
-                                      "final_agg_dq_status": "Skipped", "run_status": "Failed",
-                                      "source_query_dq_status": "Skipped", "final_query_dq_status": "Skipped"}
                              ),
                              (
                                      # Test case 16
@@ -1409,37 +1419,40 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              # row meets all row_dq_expectations
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "query_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "query_dq",
                                              "rule": "sum_col1_threshold",
                                              "column_name": "col1",
                                              "expectation": "(select sum(col1) from test_table) > 10",
-                                             "enable_for_source_dq_validation": True,
-                                             "enable_for_target_dq_validation": True,
                                              "action_if_failed": "ignore",
                                              "tag": "validity",
-                                             "description": "sum of col1 value must be greater than 10"
+                                             "description": "sum of col1 value must be greater than 10",
+                                             "enable_for_source_dq_validation": True,
+                                             "enable_for_target_dq_validation": True,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
                                          },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "query_dq",
-                                                 "rule": "stddev_col3_threshold",
-                                                 "column_name": "col3",
-                                                 "expectation": "(select stddev(col3) from test_table) > 0",
-                                                 "enable_for_source_dq_validation": True,
-                                                 "enable_for_target_dq_validation": True,
-                                                 "action_if_failed": "ignore",
-                                                 "tag": "validity",
-                                                 "description": "stddev of col3 value must be greater than 0"
-                                             }
-                                         ],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "query_dq",
+                                             "rule": "stddev_col3_threshold",
+                                             "column_name": "col3",
+                                             "expectation": "(select stddev(col3) from test_table) > 0",
+                                             "action_if_failed": "ignore",
+                                             "tag": "validity",
+                                             "description": "stddev of col3 value must be greater than 0",
+                                             "enable_for_source_dq_validation": True,
+                                             "enable_for_target_dq_validation": True,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
+                                         }
+                                     ],
                                      False,  # write to table
                                      False,  # write to temp table
                                      None,  # expected result
@@ -1462,7 +1475,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      {"row_dq_status": "Skipped", "source_agg_dq_status": "Skipped",
                                       "final_agg_dq_status": "Skipped", "run_status": "Passed",
                                       "source_query_dq_status": "Passed", "final_query_dq_status": "Skipped"}  # status
-
                              ),
 
                              (
@@ -1482,10 +1494,10 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              # row meets all row_dq_expectations
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "row_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col3_and_col1_threshold_4",
                                              "column_name": "col3, col1",
@@ -1493,40 +1505,45 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "drop",
                                              "tag": "validity",
                                              "description": "col3 and col1 operation value must be greater than 3",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": True,
                                              "error_drop_threshold": "20",
-                                         }],
-                                         "query_dq_rules": [{
+                                         },
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "query_dq",
                                              "rule": "max_col1_threshold",
                                              "column_name": "col1",
-                                             "expectation": "(select max(col1) from target_test_table) > 10",
-                                             "enable_for_source_dq_validation": False,
-                                             "enable_for_target_dq_validation": True,
+                                             "expectation": "(select max(col1) from test_final_table_view) > 10",
                                              "action_if_failed": "ignore",
                                              "tag": "strict",
                                              "description": "max of col1 value must be greater than 10",
-
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": True,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
                                          },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "query_dq",
-                                                 "rule": "min_col3_threshold",
-                                                 "column_name": "col3",
-                                                 "expectation": "(select min(col3) from target_test_table) > 0",
-                                                 "enable_for_source_dq_validation": False,
-                                                 "enable_for_target_dq_validation": True,
-                                                 "action_if_failed": "ignore",
-                                                 "tag": "validity",
-                                                 "description": "min of col3 value must be greater than 0"
-                                             }
-                                         ],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "query_dq",
+                                             "rule": "min_col3_threshold",
+                                             "column_name": "col3",
+                                             "expectation": "(select min(col3) from test_final_table_view) > 0",
+                                             "action_if_failed": "ignore",
+                                             "tag": "validity",
+                                             "description": "min of col3 value must be greater than 0",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": True,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
+                                         }
+                                     ],
                                      True,  # write to table
                                      False,  # write to temp table
                                      spark.createDataFrame(
@@ -1552,7 +1569,6 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      {"row_dq_status": "Passed", "source_agg_dq_status": "Skipped",
                                       "final_agg_dq_status": "Skipped", "run_status": "Passed",
                                       "source_query_dq_status": "Skipped", "final_query_dq_status": "Passed"}  # status
-
                              ),
                              (
                                      # Test case 18
@@ -1571,37 +1587,40 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              # row meets all row_dq_expectations
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "query_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "query_dq",
                                              "rule": "min_col1_threshold",
                                              "column_name": "col1",
-                                             "expectation": "(select min(col1) from test_table) > 10",
-                                             "enable_for_source_dq_validation": True,
-                                             "enable_for_target_dq_validation": False,
+                                             "expectation": "(select min(col1) from test_final_table_view) > 10",
                                              "action_if_failed": "fail",
                                              "tag": "validity",
-                                             "description": "min of col1 value must be greater than 10"
+                                             "description": "min of col1 value must be greater than 10",
+                                             "enable_for_source_dq_validation": True,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
                                          },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "query_dq",
-                                                 "rule": "stddev_col3_threshold",
-                                                 "column_name": "col3",
-                                                 "expectation": "(select stddev(col3) from test_table) > 0",
-                                                 "enable_for_source_dq_validation": True,
-                                                 "enable_for_target_dq_validation": False,
-                                                 "action_if_failed": "ignore",
-                                                 "tag": "validity",
-                                                 "description": "stddev of col3 value must be greater than 0"
-                                             }
-                                         ],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "query_dq",
+                                             "rule": "stddev_col3_threshold",
+                                             "column_name": "col3",
+                                             "expectation": "(select stddev(col3) from test_final_table_view) > 0",
+                                             "action_if_failed": "ignore",
+                                             "tag": "validity",
+                                             "description": "stddev of col3 value must be greater than 0",
+                                             "enable_for_source_dq_validation": True,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
+                                         }
+                                     ],
                                      False,  # write to table
                                      False,  # write to temp table
                                      SparkExpectationsMiscException,  # expected result
@@ -1610,11 +1629,16 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      0,  # output count
                                      None,  # source_agg_result
                                      None,  # final_agg_result
-                                     # final_agg_result
-                                     [{"description": "min of col1 value must be greater than 10",
-                                       "rule": "min_col1_threshold",
-                                       "rule_type": "query_dq", "action_if_failed": "fail", "tag": "validity"}],
-                                     # source_query_dq_res
+                                     [{'action_if_failed': 'fail',
+                                       'description': 'min of col1 value must be greater than 10',
+                                       'rule': 'min_col1_threshold',
+                                       'rule_type': 'query_dq',
+                                       'tag': 'validity'},
+                                      {'action_if_failed': 'ignore',
+                                       'description': 'stddev of col3 value must be greater than 0',
+                                       'rule': 'stddev_col3_threshold',
+                                       'rule_type': 'query_dq',
+                                       'tag': 'validity'}],  # source_query_dq_res
                                      None,  # final_query_dq_res
                                      {"rules": {"num_dq_rules": 2, "num_row_dq_rules": 0},
                                       "query_dq_rules": {"num_final_query_dq_rules": 2, "num_source_query_dq_rules": 2,
@@ -1624,9 +1648,7 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      {"row_dq_status": "Skipped", "source_agg_dq_status": "Skipped",
                                       "final_agg_dq_status": "Skipped", "run_status": "Failed",
                                       "source_query_dq_status": "Failed", "final_query_dq_status": "Skipped"}  # status
-
                              ),
-
                              (
                                      # Test case 19
                                      # In this test case, dq run set for query_dq final_query_dq(ignore, fail)
@@ -1644,10 +1666,10 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              # row meets all row_dq_expectations
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "row_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col3_and_col1_threshold_4",
                                              "column_name": "col3, col1",
@@ -1655,39 +1677,45 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "drop",
                                              "tag": "validity",
                                              "description": "col3 and col1 operation value must be greater than 3",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": True,
                                              "error_drop_threshold": "25",
-                                         }],
-                                         "query_dq_rules": [{
+                                         },
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "query_dq",
                                              "rule": "max_col1_threshold",
                                              "column_name": "col1",
-                                             "expectation": "(select max(col1) from target_test_table) > 10",
-                                             "enable_for_source_dq_validation": False,
-                                             "enable_for_target_dq_validation": True,
+                                             "expectation": "(select max(col1) from test_final_table_view) > 10",
                                              "action_if_failed": "fail",
                                              "tag": "strict",
-                                             "description": "max of col1 value must be greater than 10"
+                                             "description": "max of col1 value must be greater than 10",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": True,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
                                          },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "query_dq",
-                                                 "rule": "min_col3_threshold",
-                                                 "column_name": "col3",
-                                                 "expectation": "(select min(col3) from target_test_table) > 0",
-                                                 "enable_for_source_dq_validation": False,
-                                                 "enable_for_target_dq_validation": True,
-                                                 "action_if_failed": "ignore",
-                                                 "tag": "validity",
-                                                 "description": "min of col3 value must be greater than 0"
-                                             }
-                                         ],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "query_dq",
+                                             "rule": "min_col3_threshold",
+                                             "column_name": "col3",
+                                             "expectation": "(select min(col3) from test_final_table_view) > 0",
+                                             "action_if_failed": "ignore",
+                                             "tag": "validity",
+                                             "description": "min of col3 value must be greater than 0",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": True,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
+                                         }
+                                     ],
                                      True,  # write to table
                                      False,  # write to temp table
                                      SparkExpectationsMiscException,  # expected result
@@ -1710,11 +1738,9 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      {"row_dq_status": "Passed", "source_agg_dq_status": "Skipped",
                                       "final_agg_dq_status": "Skipped", "run_status": "Failed",
                                       "source_query_dq_status": "Skipped", "final_query_dq_status": "Failed"}  # status
-
                              ),
-
                              (
-                                     # Test case 19
+                                     # Test case 20
                                      # In this test case, dq run set for query_dq source_query_dq &
                                      # final_query_dq(ignore, fail)
                                      # with action_if_failed (ignore, fail) for query_dq
@@ -1732,10 +1758,10 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              # row meets all row_dq_expectations
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "row_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col3_mod_2",
                                              "column_name": "col3",
@@ -1743,52 +1769,61 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "drop",
                                              "tag": "validity",
                                              "description": "col3 mod must equals to 0",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": True,
                                              "error_drop_threshold": "40",
-                                         }],
-                                         "query_dq_rules": [{
+                                         },
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "query_dq",
                                              "rule": "min_col1_threshold",
                                              "column_name": "col1",
-                                             "expectation": "(select min(col1) from test_table) > 10",
-                                             "enable_for_source_dq_validation": True,
-                                             "enable_for_target_dq_validation": False,
+                                             "expectation": "(select min(col1) from test_final_table_view) > 10",
                                              "action_if_failed": "ignore",
                                              "tag": "strict",
-                                             "description": "min of col1 value must be greater than 10"
+                                             "description": "min of col1 value must be greater than 10",
+                                             "enable_for_source_dq_validation": True,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
                                          },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "query_dq",
-                                                 "rule": "max_col1_threshold",
-                                                 "column_name": "col1",
-                                                 "expectation": "(select max(col1) from target_test_table) > 100",
-                                                 "enable_for_source_dq_validation": False,
-                                                 "enable_for_target_dq_validation": True,
-                                                 "action_if_failed": "ignore",
-                                                 "tag": "strict",
-                                                 "description": "max of col1 value must be greater than 100"
-                                             },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "query_dq",
-                                                 "rule": "min_col3_threshold",
-                                                 "column_name": "col3",
-                                                 "expectation": "(select min(col3) from target_test_table) > 0",
-                                                 "enable_for_source_dq_validation": False,
-                                                 "enable_for_target_dq_validation": True,
-                                                 "action_if_failed": "fail",
-                                                 "tag": "validity",
-                                                 "description": "min of col3 value must be greater than 0"
-                                             }
-                                         ],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "query_dq",
+                                             "rule": "max_col1_threshold",
+                                             "column_name": "col1",
+                                             "expectation": "(select max(col1) from test_final_table_view) > 100",
+                                             "action_if_failed": "ignore",
+                                             "tag": "strict",
+                                             "description": "max of col1 value must be greater than 100",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": True,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
+                                         },
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "query_dq",
+                                             "rule": "min_col3_threshold",
+                                             "column_name": "col3",
+                                             "expectation": "(select min(col3) from test_final_table_view) > 0",
+                                             "action_if_failed": "fail",
+                                             "tag": "validity",
+                                             "description": "min of col3 value must be greater than 0",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": True,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
+                                         }
+                                     ],
                                      True,  # write to table
                                      False,  # write to temp table
                                      spark.createDataFrame(
@@ -1819,11 +1854,9 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      {"row_dq_status": "Passed", "source_agg_dq_status": "Skipped",
                                       "final_agg_dq_status": "Skipped", "run_status": "Passed",
                                       "source_query_dq_status": "Passed", "final_query_dq_status": "Passed"}  # status
-
                              ),
-
                              (
-                                     # Test case 20
+                                     # Test case 21
                                      # In this test case, dq run set for query_dq source_query_dq &
                                      # final_query_dq(ignore, fail)
                                      # with action_if_failed (ignore, fail) for query_dq
@@ -1841,10 +1874,10 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              # row meets all row_dq_expectations
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "row_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col3_mod_2",
                                              "column_name": "col3",
@@ -1852,52 +1885,61 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "drop",
                                              "tag": "validity",
                                              "description": "col3 mod must equals to 0",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": False,
                                              "error_drop_threshold": "10",
-                                         }],
-                                         "query_dq_rules": [{
+                                         },
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "query_dq",
                                              "rule": "min_col1_threshold",
                                              "column_name": "col1",
-                                             "expectation": "(select min(col1) from test_table) > 10",
-                                             "enable_for_source_dq_validation": True,
-                                             "enable_for_target_dq_validation": False,
+                                             "expectation": "(select min(col1) from test_final_table_view) > 10",
                                              "action_if_failed": "ignore",
                                              "tag": "strict",
-                                             "description": "min of col1 value must be greater than 10"
+                                             "description": "min of col1 value must be greater than 10",
+                                             "enable_for_source_dq_validation": True,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
                                          },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "query_dq",
-                                                 "rule": "max_col1_threshold",
-                                                 "column_name": "col1",
-                                                 "expectation": "(select max(col1) from target_test_table) > 100",
-                                                 "enable_for_source_dq_validation": False,
-                                                 "enable_for_target_dq_validation": True,
-                                                 "action_if_failed": "fail",
-                                                 "tag": "strict",
-                                                 "description": "max of col1 value must be greater than 100"
-                                             },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "query_dq",
-                                                 "rule": "min_col3_threshold",
-                                                 "column_name": "col3",
-                                                 "expectation": "(select min(col3) from target_test_table) > 0",
-                                                 "enable_for_source_dq_validation": False,
-                                                 "enable_for_target_dq_validation": True,
-                                                 "action_if_failed": "ignore",
-                                                 "tag": "validity",
-                                                 "description": "min of col3 value must be greater than 0"
-                                             }
-                                         ],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "query_dq",
+                                             "rule": "max_col1_threshold",
+                                             "column_name": "col1",
+                                             "expectation": "(select max(col1) from test_final_table_view) > 100",
+                                             "action_if_failed": "fail",
+                                             "tag": "strict",
+                                             "description": "max of col1 value must be greater than 100",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": True,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
+                                         },
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "query_dq",
+                                             "rule": "min_col3_threshold",
+                                             "column_name": "col3",
+                                             "expectation": "(select min(col3) from test_final_table_view) > 0",
+                                             "action_if_failed": "ignore",
+                                             "tag": "validity",
+                                             "description": "min of col3 value must be greater than 0",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": True,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
+                                         }
+                                     ],
                                      True,  # write to table
                                      False,  # write to temp table
                                      SparkExpectationsMiscException,  # expected result
@@ -1923,10 +1965,9 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      {"row_dq_status": "Passed", "source_agg_dq_status": "Skipped",
                                       "final_agg_dq_status": "Skipped", "run_status": "Failed",
                                       "source_query_dq_status": "Passed", "final_query_dq_status": "Failed"}  # status
-
                              ),
                              (
-                                     # Test case 20
+                                     # Test case 22
                                      # In this test case, dq run set for query_dq source_query_dq &
                                      # final_query_dq(ignore, fail)
                                      # with action_if_failed (ignore, fail) for query_dq
@@ -1944,23 +1985,26 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              # row meets all row_dq_expectations
                                          ]
                                      ),
-                                     {  # expectations rules
-                                         "agg_dq_rules": [{
+                                     [
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "agg_dq",
                                              "rule": "col3_max_value",
                                              "column_name": "col3",
                                              "expectation": "max(col3) > 1",
-                                             "enable_for_source_dq_validation": True,
-                                             "enable_for_target_dq_validation": True,
                                              "action_if_failed": "fail",
                                              "tag": "validity",
-                                             "description": "col3 mod must equals to 0"
-                                         }],
-                                         "row_dq_rules": [{
+                                             "description": "col3 mod must equals to 0",
+                                             "enable_for_source_dq_validation": True,
+                                             "enable_for_target_dq_validation": True,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
+                                         },
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "row_dq",
                                              "rule": "col3_mod_2",
                                              "column_name": "col3",
@@ -1968,39 +2012,46 @@ def fixture_spark_expectations(_fixture_rules_df):
                                              "action_if_failed": "drop",
                                              "tag": "validity",
                                              "description": "col3 mod must equals to 0",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
                                              "enable_error_drop_alert": False,
                                              "error_drop_threshold": "100",
-                                         }],
-                                         "query_dq_rules": [{
+                                         },
+                                         {
                                              "product_id": "product1",
-                                             "target_table_name": "dq_spark.test_table",
+                                             "table_name": "dq_spark.test_final_table",
                                              "rule_type": "query_dq",
                                              "rule": "count_col1_threshold",
                                              "column_name": "col1",
-                                             "expectation": "(select count(col1) from test_table) > 3",
-                                             "enable_for_source_dq_validation": True,
-                                             "enable_for_target_dq_validation": False,
+                                             "expectation": "(select count(col1) from test_final_table_view) > 3",
                                              "action_if_failed": "ignore",
                                              "tag": "strict",
-                                             "description": "count of col1 value must be greater than 3"
+                                             "description": "count of col1 value must be greater than 3",
+                                             "enable_for_source_dq_validation": True,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
                                          },
-                                             {
-                                                 "product_id": "product1",
-                                                 "target_table_name": "dq_spark.test_table",
-                                                 "rule_type": "query_dq",
-                                                 "rule": "col3_positive_threshold",
-                                                 "column_name": "col1",
-                                                 "expectation": "(select count(case when col3>0 then 1 else 0 end) from target_test_table) > 10",
-                                                 "enable_for_source_dq_validation": False,
-                                                 "enable_for_target_dq_validation": True,
-                                                 "action_if_failed": "ignore",
-                                                 "tag": "strict",
-                                                 "description": "count of col3 positive value must be greater than 10"
-                                             }
-                                         ],
-                                         "target_table_name": "dq_spark.test_final_table"
-
-                                     },
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "query_dq",
+                                             "rule": "col3_positive_threshold",
+                                             "column_name": "col1",
+                                             "expectation": "(select count(case when col3>0 then 1 else 0 end) from "
+                                                            "test_final_table_view) > 10",
+                                             "action_if_failed": "ignore",
+                                             "tag": "strict",
+                                             "description": "count of col3 positive value must be greater than 10",
+                                             "enable_for_source_dq_validation": False,
+                                             "enable_for_target_dq_validation": True,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
+                                         }
+                                     ],
                                      True,  # write to table
                                      False,  # write to temp table
                                      spark.createDataFrame(
@@ -2053,10 +2104,10 @@ def test_with_expectations(input_df,
 
     spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
 
-    rules_df = spark.createDataFrame(expectations)
-    rules_df.show(truncate=False)
+    rules_df = spark.createDataFrame(expectations) if len(expectations) > 0 else expectations
+    rules_df.show(truncate=False) if len(expectations) > 0 else None
 
-    writer = WrappedDataFrameWriter.mode("append").format("delta")
+    writer = WrappedDataFrameWriter.mode("append").format("parquet")
     se = SparkExpectations(product_id="product1",
                            rules_df=rules_df,
                            stats_table="dq_spark.test_dq_stats_table",
@@ -2099,13 +2150,14 @@ def test_with_expectations(input_df,
 
         if write_to_table is True:
             expected_output_df = expected_output.withColumn("run_id", lit("product1_run_test")) \
-                .withColumn("run_date", to_timestamp(lit("2022-12-27 10:00:00"))) \
+                .withColumn("run_date", to_timestamp(lit("2022-12-27 10:00:00")))
 
-            error_table = spark.table("dq_spark.test_final_table_error")
             result_df = spark.table("dq_spark.test_final_table")
-
             assert result_df.orderBy("col2").collect() == expected_output_df.orderBy("col2").collect()
-            assert error_table.count() == error_count
+
+            if spark.catalog.tableExists("dq_spark.test_final_table_error"):
+                error_table = spark.table("dq_spark.test_final_table_error")
+                assert error_table.count() == error_count
 
     stats_table = spark.table("test_dq_stats_table")
     row = stats_table.first()
@@ -2128,6 +2180,7 @@ def test_with_expectations(input_df,
     assert row.meta_dq_run_id == "product1_run_test"
     assert row.meta_dq_run_date == datetime.date(2022, 12, 27)
     assert row.meta_dq_run_datetime == datetime.datetime(2022, 12, 27, 10, 00, 00)
+    assert len(stats_table.columns) == 20
 
     assert spark.read.format("kafka").option(
         "kafka.bootstrap.servers", "localhost:9092"
@@ -2138,51 +2191,16 @@ def test_with_expectations(input_df,
     ).load().orderBy(col('timestamp').desc()).limit(1).selectExpr(
         "cast(value as string) as value").collect() == stats_table.selectExpr("to_json(struct(*)) AS value").collect()
 
-    spark.sql("select * from dq_spark.test_final_table").show(truncate=False)
-    spark.sql("select * from dq_spark.test_final_table_error").show(truncate=False)
-    spark.sql("select * from dq_spark.test_dq_stats_table").show(truncate=False)
+    # spark.sql("select * from dq_spark.test_final_table").show(truncate=False)
+    # spark.sql("select * from dq_spark.test_final_table_error").show(truncate=False)
+    # spark.sql("select * from dq_spark.test_dq_stats_table").show(truncate=False)
 
-    spark.sql("drop table if exists test_final_table_error")
-    os.system("rm -rf /tmp/hive/warehouse/dq_spark.db/test_final_table_error")
+    for db in spark.catalog.listDatabases():
+        if db.name != "default":
+            spark.sql(f"DROP DATABASE {db.name} CASCADE")
+    spark.sql("CLEAR CACHE")
 
-
-# @pytest.mark.parametrize("write_to_table", [(True), (False)])
-# def test_with_table_write_expectations(
-#         write_to_table,
-#         _fixture_create_database,
-#         _fixture_df,
-#         _fixture_rules_df,
-#         _fixture_context,
-#         _fixture_dq_rules,
-#         _fixture_spark_expectations,
-#         _fixture_create_stats_table,
-#         _fixture_local_kafka_topic):
-#     _fixture_context._num_row_dq_rules = (_fixture_dq_rules.get("rules").get("num_row_dq_rules"))
-#     _fixture_context._num_dq_rules = (_fixture_dq_rules.get("rules").get("num_dq_rules"))
-#     _fixture_context._num_agg_dq_rules = (_fixture_dq_rules.get("agg_dq_rules"))
-#     _fixture_context._num_query_dq_rules = (_fixture_dq_rules.get("query_dq_rules"))
-#
-#     # Create a mock object with a return value
-#     mock_func = Mock(return_value=_fixture_df)
-#
-#     # Decorate the mock function with required args
-#     decorated_func = _fixture_spark_expectations.with_expectations(
-#         _fixture_rules_df,
-#         write_to_table,
-#         agg_dq=None,
-#         query_dq=None,
-#         spark_conf={UserConfig.se_notifications_on_fail: False},
-#         options={'mode': 'overwrite', "format": "delta"},
-#         options_error_table={'mode': 'overwrite', "format": "delta"}
-#     )(mock_func)
-#
-#     decorated_func()
-#
-#     if write_to_table is True:
-#         assert "test_final_table" in [obj.name for obj in spark.catalog.listTables()]
-#         spark.sql("drop table if exists dq_spark.test_final_table")
-#     else:
-#         assert "test_final_table" not in [obj.name for obj in spark.catalog.listTables()]
+    # os.system("rm -rf /tmp/hive/warehouse/dq_spark.db/test_final_table_error")
 
 
 @patch("spark_expectations.core.expectations.SparkExpectationsWriter.write_error_stats")
@@ -2191,7 +2209,6 @@ def test_with_expectations_patch(_write_error_stats,
                                  _fixture_spark_expectations,
                                  _fixture_df,
                                  _fixture_rules_df):
-
     decorated_func = _fixture_spark_expectations.with_expectations(
         "dq_spark.test_final_table",
         user_conf={user_config.se_notifications_on_fail: False},
@@ -2222,6 +2239,10 @@ def test_with_expectations_dataframe_not_returned_exception(_fixture_create_data
         # Decorate the mock function with required args
         decorated_func = partial_func(mock_func)
         decorated_func()
+    for db in spark.catalog.listDatabases():
+        if db.name != "default":
+            spark.sql(f"DROP DATABASE {db.name} CASCADE")
+    spark.sql("CLEAR CACHE")
 
 
 def test_with_expectations_exception(_fixture_create_database,
@@ -2265,6 +2286,11 @@ def test_with_expectations_exception(_fixture_create_database,
         # Decorate the mock function with required args
         decorated_func = partial_func(mock_func)
         decorated_func()
+
+    for db in spark.catalog.listDatabases():
+        if db.name != "default":
+            spark.sql(f"DROP DATABASE {db.name} CASCADE")
+    spark.sql("CLEAR CACHE")
 
 
 # # patch notification hook
@@ -2421,52 +2447,73 @@ def test_target_table_view_expception(_fixture_create_database,
     with pytest.raises(SparkExpectationsMiscException, match=r"error occurred while processing spark expectations .*"):
         get_dataset()  # decorated_func()
 
+    for db in spark.catalog.listDatabases():
+        if db.name != "default":
+            spark.sql(f"DROP DATABASE {db.name} CASCADE")
+    spark.sql("CLEAR CACHE")
+
+
+def test_spark_expectations_exception():
+    writer = WrappedDataFrameWriter.mode("append").format("parquet")
+    with pytest.raises(SparkExpectationsMiscException, match=r"Input rules_df is not of dataframe type"):
+        SparkExpectations(product_id="product1",
+                          rules_df=[],
+                          stats_table="dq_spark.test_dq_stats_table",
+                          stats_table_writer=writer,
+                          target_and_error_table_writer=writer,
+                          debugger=False,
+                          )
+
 
 # [UnitTests for WrappedDataFrameWriter class]
 
-@pytest.fixture
-def fresh_writer():
-    # Reset the class attributes before each test
+def reset_wrapped_dataframe_writer():
     WrappedDataFrameWriter._mode = None
     WrappedDataFrameWriter._format = None
     WrappedDataFrameWriter._partition_by = []
     WrappedDataFrameWriter._options = {}
     WrappedDataFrameWriter._bucket_by = {}
-    return WrappedDataFrameWriter
+    WrappedDataFrameWriter._sort_by = []
 
 
-def test_mode(fresh_writer):
-    fresh_writer.mode("overwrite")
-    assert fresh_writer._mode == "overwrite"
+def test_mode():
+    WrappedDataFrameWriter.mode("overwrite")
+    assert WrappedDataFrameWriter._mode == "overwrite"
+    reset_wrapped_dataframe_writer()
 
 
-def test_format(fresh_writer):
-    fresh_writer.format("parquet")
-    assert fresh_writer._format == "parquet"
+def test_format():
+    WrappedDataFrameWriter.format("parquet")
+    assert WrappedDataFrameWriter._format == "parquet"
+    reset_wrapped_dataframe_writer()
 
 
-def test_partitionBy(fresh_writer):
-    fresh_writer.partitionBy("date", "region")
-    assert fresh_writer._partition_by == ["date", "region"]
+def test_partitionBy():
+    WrappedDataFrameWriter.partitionBy("date", "region")
+    assert WrappedDataFrameWriter._partition_by == ["date", "region"]
+    reset_wrapped_dataframe_writer()
 
 
-def test_option(fresh_writer):
-    fresh_writer.option("compression", "gzip")
-    assert fresh_writer._options == {"compression": "gzip"}
+def test_option():
+    WrappedDataFrameWriter.option("compression", "gzip")
+    assert WrappedDataFrameWriter._options == {"compression": "gzip"}
+    reset_wrapped_dataframe_writer()
 
 
-def test_options(fresh_writer):
-    fresh_writer.options(path="/path/to/output", inferSchema="true")
-    assert fresh_writer._options == {"path": "/path/to/output", "inferSchema": "true"}
+def test_options():
+    WrappedDataFrameWriter.options(path="/path/to/output", inferSchema="true")
+    assert WrappedDataFrameWriter._options == {"path": "/path/to/output", "inferSchema": "true"}
+    reset_wrapped_dataframe_writer()
 
 
-def test_bucketBy(fresh_writer):
-    fresh_writer.bucketBy(4, "country", "city")
-    assert fresh_writer._bucket_by == {"num_buckets": 4, "columns": ("country", "city")}
+def test_bucketBy():
+    WrappedDataFrameWriter.bucketBy(4, "country", "city")
+    assert WrappedDataFrameWriter._bucket_by == {"num_buckets": 4, "columns": ("country", "city")}
+    reset_wrapped_dataframe_writer()
 
 
-def test_build(fresh_writer):
-    writer = fresh_writer.mode("overwrite") \
+def test_build():
+    writer = WrappedDataFrameWriter.mode("overwrite") \
         .format("parquet") \
         .partitionBy("date", "region") \
         .option("compression", "gzip") \
@@ -2482,10 +2529,11 @@ def test_build(fresh_writer):
         "sortBy": ["col1", "col2"],
     }
     assert writer.build() == expected_config
+    reset_wrapped_dataframe_writer()
 
 
-def test_build_some_values(fresh_writer):
-    writer = fresh_writer.mode("append").format("iceberg")
+def test_build_some_values():
+    writer = WrappedDataFrameWriter.mode("append").format("iceberg")
 
     expected_config = {
         "mode": "append",
@@ -2496,3 +2544,4 @@ def test_build_some_values(fresh_writer):
         "sortBy": []
     }
     assert writer.build() == expected_config
+    reset_wrapped_dataframe_writer()
