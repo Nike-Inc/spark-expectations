@@ -12,20 +12,16 @@
         <meta name="author" content="Ashok Singamaneni">
       
       
-        <link rel="canonical" href="https://engineering.nike.com/spark-expectations/dev/api/delta_sink_plugin/">
+        <link rel="canonical" href="https://engineering.nike.com/spark-expectations/dev/api/sample_dq_bigquery/">
       
       
-        <link rel="prev" href="../base_sink_plugin/">
-      
-      
-        <link rel="next" href="../kafka_sink_plugin/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.12">
     
     
       
-        <title>Delta_Sink_Plugin - Spark-Expectations</title>
+        <title>Sample dq bigquery - Spark-Expectations</title>
       
     
     
@@ -81,7 +77,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#spark_expectations.sinks.plugins.delta_writer-attributes" class="md-skip">
+        <a href="#spark_expectations.examples.sample_dq_bigquery-attributes" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Delta_Sink_Plugin
+              Sample dq bigquery
             
           </span>
         </div>
@@ -274,8 +270,6 @@
         
   
   
-    
-  
 
 
   
@@ -287,7 +281,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../core_init/" class="md-tabs__link md-tabs__link--active">
+      <a href="../core_init/" class="md-tabs__link">
         Python API
       </a>
     </li>
@@ -456,6 +450,12 @@
         
           
         
+          
+        
+          
+        
+          
+        
       
       
         <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
@@ -512,6 +512,48 @@
 
             
           
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/delta.md" class="md-nav__link">
+        Delta
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/bigquery.md" class="md-nav__link">
+        BigQuery
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/iceberg.md" class="md-nav__link">
+        Iceberg
+      </a>
+    </li>
+  
+
+            
+          
         </ul>
       </nav>
     </li>
@@ -524,16 +566,16 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5" >
       
       
         
@@ -554,7 +596,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5">
           <span class="md-nav__icon md-icon"></span>
           Python API
@@ -667,16 +709,16 @@
               
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
       
       
-      <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5_2" checked>
+        
+      
+      <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_2" >
       
       
         
@@ -697,7 +739,7 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="true">
+      <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_5_2_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_5_2">
           <span class="md-nav__icon md-icon"></span>
           Sinks
@@ -736,21 +778,11 @@
               
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-        
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../delta_sink_plugin.md" class="md-nav__link">
         Delta_Sink_Plugin
       </a>
-      
     </li>
   
 
@@ -1162,7 +1194,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../sample_dq/" class="md-nav__link">
+      <a href="../sample_dq.md" class="md-nav__link">
         Sample_DQ
       </a>
     </li>
@@ -1203,6 +1235,49 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#spark_expectations.examples.sample_dq_bigquery.current_dir" class="md-nav__link">
+    current_dir
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spark_expectations.examples.sample_dq_bigquery.se" class="md-nav__link">
+    se
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spark_expectations.examples.sample_dq_bigquery.spark" class="md-nav__link">
+    spark
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spark_expectations.examples.sample_dq_bigquery.user_conf" class="md-nav__link">
+    user_conf
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spark_expectations.examples.sample_dq_bigquery.writer" class="md-nav__link">
+    writer
+  </a>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -1223,6 +1298,7 @@
 
 
 
+
   <div class="doc doc-contents first">
 
   
@@ -1233,151 +1309,190 @@
 
 
 
-<h1 id="spark_expectations.sinks.plugins.delta_writer-attributes">Attributes<a href="#spark_expectations.sinks.plugins.delta_writer-attributes" class="headerlink" title="Permanent link">&para;</a></h1>
-<h1 id="spark_expectations.sinks.plugins.delta_writer-classes">Classes<a href="#spark_expectations.sinks.plugins.delta_writer-classes" class="headerlink" title="Permanent link">&para;</a></h1>
+<h1 id="spark_expectations.examples.sample_dq_bigquery-attributes">Attributes<a href="#spark_expectations.examples.sample_dq_bigquery-attributes" class="headerlink" title="Permanent link">&para;</a></h1>
 
-<div class="doc doc-object doc-class">
-
+<div class="doc doc-object doc-attribute">
 
 
-<h2 id="spark_expectations.sinks.plugins.delta_writer.SparkExpectationsDeltaWritePluginImpl" class="doc doc-heading">
-          <code>spark_expectations.sinks.plugins.delta_writer.SparkExpectationsDeltaWritePluginImpl</code>
 
 
-<a href="#spark_expectations.sinks.plugins.delta_writer.SparkExpectationsDeltaWritePluginImpl" class="headerlink" title="Permanent link">&para;</a></h2>
+<h2 id="spark_expectations.examples.sample_dq_bigquery.current_dir" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">spark_expectations</span><span class="o">.</span><span class="n">examples</span><span class="o">.</span><span class="n">sample_dq_bigquery</span><span class="o">.</span><span class="n">current_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#spark_expectations.examples.sample_dq_bigquery.current_dir" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
   <div class="doc doc-contents ">
-          <p class="doc doc-class-bases">
-            Bases: <code><a class="autorefs autorefs-internal" title="spark_expectations.sinks.plugins.base_writer.SparkExpectationsSinkWriter" href="../base_sink_plugin/#spark_expectations.sinks.plugins.base_writer.SparkExpectationsSinkWriter">SparkExpectationsSinkWriter</a></code></p>
+  </div>
 
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+
+<h2 id="spark_expectations.examples.sample_dq_bigquery.se" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">spark_expectations</span><span class="o">.</span><span class="n">examples</span><span class="o">.</span><span class="n">sample_dq_bigquery</span><span class="o">.</span><span class="n">se</span><span class="p">:</span> <span class="n">SparkExpectations</span> <span class="o">=</span> <span class="n">SparkExpectations</span><span class="p">(</span><span class="n">product_id</span><span class="o">=</span><span class="s1">&#39;your_product&#39;</span><span class="p">,</span> <span class="n">rules_df</span><span class="o">=</span><span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;bigquery&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s1">&#39;&lt;project_id&gt;.&lt;dataset_id&gt;.&lt;rules_table&gt;&#39;</span><span class="p">),</span> <span class="n">stats_table</span><span class="o">=</span><span class="s1">&#39;&lt;project_id&gt;.&lt;dataset_id&gt;.&lt;stats_table&gt;&#39;</span><span class="p">,</span> <span class="n">stats_table_writer</span><span class="o">=</span><span class="n">writer</span><span class="p">,</span> <span class="n">target_and_error_table_writer</span><span class="o">=</span><span class="n">writer</span><span class="p">,</span> <span class="n">debugger</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
   
-      <p>function implements/supports data into the delta table</p>
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#spark_expectations.examples.sample_dq_bigquery.se" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
+  <div class="doc doc-contents ">
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+
+<h2 id="spark_expectations.examples.sample_dq_bigquery.spark" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">spark_expectations</span><span class="o">.</span><span class="n">examples</span><span class="o">.</span><span class="n">sample_dq_bigquery</span><span class="o">.</span><span class="n">spark</span> <span class="o">=</span> <span class="n">set_up_bigquery</span><span class="p">(</span><span class="s1">&#39;&lt;temp_dataset&gt;&#39;</span><span class="p">)</span></code>
   
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
 
-  <div class="doc doc-children">
-
-
-
-
-
+<a href="#spark_expectations.examples.sample_dq_bigquery.spark" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
-<h3 id="spark_expectations.sinks.plugins.delta_writer.SparkExpectationsDeltaWritePluginImpl-functions">Functions<a href="#spark_expectations.sinks.plugins.delta_writer.SparkExpectationsDeltaWritePluginImpl-functions" class="headerlink" title="Permanent link">&para;</a></h3>
+  <div class="doc doc-contents ">
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+
+<h2 id="spark_expectations.examples.sample_dq_bigquery.user_conf" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">spark_expectations</span><span class="o">.</span><span class="n">examples</span><span class="o">.</span><span class="n">sample_dq_bigquery</span><span class="o">.</span><span class="n">user_conf</span> <span class="o">=</span> <span class="p">{</span><span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_enable_email</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_email_smtp_host</span><span class="p">:</span> <span class="s1">&#39;mailhost.com&#39;</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_email_smtp_port</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_email_from</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_email_to_other_mail_id</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_email_subject</span><span class="p">:</span> <span class="s1">&#39;spark expectations - data quality - notifications&#39;</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_enable_slack</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_slack_webhook_url</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_on_start</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_on_completion</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_on_fail</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_on_error_drop_exceeds_threshold_breach</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_on_error_drop_threshold</span><span class="p">:</span> <span class="mi">15</span><span class="p">}</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#spark_expectations.examples.sample_dq_bigquery.user_conf" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+
+<h2 id="spark_expectations.examples.sample_dq_bigquery.writer" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">spark_expectations</span><span class="o">.</span><span class="n">examples</span><span class="o">.</span><span class="n">sample_dq_bigquery</span><span class="o">.</span><span class="n">writer</span> <span class="o">=</span> <span class="n">WrappedDataFrameWriter</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s1">&#39;overwrite&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;bigquery&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;createDisposition&#39;</span><span class="p">,</span> <span class="s1">&#39;CREATE_IF_NEEDED&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s1">&#39;writeMethod&#39;</span><span class="p">,</span> <span class="s1">&#39;direct&#39;</span><span class="p">)</span></code>
+  
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#spark_expectations.examples.sample_dq_bigquery.writer" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+  </div>
+
+</div>
+<h1 id="spark_expectations.examples.sample_dq_bigquery-classes">Classes<a href="#spark_expectations.examples.sample_dq_bigquery-classes" class="headerlink" title="Permanent link">&para;</a></h1>
+<h1 id="spark_expectations.examples.sample_dq_bigquery-functions">Functions<a href="#spark_expectations.examples.sample_dq_bigquery-functions" class="headerlink" title="Permanent link">&para;</a></h1>
 
 
 <div class="doc doc-object doc-function">
 
 
 
-<h4 id="spark_expectations.sinks.plugins.delta_writer.SparkExpectationsDeltaWritePluginImpl.writer" class="doc doc-heading">
-<code class="highlight language-python"><span class="n">writer</span><span class="p">(</span><span class="n">_write_args</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">DataFrame</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span></code>
 
-<a href="#spark_expectations.sinks.plugins.delta_writer.SparkExpectationsDeltaWritePluginImpl.writer" class="headerlink" title="Permanent link">&para;</a></h4>
+<h2 id="spark_expectations.examples.sample_dq_bigquery.build_new" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">spark_expectations</span><span class="o">.</span><span class="n">examples</span><span class="o">.</span><span class="n">sample_dq_bigquery</span><span class="o">.</span><span class="n">build_new</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span></code>
+
+<a href="#spark_expectations.examples.sample_dq_bigquery.build_new" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
   <div class="doc doc-contents ">
-  
-
-
-
-  <p><strong>Parameters:</strong></p>
-  <table>
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Type</th>
-        <th>Description</th>
-        <th>Default</th>
-      </tr>
-    </thead>
-    <tbody>
-        <tr>
-          <td><code>_write_args</code></td>
-          <td>
-                <code><span title="typing.Dict">Dict</span>[<span title="typing.Union">Union</span>[str], <span title="typing.Union">Union</span>[str, bool, <span title="typing.Dict">Dict</span>[str, str], <span title="pyspark.sql.DataFrame">DataFrame</span>]]</code>
-          </td>
-          <td>
-            <div class="doc-md-description">
-              
-            </div>
-          </td>
-          <td>
-              <em>required</em>
-          </td>
-        </tr>
-    </tbody>
-  </table>
 
           <details class="quote">
-            <summary>Source code in <code>spark_expectations/sinks/plugins/delta_writer.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-17">17</a></span>
-<span class="normal"><a href="#__codelineno-0-18">18</a></span>
-<span class="normal"><a href="#__codelineno-0-19">19</a></span>
-<span class="normal"><a href="#__codelineno-0-20">20</a></span>
-<span class="normal"><a href="#__codelineno-0-21">21</a></span>
-<span class="normal"><a href="#__codelineno-0-22">22</a></span>
-<span class="normal"><a href="#__codelineno-0-23">23</a></span>
-<span class="normal"><a href="#__codelineno-0-24">24</a></span>
-<span class="normal"><a href="#__codelineno-0-25">25</a></span>
-<span class="normal"><a href="#__codelineno-0-26">26</a></span>
-<span class="normal"><a href="#__codelineno-0-27">27</a></span>
-<span class="normal"><a href="#__codelineno-0-28">28</a></span>
-<span class="normal"><a href="#__codelineno-0-29">29</a></span>
-<span class="normal"><a href="#__codelineno-0-30">30</a></span>
-<span class="normal"><a href="#__codelineno-0-31">31</a></span>
-<span class="normal"><a href="#__codelineno-0-32">32</a></span>
-<span class="normal"><a href="#__codelineno-0-33">33</a></span>
-<span class="normal"><a href="#__codelineno-0-34">34</a></span>
-<span class="normal"><a href="#__codelineno-0-35">35</a></span>
-<span class="normal"><a href="#__codelineno-0-36">36</a></span>
-<span class="normal"><a href="#__codelineno-0-37">37</a></span>
-<span class="normal"><a href="#__codelineno-0-38">38</a></span>
-<span class="normal"><a href="#__codelineno-0-39">39</a></span>
-<span class="normal"><a href="#__codelineno-0-40">40</a></span>
-<span class="normal"><a href="#__codelineno-0-41">41</a></span>
-<span class="normal"><a href="#__codelineno-0-42">42</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="nd">@spark_expectations_writer_impl</span>
-<a id="__codelineno-0-18" name="__codelineno-0-18"></a><span class="k">def</span> <span class="nf">writer</span><span class="p">(</span>
-<a id="__codelineno-0-19" name="__codelineno-0-19"></a>    <span class="bp">self</span><span class="p">,</span> <span class="n">_write_args</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span> <span class="n">DataFrame</span><span class="p">]]</span>
-<a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<a id="__codelineno-0-21" name="__codelineno-0-21"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<a id="__codelineno-0-22" name="__codelineno-0-22"></a><span class="sd">    Args:</span>
-<a id="__codelineno-0-23" name="__codelineno-0-23"></a><span class="sd">        _write_args:</span>
-<a id="__codelineno-0-24" name="__codelineno-0-24"></a>
-<a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="sd">    Returns:</span>
-<a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="sd">    &quot;&quot;&quot;</span>
-<a id="__codelineno-0-27" name="__codelineno-0-27"></a>    <span class="k">try</span><span class="p">:</span>
-<a id="__codelineno-0-28" name="__codelineno-0-28"></a>        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;started writing data into delta stats table&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-29" name="__codelineno-0-29"></a>        <span class="n">df</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="n">_write_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;stats_df&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-30" name="__codelineno-0-30"></a>        <span class="n">df</span><span class="o">.</span><span class="n">write</span><span class="o">.</span><span class="n">saveAsTable</span><span class="p">(</span>
-<a id="__codelineno-0-31" name="__codelineno-0-31"></a>            <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_write_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;table_name&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-32" name="__codelineno-0-32"></a>            <span class="o">**</span><span class="p">{</span><span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="s2">&quot;append&quot;</span><span class="p">,</span> <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;delta&quot;</span><span class="p">,</span> <span class="s2">&quot;mergeSchema&quot;</span><span class="p">:</span> <span class="s2">&quot;true&quot;</span><span class="p">},</span>
-<a id="__codelineno-0-33" name="__codelineno-0-33"></a>        <span class="p">)</span>
-<a id="__codelineno-0-34" name="__codelineno-0-34"></a>        <span class="n">get_spark_session</span><span class="p">()</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span>
-<a id="__codelineno-0-35" name="__codelineno-0-35"></a>            <span class="sa">f</span><span class="s2">&quot;ALTER TABLE </span><span class="si">{</span><span class="n">_write_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;table_name&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
-<a id="__codelineno-0-36" name="__codelineno-0-36"></a>            <span class="sa">f</span><span class="s2">&quot;SET TBLPROPERTIES (&#39;product_id&#39; = &#39;</span><span class="si">{</span><span class="n">_write_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;product_id&#39;</span><span class="p">)</span><span class="si">}</span><span class="s2">&#39;)&quot;</span>
-<a id="__codelineno-0-37" name="__codelineno-0-37"></a>        <span class="p">)</span>
-<a id="__codelineno-0-38" name="__codelineno-0-38"></a>        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;ended writing data into delta stats table&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-39" name="__codelineno-0-39"></a>    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-<a id="__codelineno-0-40" name="__codelineno-0-40"></a>        <span class="k">raise</span> <span class="n">SparkExpectationsMiscException</span><span class="p">(</span>
-<a id="__codelineno-0-41" name="__codelineno-0-41"></a>            <span class="sa">f</span><span class="s2">&quot;error occurred while saving data into delta stats table </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span>
-<a id="__codelineno-0-42" name="__codelineno-0-42"></a>        <span class="p">)</span>
+            <summary>Source code in <code>spark_expectations/examples/sample_dq_bigquery.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-61">61</a></span>
+<span class="normal"><a href="#__codelineno-0-62">62</a></span>
+<span class="normal"><a href="#__codelineno-0-63">63</a></span>
+<span class="normal"><a href="#__codelineno-0-64">64</a></span>
+<span class="normal"><a href="#__codelineno-0-65">65</a></span>
+<span class="normal"><a href="#__codelineno-0-66">66</a></span>
+<span class="normal"><a href="#__codelineno-0-67">67</a></span>
+<span class="normal"><a href="#__codelineno-0-68">68</a></span>
+<span class="normal"><a href="#__codelineno-0-69">69</a></span>
+<span class="normal"><a href="#__codelineno-0-70">70</a></span>
+<span class="normal"><a href="#__codelineno-0-71">71</a></span>
+<span class="normal"><a href="#__codelineno-0-72">72</a></span>
+<span class="normal"><a href="#__codelineno-0-73">73</a></span>
+<span class="normal"><a href="#__codelineno-0-74">74</a></span>
+<span class="normal"><a href="#__codelineno-0-75">75</a></span>
+<span class="normal"><a href="#__codelineno-0-76">76</a></span>
+<span class="normal"><a href="#__codelineno-0-77">77</a></span>
+<span class="normal"><a href="#__codelineno-0-78">78</a></span>
+<span class="normal"><a href="#__codelineno-0-79">79</a></span>
+<span class="normal"><a href="#__codelineno-0-80">80</a></span>
+<span class="normal"><a href="#__codelineno-0-81">81</a></span>
+<span class="normal"><a href="#__codelineno-0-82">82</a></span>
+<span class="normal"><a href="#__codelineno-0-83">83</a></span>
+<span class="normal"><a href="#__codelineno-0-84">84</a></span>
+<span class="normal"><a href="#__codelineno-0-85">85</a></span>
+<span class="normal"><a href="#__codelineno-0-86">86</a></span>
+<span class="normal"><a href="#__codelineno-0-87">87</a></span>
+<span class="normal"><a href="#__codelineno-0-88">88</a></span>
+<span class="normal"><a href="#__codelineno-0-89">89</a></span>
+<span class="normal"><a href="#__codelineno-0-90">90</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-61" name="__codelineno-0-61"></a><span class="nd">@se</span><span class="o">.</span><span class="n">with_expectations</span><span class="p">(</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>    <span class="n">target_table</span><span class="o">=</span><span class="s2">&quot;&lt;project_id&gt;.&lt;dataset_id&gt;.&lt;target_table_name&gt;&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="n">write_to_table</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a>    <span class="n">user_conf</span><span class="o">=</span><span class="n">user_conf</span><span class="p">,</span>
+<a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="n">target_table_view</span><span class="o">=</span><span class="s2">&quot;&lt;project_id&gt;.&lt;dataset_id&gt;.&lt;target_table_view_name&gt;&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-66" name="__codelineno-0-66"></a><span class="p">)</span>
+<a id="__codelineno-0-67" name="__codelineno-0-67"></a><span class="k">def</span> <span class="nf">build_new</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
+<a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="n">_df_order</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;header&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-70" name="__codelineno-0-70"></a>        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;inferSchema&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-71" name="__codelineno-0-71"></a>        <span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;resources/order.csv&quot;</span><span class="p">))</span>
+<a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="p">)</span>
+<a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="n">_df_order</span><span class="o">.</span><span class="n">createOrReplaceTempView</span><span class="p">(</span><span class="s2">&quot;order&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-74" name="__codelineno-0-74"></a>
+<a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="n">_df_product</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;header&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-77" name="__codelineno-0-77"></a>        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;inferSchema&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;resources/product.csv&quot;</span><span class="p">))</span>
+<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="p">)</span>
+<a id="__codelineno-0-80" name="__codelineno-0-80"></a>    <span class="n">_df_product</span><span class="o">.</span><span class="n">createOrReplaceTempView</span><span class="p">(</span><span class="s2">&quot;product&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-81" name="__codelineno-0-81"></a>
+<a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="n">_df_customer</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="p">(</span>
+<a id="__codelineno-0-83" name="__codelineno-0-83"></a>        <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;header&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-84" name="__codelineno-0-84"></a>        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;inferSchema&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-85" name="__codelineno-0-85"></a>        <span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;resources/customer.csv&quot;</span><span class="p">))</span>
+<a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="p">)</span>
+<a id="__codelineno-0-87" name="__codelineno-0-87"></a>
+<a id="__codelineno-0-88" name="__codelineno-0-88"></a>    <span class="n">_df_customer</span><span class="o">.</span><span class="n">createOrReplaceTempView</span><span class="p">(</span><span class="s2">&quot;customer&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-89" name="__codelineno-0-89"></a>
+<a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="k">return</span> <span class="n">_df_order</span>
 </code></pre></div></td></tr></table></div>
           </details>
   </div>
 
 </div>
-
-
-
-  </div>
-
-  </div>
-
-</div>
-<h1 id="spark_expectations.sinks.plugins.delta_writer-functions">Functions<a href="#spark_expectations.sinks.plugins.delta_writer-functions" class="headerlink" title="Permanent link">&para;</a></h1>
 
 
 
