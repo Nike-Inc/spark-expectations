@@ -35,7 +35,7 @@ se: SparkExpectations = SparkExpectations(
     rules_df=spark.read.format("bigquery").load(
         "<project_id>.<dataset_id>.<rules_table>"
     ),
-    stats_table="<project_id>.<dataset_id>.<rules_table>",
+    stats_table="<project_id>.<dataset_id>.<stats_table>",
     stats_table_writer=writer,
     target_and_error_table_writer=writer,
     debugger=False,

@@ -52,6 +52,9 @@ nav:
       Rules: configurations/rules.md
       Configure_Rules: configurations/configure_rules.md
       Initialization_Examples: examples.md
+      Delta: delta.md
+      BigQuery: bigquery.md
+      Iceberg: iceberg.md
   - Python API:
       - Core:
           Init: api/core_init.md

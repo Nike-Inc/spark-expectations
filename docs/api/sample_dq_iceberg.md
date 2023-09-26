@@ -1,9 +1,5 @@
----
-search:
-  exclude: true
----
 
-::: spark_expectations.examples.sample_dq
+::: spark_expectations.examples.sample_dq_iceberg
     handler: python
     options:
         filters:

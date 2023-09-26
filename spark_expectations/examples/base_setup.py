@@ -141,7 +141,7 @@ def set_up_delta() -> SparkSession:
     spark.sql("drop table if exists dq_rules")
 
     spark.sql(f" CREATE TABLE dq_rules {RULES_TABLE_SCHEMA} USING DELTA")
-    spark.sql(f" INSERT INTO dq_rules  values {RULES_DATA} ")
+    spark.sql(f" INSERT INTO dq_rules  values {RULES_DATA}")
 
     spark.sql("select * from dq_rules").show(truncate=False)
     return spark
