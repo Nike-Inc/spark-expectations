@@ -2219,6 +2219,22 @@ def test_with_expectations_patch(_write_error_stats,
     _write_error_stats.assert_called_once_with()
 
 
+# @patch("spark_expectations.core.expectations.SparkExpectationsWriter.write_error_stats")
+def test_with_expectations_overwrite_writers(
+                                             _fixture_create_database,
+                                             _fixture_spark_expectations,
+                                             _fixture_df,
+                                             _fixture_rules_df):
+    modified_writer = WrappedDataFrameWriter().mode("overwrite").format("iceberg")
+    decorated_func = _fixture_spark_expectations.with_expectations(
+        "dq_spark.test_final_table",
+        user_conf={user_config.se_notifications_on_fail: False},
+        target_and_error_table_writer=modified_writer
+    )(Mock(return_value=_fixture_df))
+
+    assert _fixture_spark_expectations._context.get_target_and_error_table_writer_config == modified_writer.build()
+
+
 def test_with_expectations_dataframe_not_returned_exception(_fixture_create_database,
                                                             _fixture_spark_expectations,
                                                             _fixture_df,
@@ -2494,11 +2510,13 @@ def test_option():
 
 
 def test_options():
-    assert WrappedDataFrameWriter().options(path="/path/to/output", inferSchema="true")._options == {"path": "/path/to/output", "inferSchema": "true"}
+    assert WrappedDataFrameWriter().options(path="/path/to/output", inferSchema="true")._options == {
+        "path": "/path/to/output", "inferSchema": "true"}
 
 
 def test_bucketBy():
-    assert WrappedDataFrameWriter().bucketBy(4, "country", "city")._bucket_by == {"num_buckets": 4, "columns": ("country", "city")}
+    assert WrappedDataFrameWriter().bucketBy(4, "country", "city")._bucket_by == {"num_buckets": 4,
+                                                                                  "columns": ("country", "city")}
 
 
 def test_build():
@@ -2537,4 +2555,4 @@ def test_build_some_values():
 def test_delta_bucketby_exception():
     writer = WrappedDataFrameWriter().mode("append").format("delta").bucketBy(10, "a", "b")
     with pytest.raises(SparkExpectationsMiscException, match=r"Bucketing is not supported for delta tables yet"):
-       writer.build()
+        writer.build()
