@@ -378,11 +378,7 @@ class SparkExpectations:
                             )
                             self._context.set_error_count(_error_count)
 
-                            if _target_table_view:
-                                if _row_dq_df:
-                                    _row_dq_df.createOrReplaceTempView(
-                                        _target_table_view
-                                    )
+                            _row_dq_df.createOrReplaceTempView(_target_table_view)
 
                             _output_count = _row_dq_df.count() if _row_dq_df else 0
                             self._context.set_output_count(_output_count)
@@ -450,12 +446,7 @@ class SparkExpectations:
                             #        _: number of error records
                             #        status: status of the execution
 
-                            if _target_table_view and _row_dq_df:
-                                _row_dq_df.createOrReplaceTempView(_target_table_view)
-                            else:
-                                raise SparkExpectationsMiscException(
-                                    "final table view name is not supplied to run query dq"
-                                )
+                            _row_dq_df.createOrReplaceTempView(_target_table_view)
 
                             (
                                 _final_query_dq_df,

@@ -7,6 +7,8 @@ import pytest
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import lit, to_timestamp, col
 from pyspark.sql.types import StringType, IntegerType, StructField, StructType
+from pytest_mock import mocker
+
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.expectations import SparkExpectations, WrappedDataFrameWriter
 from spark_expectations.config.user_config import Constants as user_config
@@ -99,25 +101,6 @@ def fixture_create_database():
     # drop dq_spark if exists
     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
 
-
-# @pytest.fixture(name="_fixture_context")
-# def fixture_context():
-#     writer = WrappedDataFrameWriter.mode("append").format("delta")
-#     _context: SparkExpectationsContext = SparkExpectationsContext(product_id="product1",
-#                                                                   spark=spark
-#                                                                   )
-#     _context.set_table_name("dq_spark.test_final_table")
-#     _context.set_dq_stats_table_name("dq_spark.test_dq_stats_table")
-#     _context.set_final_table_name("dq_spark.test_final_table")
-#     _context.set_error_table_name("dq_spark.test_final_table_error")
-#     _context._run_date = "2022-12-27 10:39:44"
-#     _context._env = "local"
-#     _context.set_input_count(100)
-#     _context.set_output_count(100)
-#     _context.set_error_count(0)
-#     _context._run_id = "product1_run_test"
-#
-#     return _context
 
 @pytest.fixture(name="_fixture_context")
 def fixture_context():
@@ -2219,14 +2202,13 @@ def test_with_expectations_patch(_write_error_stats,
     _write_error_stats.assert_called_once_with()
 
 
-# @patch("spark_expectations.core.expectations.SparkExpectationsWriter.write_error_stats")
 def test_with_expectations_overwrite_writers(
-                                             _fixture_create_database,
-                                             _fixture_spark_expectations,
-                                             _fixture_df,
-                                             _fixture_rules_df):
+        _fixture_create_database,
+        _fixture_spark_expectations,
+        _fixture_df,
+        _fixture_rules_df):
     modified_writer = WrappedDataFrameWriter().mode("overwrite").format("iceberg")
-    decorated_func = _fixture_spark_expectations.with_expectations(
+    _fixture_spark_expectations.with_expectations(
         "dq_spark.test_final_table",
         user_conf={user_config.se_notifications_on_fail: False},
         target_and_error_table_writer=modified_writer
@@ -2309,87 +2291,100 @@ def test_with_expectations_exception(_fixture_create_database,
     spark.sql("CLEAR CACHE")
 
 
-# # patch notification hook
-# @patch("spark_expectations.core.expectations.SparkExpectationsNotify")
-# @patch("spark_expectations.notifications.plugins.base_notification.SparkExpectationsNotification")
-# @patch("spark_expectations.notifications.plugins.email.SparkExpectationsEmailPluginImpl")
-# def test_error_threshold_breach(_mock_email_hook, _mock_notification_hook, _mock_spark_expectations_notify,
-#                                 _fixture_create_database,
-#                                 _fixture_local_kafka_topic
-#                                 ):
-#     input_df = spark.createDataFrame(
-#         [
-#             {"col1": 1, "col2": "a", "col3": 4},
-#             {"col1": 2, "col2": "b", "col3": 5},
-#             {"col1": 3, "col2": "c", 'col3': 6},
-#         ]
-#     )
-#
-#     rules = [
-#         {
-#             "product_id": "product1",
-#             "table_name": "dq_spark.test_final_table",
-#             "rule_type": "row_dq",
-#             "rule": "col1_add_col3_threshold",
-#             "column_name": "col1",
-#             "expectation": "(col1+col3) > 6",
-#             "action_if_failed": "drop",
-#             "tag": "strict",
-#             "description": "col1_add_col3 value must be greater than 6",
-#             "enable_for_source_dq_validation": True,
-#             "enable_for_target_dq_validation": True,
-#             "is_active": True,
-#             "enable_error_drop_alert": True,
-#             "error_drop_threshold": "25"
-#         },
-#         {
-#             "product_id": "product1",
-#             "table_name": "dq_spark.test_final_table",
-#             "rule_type": "query_dq",
-#             "rule": "col3_positive_threshold",
-#             "column_name": "col3",
-#             "expectation": "(select count(case when col3>0 then 1 else 0 end) from target_test_table) > 10",
-#             "action_if_failed": "ignore",
-#             "tag": "strict",
-#             "description": "count of col3 positive value must be greater than 10",
-#             "enable_for_source_dq_validation": False,
-#             "enable_for_target_dq_validation": True,
-#             "is_active": True,
-#             "enable_error_drop_alert": True,
-#             "error_drop_threshold": "50"
-#         }]
-#
-#     # create a PySpark DataFrame from the list of dictionaries
-#     rules_df = spark.createDataFrame(rules)
-#     rules_df.createOrReplaceTempView("target_test_table")
-#
-#     writer = WrappedDataFrameWriter.mode("append").format("delta")
-#     se = SparkExpectations(product_id="product1",
-#                            rules_df=rules_df,
-#                            stats_table="dq_spark.test_dq_stats_table",
-#                            stats_table_writer=writer,
-#                            target_and_error_table_writer=writer,
-#                            debugger=False,
-#                            )
-#
-#     @se.with_expectations(
-#         target_table="dq_spark.test_final_table",
-#         write_to_table=True,
-#         target_table_view="target_test_table",
-#
-#     )
-#     def get_dataset() -> DataFrame:
-#         return input_df
-#
-#     get_dataset()
-#
-#     _mock_email_hook.send_notification.assert_called_once()
-#     _mock_spark_expectations_notify("product_id",
-#     se._context).notify_on_exceeds_of_error_threshold.assert_called_once()
+# @patch('spark_expectations.core.expectations.SparkExpectationsNotify', autospec=True,
+#        spec_set=True)
+# @patch('spark_expectations.notifications.push.spark_expectations_notify._notification_hook', autospec=True,
+#        spec_set=True)
+def test_error_threshold_breach(
+        # _mock_notification_hook, _mock_spark_expectations_notify,
+        _fixture_create_database,
+        _fixture_local_kafka_topic
+):
+    input_df = spark.createDataFrame(
+        [
+            {"col1": 1, "col2": "a", "col3": 4},
+            {"col1": 2, "col2": "b", "col3": 5},
+            {"col1": 3, "col2": "c", 'col3': 6},
+        ]
+    )
+
+    rules = [
+        {
+            "product_id": "product1",
+            "table_name": "dq_spark.test_final_table",
+            "rule_type": "row_dq",
+            "rule": "col1_add_col3_threshold",
+            "column_name": "col1",
+            "expectation": "(col1+col3) > 6",
+            "action_if_failed": "drop",
+            "tag": "strict",
+            "description": "col1_add_col3 value must be greater than 6",
+            "enable_for_source_dq_validation": True,
+            "enable_for_target_dq_validation": True,
+            "is_active": True,
+            "enable_error_drop_alert": True,
+            "error_drop_threshold": "25"
+        },
+        {
+            "product_id": "product1",
+            "table_name": "dq_spark.test_final_table",
+            "rule_type": "query_dq",
+            "rule": "col3_positive_threshold",
+            "column_name": "col3",
+            "expectation": "(select count(case when col3>0 then 1 else 0 end) from test_final_table_view) > 10",
+            "action_if_failed": "ignore",
+            "tag": "strict",
+            "description": "count of col3 positive value must be greater than 10",
+            "enable_for_source_dq_validation": False,
+            "enable_for_target_dq_validation": True,
+            "is_active": True,
+            "enable_error_drop_alert": True,
+            "error_drop_threshold": "10"
+        }]
+
+    # create a PySpark DataFrame from the list of dictionaries
+    rules_df = spark.createDataFrame(rules)
+
+    writer = WrappedDataFrameWriter().mode("append").format("delta")
+
+    with patch(
+            'spark_expectations.notifications.push.spark_expectations_notify.SparkExpectationsNotify'
+            '.notify_on_exceeds_of_error_threshold',
+            autospec=True, spec_set=True) as _mock_notification_hook:
+        se = SparkExpectations(product_id="product1",
+                               rules_df=rules_df,
+                               stats_table="dq_spark.test_dq_stats_table",
+                               stats_table_writer=writer,
+                               target_and_error_table_writer=writer,
+                               debugger=False,
+                               )
+
+        from spark_expectations.config.user_config import Constants as user_config
+        conf = {
+            user_config.se_notifications_on_fail: True,
+            user_config.se_notifications_on_error_drop_exceeds_threshold_breach: True,
+            user_config.se_notifications_on_error_drop_threshold: 15,
+        }
+
+        @se.with_expectations(
+            target_table="dq_spark.test_final_table",
+            write_to_table=True,
+            user_conf=conf
+        )
+        def get_dataset() -> DataFrame:
+            return input_df
+
+        get_dataset()
+
+    _mock_notification_hook.assert_called_once()
+    for db in spark.catalog.listDatabases():
+        if db.name != "default":
+            spark.sql(f"DROP DATABASE {db.name} CASCADE")
+    spark.sql("CLEAR CACHE")
 
 
-def test_target_table_view_expception(_fixture_create_database,
-                                      _fixture_local_kafka_topic):
+def test_target_table_view_exception(_fixture_create_database,
+                                     _fixture_local_kafka_topic):
     rules = [
         {
             "product_id": "product1",
