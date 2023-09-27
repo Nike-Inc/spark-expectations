@@ -6,7 +6,7 @@ In order to establish the global configuration parameter for DQ Spark Expectatio
 ```python
 from spark_expectations.config.user_config import Constants as user_config
 
-se_global_spark_Conf = {
+se_user_conf = {
     user_config.se_notifications_enable_email: False,  # (1)!
     user_config.se_notifications_email_smtp_host: "mailhost.com",  # (2)!
     user_config.se_notifications_email_smtp_port: 25,  # (3)!
@@ -100,11 +100,26 @@ stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
 8. The `user_config.cbs_secret_token` captures path where kafka authentication app name secret token stored in the cerberus sdb
 9. The `user_config.cbs_topic_name`  captures path where kafka topic name stored in the cerberus sdb
 
+You can disable the streaming functionality by setting the `user_config.se_enable_streaming` parameter to `False` 
+
+```python
+from typing import Dict, Union
+from spark_expectations.config.user_config import Constants as user_config
+
+stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
+                user_config.se_enable_streaming: False, # (1)!
+            }
+```
+
+1. The `user_config.se_enable_streaming` parameter is used to control the enabling or disabling of Spark Expectations (SE) streaming functionality. When enabled, SE streaming stores the statistics of every batch run into Kafka.
+
 ```python
 from spark_expectations.core.expectations import SparkExpectations
 
 # product_id should match with the "product_id" in the rules table
-se: SparkExpectations = SparkExpectations(product_id="your-products-id", stats_streaming_options=stats_streaming_config_dict)  # (1)!
+se: SparkExpectations = SparkExpectations(
+    product_id="your-products-id", 
+    stats_streaming_options=stats_streaming_config_dict)  # (1)!
 ```
 
 
@@ -134,7 +149,7 @@ from spark_expectations.config.user_config import *  # (7)!
         user_config.se_final_query_dq: True,  # (17)!
         user_config.se_target_table_view: "order",  # (18)!
     },
-    user_conf=se_global_spark_Conf,  # (19)!
+    user_conf=se_user_conf,  # (19)!
 
 )
 def build_new() -> DataFrame:
@@ -331,7 +346,7 @@ import os
 @se.with_expectations(
     se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
                                 target_table="pilot_nonpub.customer_order"),
-    user_conf=se_global_spark_Conf,  # (2)!
+    user_conf=se_user_conf,  # (2)!
 
 )
 def build_new() -> DataFrame:
@@ -346,7 +361,7 @@ def build_new() -> DataFrame:
 1. There are four types of notifications: notification_on_start, notification_on_completion, notification_on_fail and notification_on_error_threshold_breach. 
    Enable notifications for all four stages by setting the values to `True`
 2. To provide the absolute file path for a configuration variable that holds information regarding notifications, use the 
-  decalared global variable, `se_global_spark_Conf`
+  decalared global variable, `se_user_conf`
 
 
 #### Example 7
