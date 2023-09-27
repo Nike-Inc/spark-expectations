@@ -11,7 +11,7 @@ from spark_expectations.core.expectations import (
 from spark_expectations.config.user_config import Constants as user_config
 
 
-writer = WrappedDataFrameWriter.mode("append").format("delta")
+writer = WrappedDataFrameWriter().mode("append").format("delta")
 
 spark = set_up_delta()
 

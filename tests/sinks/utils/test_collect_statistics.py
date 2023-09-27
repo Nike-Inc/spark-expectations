@@ -6,6 +6,9 @@ from spark_expectations.core import get_spark_session
 from spark_expectations.sinks.utils.collect_statistics import SparkExpectationsCollectStatistics
 from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
+from unittest.mock import Mock
+from spark_expectations.core.context import SparkExpectationsContext
+from spark_expectations.core.expectations import WrappedDataFrameWriter
 
 spark = get_spark_session()
 
@@ -195,10 +198,10 @@ def fixture_create_stats_table():
          "error_percentage": 100.0,
      })
 ])
-@patch('spark_expectations.sinks.utils.writer.SparkExpectationsContext', autospec=True, spec_set=True)
-def test_collect_stats_on_success_failure(_mock_context, input_record,
+def test_collect_stats_on_success_failure(input_record,
                                           expected_result, _fixture_local_kafka_topic, _fixture_create_stats_table):
     # create mock _context object
+    _mock_context = Mock(spec=SparkExpectationsContext)
     setattr(_mock_context, "get_dq_stats_table_name", "test_dq_stats_table")
     setattr(_mock_context, "get_run_date_name", "meta_dq_run_date")
     setattr(_mock_context, "get_run_date_time_name", "meta_dq_run_datetime")
@@ -250,9 +253,17 @@ def test_collect_stats_on_success_failure(_mock_context, input_record,
             input_record.get("dq_rules").get("agg_dq_rules"))
     setattr(_mock_context, "get_num_query_dq_rules",
             input_record.get("dq_rules").get("query_dq_rules"))
+    setattr(_mock_context, "_stats_table_writer_config",
+            WrappedDataFrameWriter().mode("overwrite").format("delta").build())
+    setattr(_mock_context, 'get_stats_table_writer_config',
+            WrappedDataFrameWriter().mode("overwrite").format("delta").build())
+    setattr(_mock_context, 'get_se_streaming_stats_dict', {'se.enable.streaming': True})
 
-    writer = SparkExpectationsWriter("product1", _mock_context)
-    statistics_writer_obj = SparkExpectationsCollectStatistics("product1", _mock_context, writer)
+    _mock_context.spark = spark
+    _mock_context.product_id = 'product1'
+
+    writer = SparkExpectationsWriter(_mock_context)
+    statistics_writer_obj = SparkExpectationsCollectStatistics(_mock_context, writer)
 
     @statistics_writer_obj.collect_stats_on_success_failure()
     def exec_func():
@@ -406,10 +417,11 @@ def test_collect_stats_on_success_failure(_mock_context, input_record,
          "error_percentage": 100.0,
      })
 ])
-@patch('spark_expectations.sinks.utils.writer.SparkExpectationsContext', autospec=True, spec_set=True)
-def test_collect_stats_on_success_failure_exception(_mock_context, input_record,
+
+def test_collect_stats_on_success_failure_exception(input_record,
                                                     expected_result, _fixture_local_kafka_topic,
                                                     _fixture_create_stats_table):
+    _mock_context = Mock(spec=SparkExpectationsContext)
     setattr(_mock_context, "get_dq_stats_table_name", "test_dq_stats_table")
     setattr(_mock_context, "get_run_date_name", "meta_dq_run_date")
     setattr(_mock_context, "get_run_date_time_name", "meta_dq_run_datetime")
@@ -461,9 +473,16 @@ def test_collect_stats_on_success_failure_exception(_mock_context, input_record,
             input_record.get("dq_rules").get("agg_dq_rules"))
     setattr(_mock_context, "get_num_query_dq_rules",
             input_record.get("dq_rules").get("query_dq_rules"))
+    _mock_context.spark = spark
+    _mock_context.product_id = "product1"
+    setattr(_mock_context, "_stats_table_writer_config",
+            WrappedDataFrameWriter().mode("overwrite").format("delta").build())
+    setattr(_mock_context, 'get_stats_table_writer_config',
+            WrappedDataFrameWriter().mode("overwrite").format("delta").build())
+    setattr(_mock_context, 'get_se_streaming_stats_dict', {'se.enable.streaming': True})
 
-    writer = SparkExpectationsWriter("product1", _mock_context)
-    statistics_writer_obj = SparkExpectationsCollectStatistics("product1", _mock_context, writer)
+    writer = SparkExpectationsWriter(_mock_context)
+    statistics_writer_obj = SparkExpectationsCollectStatistics(_mock_context, writer)
 
     @statistics_writer_obj.collect_stats_on_success_failure()
     def func_exception():
@@ -472,7 +491,6 @@ def test_collect_stats_on_success_failure_exception(_mock_context, input_record,
     with pytest.raises(SparkExpectationsMiscException):
         func_exception()
 
-    stats_table = spark.table("test_dq_stats_table")
     stats_table = spark.table("test_dq_stats_table")
     assert stats_table.count() == 1
     row = stats_table.first()

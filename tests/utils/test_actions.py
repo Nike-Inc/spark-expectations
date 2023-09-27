@@ -1,4 +1,3 @@
-import os
 from unittest.mock import Mock
 from unittest.mock import patch
 
@@ -31,6 +30,7 @@ def fixture_mock_context():
     # fixture for mock context
     mock_object = Mock(spec=SparkExpectationsContext)
     mock_object.product_id = "product1"
+    mock_object.spark=spark
     mock_object.get_row_dq_rule_type_name = "row_dq"
     mock_object.get_agg_dq_rule_type_name = "agg_dq"
     mock_object.get_query_dq_rule_type_name = "query_dq"
@@ -282,10 +282,6 @@ def test_create_rules_map(_rule_map, expected_output):
                             {"action_if_failed": "ignore", "description": "desc2"},
                             {"action_if_failed": "ignore", "description": "desc3"}],
                          ),  # input_df
-                             (None,
-                              "agg_dq",  # rule_type_name
-                              # expected_output
-                              None),
                              # input_df
                              (spark.createDataFrame(
                                  [{"meta_query_dq_results": [{"action_if_failed": "ignore", "description": "desc1"},
@@ -294,27 +290,38 @@ def test_create_rules_map(_rule_map, expected_output):
                               # expected_output
                               "query_dq",  # rule_type_name
                               [{'action_if_failed': 'ignore', 'description': 'desc1'}]
+                             ),
+                             (spark.createDataFrame(
+                                 [{"meta_query_dq_results": [{"action_if_failed": "ignore", "description": "desc1"},
+                                                             ]
+                                   }]),
+                              # expected_output
+                              "row_dq",  # rule_type_name
+                              None
                              )
                          ])
 def test_create_agg_dq_results(input_df,
                                rule_type_name,
-                               expected_output,
-                               _fixture_mock_context):
+                               expected_output, _fixture_mock_context):
     # unit test case on create_agg_dq_results
-    assert SparkExpectationsActions().create_agg_dq_results(input_df, rule_type_name, ) == expected_output
+    assert SparkExpectationsActions().create_agg_dq_results(_fixture_mock_context,input_df, rule_type_name, ) == expected_output
 
 
 @pytest.mark.parametrize("input_df",
                          [(spark.createDataFrame(
                              [{"agg_dq_results": ""}]),
-
-                         )])
+                         ),
+                             (None,
+                              "agg_dq",  # rule_type_name
+                              # expected_output
+                              None),
+                         ])
 def test_create_agg_dq_results_exception(input_df,
                                          _fixture_mock_context):
     # faulty user input is given to test the exception functionality of the agg_dq_result
     with pytest.raises(SparkExpectationsMiscException,
                        match=r"error occurred while running create agg dq results .*"):
-        SparkExpectationsActions().create_agg_dq_results(input_df, "<test>", )
+        SparkExpectationsActions().create_agg_dq_results(_fixture_mock_context, input_df, "<test>", )
 
 
 def test_run_dq_rules_row(_fixture_df,
@@ -862,7 +869,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 "query_dq",  # rule type
                 False,  # row_dq_flag
                 False,  # source_agg_flag
-                True,  # final_agg_flag
+                False,  # final_agg_flag
                 True,  # source_query_dq_flag
                 False,  # final_query_dq_flag
                 SparkExpectationsMiscException  # expected df
@@ -885,7 +892,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 "query_dq",  # rule type
                 False,  # row_dq_flag
                 False,  # source_agg_flag
-                True,  # final_agg_flag
+                False,  # final_agg_flag
                 False,  # source_query_dq_flag
                 True,  # final_query_dq_flag
                 SparkExpectationsMiscException  # expected df
@@ -908,7 +915,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 "query_dq",  # rule type
                 False,  # row_dq_flag
                 False,  # source_agg_flag
-                True,  # final_agg_flag
+                False,  # final_agg_flag
                 False,  # source_query_dq_flag
                 True,  # final_query_dq_flag
                 spark.createDataFrame(
@@ -940,7 +947,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 "query_dq",  # rule type
                 False,  # row_dq_flag
                 False,  # source_agg_flag
-                True,  # final_agg_flag
+                False,  # final_agg_flag
                 False,  # source_query_dq_flag
                 True,  # final_query_dq_flag
                 spark.createDataFrame(
@@ -998,7 +1005,6 @@ def test_action_on_dq_rules(_mock_set_row_dq_status, _mock_set_source_agg_dq_sta
         # assert when all condition passes without action_if_failed "fail"
         df = SparkExpectationsActions.action_on_rules(_fixture_mock_context,
                                                       input_df,
-                                                      table_name,
                                                       input_count,
                                                       error_count,
                                                       output_count,
