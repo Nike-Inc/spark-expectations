@@ -7,7 +7,6 @@ import pytest
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import lit, to_timestamp, col
 from pyspark.sql.types import StringType, IntegerType, StructField, StructType
-from pytest_mock import mocker
 
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.expectations import SparkExpectations, WrappedDataFrameWriter
@@ -16,8 +15,6 @@ from spark_expectations.core import get_spark_session
 from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException
 )
-from spark_expectations.notifications.push.spark_expectations_notify import SparkExpectationsNotify
-from spark_expectations.sinks.utils.collect_statistics import SparkExpectationsCollectStatistics
 
 # os.environ["UNIT_TESTING_ENV"] = "local"
 
