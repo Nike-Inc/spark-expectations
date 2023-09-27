@@ -18,7 +18,7 @@
         <link rel="prev" href="../../getting-started/setup/">
       
       
-        <link rel="next" href="../rules/">
+        <link rel="next" href="../../examples/">
       
       <link rel="icon" href="../../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.4.3, mkdocs-material-9.1.12">
@@ -266,7 +266,7 @@
   
   
     <li class="md-tabs__item">
-      <a href="../rules/" class="md-tabs__link">
+      <a href="../../examples/" class="md-tabs__link">
         Examples
       </a>
     </li>
@@ -519,34 +519,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../rules/" class="md-nav__link">
-        Rules
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../configure_rules/" class="md-nav__link">
-        Configure_Rules
-      </a>
-    </li>
-  
-
-            
-          
-            
-              
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../examples/" class="md-nav__link">
         Understand Args
       </a>
@@ -591,6 +563,34 @@
     <li class="md-nav__item">
       <a href="../../iceberg/" class="md-nav__link">
         Iceberg
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../rules/" class="md-nav__link">
+        Rules
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configure_rules/" class="md-nav__link">
+        Configure Rules
       </a>
     </li>
   
@@ -1315,59 +1315,55 @@
 <thead>
 <tr>
 <th align="left">stage</th>
-<th align="left">0.6.0</th>
-<th align="left">0.7.0</th>
 <th>0.8.0</th>
+<th>1.0.0</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td align="left">rules table schema changes</td>
-<td align="left">refer rule table creation <a href="https://glowing-umbrella-j8jnolr.pages.github.io/0.7.0/getting-started/setup/">here</a></td>
-<td align="left">added three additional column <br> 1.<code>enable_for_source_dq_validation(boolean)</code>  <br> 2.<code>enable_for_target_dq_validation(boolean)</code> <br> 3.<code>is_active(boolean)</code> <br> <br> documentation found <a href="https://glowing-umbrella-j8jnolr.pages.github.io/0.7.0/getting-started/setup/">here</a></td>
-<td>added additional two column <br> 1.<code>enable_error_drop_alert(boolean)</code> <br> 2.<code>error_drop_thresholdt(int)</code> <br><br> documentation found <a href="https://glowing-umbrella-j8jnolr.pages.github.io/0.8.0/getting-started/setup/">here</a></td>
+<td>added additional two column <br> 1.<code>enable_error_drop_alert(boolean)</code> <br> 2.<code>error_drop_thresholdt(int)</code> <br><br> documentation found <a href="https://engineering.nike.com/spark-expectations/0.8.1/getting-started/setup/">here</a></td>
+<td>Remains same</td>
 </tr>
 <tr>
 <td align="left">rule table creation required</td>
-<td align="left">yes</td>
-<td align="left">yes - creation not required if you're upgrading from old version but schema changes required</td>
+<td>yes - creation not required if you're upgrading from old version but schema changes required</td>
 <td>yes - creation not required if you're upgrading from old version but schema changes required</td>
 </tr>
 <tr>
 <td align="left">stats table schema changes</td>
-<td align="left">refer rule table creation <a href="https://glowing-umbrella-j8jnolr.pages.github.io/0.7.0/getting-started/setup/">here</a></td>
-<td align="left">added additional columns <br> 1. <code>source_query_dq_results</code>  <br> 2. <code>final_query_dq_results</code> <br> 3. <code>row_dq_res_summary</code> <br> 4. <code>dq_run_time</code> <br> 5. <code>dq_rules</code> <br><br> renamed columns <br> 1. <code>runtime</code> to <code>meta_dq_run_time</code>  <br> 2. <code>run_date</code> to <code>meta_dq_run_date</code> <br> 3. <code>run_id</code> to <code>meta_dq_run_id</code> <br><br> documentation found <a href="https://glowing-umbrella-j8jnolr.pages.github.io/0.7.0/getting-started/setup/">here</a></td>
 <td>remains same</td>
+<td>Remains Same</td>
 </tr>
 <tr>
 <td align="left">stats table creation required</td>
-<td align="left">yes</td>
-<td align="left">yes - creation not required if you're upgrading from old version but schema changes required</td>
 <td>automated</td>
+<td>Remains Same</td>
 </tr>
 <tr>
 <td align="left">notification config setting</td>
-<td align="left">define global notification param, register as env variable and place in the <code>__init__.py</code> file for multiple usage, <a href="https://glowing-umbrella-j8jnolr.pages.github.io/0.7.0/examples/">example</a></td>
-<td align="left">Define a global notification parameter in the <code>__init__.py</code> file to be used in multiple instances where the spark_conf parameter needs to be passed within the with_expectations function. <a href="https://glowing-umbrella-j8jnolr.pages.github.io/0.7.0/examples/">example</a></td>
 <td>remains same</td>
+<td>Remains Same</td>
 </tr>
 <tr>
 <td align="left">secret store and kafka authentication details</td>
-<td align="left">not applicable</td>
-<td align="left">not applicable</td>
-<td>Create a dictionary that contains your secret configuration values and register in <code>__init__.py</code> for multiple usage, <a href="https://glowing-umbrella-j8jnolr.pages.github.io/0.8.0/examples/">example</a></td>
+<td>Create a dictionary that contains your secret configuration values and register in <code>__init__.py</code> for multiple usage, <a href="https://engineering.nike.com/spark-expectations/0.8.1/examples/">example</a></td>
+<td>Remains Same. You can disable streaming if needed, in SparkExpectations class</td>
 </tr>
 <tr>
 <td align="left">spark expectations initialisation</td>
-<td align="left">create SparkExpectations class object using the <code>SparkExpectations</code> library and by passing the <code>product_id</code></td>
-<td align="left">create spark expectations class object using <code>SpakrExpectations</code> by passing <code>product_id</code> and optional parameter <code>debugger</code> <a href="https://glowing-umbrella-j8jnolr.pages.github.io/0.7.0/examples/">example</a></td>
-<td>create spark expectations class object using <code>SpakrExpectations</code> by passing <code>product_id</code> and additional optional parameter <code>debugger</code>, <code>stats_streaming_options</code>  <a href="https://glowing-umbrella-j8jnolr.pages.github.io/0.8.0/examples/">example</a></td>
+<td>create spark expectations class object using <code>SpakrExpectations</code> by passing <code>product_id</code> and additional optional parameter <code>debugger</code>, <code>stats_streaming_options</code>  <a href="https://engineering.nike.com/spark-expectations/0.8.1/examples/">example</a></td>
+<td>New arguments are added. Please follow this - <a href="https://engineering.nike.com/spark-expectations/1.0.0/examples/">example</a></td>
 </tr>
 <tr>
-<td align="left">spark expectations decorator</td>
-<td align="left">The decorator allows for configuration by passing individual parameters to each decorator. However, registering a DataFrame view within a decorated function is not supported for implementations of query_dq <a href="https://glowing-umbrella-j8jnolr.pages.github.io/0.7.0/examples/">example</a></td>
-<td align="left">The decorator allows configurations to be logically grouped through a dictionary passed as a parameter to the decorator. Additionally, registering a DataFrame view within a decorated function is supported for implementations of query_dq. <a href="https://glowing-umbrella-j8jnolr.pages.github.io/0.7.0/examples/">example</a></td>
+<td align="left">with_expectations decorator</td>
 <td>remains same</td>
+<td>New arguments are added. Please follow this - <a href="https://engineering.nike.com/spark-expectations/1.0.0/examples/">example</a></td>
+</tr>
+<tr>
+<td align="left">WrappedDataFrameWriter</td>
+<td>Doesn't exist</td>
+<td>This is new and users need to provider the writer object to record the spark conf that need to be used while writing - <a href="https://engineering.nike.com/spark-expectations/1.0.0/examples/">example</a></td>
 </tr>
 </tbody>
 </table>
