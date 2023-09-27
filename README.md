@@ -92,6 +92,8 @@ se_user_conf = {
 
 For all the below examples the below import and SparkExpectations class instantiation is mandatory
 
+1. Instantiate `SparkExpectations` class which has all the required functions for running data quality rules
+
 ```python
 from spark_expectations.core.expectations import SparkExpectations, WrappedDataFrameWriter
 from pyspark.sql import SparkSession
@@ -111,7 +113,7 @@ se: SparkExpectations = SparkExpectations(
 )
 ```
 
-1. Instantiate `SparkExpectations` class which has all the required functions for running data quality rules
+2. Decorate the function with `@se.with_expectations` decorator
 
 ```python
 from spark_expectations.config.user_config import *

@@ -49,12 +49,12 @@ nav:
   - Adoption_Guide:
       - comparision: configurations/adoption_versions_comparsion.md
   - Examples:
-      Rules: configurations/rules.md
-      Configure_Rules: configurations/configure_rules.md
-      Initialization_Examples: examples.md
+      Understand Args: examples.md
       Delta: delta.md
       BigQuery: bigquery.md
       Iceberg: iceberg.md
+      Rules: configurations/rules.md
+      Configure Rules: configurations/configure_rules.md
   - Python API:
       - Core:
           Init: api/core_init.md

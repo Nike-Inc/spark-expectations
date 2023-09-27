@@ -49,16 +49,16 @@ from typing import Dict, Union
 from spark_expectations.config.user_config import Constants as user_config
 
 stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
-                user_config.se_enable_streaming: True, # (1)!
-                user_config.secret_type: "databricks", # (2)!
-                user_config.dbx_workspace_url  : "https://workspace.cloud.databricks.com", # (3)!
-                user_config.dbx_secret_scope: "sole_common_prod", # (4)!
-                user_config.dbx_kafka_server_url: "se_streaming_server_url_secret_key", # (5)!
-                user_config.dbx_secret_token_url: "se_streaming_auth_secret_token_url_key", # (6)!
-                user_config.dbx_secret_app_name: "se_streaming_auth_secret_appid_key", # (7)!
-                user_config.dbx_secret_token: "se_streaming_auth_secret_token_key", # (8)!
-                user_config.dbx_topic_name: "se_streaming_topic_name", # (9)!
-            }
+    user_config.se_enable_streaming: True, # (1)!
+    user_config.secret_type: "databricks", # (2)!
+    user_config.dbx_workspace_url  : "https://workspace.cloud.databricks.com", # (3)!
+    user_config.dbx_secret_scope: "sole_common_prod", # (4)!
+    user_config.dbx_kafka_server_url: "se_streaming_server_url_secret_key", # (5)!
+    user_config.dbx_secret_token_url: "se_streaming_auth_secret_token_url_key", # (6)!
+    user_config.dbx_secret_app_name: "se_streaming_auth_secret_appid_key", # (7)!
+    user_config.dbx_secret_token: "se_streaming_auth_secret_token_key", # (8)!
+    user_config.dbx_topic_name: "se_streaming_topic_name", # (9)!
+}
 ```
 
 1. The `user_config.se_enable_streaming` parameter is used to control the enabling or disabling of Spark Expectations (SE) streaming functionality. When enabled, SE streaming stores the statistics of every batch run into Kafka.
@@ -78,16 +78,16 @@ from typing import Dict, Union
 from spark_expectations.config.user_config import Constants as user_config
 
 stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
-                user_config.se_enable_streaming: True, # (1)!
-                user_config.secret_type: "databricks", # (2)!
-                user_config.cbs_url  : "https://<url>.cerberus.com", # (3)!
-                user_config.cbs_sdb_path: "cerberus_sdb_path", # (4)!
-                user_config.cbs_kafka_server_url: "se_streaming_server_url_secret_sdb_path", # (5)!
-                user_config.cbs_secret_token_url: "se_streaming_auth_secret_token_url_sdb_apth", # (6)!
-                user_config.cbs_secret_app_name: "se_streaming_auth_secret_appid_sdb_path", # (7)!
-                user_config.cbs_secret_token: "se_streaming_auth_secret_token_sdb_path", # (8)!
-                user_config.cbs_topic_name: "se_streaming_topic_name_sdb_path", # (9)!
-            }
+    user_config.se_enable_streaming: True, # (1)!
+    user_config.secret_type: "databricks", # (2)!
+    user_config.cbs_url  : "https://<url>.cerberus.com", # (3)!
+    user_config.cbs_sdb_path: "cerberus_sdb_path", # (4)!
+    user_config.cbs_kafka_server_url: "se_streaming_server_url_secret_sdb_path", # (5)!
+    user_config.cbs_secret_token_url: "se_streaming_auth_secret_token_url_sdb_apth", # (6)!
+    user_config.cbs_secret_app_name: "se_streaming_auth_secret_appid_sdb_path", # (7)!
+    user_config.cbs_secret_token: "se_streaming_auth_secret_token_sdb_path", # (8)!
+    user_config.cbs_topic_name: "se_streaming_topic_name_sdb_path", # (9)!
+}
 ```
 
 1. The `user_config.se_enable_streaming` parameter is used to control the enabling or disabling of Spark Expectations (SE) streaming functionality. When enabled, SE streaming stores the statistics of every batch run into Kafka.
@@ -107,8 +107,8 @@ from typing import Dict, Union
 from spark_expectations.config.user_config import Constants as user_config
 
 stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
-                user_config.se_enable_streaming: False, # (1)!
-            }
+    user_config.se_enable_streaming: False, # (1)!
+}
 ```
 
 1. The `user_config.se_enable_streaming` parameter is used to control the enabling or disabling of Spark Expectations (SE) streaming functionality. When enabled, SE streaming stores the statistics of every batch run into Kafka.
@@ -129,312 +129,24 @@ se: SparkExpectations = SparkExpectations(
 #### Example 1
 
 ```python
-from spark_expectations.config.user_config import *  # (7)!
+from spark_expectations.core.expectations import SparkExpectations, WrappedDataFrameWriter
 
-
-@se.with_expectations(  # (6)!
-    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                target_table=),
-    write_to_table=True,  # (4)!
-    write_to_temp_table=True,  # (8)!
-    row_dq=True,  # (9)!
-    agg_dq={  # (10)!
-        user_config.se_agg_dq: True,  # (11)!
-        user_config.se_source_agg_dq: True,  # (12)!
-        user_config.se_final_agg_dq: True,  # (13)!
-    },
-    query_dq={  # (14)!
-        user_config.se_query_dq: True,  # (15)!
-        user_config.se_source_query_dq: True,  # (16)!
-        user_config.se_final_query_dq: True,  # (17)!
-        user_config.se_target_table_view: "order",  # (18)!
-    },
-    user_conf=se_user_conf,  # (19)!
-
+writer = WrappedDataFrameWriter().mode("append").format("delta")  # (1)!
+se = SparkExpectations(  # (10)!
+    product_id="your_product",  # (11)!
+    rules_df=spark.table("dq_spark_local.dq_rules"),  # (12)!
+    stats_table="dq_spark_local.dq_stats",  # (13)!
+    stats_table_writer=writer,  # (14)!
+    target_and_error_table_writer=writer,  # (15)!
+    debugger=False,  # (16)!
+    # stats_streaming_options={user_config.se_enable_streaming: False},  # (17)!
 )
-def build_new() -> DataFrame:
-    _df_order: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
-    )
-    _df_order.createOrReplaceTempView("order")  # (20)!
-
-    _df_product: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/product.csv"))
-    )
-    _df_product.createOrReplaceTempView("product")  # (20)!
-
-    _df_customer: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/customer.csv"))
-    )
-
-    _df_customer.createOrReplaceTempView("customer")  # (20)!
-
-    return _df_order  # (21)!
-```
-
-
-1. Provide the full table name of the table which contains the rules
-2. Provide the table name using which the `_error` table will be created, which contains all the failed records. 
-   Note if you are also wanting to write the data using `write_df`, then the table_name provided to both the functions 
-   should be same
-3. Provide the full table name where the stats will be written into
-4. Use this argument to write the final data into the table. By default, it is False.
-   This is optional, if you just want to run the data quality checks.
-   A good example will be a staging table or temporary view.
-5. This functions reads the rules from the table and return them as a dict, which is an input to the `with_expectations` function
-6. This is the decorator that helps us run the data quality rules. After running the rules the results will be written into `_stats` table and `error` table
-7. import necessary configurable variables from `user_config` package for the specific functionality to configure in spark-expectations
-8. Use this argument to write the input dataframe into the temp table, so that it breaks the spark plan and might speed 
-   up the job in cases of complex dataframe lineage
-9. The argument row_dq is optional and enables the conducting of row-based data quality checks. By default, this 
-   argument is set to True, however, if desired, these checks can be skipped by setting the argument to False.
-10. The `agg_dq` argument is a dictionary that is used to gather different settings and options for the purpose of configuring the `agg_dq`
-11. The argument `se_agg_dq` is utilized to activate the aggregate data quality check, and its default setting is True.
-12. The `se_source_agg_dq` argument is optional and enables the conducting of aggregate-based data quality checks on the 
-    source data. By default, this argument is set to True, and this option depends on the `agg_dq` value. 
-    If desired, these checks can be skipped by setting the source_agg_dq argument to False.
-13. This optional argument `se_final_agg_dq` allows to perform agg-based data quality checks on final data, with the 
-    default setting being `True`, which depended on `row_agg` and `agg_dq`. skip these checks by setting argument to `False`
-14. The `query_dq` argument is a dictionary that is used to gather different settings and options for the purpose of configuring the `query_dq`
-15. The argument `se_query_dq` is utilized to activate the aggregate data quality check, and its default setting is True. 
-16. The `se_source_query_dq` argument is optional and enables the conducting of query-based data quality checks on the 
-    source data. By default, this argument is set to True, and this option depends on the `agg_dq` value. 
-    If desired, these checks can be skipped by setting the source_agg_dq argument to False.
-17. This optional argument `se_final_query_dq` allows to perform query_based data quality checks on final data, with the 
-    default setting being `True`, which depended on `row_agg` and `agg_dq`. skip these checks by setting argument to `False`
-18. The parameter `se_target_table_view` can be provided with the name of a view that represents the target validated dataset for implementation of `query_dq` on the clean dataset from `row_dq`
-19. The `spark_conf` parameter is utilized to gather all the configurations that are associated with notifications
-20. View registration can be utilized when implementing `query_dq` expectations.
-21. Returning a dataframe is mandatory for the `spark_expectations` to work, if we do not return a dataframe - then an exceptionm will be raised
-
-
-#### Example 2
-
-```python
-@se.with_expectations(  # (1)!
-    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                target_table="pilot_nonpub.customer_order")
-)
-
-,
-row_dq = True  # (2)!
-)
-
-def build_new() -> DataFrame:
-    _df: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/employee.csv"))
-    )
-    return df 
-```
-
-1. Conduct only row-based data quality checks while skipping the aggregate data quality checks
-2. Disabled the aggregate data quality checks
-
-#### Example 3
-
-```python
-@se.with_expectations(  # (1)!
-    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                target_table="pilot_nonpub.customer_order"),
-    row_dq=False,  # (2)!
-    agg_dq={
-        user_config.se_agg_dq: True,
-        user_config.se_source_agg_dq: True,
-        user_config.se_final_agg_dq: False,
-    }
-
-)
-def build_new() -> DataFrame:
-    _df: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/employee.csv"))
-    )
-    return df 
-```
-
-1. Perform only aggregate-based data quality checks while avoiding both row-based data quality checks and aggregate data
-   quality checks on the validated dataset, since row validation has not taken place
-2. Disabled the row data quality checks
-
-#### Example 4
-
-```python
-@se.with_expectations(  # (1)!
-    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                target_table="pilot_nonpub.customer_order"),
-    row_dq=True,
-    query_dq={  # (2)!
-        user_config.se_query_dq: True,
-        user_config.se_source_query_dq: True,
-        user_config.se_final_query_dq: True,
-        user_config.se_target_table_view: "order",
-    },
-
-)
-def build_new() -> DataFrame:
-    _df_order: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
-    )
-    _df_order.createOrReplaceTempView("order")
-    _df_product: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/product.csv"))
-    )
-    _df_product.createOrReplaceTempView("product")
-
-    _df_customer: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/customer.csv"))
-    )
-
-    _df_customer.createOrReplaceTempView("customer")
-
-    return _df_order
-```
-
-1. Conduct row-based and query-based data quality checks only on the source and target dataset, while skipping the aggregate 
-   data quality checks on the validated dataset
-2. Enabled the query data quality checks
-
-#### Example 5
-
-```python
-@se.with_expectations(  # (1)!
-    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                target_table="pilot_nonpub.customer_order"),
-    row_dq=True,
-    agg_dq={  # (10)!
-        user_config.user_configse_agg_dq: True,
-        user_config.se_source_agg_dq: True,
-        user_config.se_final_agg_dq: False,  # (2)!
-    },
-
-)
-def build_new() -> DataFrame:
-    _df_order: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
-    )
-    return _df_order 
-```
-
-1. Conduct row-based and aggregate-based data quality checks only on the source dataset, while skipping the aggregate 
-   data quality checks on the validated dataset
-2. Disabled the final aggregate data quality quality checks
-
-
-#### Example 6
-
-```python
-import os
-
-
-@se.with_expectations(
-    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                target_table="pilot_nonpub.customer_order"),
-    user_conf=se_user_conf,  # (2)!
-
-)
-def build_new() -> DataFrame:
-    _df_order: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
-    )
-    return _df_order 
-```
-
-1. There are four types of notifications: notification_on_start, notification_on_completion, notification_on_fail and notification_on_error_threshold_breach. 
-   Enable notifications for all four stages by setting the values to `True`
-2. To provide the absolute file path for a configuration variable that holds information regarding notifications, use the 
-  decalared global variable, `se_user_conf`
-
-
-#### Example 7
-
-```python
-@se.with_expectations(  # (1)!
-    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                target_table="pilot_nonpub.customer_order"),
-    row_dq=False,
-    agg_dq={
-        user_config.se_agg_dq: False,
-        user_config.se_source_agg_dq: False,
-        user_config.se_final_agg_dq: True,
-    },
-    query_dq={
-        user_config.se_query_dq: False,
-        user_config.se_source_query_dq: True,
-        user_config.se_final_query_dq: True,
-        user_config.se_target_table_view: "order",
-    },
-)
-def build_new() -> DataFrame:
-    _df_order: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
-    )
-    return _df_order 
-```
-
-1. Below combination of `row_dq, agg_dq, source_agg_dq, final_agg_dq, query_dq, source_query_dq and final_query_dq` skips the data quality checks because 
-   source_agg_dq depends on agg_dq and final_agg_dq depends on row_dq and agg_dq
-
-
-#### Example 8
-
-```python
-@se.with_expectations(  # (1)!
-    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                target_table="pilot_nonpub.customer_order", actions_if_failed=["drop", "ignore"])
-)
-def build_new() -> DataFrame:
-    _df_order: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
-    )
-    return _df_order 
-```
-
-1. By default `action_if_failed` contains ["fail", "drop", "ignore"], but if we want to run only rules which has a 
-   particular action then we can pass them as list shown in the example
-   
-
-#### Example 9
-
-```python
-@se.with_expectations(  # (1)!
-    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                target_table="pilot_nonpub.customer_order", actions_if_failed=["drop", "ignore"]),
-    row_dq=True,  # (2)!
-    agg_dq={
-        user_config.se_agg_dq: True,
-        user_config.se_source_agg_dq: True,
-        user_config.se_final_agg_dq: True,
-    },
-    query_dq={
-        user_config.se_query_dq: True,
-        user_config.se_source_query_dq: True,
-        user_config.se_final_query_dq: True,
-        user_config.se_target_table_view: "order",
-    }
-
+@se.with_expectations(  # (2)!
+    write_to_table=True,  # (3)!
+    write_to_temp_table=True,  # (4)!
+    user_conf=se_user_conf,  # (5)!
+    target_table_view="order",  # (6)!
+    target_and_error_table_writer=writer,  # (7)!
 )
 def build_new() -> DataFrame:
     _df_order: DataFrame = (
@@ -457,38 +169,26 @@ def build_new() -> DataFrame:
         .csv(os.path.join(os.path.dirname(__file__), "resources/customer.csv"))
     )
 
-    _df_customer.createOrReplaceTempView("customer")
+    _df_customer.createOrReplaceTempView("customer")  # (8)!
 
-    return _df_order
-
+    return _df_order  # (9)!
 ```
 
-1. The default options for the action_if_failed field are ["fail", "drop", or "ignore"], but you can specify which of 
-   these actions to run by providing a list of the desired actions in the example when selecting which data quality rules 
-   set to apply
-2. Data quality rules will only be applied if they have ["drop" or "ignore"] specified in the action_if_failed field
-   
-
-#### Example 10
-
-```python
-@se.with_expectations(
-    se.reader.get_rules_from_df(rules_table="pilot_nonpub.dq.dq_rules", dq_stats_table="pilot_nonpub.dq.dq_stats",
-                                target_table="pilot_nonpub.customer_order"),
-    user_conf={"spark.files.maxPartitionBytes": "134217728"},  # (1)!
-    options={"mode": "overwrite", "partitionBy": "order_month",
-             "overwriteSchema": "true"},  # (2)!
-    options_error_table={"partition_by": "id"}  # (3)!
-)
-def build_new() -> DataFrame:
-    _df_order: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
-    )
-    return _df_order
-```
-
-1. Provide the optional `spark_conf` if needed, this is used while writing the data into the `final` and `error` table along with notification related configurations
-2. Provide the optional `options` if needed, this is used while writing the data into the `final` table
-3. Provide the optional `options_error_table` if needed, this is used while writing the data into the `error` table
+1. The `WrappedDataFrameWriter` class is used to wrap the `DataFrameWriter` class and add additional functionality to it
+2. The `@se.with_expectations` decorator is used to run the data quality rules
+3. The `write_to_table` parameter is used to write the final data into the table. By default, it is False. This is optional, if you just want to run the data quality checks. A good example will be a staging table or temporary view.
+4. The `write_to_temp_table` parameter is used to write the input dataframe into the temp table, so that it breaks the spark plan and might speed up the job in cases of complex dataframe lineage
+5. The `user_conf` parameter is utilized to gather all the configurations that are associated with notifications. There are four types of notifications: notification_on_start, notification_on_completion, notification_on_fail and notification_on_error_threshold_breach.
+   Enable notifications for all four stages by setting the values to `True`. By default, all four stages are set to `False`
+6. The `target_table_view` parameter is used to provide the name of a view that represents the target validated dataset for implementation of `query_dq` on the clean dataset from `row_dq`
+7. The `target_and_error_table_writer` parameter is used to write the final data into the table. By default, it is False. This is optional, if you just want to run the data quality checks. A good example will be a staging table or temporary view.
+8. View registration can be utilized when implementing `query_dq` expectations.
+9. Returning a dataframe is mandatory for the `spark_expectations` to work, if we do not return a dataframe - then an exceptionm will be raised
+10. Instantiate `SparkExpectations` class which has all the required functions for running data quality rules
+11. The `product_id` parameter is used to specify the product ID of the data quality rules. This has to be a unique value
+12. The `rules_df` parameter is used to specify the dataframe that contains the data quality rules
+13. The `stats_table` parameter is used to specify the table name where the statistics will be written into
+14. The `stats_table_writer` takes in the configuration that need to be used to write the stats table using pyspark
+15. The `target_and_error_table_writer` takes in the configuration that need to be used to write the target and error table using pyspark
+16. The `debugger` parameter is used to enable the debugger mode
+17. The `stats_streaming_options` parameter is used to specify the configurations for streaming statistics into Kafka. To not use kafka, uncomment this.
