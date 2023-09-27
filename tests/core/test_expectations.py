@@ -139,7 +139,7 @@ def fixture_context():
 @pytest.fixture(name="_fixture_spark_expectations")
 def fixture_spark_expectations(_fixture_rules_df):
     # create a spark expectations class object
-    writer = WrappedDataFrameWriter.mode("append").format("delta")
+    writer = WrappedDataFrameWriter().mode("append").format("delta")
     spark_expectations = SparkExpectations(product_id="product1",
                                            rules_df=_fixture_rules_df,
                                            stats_table="dq_spark.test_dq_stats_table",
@@ -2107,7 +2107,7 @@ def test_with_expectations(input_df,
     rules_df = spark.createDataFrame(expectations) if len(expectations) > 0 else expectations
     rules_df.show(truncate=False) if len(expectations) > 0 else None
 
-    writer = WrappedDataFrameWriter.mode("append").format("parquet")
+    writer = WrappedDataFrameWriter().mode("append").format("parquet")
     se = SparkExpectations(product_id="product1",
                            rules_df=rules_df,
                            stats_table="dq_spark.test_dq_stats_table",
@@ -2265,7 +2265,7 @@ def test_with_expectations_exception(_fixture_create_database,
         "error_drop_threshold": "10"
     }
     rules_df = spark.createDataFrame([rules_dict])
-    writer = WrappedDataFrameWriter.mode("append").format("delta")
+    writer = WrappedDataFrameWriter().mode("append").format("delta")
     se = SparkExpectations(product_id="product1",
                            rules_df=rules_df,
                            stats_table="dq_spark.test_dq_stats_table",
@@ -2426,7 +2426,7 @@ def test_target_table_view_expception(_fixture_create_database,
     rules_df = spark.createDataFrame(rules)
     rules_df.createOrReplaceTempView("test_table")
 
-    writer = WrappedDataFrameWriter.mode("append").format("delta")
+    writer = WrappedDataFrameWriter().mode("append").format("delta")
     se = SparkExpectations(product_id="product1",
                            rules_df=rules_df,
                            stats_table="dq_spark.test_dq_stats_table",
@@ -2454,7 +2454,7 @@ def test_target_table_view_expception(_fixture_create_database,
 
 
 def test_spark_expectations_exception():
-    writer = WrappedDataFrameWriter.mode("append").format("parquet")
+    writer = WrappedDataFrameWriter().mode("append").format("parquet")
     with pytest.raises(SparkExpectationsMiscException, match=r"Input rules_df is not of dataframe type"):
         SparkExpectations(product_id="product1",
                           rules_df=[],
@@ -2468,52 +2468,41 @@ def test_spark_expectations_exception():
 # [UnitTests for WrappedDataFrameWriter class]
 
 def reset_wrapped_dataframe_writer():
-    WrappedDataFrameWriter._mode = None
-    WrappedDataFrameWriter._format = None
-    WrappedDataFrameWriter._partition_by = []
-    WrappedDataFrameWriter._options = {}
-    WrappedDataFrameWriter._bucket_by = {}
-    WrappedDataFrameWriter._sort_by = []
+    writer = WrappedDataFrameWriter()
+    writer._mode = None
+    writer._format = None
+    writer._partition_by = []
+    writer._options = {}
+    writer._bucket_by = {}
+    writer._sort_by = []
 
 
 def test_mode():
-    WrappedDataFrameWriter.mode("overwrite")
-    assert WrappedDataFrameWriter._mode == "overwrite"
-    reset_wrapped_dataframe_writer()
+    assert WrappedDataFrameWriter().mode("overwrite")._mode == "overwrite"
 
 
 def test_format():
-    WrappedDataFrameWriter.format("parquet")
-    assert WrappedDataFrameWriter._format == "parquet"
-    reset_wrapped_dataframe_writer()
+    assert WrappedDataFrameWriter().format("parquet")._format == "parquet"
 
 
 def test_partitionBy():
-    WrappedDataFrameWriter.partitionBy("date", "region")
-    assert WrappedDataFrameWriter._partition_by == ["date", "region"]
-    reset_wrapped_dataframe_writer()
+    assert WrappedDataFrameWriter().partitionBy("date", "region")._partition_by == ["date", "region"]
 
 
 def test_option():
-    WrappedDataFrameWriter.option("compression", "gzip")
-    assert WrappedDataFrameWriter._options == {"compression": "gzip"}
-    reset_wrapped_dataframe_writer()
+    assert WrappedDataFrameWriter().option("compression", "gzip")._options == {"compression": "gzip"}
 
 
 def test_options():
-    WrappedDataFrameWriter.options(path="/path/to/output", inferSchema="true")
-    assert WrappedDataFrameWriter._options == {"path": "/path/to/output", "inferSchema": "true"}
-    reset_wrapped_dataframe_writer()
+    assert WrappedDataFrameWriter().options(path="/path/to/output", inferSchema="true")._options == {"path": "/path/to/output", "inferSchema": "true"}
 
 
 def test_bucketBy():
-    WrappedDataFrameWriter.bucketBy(4, "country", "city")
-    assert WrappedDataFrameWriter._bucket_by == {"num_buckets": 4, "columns": ("country", "city")}
-    reset_wrapped_dataframe_writer()
+    assert WrappedDataFrameWriter().bucketBy(4, "country", "city")._bucket_by == {"num_buckets": 4, "columns": ("country", "city")}
 
 
 def test_build():
-    writer = WrappedDataFrameWriter.mode("overwrite") \
+    writer = WrappedDataFrameWriter().mode("overwrite") \
         .format("parquet") \
         .partitionBy("date", "region") \
         .option("compression", "gzip") \
@@ -2529,11 +2518,10 @@ def test_build():
         "sortBy": ["col1", "col2"],
     }
     assert writer.build() == expected_config
-    reset_wrapped_dataframe_writer()
 
 
 def test_build_some_values():
-    writer = WrappedDataFrameWriter.mode("append").format("iceberg")
+    writer = WrappedDataFrameWriter().mode("append").format("iceberg")
 
     expected_config = {
         "mode": "append",
@@ -2544,4 +2532,9 @@ def test_build_some_values():
         "sortBy": []
     }
     assert writer.build() == expected_config
-    reset_wrapped_dataframe_writer()
+
+
+def test_delta_bucketby_exception():
+    writer = WrappedDataFrameWriter().mode("append").format("delta").bucketBy(10, "a", "b")
+    with pytest.raises(SparkExpectationsMiscException, match=r"Bucketing is not supported for delta tables yet"):
+       writer.build()

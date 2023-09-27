@@ -1,6 +1,6 @@
 import functools
 from dataclasses import dataclass
-from typing import Dict, Optional, Any, Union, Type
+from typing import Dict, Optional, Any, Union
 from pyspark import StorageLevel
 from pyspark.sql import DataFrame, SparkSession
 from spark_expectations import _log
@@ -39,8 +39,8 @@ class SparkExpectations:
     product_id: str
     rules_df: DataFrame
     stats_table: str
-    target_and_error_table_writer: Type["WrappedDataFrameWriter"]
-    stats_table_writer: Type["WrappedDataFrameWriter"]
+    target_and_error_table_writer: "WrappedDataFrameWriter"
+    stats_table_writer: "WrappedDataFrameWriter"
     debugger: bool = False
     stats_streaming_options: Optional[Dict[str, Union[str, bool]]] = None
 
@@ -84,7 +84,7 @@ class SparkExpectations:
         write_to_temp_table: bool = False,
         user_conf: Optional[Dict[str, Union[str, int, bool]]] = None,
         target_table_view: Optional[str] = None,
-        target_and_error_table_writer: Optional[Type["WrappedDataFrameWriter"]] = None,
+        target_and_error_table_writer: Optional["WrappedDataFrameWriter"] = None,
     ) -> Any:
         """
         This decorator helps to wrap a function which returns dataframe and apply dataframe rules on it
@@ -516,7 +516,7 @@ class WrappedDataFrameWriter:
 
     Example usage:
     --------------
-    writer = WrappedDataFrameWriter.mode("overwrite")\
+    writer = WrappedDataFrameWriter().mode("overwrite")\
                                    .format("parquet")\
                                    .partitionBy("date", "region")\
                                    .option("compression", "gzip")\
@@ -540,83 +540,67 @@ class WrappedDataFrameWriter:
         Configuration for bucketing, including number of buckets and columns.
     """
 
-    _mode: Optional[str] = None
-    _format: Optional[str] = None
-    _partition_by: list = []
-    _options: dict[str, str] = {}
-    _bucket_by: Dict[str, Union[int, tuple]] = {}
-    _sort_by: list = []
+    def __init__(self) -> None:
+        self._mode: Optional[str] = None
+        self._format: Optional[str] = None
+        self._partition_by: list = []
+        self._options: dict[str, str] = {}
+        self._bucket_by: Dict[str, Union[int, tuple]] = {}
+        self._sort_by: list = []
 
-    @classmethod
-    def mode(
-        cls: Type["WrappedDataFrameWriter"], saveMode: str  # noqa: N803
-    ) -> Type["WrappedDataFrameWriter"]:
+    def mode(self, saveMode: str) -> "WrappedDataFrameWriter":  # noqa: N803
         """Set the mode for writing."""
-        cls._mode = saveMode
-        return cls
+        self._mode = saveMode
+        return self
 
-    @classmethod
-    def format(
-        cls: Type["WrappedDataFrameWriter"], source: str
-    ) -> Type["WrappedDataFrameWriter"]:
+    def format(self, source: str) -> "WrappedDataFrameWriter":
         """Set the format for writing."""
-        cls._format = source
-        return cls
+        self._format = source
+        return self
 
-    @classmethod
-    def partitionBy(  # noqa: N802
-        cls: Type["WrappedDataFrameWriter"], *columns: str
-    ) -> Type["WrappedDataFrameWriter"]:
+    def partitionBy(self, *columns: str) -> "WrappedDataFrameWriter":  # noqa: N802
         """Set the columns by which the data should be partitioned."""
-        cls._partition_by.extend(columns)
-        return cls
+        self._partition_by.extend(columns)
+        return self
 
-    @classmethod
-    def option(
-        cls: Type["WrappedDataFrameWriter"], key: str, value: str
-    ) -> Type["WrappedDataFrameWriter"]:
+    def option(self, key: str, value: str) -> "WrappedDataFrameWriter":
         """Set a single option for writing."""
-        cls._options[key] = value
-        return cls
+        self._options[key] = value
+        return self
 
-    @classmethod
-    def options(
-        cls: Type["WrappedDataFrameWriter"], **options: str
-    ) -> Type["WrappedDataFrameWriter"]:
+    def options(self, **options: str) -> "WrappedDataFrameWriter":
         """Set multiple options for writing."""
-        cls._options.update(options)
-        return cls
+        self._options.update(options)
+        return self
 
-    @classmethod
     def bucketBy(  # noqa: N802
-        cls: Type["WrappedDataFrameWriter"], num_buckets: int, *columns: str
-    ) -> Type["WrappedDataFrameWriter"]:
+        self, num_buckets: int, *columns: str
+    ) -> "WrappedDataFrameWriter":
         """Set the configuration for bucketing."""
-        cls._bucket_by["num_buckets"] = num_buckets
-        cls._bucket_by["columns"] = columns
-        return cls
+        self._bucket_by["num_buckets"] = num_buckets
+        self._bucket_by["columns"] = columns
+        return self
 
-    @classmethod
-    def sortBy(  # noqa: N802
-        cls: Type["WrappedDataFrameWriter"], *columns: str
-    ) -> Type["WrappedDataFrameWriter"]:
+    def sortBy(self, *columns: str) -> "WrappedDataFrameWriter":  # noqa: N802
         """Set the configuration for bucketing."""
-        cls._sort_by.extend(columns)
-        return cls
+        self._sort_by.extend(columns)
+        return self
 
-    @classmethod
-    def build(
-        cls,
-    ) -> Dict[str, Union[str, list, dict, tuple, int, None]]:
+    def build(self) -> Dict[str, Union[str, list, dict, tuple, int, None]]:
         """Return the collected configurations."""
+        if self._format is not None and self._format.lower() == "delta":
+            if self._bucket_by is not None and self._bucket_by:
+                raise SparkExpectationsMiscException(
+                    "Bucketing is not supported for delta tables yet..."
+                )
 
         return {
-            "mode": cls._mode,
-            "format": cls._format,
-            "partitionBy": cls._partition_by,
-            "options": cls._options,
-            "bucketBy": cls._bucket_by,
-            "sortBy": cls._sort_by,
+            "mode": self._mode,
+            "format": self._format,
+            "partitionBy": self._partition_by,
+            "options": self._options,
+            "bucketBy": self._bucket_by,
+            "sortBy": self._sort_by,
         }
 
         # config = {}

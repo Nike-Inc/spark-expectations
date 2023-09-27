@@ -13,14 +13,15 @@ os.environ[
     "GOOGLE_APPLICATION_CREDENTIALS"
 ] = "path_to_your_json_credential_file"  # This is needed for spark write to bigquery
 writer = (
-    WrappedDataFrameWriter.mode("overwrite")
+    WrappedDataFrameWriter()
+    .mode("overwrite")
     .format("bigquery")
     .option("createDisposition", "CREATE_IF_NEEDED")
     .option("writeMethod", "direct")
 )
 
 # if wanted to use indirect method use below setting and spark session
-# writer = WrappedDataFrameWriter.mode("overwrite").format("bigquery").\
+# writer = WrappedDataFrameWriter().mode("overwrite").format("bigquery").\
 #     option("createDisposition", "CREATE_IF_NEEDED")\
 #     .option("writeMethod", "indirect")\
 #     .option("intermediateFormat", "AVRO")\

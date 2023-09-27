@@ -92,7 +92,7 @@ class DatabricksSecretsSparkExpectationsSecretPluginImpl(
             try:
                 from pyspark.dbutils import DBUtils
 
-                spark = SparkSession.getActiveSession()
+                spark = SparkSession.getActiveSession()  # pragma: no cover
                 dbutils = DBUtils(spark)  # pragma: no cover
             except ImportError:
                 raise ImportError(
