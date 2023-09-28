@@ -40,7 +40,7 @@ from spark_expectations.core.expectations import (
 )
 from spark_expectations.config.user_config import Constants as user_config
 
-writer = WrappedDataFrameWriter.mode("append").format("iceberg")
+writer = WrappedDataFrameWriter().mode("append").format("iceberg")
 
 se: SparkExpectations = SparkExpectations(
     product_id="your_product",
