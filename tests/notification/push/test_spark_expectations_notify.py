@@ -2,11 +2,11 @@ from unittest.mock import patch
 import pytest
 from spark_expectations.notifications.push.spark_expectations_notify import SparkExpectationsNotify
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
-
+from spark_expectations.core.context import SparkExpectationsContext
+from unittest.mock import Mock
 @pytest.fixture(name="_fixture_mock_context")
-@patch('spark_expectations.notifications.push.spark_expectations_notify.SparkExpectationsContext', autospec=True,
-       spec_set=True)
-def fixture_mock_context(_context_mock):
+def fixture_mock_context():
+    _context_mock = Mock(spec=SparkExpectationsContext)
     _context_mock.get_table_name = "test_table"
     _context_mock.get_run_id = "test_run_id"
     _context_mock.get_run_date = "test_run_date"
@@ -23,6 +23,7 @@ def fixture_mock_context(_context_mock):
     _context_mock.get_final_query_dq_status = "skipped"
     _context_mock.get_dq_run_status = "fail"
     _context_mock.get_row_dq_rule_type_name = "row_dq"
+    _context_mock.product_id = "product_id1"
 
     return _context_mock
 
@@ -96,7 +97,7 @@ def test_notify_on_start_completion_failure(_fixture_mock_context,):
     _fixture_mock_context.get_notification_on_completion = False
     _fixture_mock_context.get_notification_on_fail = False
 
-    notify_handler = SparkExpectationsNotify("product_id1", _fixture_mock_context)
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     @notify_handler.notify_on_start_completion_failure(
         lambda: print("start notification sent"),
@@ -115,7 +116,7 @@ def test_notify_on_start_completion_failure(_fixture_mock_context,):
        spec_set=True)
 def test_notify_on_start(_mock_notification_hook, _fixture_mock_context, _fixture_notify_start_expected_result):
 
-    notify_handler = SparkExpectationsNotify("product_id1", _fixture_mock_context)
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Call the function to be tested
     notify_handler.notify_on_start()
@@ -132,7 +133,7 @@ def test_notify_on_start(_mock_notification_hook, _fixture_mock_context, _fixtur
 def test_notify_on_completion(_mock_notification_hook, _fixture_mock_context,
                               _fixture_notify_completion_expected_result):
 
-    notify_handler = SparkExpectationsNotify("product_id1", _fixture_mock_context)
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Call the function to be tested
     notify_handler.notify_on_completion()
@@ -148,7 +149,7 @@ def test_notify_on_completion(_mock_notification_hook, _fixture_mock_context,
 def test_notify_on_exceeds_of_error_threshold(_mock_notification_hook, _fixture_mock_context,
                                               _fixture_notify_error_threshold_expected_result):
 
-    notify_handler = SparkExpectationsNotify("product_id1", _fixture_mock_context)
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Call the function to be tested
     notify_handler.notify_on_exceeds_of_error_threshold()
@@ -163,7 +164,7 @@ def test_notify_on_exceeds_of_error_threshold(_mock_notification_hook, _fixture_
        spec_set=True)
 def test_notify_on_failure(_mock_notification_hook, _fixture_mock_context, _fixture_notify_fail_expected_result):
 
-    notify_handler = SparkExpectationsNotify("product_id1", _fixture_mock_context)
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Call the function to be tested
     notify_handler.notify_on_failure("exception")
@@ -181,7 +182,7 @@ def test_notify_on_start_success(_mock_notification_hook, _fixture_mock_context,
     _fixture_mock_context.get_notification_on_completion = False
     _fixture_mock_context.get_notification_on_fail = False
 
-    notify_handler = SparkExpectationsNotify("product1", _fixture_mock_context)
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     @notify_handler.notify_on_start_completion_failure(
         notify_handler.notify_on_start,
@@ -206,7 +207,7 @@ def test_notify_on_completion_success(_mock_notification_hook, _fixture_mock_con
     _fixture_mock_context.get_notification_on_completion = True
     _fixture_mock_context.get_notification_on_fail = False
 
-    notify_handler = SparkExpectationsNotify("product_id1", _fixture_mock_context)
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     @notify_handler.notify_on_start_completion_failure(
         lambda: print("start notification sent"),
@@ -232,7 +233,7 @@ def test_notify_on_failure_success(_mock_notification_hook, _fixture_mock_contex
     _fixture_mock_context.get_notification_on_completion = False
     _fixture_mock_context.get_notification_on_fail = True
 
-    notify_handler = SparkExpectationsNotify("product_id1", _fixture_mock_context)
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     @notify_handler.notify_on_start_completion_failure(
         lambda: print("start notification sent"),
@@ -260,7 +261,7 @@ def test_notify_on_start_completion_failure_exception(_fixture_mock_context):
     _fixture_mock_context.get_notification_on_completion = False
     _fixture_mock_context.get_notification_on_fail = False
 
-    notify_handler = SparkExpectationsNotify("product1", _fixture_mock_context)
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     @notify_handler.notify_on_start_completion_failure(
         lambda: print("start notification sent"),
@@ -279,7 +280,7 @@ def test_notify_on_start_completion_failure_exception(_fixture_mock_context):
 
 def test_construct_message_for_each_rules(_fixture_mock_context):
     # Create an instance of the class under test
-    notify_handler = SparkExpectationsNotify("product1", _fixture_mock_context)
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Set up the test input
     rule_name = "Rule 1"
@@ -296,7 +297,7 @@ def test_construct_message_for_each_rules(_fixture_mock_context):
     # Assert the constructed notification message
     expected_message = (
         "Rule 1 has been exceeded above the threshold value(2.5%) for `row_data` quality validation\n"
-        "product_id: product1\n"
+        "product_id: product_id1\n"
         f"table_name: {_fixture_mock_context.get_table_name}\n"
         f"run_id: {_fixture_mock_context.get_run_id}\n"
         f"run_date: {_fixture_mock_context.get_run_date}\n"
@@ -315,7 +316,7 @@ def test_construct_message_for_each_rules(_fixture_mock_context):
 def test_notify_on_exceeds_of_error_threshold_each_rules(_notification_hook, _fixture_mock_context):
     from unittest import mock
 
-    notify_handler = SparkExpectationsNotify("product1", _fixture_mock_context)
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Define test data
     message = "Test message"
@@ -356,7 +357,7 @@ def test_notify_rules_exceeds_threshold(
         {"rule": "rule1", "failed_row_count": failed_row_count}
     ]
 
-    notify_handler = SparkExpectationsNotify("product1", _fixture_mock_context)
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
 
     rules = {
@@ -394,7 +395,7 @@ def test_notify_rules_exceeds_threshold_return_none(
 
     _fixture_mock_context.get_summarised_row_dq_res = None
 
-    notify_handler = SparkExpectationsNotify("product1", _fixture_mock_context)
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Call the function to test
     assert notify_handler.notify_rules_exceeds_threshold({}) == None
@@ -417,7 +418,7 @@ def test_notify_rules_exceeds_threshold_exception(_fixture_mock_context):
         ]
     }
 
-    notify_handler = SparkExpectationsNotify("product1", _fixture_mock_context)
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Expecting a SparkExpectationsMiscException to be raised
     with pytest.raises(SparkExpectationsMiscException, match="An error occurred while sending notification "

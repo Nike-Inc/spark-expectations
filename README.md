@@ -7,7 +7,8 @@
 [![Checked with mypy](http://www.mypy-lang.org/static/mypy_badge.svg)](http://mypy-lang.org/)
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![PYPI version](https://img.shields.io/pypi/v/spark-expectations.svg)
-
+![PYPI - Downloads](https://static.pepy.tech/badge/spark-expectations)
+![PYPI - Python Version](https://img.shields.io/pypi/pyversions/spark-expectations.svg)
 
 <p align="center">
 Spark Expectations is a specialized tool designed with the primary goal of maintaining data integrity within your processing pipeline.
@@ -70,7 +71,7 @@ is provided in the appropriate fields.
 ```python
 from spark_expectations.config.user_config import *
 
-se_global_spark_Conf = {
+se_user_conf = {
     se_notifications_enable_email: False,
     se_notifications_email_smtp_host: "mailhost.nike.com",
     se_notifications_email_smtp_port: 25,
@@ -91,66 +92,49 @@ se_global_spark_Conf = {
 
 For all the below examples the below import and SparkExpectations class instantiation is mandatory
 
-```python
-from spark_expectations.core.expectations import SparkExpectations
-
-
-# product_id should match with the "product_id" in the rules table
-se: SparkExpectations = SparkExpectations(product_id="your-products-id")
-```
-
 1. Instantiate `SparkExpectations` class which has all the required functions for running data quality rules
 
+```python
+from spark_expectations.core.expectations import SparkExpectations, WrappedDataFrameWriter
+from pyspark.sql import SparkSession
+
+spark: SparkSession = SparkSession.builder.getOrCreate()
+writer = WrappedDataFrameWriter().mode("append").format("delta")
+# writer = WrappedDataFrameWriter().mode("append").format("iceberg")
+# product_id should match with the "product_id" in the rules table
+se: SparkExpectations = SparkExpectations(
+    product_id="your_product",
+    rules_df=spark.table("dq_spark_local.dq_rules"),
+    stats_table="dq_spark_local.dq_stats",
+    stats_table_writer=writer,
+    target_and_error_table_writer=writer,
+    debugger=False,
+    # stats_streaming_options={user_config.se_enable_streaming: False},
+)
+```
+
+2. Decorate the function with `@se.with_expectations` decorator
 
 ```python
-from spark_expectations.config.user_config import * 
+from spark_expectations.config.user_config import *
+from pyspark.sql import DataFrame
+import os
 
 
-@se.with_expectations( 
-    se.reader.get_rules_from_table(
-        product_rules_table="pilot_nonpub.dq.dq_rules",
-        table_name="pilot_nonpub.dq_employee.employee",  
-        dq_stats_table_name="pilot_nonpub.dq.dq_stats" 
-    ),
-    write_to_table=True, 
-    write_to_temp_table=True,
-    row_dq=True, 
-    agg_dq={
-        se_agg_dq: True,  
-        se_source_agg_dq: True,  
-        se_final_agg_dq: True, 
-    },
-    query_dq={ 
-        se_query_dq: True,  
-        se_source_query_dq: True, 
-        se_final_query_dq: True, 
-        se_target_table_view: "order", 
-    },
-    spark_conf=se_global_spark_Conf,
-
+@se.with_expectations(
+    target_table="dq_spark_local.customer_order",
+    write_to_table=True,
+    user_conf=se_user_conf,
+    target_table_view="order",
 )
 def build_new() -> DataFrame:
+    # Return the dataframe on which Spark-Expectations needs to be run
     _df_order: DataFrame = (
         spark.read.option("header", "true")
         .option("inferSchema", "true")
         .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
     )
-    _df_order.createOrReplaceTempView("order")  
-
-    _df_product: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/product.csv"))
-    )
-    _df_product.createOrReplaceTempView("product") 
-
-    _df_customer: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/customer.csv"))
-    )
-
-    _df_customer.createOrReplaceTempView("customer") 
+    _df_order.createOrReplaceTempView("order")
 
     return _df_order 
 ```

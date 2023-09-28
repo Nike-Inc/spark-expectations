@@ -12,7 +12,6 @@ class SparkExpectationsNotify:
     This class implements Notification
     """
 
-    product_id: str
     _context: SparkExpectationsContext
 
     def __post_init__(self) -> None:
@@ -89,7 +88,7 @@ class SparkExpectationsNotify:
         _notification_message = (
             f"Spark expectations - dropped error percentage has been exceeded above the threshold "
             f"value({self._context.get_error_drop_threshold}%) for `row_data` quality validation  \n\n"
-            f"product_id: {self.product_id}\n"
+            f"product_id: {self._context.product_id}\n"
             f"table_name: {self._context.get_table_name}\n"
             f"run_id: {self._context.get_run_id}\n"
             f"run_date: {self._context.get_run_date}\n"
@@ -119,7 +118,7 @@ class SparkExpectationsNotify:
 
         _notification_message = (
             "Spark expectations job has been completed  \n\n"
-            f"product_id: {self.product_id}\n"
+            f"product_id: {self._context.product_id}\n"
             f"table_name: {self._context.get_table_name}\n"
             f"run_id: {self._context.get_run_id}\n"
             f"run_date: {self._context.get_run_date}\n"
@@ -151,7 +150,7 @@ class SparkExpectationsNotify:
 
         _notification_message = (
             "Spark expectations job has been failed  \n\n"
-            f"product_id: {self.product_id}\n"
+            f"product_id: {self._context.product_id}\n"
             f"table_name: {self._context.get_table_name}\n"
             f"run_id: {self._context.get_run_id}\n"
             f"run_date: {self._context.get_run_date}\n"
@@ -193,7 +192,7 @@ class SparkExpectationsNotify:
         _notification_message = (
             f"{rule_name} has been exceeded above the threshold "
             f"value({set_error_drop_threshold}%) for `row_data` quality validation\n"
-            f"product_id: {self.product_id}\n"
+            f"product_id: {self._context.product_id}\n"
             f"table_name: {self._context.get_table_name}\n"
             f"run_id: {self._context.get_run_id}\n"
             f"run_date: {self._context.get_run_date}\n"
@@ -213,9 +212,7 @@ class SparkExpectationsNotify:
         """
         This function sends notification when specific rule error drop percentage exceeds above threshold
         Args:
-            rule_name: name of the dq rule
-            failed_row_count: number of failed of dq rule
-            error_drop_percentage: error drop percentage
+            message: message to be sent in notification
         Returns: None
 
         """
@@ -255,7 +252,11 @@ class SparkExpectationsNotify:
 
                 rule_name = rule["rule"]
                 rule_action = rule["action_if_failed"]
-                failed_row_count = int(rules_failed_row_count[rule_name])
+                failed_row_count = int(
+                    rules_failed_row_count[rule_name]
+                    if rule_name in rules_failed_row_count
+                    else 0
+                )
 
                 if failed_row_count is not None and failed_row_count > 0:
                     set_error_drop_threshold = int(rule["error_drop_threshold"])

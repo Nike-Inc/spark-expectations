@@ -15,20 +15,6 @@ def test_constants():
 
     assert user_config.se_notifications_slack_webhook_url == "spark.expectations.notifications.slack.webhook_url"
 
-    assert user_config.se_agg_dq == "agg_dq"
-
-    assert user_config.se_source_agg_dq == "source_agg_dq"
-
-    assert user_config.se_final_agg_dq == "final_agg_dq"
-
-    assert user_config.se_query_dq == "query_dq"
-
-    assert user_config.se_source_query_dq == "source_query_dq"
-
-    assert user_config.se_final_query_dq == "final_query_dq"
-
-    assert user_config.se_target_table_view == "target_table_view"
-
     assert user_config.se_notifications_on_start == "spark.expectations.notifications.on_start"
 
     assert user_config.se_notifications_on_completion == "spark.expectations.notifications.on.completion"

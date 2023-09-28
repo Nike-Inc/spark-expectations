@@ -4,6 +4,17 @@ Taking inspiration from DLT - data quality expectations: Spark-Expectations is b
 run using decorator pattern while the spark job is in flight and Additionally, the framework able to perform data 
 quality checks when the data is at rest.
 
+### Features Of Spark Expectations
+
+Please find the spark-expectations flow and feature diagrams below
+
+<p align="center">
+<img src=https://github.com/Nike-Inc/spark-expectations/blob/main/docs/se_diagrams/flow.png?raw=true width=1000></p>
+
+<p align="center">
+<img src=https://github.com/Nike-Inc/spark-expectations/blob/main/docs/se_diagrams/features.png?raw=true width=1000></p>
+
+
 ## Concept
 Most of the data quality tools do the data quality checks or data validation on a table at rest and provide metrics in 
 different forms. `While the existing tools are good to do profiling and provide metrics, below are the problems that we 
@@ -54,6 +65,3 @@ final table or not? Below are the heirarchy of checks that happens?
   recorded in the `_stats` table and the job will be considered a failure. However, if none of the failed rules 
   has an _action_if_failed_as_fail_, then summary of the aggregated rules' metadata will still be collected in the 
   `_stats` table for failed aggregated and  query dq rules.
-  
-  
-Please find the spark-expectations flow and feature diagrams [here](./se_diagrams/spark_expectations_flow_and_feature.pptx)

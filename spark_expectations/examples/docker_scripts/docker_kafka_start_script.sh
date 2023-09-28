@@ -3,7 +3,7 @@
 file_dir=$(dirname "$0")
 
 docker_container_name="spark_expectations_kafka_docker"
-docker_image_name="spark_expectations_nsp_topic"
+docker_image_name="spark_expectations_kafka_topic"
 
 if [[ $(docker ps -a | grep "$docker_container_name") ]]; then
   if [[ $(docker ps | grep "$docker_container_name") ]]; then

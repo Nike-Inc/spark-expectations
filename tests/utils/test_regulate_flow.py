@@ -5,6 +5,7 @@ import pytest
 from pyspark.sql.functions import lit
 from spark_expectations.core import get_spark_session
 from spark_expectations.core.context import SparkExpectationsContext
+from spark_expectations.core.expectations import WrappedDataFrameWriter
 from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException
 )
@@ -18,7 +19,7 @@ spark = get_spark_session()
 @pytest.fixture(name="_fixture_context")
 def fixture_mock_context():
     # fixture for  context
-    sparkexpectations_context = SparkExpectationsContext("product1")
+    sparkexpectations_context = SparkExpectationsContext("product1", spark)
 
     sparkexpectations_context._row_dq_rule_type_name = "row_dq"
     sparkexpectations_context._agg_dq_rule_type_name = "agg_dq"
@@ -27,6 +28,9 @@ def fixture_mock_context():
     sparkexpectations_context._run_date = "2022-12-27 10:39:44"
     sparkexpectations_context._run_id = "product1_run_test"
     sparkexpectations_context._input_count = 10
+    writer = WrappedDataFrameWriter().mode('overwrite').format('delta').build()
+    sparkexpectations_context.set_target_and_error_table_writer_config(writer)
+    sparkexpectations_context.set_stats_table_writer_config(writer)
 
     return sparkexpectations_context
 
@@ -1574,13 +1578,8 @@ def test_execute_dq_process(_mock_notify,
                             _fixture_context,
                             _fixture_create_stats_table):
     spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
-    spark_conf = {"spark.sql.session.timeZone": "Etc/UTC"}
-    options = {'mode': 'overwrite', "format": "delta"}
-    options_error_table = {'mode': 'overwrite', "format": "delta"}
-
     df.createOrReplaceTempView("test_table")
-
-    writer = SparkExpectationsWriter("product1", _fixture_context)
+    writer = SparkExpectationsWriter(_fixture_context)
     regulate_flow = SparkExpectationsRegulateFlow("product1")
 
     func_process = regulate_flow.execute_dq_process(
@@ -1590,9 +1589,7 @@ def test_execute_dq_process(_mock_notify,
         _mock_notify,
         expectations,
         "dq_spark.test_final_table",
-        input_count,
-        spark_conf,
-        options_error_table
+        input_count
     )
 
     # assert if expected output raises certain exception for failure
@@ -1800,13 +1797,9 @@ def test_execute_dq_process_exception(df,
     with pytest.raises(SparkExpectationsMiscException,
                        match=r"error occurred while executing func_process .*"):
         mock_contextt = Mock(spec=SparkExpectationsContext)
+        mock_contextt.spark = spark
         actions = SparkExpectationsActions()
-        writer = SparkExpectationsWriter("product1", mock_contextt)
-
-        spark_conf = {"spark.sql.session.timeZone": "Etc/UTC"}
-        options = {'mode': 'overwrite', "format": "delta"}
-        options_error_table = {'mode': 'overwrite', "format": "delta"}
-
+        writer = SparkExpectationsWriter(mock_contextt)
         regulate_flow = SparkExpectationsRegulateFlow("product1")
         func_process = regulate_flow.execute_dq_process(
             mock_contextt,
@@ -1814,9 +1807,7 @@ def test_execute_dq_process_exception(df,
             writer,
             expectations,
             "dq_spark.test_final_table",
-            input_count,
-            spark_conf,
-            options_error_table
+            input_count
         )
 
         (_df, _agg_dq_res, _error_count, _status) = func_process(df,

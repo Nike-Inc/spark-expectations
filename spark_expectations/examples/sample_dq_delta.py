@@ -1,17 +1,32 @@
+# mypy: ignore-errors
 import os
+
 from pyspark.sql import DataFrame
 from spark_expectations import _log
-from spark_expectations.examples.base_setup import main
-from spark_expectations.core import get_spark_session
-from spark_expectations.core.expectations import SparkExpectations
+from spark_expectations.examples.base_setup import set_up_delta
+from spark_expectations.core.expectations import (
+    SparkExpectations,
+    WrappedDataFrameWriter,
+)
 from spark_expectations.config.user_config import Constants as user_config
 
-main()
 
-se: SparkExpectations = SparkExpectations(product_id="your_product", debugger=False)
-spark = get_spark_session()
+writer = WrappedDataFrameWriter().mode("append").format("delta")
 
-global_spark_Conf = {
+spark = set_up_delta()
+
+se: SparkExpectations = SparkExpectations(
+    product_id="your_product",
+    rules_df=spark.table("dq_spark_local.dq_rules"),
+    stats_table="dq_spark_local.dq_stats",
+    stats_table_writer=writer,
+    target_and_error_table_writer=writer,
+    debugger=False,
+    # stats_streaming_options={user_config.se_enable_streaming: False},
+)
+
+
+user_conf = {
     user_config.se_notifications_enable_email: False,
     user_config.se_notifications_email_smtp_host: "mailhost.com",
     user_config.se_notifications_email_smtp_port: 25,
@@ -29,25 +44,10 @@ global_spark_Conf = {
 
 
 @se.with_expectations(
-    se.reader.get_rules_from_table(
-        product_rules_table="dq_spark_local.dq_rules",
-        target_table_name="dq_spark_local.customer_order",
-        dq_stats_table_name="dq_spark_local.dq_stats",
-    ),
+    target_table="dq_spark_local.customer_order",
     write_to_table=True,
-    row_dq=True,
-    agg_dq={
-        user_config.se_agg_dq: True,
-        user_config.se_source_agg_dq: True,
-        user_config.se_final_agg_dq: True,
-    },
-    query_dq={
-        user_config.se_query_dq: True,
-        user_config.se_source_query_dq: True,
-        user_config.se_final_query_dq: True,
-        user_config.se_target_table_view: "order",
-    },
-    spark_conf=global_spark_Conf,
+    user_conf=user_conf,
+    target_table_view="order",
 )
 def build_new() -> DataFrame:
     _df_order: DataFrame = (
@@ -78,10 +78,15 @@ def build_new() -> DataFrame:
 if __name__ == "__main__":
     build_new()
 
+    spark.sql("use dq_spark_local")
     spark.sql("select * from dq_spark_local.dq_stats").show(truncate=False)
     spark.sql("select * from dq_spark_local.dq_stats").printSchema()
+    spark.sql("select * from dq_spark_local.customer_order").show(truncate=False)
+    spark.sql("select count(*) from dq_spark_local.customer_order_error").show(
+        truncate=False
+    )
 
-    _log.info("stats data in the nsp topic")
+    _log.info("stats data in the kafka topic")
     # display posted statistics from the kafka topic
     spark.read.format("kafka").option(
         "kafka.bootstrap.servers", "localhost:9092"

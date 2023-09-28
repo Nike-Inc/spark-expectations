@@ -21,8 +21,8 @@ class SparkExpectationsRegulateFlow:
 
     product_id: str
 
+    @staticmethod
     def execute_dq_process(
-        self,
         _context: SparkExpectationsContext,
         _actions: SparkExpectationsActions,
         _writer: SparkExpectationsWriter,
@@ -30,20 +30,17 @@ class SparkExpectationsRegulateFlow:
         expectations: Dict[str, List[dict]],
         table_name: str,
         _input_count: int = 0,
-        spark_conf: Optional[Dict[str, Any]] = None,
-        options_error_table: Optional[Dict[str, str]] = None,
     ) -> Any:
         """
         This functions takes required static variable and returns the function
         Args:
+            _context: SparkExpectationsContext class object
             _actions: SparkExpectationsActions class object
             _writer: SparkExpectationsWriter class object
+            _notification: SparkExpectationsNotify class object
             expectations: expectations dictionary which contains rules
             table_name: name of the table
             _input_count: number of records in the source dataframe
-            spark_conf: spark configurations(which is optional)
-            options_error_table: spark configurations to write data into the error table(which is optional)
-
         Returns:
                Any: returns function
 
@@ -70,7 +67,7 @@ class SparkExpectationsRegulateFlow:
                 final_agg_dq_flag: default false, Mark True tp process agg level data quality on final dataframe
                 source_query_dq_flag: default false, Mark True tp process query level data quality on source dataframe
                 final_query_dq_flag: default false, Mark True tp process query level data quality on final dataframe
-                error_count: number of records error records default zero)
+                error_count: number of records error records (default zero)
                 output_count: number of output records from expectations (default zero)
 
             Returns:
@@ -79,7 +76,6 @@ class SparkExpectationsRegulateFlow:
 
             """
             try:
-                _df_dq: Optional[DataFrame] = None
                 _error_df: Optional[DataFrame] = None
                 _error_count: int = error_count
 
@@ -97,7 +93,7 @@ class SparkExpectationsRegulateFlow:
                     "The data quality dataframe is getting created for expectations"
                 )
 
-                _df_dq = _actions.run_dq_rules(
+                _df_dq: DataFrame = _actions.run_dq_rules(
                     _context,
                     df,
                     expectations,
@@ -128,8 +124,6 @@ class SparkExpectationsRegulateFlow:
                         _df_dq,
                         f"{table_name}_error",
                         _context.get_row_dq_rule_type_name,
-                        spark_conf,
-                        options_error_table,
                     )
                     if _context.get_summarised_row_dq_res:
                         _notification.notify_rules_exceeds_threshold(expectations)
@@ -153,7 +147,6 @@ class SparkExpectationsRegulateFlow:
                 df = _actions.action_on_rules(
                     _context,
                     _error_df if row_dq_flag else _df_dq,
-                    table_name,
                     _input_count,
                     _error_count=_error_count,
                     _output_count=output_count,

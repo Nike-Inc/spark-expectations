@@ -4,34 +4,34 @@ Please find the different types of possible expectations
 
 #### Possible Row Data Quality Expectations
 
-| rule_description | rule_type | tag | rule_expectation |
-| :------------------| :-----------: | :-----: | ------------------: |
-| Expect that the values in the column should not be null/empty |  null_validation | completeness | ```[col_name] is not null``` |
-| Ensure that the primary key values are unique and not duplicated  | primary_key_validation| uniqueness | ```count(*) over(partition by [primary_key_or_combination_of_primary_key] order by 1)=1 ```|
-| Perform a thorough check to make sure that there are no duplicate values, if there are duplicates preserve one row into target | complete_duplicate_validation | uniqueness | ```row_number() over(partition by [all_the_column_in_dataset_b_ comma_separated] order by 1)=1```|
-| Verify that the date values are in the correct format | date_format_validation |validity |```to_date([date_col_name], '[mention_expected_date_format]') is not null``` |
-| Verify that the date values are in the correct format using regex | date_format_validation_with_regex | validity | ```[date_col_name] rlike '[regex_format_of_date]'``` |
-| Expect column value is date parseable | expect_column_values_to_be_date_parseable | validity | ```try_cast([date_col_name] as date)``` | 
-| Verify values in a column to conform to a specified regular expression pattern | expect_column_values_to_match_regex| validity | ```[col_name]  rlike '[regex_format]'``` |
-| Verify values in a column to not conform to a specified regular expression pattern | expect_column_values_to_not_match_regex| validity | ```[col_name] not rlike '[regex_format]'``` |
-| Verify values in a column to match regex in list | expect_column_values_to_match_regex_list | validity |  ```[col_name] not rlike '[regex format1]' or [col_name] not rlike '[regex_format2]' or [col_name] not rlike '[regex_format3]'``` |
-| Expect the values in a column to belong to a specified set | expect_column_values_to_be_in_set | accuracy | ```[col_name] in ([values_in_comma_separated])```|
-| Expect the values in a column not to belong to a specified set| expect_column_values_to_be_not_in_set |accuracy | ```[col_name] not in ([values_in_comma_separated])``` |
-| Expect the values in a column to fall within a defined range | expect_column_values_to_be_in_range | accuracy | ```[col_name] between [min_threshold] and [max_threshold]``` |
-| Expect the lengths of the values in a column to be within a specified range| expect_column_value_lengths_to_be_between | accuracy | ```length([col_name]) between [min_threshold] and [max_threshold]``` |
-| Expect the lengths of the values in a column to be equal to a certain value | expect_column_value_lengths_to_be_equal | accuracy | ```length([col_name])=[threshold]``` |
-| Expect values in the column to exceed a certain limit | expect_column_value_to_be_greater_than | accuracy| ```[col_name] > [threshold_value]``` |
-| Expect values in the column  not to exceed a certain limit| expect_column_value_to_be_lesser_than | accuracy | ```[col_name] < [threshold_value]``` |
-| Expect values in the column to be equal to or exceed a certain limit | expect_column_value_greater_than_equal | accuracy | ```[col_name] >= [threshold_value]``` |
-| Expect values in the column to be equal to or not exceed a certain limit | expect_column_value_lesser_than_equal | accuracy | ```[col_name] <= [threshold_value]``` |
+| rule_description |                     category                     | tag | rule_expectation |
+| :------------------|:------------------------------------------------:| :-----: | ------------------: |
+| Expect that the values in the column should not be null/empty |                 null_validation                  | completeness | ```[col_name] is not null``` |
+| Ensure that the primary key values are unique and not duplicated  |              primary_key_validation              | uniqueness | ```count(*) over(partition by [primary_key_or_combination_of_primary_key] order by 1)=1 ```|
+| Perform a thorough check to make sure that there are no duplicate values, if there are duplicates preserve one row into target |          complete_duplicate_validation           | uniqueness | ```row_number() over(partition by [all_the_column_in_dataset_b_ comma_separated] order by 1)=1```|
+| Verify that the date values are in the correct format |              date_format_validation              |validity |```to_date([date_col_name], '[mention_expected_date_format]') is not null``` |
+| Verify that the date values are in the correct format using regex |        date_format_validation_with_regex         | validity | ```[date_col_name] rlike '[regex_format_of_date]'``` |
+| Expect column value is date parseable |    expect_column_values_to_be_date_parseable     | validity | ```try_cast([date_col_name] as date)``` | 
+| Verify values in a column to conform to a specified regular expression pattern |       expect_column_values_to_match_regex        | validity | ```[col_name]  rlike '[regex_format]'``` |
+| Verify values in a column to not conform to a specified regular expression pattern |     expect_column_values_to_not_match_regex      | validity | ```[col_name] not rlike '[regex_format]'``` |
+| Verify values in a column to match regex in list |     expect_column_values_to_match_regex_list     | validity |  ```[col_name] not rlike '[regex format1]' or [col_name] not rlike '[regex_format2]' or [col_name] not rlike '[regex_format3]'``` |
+| Expect the values in a column to belong to a specified set |        expect_column_values_to_be_in_set         | accuracy | ```[col_name] in ([values_in_comma_separated])```|
+| Expect the values in a column not to belong to a specified set|      expect_column_values_to_be_not_in_set       |accuracy | ```[col_name] not in ([values_in_comma_separated])``` |
+| Expect the values in a column to fall within a defined range |       expect_column_values_to_be_in_range        | accuracy | ```[col_name] between [min_threshold] and [max_threshold]``` |
+| Expect the lengths of the values in a column to be within a specified range|    expect_column_value_lengths_to_be_between     | accuracy | ```length([col_name]) between [min_threshold] and [max_threshold]``` |
+| Expect the lengths of the values in a column to be equal to a certain value |     expect_column_value_lengths_to_be_equal      | accuracy | ```length([col_name])=[threshold]``` |
+| Expect values in the column to exceed a certain limit |      expect_column_value_to_be_greater_than      | accuracy| ```[col_name] > [threshold_value]``` |
+| Expect values in the column  not to exceed a certain limit|      expect_column_value_to_be_lesser_than       | accuracy | ```[col_name] < [threshold_value]``` |
+| Expect values in the column to be equal to or exceed a certain limit |      expect_column_value_greater_than_equal      | accuracy | ```[col_name] >= [threshold_value]``` |
+| Expect values in the column to be equal to or not exceed a certain limit |      expect_column_value_lesser_than_equal       | accuracy | ```[col_name] <= [threshold_value]``` |
 | Expect values in column A to be greater than values in column B | expect_column_pair_values_A_to_be_greater_than_B | accuracy | ```[col_A] > [col_B]``` |
-| Expect values in column A to be lesser than values in column B | expect_column_pair_values_A_to_be_lesser_than_B | accuracy | ```[col_A] < [col_B]``` |
-| Expect values in column A to be greater than or equals to values in column B | expect_column_A_to_be_greater_than_B | accuracy | ```[col_A] >= [col_B]``` |
-| Expect values in column A to be lesser than or equals to values in column B | expect_column_A_to_be_lesser_than_or_equals_B |accuracy  | ```[col_A] <= [col_B]``` |  
-| Expect the sum of values across multiple columns to be equal to a certain value | expect_multicolumn_sum_to_equal | accuracy | ```[col_1] + [col_2] + [col_3] = [threshold_value]``` |
-| Expect sum of values in each category equals certain value | expect_sum_of_value_in_subset_equal | accuracy | ```sum([col_name]) over(partition by [category_col] order by 1)``` |
-| Expect count of values in each category equals certain value | expect_count_of_value_in_subset_equal | accuracy | ```count(*) over(partition by [category_col] order by 1)``` |
-| Expect distinct value in each category exceeds certain range | expect_distinct_value_in_subset_exceeds | accuracy | ```count(distinct [col_name]) over(partition by [category_col] order by 1)``` |
+| Expect values in column A to be lesser than values in column B | expect_column_pair_values_A_to_be_lesser_than_B  | accuracy | ```[col_A] < [col_B]``` |
+| Expect values in column A to be greater than or equals to values in column B |       expect_column_A_to_be_greater_than_B       | accuracy | ```[col_A] >= [col_B]``` |
+| Expect values in column A to be lesser than or equals to values in column B |  expect_column_A_to_be_lesser_than_or_equals_B   |accuracy  | ```[col_A] <= [col_B]``` |  
+| Expect the sum of values across multiple columns to be equal to a certain value |         expect_multicolumn_sum_to_equal          | accuracy | ```[col_1] + [col_2] + [col_3] = [threshold_value]``` |
+| Expect sum of values in each category equals certain value |       expect_sum_of_value_in_subset_equal        | accuracy | ```sum([col_name]) over(partition by [category_col] order by 1)``` |
+| Expect count of values in each category equals certain value |      expect_count_of_value_in_subset_equal       | accuracy | ```count(*) over(partition by [category_col] order by 1)``` |
+| Expect distinct value in each category exceeds certain range |     expect_distinct_value_in_subset_exceeds      | accuracy | ```count(distinct [col_name]) over(partition by [category_col] order by 1)``` |
 
 
 

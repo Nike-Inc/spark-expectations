@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple, List, Any
+from typing import Dict, Optional, Tuple, List
 from datetime import datetime
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import (
@@ -11,13 +11,13 @@ from pyspark.sql.functions import (
     round as sql_round,
     create_map,
     explode,
+    to_json,
 )
 from spark_expectations import _log
 from spark_expectations.core.exceptions import (
     SparkExpectationsUserInputOrConfigInvalidException,
     SparkExpectationsMiscException,
 )
-from spark_expectations.core import get_spark_session
 from spark_expectations.secrets import SparkExpectationsSecretsBackend
 from spark_expectations.utils.udf import remove_empty_maps
 from spark_expectations.core.context import SparkExpectationsContext
@@ -31,18 +31,13 @@ class SparkExpectationsWriter:
     This class implements/supports writing data into the sink system
     """
 
-    product_id: str
     _context: SparkExpectationsContext
 
     def __post_init__(self) -> None:
-        self.spark = get_spark_session()
+        self.spark = self._context.spark
 
     def save_df_as_table(
-        self,
-        df: DataFrame,
-        table_name: str,
-        spark_conf: Dict[str, str],
-        options: Dict[str, str],
+        self, df: DataFrame, table_name: str, config: dict, stats_table: bool = False
     ) -> None:
         """
         This function takes a dataframe and writes into a table
@@ -50,8 +45,8 @@ class SparkExpectationsWriter:
         Args:
             df: Provide the dataframe which need to be written as a table
             table_name: Provide the table name to which the dataframe need to be written to
-            spark_conf: Provide the spark conf that need to be set on the SparkSession
-            options: Provide the options that need to be used while writing the table
+            config: Provide the config to write the dataframe into the table
+            stats_table: Provide if this is for writing stats table
 
         Returns:
             None:
@@ -59,62 +54,47 @@ class SparkExpectationsWriter:
         """
         try:
             print("run date ", self._context.get_run_date)
-            for key, value in spark_conf.items():
-                self.spark.conf.set(key, value)
-            _df = df.withColumn(
-                self._context.get_run_id_name, lit(f"{self._context.get_run_id}")
-            ).withColumn(
-                self._context.get_run_date_name,
-                to_timestamp(lit(f"{self._context.get_run_date}")),
-            )
+            if not stats_table:
+                df = df.withColumn(
+                    self._context.get_run_id_name, lit(f"{self._context.get_run_id}")
+                ).withColumn(
+                    self._context.get_run_date_name,
+                    to_timestamp(
+                        lit(f"{self._context.get_run_date}"), "yyyy-MM-dd HH:mm:ss"
+                    ),
+                )
             _log.info("_save_df_as_table started")
-            _df.write.saveAsTable(name=table_name, **options)
-            self.spark.sql(
-                f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = '{self.product_id}')"
-            )
-            _log.info("finished writing records to table: %s", table_name)
+
+            _df_writer = df.write
+
+            if config["mode"] is not None:
+                _df_writer = _df_writer.mode(config["mode"])
+            if config["format"] is not None:
+                _df_writer = _df_writer.format(config["format"])
+            if config["partitionBy"] is not None and config["partitionBy"] != []:
+                _df_writer = _df_writer.partitionBy(config["partitionBy"])
+            if config["sortBy"] is not None and config["sortBy"] != []:
+                _df_writer = _df_writer.sortBy(config["sortBy"])
+            if config["bucketBy"] is not None and config["bucketBy"] != {}:
+                bucket_by_config = config["bucketBy"]
+                _df_writer = _df_writer.bucketBy(
+                    bucket_by_config["numBuckets"], bucket_by_config["colName"]
+                )
+            if config["options"] is not None and config["options"] != {}:
+                _df_writer = _df_writer.options(**config["options"])
+
+            if config["format"] == "bigquery":
+                _df_writer.option("table", table_name).save()
+            else:
+                _df_writer.saveAsTable(name=table_name)
+                self.spark.sql(
+                    f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = '{self._context.product_id}')"
+                )
+            _log.info("finished writing records to table: %s,", table_name)
 
         except Exception as e:
             raise SparkExpectationsUserInputOrConfigInvalidException(
-                f"error occurred while writing data in to the table {e}"
-            )
-
-    def write_df_to_table(
-        self,
-        df: DataFrame,
-        table: str,
-        spark_conf: Optional[Dict[str, Any]] = None,
-        options: Optional[Dict[str, str]] = None,
-    ) -> None:
-        """
-        This function takes in a dataframe which has dq results publish it
-
-        Args:
-            df: Provide a dataframe to write the records to a table.
-            table : Provide the full original table name into which the data need to be written to
-            spark_conf: Provide the spark conf, if you want to set/override the configuration
-            options: Provide the options, if you want to override the default.
-                    default options available are - {"mode": "append", "format": "delta"}
-
-        Returns:
-            None:
-
-        """
-        try:
-            _spark_conf = (
-                {**{"spark.sql.session.timeZone": "Etc/UTC"}, **spark_conf}
-                if spark_conf
-                else {"spark.sql.session.timeZone": "Etc/UTC"}
-            )
-            _options = (
-                {**{"mode": "append", "format": "delta"}, **options}
-                if options
-                else {"mode": "append", "format": "delta"}
-            )
-            self.save_df_as_table(df, table, _spark_conf, _options)
-        except Exception as e:
-            raise SparkExpectationsMiscException(
-                f"error occurred while saving the data into the table  {e}"
+                f"error occurred while writing data in to the table - {table_name}: {e}"
             )
 
     def write_error_stats(self) -> None:
@@ -122,12 +102,7 @@ class SparkExpectationsWriter:
         This functions takes the stats table and write it into error table
 
         Args:
-            table_name: Provide the full table name to which the dq stats will be written to
-            input_count: Provide the original input dataframe count
-            error_count: Provide the error record count
-            output_count: Provide the output dataframe count
-            source_agg_dq_result: source aggregated dq results
-            final_agg_dq_result: final aggregated dq results
+            config: Provide the config to write the dataframe into the table
 
         Returns:
             None:
@@ -136,13 +111,6 @@ class SparkExpectationsWriter:
         try:
             self.spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
             from datetime import date
-
-            # table_name: str,
-            # input_count: int,
-            # error_count: int = 0,
-            # output_count: int = 0,
-            # source_agg_dq_result: Optional[List[Dict[str, str]]] = None,
-            # final_agg_dq_result: Optional[List[Dict[str, str]]] = None,
 
             table_name: str = self._context.get_table_name
             input_count: int = self._context.get_input_count
@@ -163,7 +131,7 @@ class SparkExpectationsWriter:
 
             error_stats_data = [
                 (
-                    self.product_id,
+                    self._context.product_id,
                     table_name,
                     input_count,
                     error_count,
@@ -301,59 +269,74 @@ class SparkExpectationsWriter:
                 "Writing metrics to the stats table: %s, started",
                 self._context.get_dq_stats_table_name,
             )
+            if self._context.get_stats_table_writer_config["format"] == "bigquery":
+                df = df.withColumn("dq_rules", to_json(df["dq_rules"]))
 
-            _se_stats_dict = self._context.get_se_streaming_stats_dict
-
-            secret_handler = SparkExpectationsSecretsBackend(secret_dict=_se_stats_dict)
-
-            kafka_write_options: dict = (
-                {
-                    "kafka.bootstrap.servers": "localhost:9092",
-                    "topic": self._context.get_se_streaming_stats_topic_name,
-                    "failOnDataLoss": "true",
-                }
-                if self._context.get_env == "local"
-                else (
-                    {
-                        "kafka.bootstrap.servers": f"{secret_handler.get_secret(self._context.get_server_url_key)}",
-                        "kafka.security.protocol": "SASL_SSL",
-                        "kafka.sasl.mechanism": "OAUTHBEARER",
-                        "kafka.sasl.jaas.config": "kafkashaded.org.apache.kafka.common.security.oauthbearer."
-                        "OAuthBearerLoginModule required oauth.client.id="
-                        f"'{secret_handler.get_secret(self._context.get_client_id)}'  "
-                        + "oauth.client.secret="
-                        f"'{secret_handler.get_secret(self._context.get_token)}' "
-                        "oauth.token.endpoint.uri="
-                        f"'{secret_handler.get_secret(self._context.get_token_endpoint_url)}'; ",
-                        "kafka.sasl.login.callback.handler.class": "io.strimzi.kafka.oauth.client"
-                        ".JaasClientOauthLoginCallbackHandler",
-                        "topic": (
-                            self._context.get_se_streaming_stats_topic_name
-                            if self._context.get_env == "local"
-                            else secret_handler.get_secret(self._context.get_topic_name)
-                        ),
-                    }
-                    if bool(_se_stats_dict[user_config.se_enable_streaming])
-                    else {}
-                )
-            )
-
-            _sink_hook.writer(
-                _write_args={
-                    "product_id": self.product_id,
-                    "enable_se_streaming": _se_stats_dict[
-                        user_config.se_enable_streaming
-                    ],
-                    "table_name": self._context.get_dq_stats_table_name,
-                    "kafka_write_options": kafka_write_options,
-                    "stats_df": df,
-                }
+            self.save_df_as_table(
+                df,
+                self._context.get_dq_stats_table_name,
+                config=self._context.get_stats_table_writer_config,
+                stats_table=True,
             )
 
             _log.info(
                 "Writing metrics to the stats table: %s, ended",
-                self._context.get_dq_stats_table_name,
+                {self._context.get_dq_stats_table_name},
             )
+
+            # TODO check if streaming_stats is set to off, if it's enabled only then this should run
+
+            _se_stats_dict = self._context.get_se_streaming_stats_dict
+            if _se_stats_dict["se.enable.streaming"]:
+                secret_handler = SparkExpectationsSecretsBackend(
+                    secret_dict=_se_stats_dict
+                )
+                kafka_write_options: dict = (
+                    {
+                        "kafka.bootstrap.servers": "localhost:9092",
+                        "topic": self._context.get_se_streaming_stats_topic_name,
+                        "failOnDataLoss": "true",
+                    }
+                    if self._context.get_env == "local"
+                    else (
+                        {
+                            "kafka.bootstrap.servers": f"{secret_handler.get_secret(self._context.get_server_url_key)}",
+                            "kafka.security.protocol": "SASL_SSL",
+                            "kafka.sasl.mechanism": "OAUTHBEARER",
+                            "kafka.sasl.jaas.config": "kafkashaded.org.apache.kafka.common.security.oauthbearer."
+                            "OAuthBearerLoginModule required oauth.client.id="
+                            f"'{secret_handler.get_secret(self._context.get_client_id)}'  "
+                            + "oauth.client.secret="
+                            f"'{secret_handler.get_secret(self._context.get_token)}' "
+                            "oauth.token.endpoint.uri="
+                            f"'{secret_handler.get_secret(self._context.get_token_endpoint_url)}'; ",
+                            "kafka.sasl.login.callback.handler.class": "io.strimzi.kafka.oauth.client"
+                            ".JaasClientOauthLoginCallbackHandler",
+                            "topic": (
+                                self._context.get_se_streaming_stats_topic_name
+                                if self._context.get_env == "local"
+                                else secret_handler.get_secret(
+                                    self._context.get_topic_name
+                                )
+                            ),
+                        }
+                    )
+                )
+
+                _sink_hook.writer(
+                    _write_args={
+                        "product_id": self._context.product_id,
+                        "enable_se_streaming": _se_stats_dict[
+                            user_config.se_enable_streaming
+                        ],
+                        "kafka_write_options": kafka_write_options,
+                        "stats_df": df,
+                    }
+                )
+            else:
+                _log.info(
+                    "Streaming stats to kafka is disabled, hence skipping writing to kafka"
+                )
 
         except Exception as e:
             raise SparkExpectationsMiscException(
@@ -361,25 +344,10 @@ class SparkExpectationsWriter:
             )
 
     def write_error_records_final(
-        self,
-        df: DataFrame,
-        error_table: str,
-        rule_type: str,
-        spark_conf: Optional[Dict[str, str]] = None,
-        options: Optional[Dict[str, str]] = None,
+        self, df: DataFrame, error_table: str, rule_type: str
     ) -> Tuple[int, DataFrame]:
         try:
             _log.info("_write_error_records_final started")
-            _spark_conf = (
-                {**{"spark.sql.session.timeZone": "Etc/UTC"}, **spark_conf}
-                if spark_conf
-                else {"spark.sql.session.timeZone": "Etc/UTC"}
-            )
-            _options = (
-                {**{"mode": "append", "format": "delta"}, **options}
-                if options
-                else {"mode": "append", "format": "delta"}
-            )
 
             failed_records = [
                 f"size({dq_column}) != 0"
@@ -420,7 +388,11 @@ class SparkExpectationsWriter:
             error_df = df.filter(f"size(meta_{rule_type}_results) != 0")
             self._context.print_dataframe_with_debugger(error_df)
 
-            self.save_df_as_table(error_df, error_table, _spark_conf, _options)
+            self.save_df_as_table(
+                error_df,
+                error_table,
+                self._context.get_target_and_error_table_writer_config,
+            )
 
             _error_count = error_df.count()
             if _error_count > 0:

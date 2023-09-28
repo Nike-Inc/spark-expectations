@@ -9,12 +9,11 @@ def get_spark_session() -> SparkSession:
         os.environ.get("UNIT_TESTING_ENV")
         == "spark_expectations_unit_testing_on_github_actions"
     ) or (os.environ.get("SPARKEXPECTATIONS_ENV") == "local"):
-        from delta import configure_spark_with_delta_pip
-
         builder = (
             SparkSession.builder.config(
                 "spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension"
             )
+            .config("spark.jars.packages", "io.delta:delta-core_2.12:2.4.0")
             .config(
                 "spark.sql.catalog.spark_catalog",
                 "org.apache.spark.sql.delta.catalog.DeltaCatalog",
@@ -30,6 +29,6 @@ def get_spark_session() -> SparkSession:
                 f"{current_dir}/../../jars/spark-token-provider-kafka-0-10_2.12-3.0.0.jar",
             )
         )
-        return configure_spark_with_delta_pip(builder).getOrCreate()
+        return builder.getOrCreate()
 
-    return SparkSession.builder.getOrCreate()
+    return SparkSession.getActiveSession()
