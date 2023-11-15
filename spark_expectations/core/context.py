@@ -21,6 +21,7 @@ class SparkExpectationsContext:
     product_id: str
     spark: SparkSession
 
+
     def __post_init__(self) -> None:
         self._run_id: str = f"{self.product_id}_{uuid1()}"
         self._run_date: str = self.set_run_date()
@@ -535,6 +536,45 @@ class SparkExpectationsContext:
             return self._slack_webhook_url
         raise SparkExpectationsMiscException(
             """The spark expectations context is not set completely, please assign '_slack_webhook_url' before 
+            accessing it"""
+        )
+
+    def set_enable_teams(self, enable_teams: bool) -> None:
+        """
+
+        Args:
+            enable_teams:
+
+        Returns:
+
+        """
+        self._enable_teams = enable_teams
+
+    @property
+    def get_enable_teams(self) -> bool:
+        """
+        This function returns whether to enable teams notification or not
+        Returns: Returns _enable_teams(bool)
+
+        """
+        return self._enable_teams
+
+    def set_teams_webhook_url(self, teams_webhook_url: str) -> None:
+        self._teams_webhook_url = teams_webhook_url
+
+    @property
+    def get_teams_webhook_url(self) -> str:
+        """
+        This function returns sack webhook url
+        Returns:
+            str: Returns _webhook_url(str)
+
+        """
+
+        if self._teams_webhook_url:
+            return self._teams_webhook_url
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign '_teams_webhook_url' before 
             accessing it"""
         )
 
