@@ -48,6 +48,7 @@ class SparkExpectationsSlackNotificationException(Exception):
 
     pass
 
+
 class SparkExpectationsTeamsNotificationException(Exception):
     """
     Throw this exception when spark expectations encounters miscellaneous exceptions

@@ -559,6 +559,7 @@ class SparkExpectationsContext:
         """
         return self._enable_teams
 
+
     def set_teams_webhook_url(self, teams_webhook_url: str) -> None:
         self._teams_webhook_url = teams_webhook_url
 
