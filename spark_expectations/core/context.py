@@ -53,6 +53,9 @@ class SparkExpectationsContext:
         self._enable_slack: bool = False
         self._slack_webhook_url: Optional[str] = None
 
+        self._enable_teams: bool = False
+        self._teams_webhook_url: Optional[str] = None
+
         self._table_name: Optional[str] = None
         self._input_count: int = 0
         self._error_count: int = 0
