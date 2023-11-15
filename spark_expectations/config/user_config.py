@@ -23,6 +23,12 @@ class Constants:
         "spark.expectations.notifications.slack.webhook_url"
     )
 
+    # declare const user config variables for teams notification
+    se_notifications_enable_teams = "spark.expectations.notifications.teams.enabled"
+    se_notifications_teams_webhook_url = (
+        "spark.expectations.notifications.teams.webhook_url"
+    )
+
     se_notifications_on_start = "spark.expectations.notifications.on_start"
     se_notifications_on_completion = "spark.expectations.notifications.on.completion"
     se_notifications_on_fail = "spark.expectations.notifications.on.fail"
