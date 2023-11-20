@@ -1,5 +1,5 @@
 from typing import Dict, Union
-import pymsteams
+import requests
 from spark_expectations import _log
 from spark_expectations.notifications.plugins.base_notification import (
     SparkExpectationsNotification,
@@ -33,16 +33,16 @@ class SparkExpectationsTeamsPluginImpl(SparkExpectationsNotification):
         """
         try:
             if _context.get_enable_teams is True:
+                print(_config_args)
+                print(_config_args.get("message"))
                 # payload = {"token": "{token}", "channel": kwargs['channel'], "text": kwargs['message']}
+                payload = {
+                    "text": _config_args.get("message")
+                }
 
-                myTeamsMessage = pymsteams.connectorcard(_context.get_teams_webhook_url)
-                payload = _config_args.get("message")
-
-                # Set card details
-                myTeamsMessage.title("DQ Notification")
-                myTeamsMessage.text(payload)
-
-                response = myTeamsMessage.send()
+                response = requests.post(
+                    _context.get_teams_webhook_url, json=payload, timeout=10
+                )
 
                 # Check the response for success or failure
                 if response:
@@ -50,7 +50,7 @@ class SparkExpectationsTeamsPluginImpl(SparkExpectationsNotification):
                 else:
                     _log.info("Failed to post message")
                     raise SparkExpectationsTeamsNotificationException(
-                        "error occurred while sending slack notification from spark expectations project"
+                        "error occurred while sending teams notification from spark expectations project"
                     )
 
         except Exception as e:
