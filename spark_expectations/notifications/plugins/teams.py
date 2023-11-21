@@ -33,8 +33,6 @@ class SparkExpectationsTeamsPluginImpl(SparkExpectationsNotification):
         """
         try:
             if _context.get_enable_teams is True:
-                print(type(_config_args.get("message")))
-                print(_config_args.get("message"))
                 # payload = {"token": "{token}", "channel": kwargs['channel'], "text": kwargs['message']}
                 payload = {
                     "title": "SE Notification",
