@@ -79,12 +79,12 @@ class SparkExpectations:
     #  if user provides it
     def with_expectations(
         self,
-            target_table: str,
-            write_to_table: bool = False,
-            write_to_temp_table: bool = False,
-            user_conf: Optional[Dict[str, Union[str, int, bool]]] = None,
-            target_table_view: Optional[str] = None,
-            target_and_error_table_writer: Optional["WrappedDataFrameWriter"] = None,
+        target_table: str,
+        write_to_table: bool = False,
+        write_to_temp_table: bool = False,
+        user_conf: Optional[Dict[str, Union[str, int, bool]]] = None,
+        target_table_view: Optional[str] = None,
+        target_and_error_table_writer: Optional["WrappedDataFrameWriter"] = None,
     ) -> Any:
         """
         This decorator helps to wrap a function which returns dataframe and apply dataframe rules on it
