@@ -46,7 +46,7 @@ class SparkExpectationsTeamsPluginImpl(SparkExpectationsNotification):
                 )
 
                 # Check the response for success or failure
-                if response:
+                if response.status_code == 200:
                     _log.info("Message posted successfully!")
                 else:
                     _log.info("Failed to post message")
