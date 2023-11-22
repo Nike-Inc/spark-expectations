@@ -119,7 +119,9 @@ class SparkExpectationsReader:
                     self._context.set_enable_teams(True)
                     self._context.set_teams_webhook_url(
                         str(
-                            _notification_dict[user_config.se_notifications_teams_webhook_url]
+                            _notification_dict[
+                                user_config.se_notifications_teams_webhook_url
+                            ]
                         )
                     )
 

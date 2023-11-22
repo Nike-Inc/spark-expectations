@@ -21,7 +21,6 @@ class SparkExpectationsContext:
     product_id: str
     spark: SparkSession
 
-
     def __post_init__(self) -> None:
         self._run_id: str = f"{self.product_id}_{uuid1()}"
         self._run_date: str = self.set_run_date()
@@ -561,7 +560,6 @@ class SparkExpectationsContext:
 
         """
         return self._enable_teams
-
 
     def set_teams_webhook_url(self, teams_webhook_url: str) -> None:
         self._teams_webhook_url = teams_webhook_url

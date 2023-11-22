@@ -18,9 +18,9 @@ class SparkExpectationsTeamsPluginImpl(SparkExpectationsNotification):
 
     @spark_expectations_notification_impl
     def send_notification(
-            self,
-            _context: SparkExpectationsContext,
-            _config_args: Dict[Union[str], Union[str, bool]],
+        self,
+        _context: SparkExpectationsContext,
+        _config_args: Dict[Union[str], Union[str, bool]],
     ) -> None:
         """
         function to send the teams notification for assigned channel
@@ -38,7 +38,9 @@ class SparkExpectationsTeamsPluginImpl(SparkExpectationsNotification):
                     "title": "SE Notification",
                     "themeColor": "008000",
                     # Formatting due to Teams notifications is coming as a continuous string instead of formatted json
-                    "text": _config_args.get("message").replace("\n", "\n\n").replace("            ", "")
+                    "text": _config_args.get("message")
+                    .replace("\n", "\n\n")
+                    .replace("            ", ""),
                 }
 
                 response = requests.post(
