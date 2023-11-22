@@ -34,13 +34,17 @@ class SparkExpectationsTeamsPluginImpl(SparkExpectationsNotification):
         try:
             if _context.get_enable_teams is True:
                 # payload = {"token": "{token}", "channel": kwargs['channel'], "text": kwargs['message']}
+
+                message = _config_args.get("message")
+
+                # Format Message for Teams
+                if isinstance(message, str):
+                    message = message.replace("\n", "\n\n").replace("            ", "")
+
                 payload = {
                     "title": "SE Notification",
                     "themeColor": "008000",
-                    # Formatting due to Teams notifications is coming as a continuous string instead of formatted json
-                    "text": _config_args.get("message")
-                    .replace("\n", "\n\n")
-                    .replace("            ", ""),
+                    "text": message,
                 }
 
                 response = requests.post(
