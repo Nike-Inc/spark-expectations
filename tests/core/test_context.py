@@ -49,6 +49,8 @@ def test_context_properties():
     context._mail_subject = "spark expectations"
     context._enable_slack = True
     context._slack_webhook_url = "abcedfghi"
+    context._enable_teams = True
+    context._teams_webhook_url = "abcedfghi"
     context._table_name = "test_table"
     context._input_count = 100
     context._error_count = 10
@@ -146,6 +148,8 @@ def test_context_properties():
     assert context._mail_subject == "spark expectations"
     assert context._enable_slack is True
     assert context._slack_webhook_url == "abcedfghi"
+    assert context._enable_teams is True
+    assert context._teams_webhook_url == "abcedfghi"
     assert context._table_name == "test_table"
     assert context._input_count == 100
     assert context._error_count == 10
@@ -461,6 +465,20 @@ def test_set_slack_webhook_url():
     assert context.get_slack_webhook_url == "abcdefghi"
 
 
+def test_set_enable_teams():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_enable_teams(True)
+    assert context._enable_teams is True
+    assert context.get_enable_teams is True
+
+
+def test_set_teams_webhook_url():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_teams_webhook_url("abcdefghi")
+    assert context._teams_webhook_url == "abcdefghi"
+    assert context.get_teams_webhook_url == "abcdefghi"
+
+
 def test_table_name():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_table_name("test_table")
@@ -576,6 +594,16 @@ def test_get_slack_webhook_url_exception():
                        match="The spark expectations context is not set completely, please assign "
                              "'_slack_webhook_url' before \n            accessing it"):
         context.get_slack_webhook_url
+
+
+def test_get_teams_webhook_url_exception():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._teams_webhook_url = False
+    with pytest.raises(SparkExpectationsMiscException,
+                       match="The spark expectations context is not set completely, please assign "
+                             "'_teams_webhook_url' before \n            accessing it"):
+        context.get_teams_webhook_url
+
 
 
 def test_get_table_name_expection():

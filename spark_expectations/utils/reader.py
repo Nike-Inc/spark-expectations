@@ -124,6 +124,10 @@ class SparkExpectationsReader:
                             ]
                         )
                     )
+                else:
+                    raise SparkExpectationsMiscException(
+                        "All params/variables required for slack notification is not configured or supplied"
+                    )
 
         except Exception as e:
             raise SparkExpectationsMiscException(
