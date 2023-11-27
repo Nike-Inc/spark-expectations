@@ -12,6 +12,9 @@ from spark_expectations.notifications.plugins.email import (
 from spark_expectations.notifications.plugins.slack import (
     SparkExpectationsSlackPluginImpl,
 )
+from spark_expectations.notifications.plugins.teams import (
+    SparkExpectationsTeamsPluginImpl,
+)
 
 
 @functools.lru_cache
@@ -29,6 +32,9 @@ def get_notifications_hook() -> pluggy.PluginManager:
     )
     pm.register(
         SparkExpectationsSlackPluginImpl(), "spark_expectations_slack_notification"
+    )
+    pm.register(
+        SparkExpectationsTeamsPluginImpl(), "spark_expectations_teams_notification"
     )
     for name, plugin_instance in pm.list_name_plugin():
         _log.info(

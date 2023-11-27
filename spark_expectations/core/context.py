@@ -52,6 +52,9 @@ class SparkExpectationsContext:
         self._enable_slack: bool = False
         self._slack_webhook_url: Optional[str] = None
 
+        self._enable_teams: bool = False
+        self._teams_webhook_url: Optional[str] = None
+
         self._table_name: Optional[str] = None
         self._input_count: int = 0
         self._error_count: int = 0
@@ -535,6 +538,45 @@ class SparkExpectationsContext:
             return self._slack_webhook_url
         raise SparkExpectationsMiscException(
             """The spark expectations context is not set completely, please assign '_slack_webhook_url' before 
+            accessing it"""
+        )
+
+    def set_enable_teams(self, enable_teams: bool) -> None:
+        """
+
+        Args:
+            enable_teams:
+
+        Returns:
+
+        """
+        self._enable_teams = enable_teams
+
+    @property
+    def get_enable_teams(self) -> bool:
+        """
+        This function returns whether to enable teams notification or not
+        Returns: Returns _enable_teams(bool)
+
+        """
+        return self._enable_teams
+
+    def set_teams_webhook_url(self, teams_webhook_url: str) -> None:
+        self._teams_webhook_url = teams_webhook_url
+
+    @property
+    def get_teams_webhook_url(self) -> str:
+        """
+        This function returns sack webhook url
+        Returns:
+            str: Returns _webhook_url(str)
+
+        """
+
+        if self._teams_webhook_url:
+            return self._teams_webhook_url
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign '_teams_webhook_url' before 
             accessing it"""
         )
 

@@ -39,6 +39,8 @@ class SparkExpectationsReader:
                 user_config.se_notifications_email_subject: "spark-expectations-testing",
                 user_config.se_notifications_enable_slack: False,
                 user_config.se_notifications_slack_webhook_url: "",
+                user_config.se_notifications_enable_teams: False,
+                user_config.se_notifications_teams_webhook_url: "",
             }
 
             _notification_dict: Dict[str, Union[str, int, bool]] = (
@@ -104,6 +106,21 @@ class SparkExpectationsReader:
                         str(
                             _notification_dict[
                                 user_config.se_notifications_slack_webhook_url
+                            ]
+                        )
+                    )
+                else:
+                    raise SparkExpectationsMiscException(
+                        "All params/variables required for slack notification is not configured or supplied"
+                    )
+
+            if _notification_dict[user_config.se_notifications_enable_teams] is True:
+                if _notification_dict[user_config.se_notifications_teams_webhook_url]:
+                    self._context.set_enable_teams(True)
+                    self._context.set_teams_webhook_url(
+                        str(
+                            _notification_dict[
+                                user_config.se_notifications_teams_webhook_url
                             ]
                         )
                     )

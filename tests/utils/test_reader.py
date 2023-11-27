@@ -47,6 +47,8 @@ def fixture_product_rules():
          "spark.expectations.notifications.email.subject": "Test email",
          "spark.expectations.notifications.slack.enabled": False,
          "spark.expectations.notifications.slack.webhook_url": "",
+         "spark.expectations.notifications.teams.enabled": False,
+         "spark.expectations.notifications.teams.webhook_url": "",
      }, None),
     ({
          "spark.expectations.notifications.email.enabled": True,
@@ -71,6 +73,13 @@ def fixture_product_rules():
     ({
          "spark.expectations.notifications.slack.enabled": True,
          "spark.expectations.notifications.slack.webhook_url": "",
+     }, SparkExpectationsMiscException),
+    ({"spark.expectations.notifications.teams.enabled": True,
+      "spark.expectations.notifications.teams.webhook_url": "https://hooks.teams.com/services/..."},
+     None),
+    ({
+         "spark.expectations.notifications.teams.enabled": True,
+         "spark.expectations.notifications.teams.webhook_url": "",
      }, SparkExpectationsMiscException),
 ])
 def test_set_notification_param(notification, expected_result):
@@ -104,6 +113,11 @@ def test_set_notification_param(notification, expected_result):
                 notification.get("spark.expectations.notifications.slack.enabled"))
             mock_context.set_slack_webhook_url.assert_called_once_with(
                 notification.get("spark.expectations.notifications.slack.webhook_url"))
+        if notification.get("spark.expectations.notifications.teams.enabled"):
+            mock_context.set_enable_teams.assert_called_once_with(
+                notification.get("spark.expectations.notifications.teams.enabled"))
+            mock_context.set_teams_webhook_url.assert_called_once_with(
+                notification.get("spark.expectations.notifications.teams.webhook_url"))
     else:
         with pytest.raises(expected_result, match=r"All params/variables required for [a-z]+ notification "
                                                   "is not configured or supplied"):
