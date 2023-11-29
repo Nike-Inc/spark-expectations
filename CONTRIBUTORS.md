@@ -8,6 +8,7 @@ Thanks to the contributors who helped on this project apart from the authors
 * [Phani Kumar Vemuri](https://www.linkedin.com/in/vemuriphani/)
 * [Sarath Chandra Bandaru](https://www.linkedin.com/in/sarath-chandra-bandaru/)
 * [Holden Karau](https://www.linkedin.com/in/holdenkarau/)
+* [Araveti Venkata Bharat Kumar](https://www.linkedin.com/in/bharat-kumar-araveti/)
 
 # Honorary Mentions
 Thanks to the team below for invaluable insights and support throughout the initial release of this project
