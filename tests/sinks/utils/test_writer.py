@@ -1,6 +1,6 @@
 import os
 import unittest.mock
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, call
 
 import pyspark.sql
 import pytest
@@ -11,7 +11,7 @@ from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
 from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException,
-    SparkExpectationsUserInputOrConfigInvalidException
+    SparkExpectationsUserInputOrConfigInvalidException, SparkExpectationsWriteToTableException
 )
 from spark_expectations.core.expectations import WrappedDataFrameWriter
 
@@ -57,7 +57,7 @@ def fixture_writer():
     setattr(mock_context, "get_run_id_name", "meta_dq_run_id")
     setattr(mock_context, "get_run_date_name", "meta_dq_run_date")
     mock_context.spark = spark
-    mock_context.product_id='product1'
+    mock_context.product_id = 'product1'
 
     # Create an instance of the class and set the product_id
     return SparkExpectationsWriter(mock_context)
@@ -160,9 +160,11 @@ def fixture_expected_dq_dataset():
 @pytest.mark.parametrize('table_name, options, expected_count',
                          [('employee_table',
                            {'mode': 'overwrite', 'partitionBy': ['department'], "format": "parquet",
-                            'bucketBy': {'numBuckets':2,'colName':'business_unit'}, 'sortBy': ["eeid"], 'options': {"overwriteSchema": "true", "mergeSchema": "true"}}, 1000),
+                            'bucketBy': {'numBuckets': 2, 'colName': 'business_unit'}, 'sortBy': ["eeid"],
+                            'options': {"overwriteSchema": "true", "mergeSchema": "true"}}, 1000),
                           ('employee_table',
-                           {'mode': 'append', "format": "delta", 'partitionBy': [], 'bucketBy': {}, 'sortBy': [], 'options': {"mergeSchema": "true"}},
+                           {'mode': 'append', "format": "delta", 'partitionBy': [], 'bucketBy': {}, 'sortBy': [],
+                            'options': {"mergeSchema": "true"}},
                            1000)
                           ])
 def test_save_df_as_table(table_name,
@@ -175,15 +177,69 @@ def test_save_df_as_table(table_name,
 
     assert expected_count == spark.sql(f"select * from {table_name}").count()
 
+    # Fetch table properties
+    table_properties = spark.sql(f"SHOW TBLPROPERTIES {table_name}").collect()
+    table_properties_dict = {row["key"]: row["value"] for row in table_properties}
+
+    # Check 'product_id' property
+    assert table_properties_dict.get("product_id") == _fixture_writer._context.product_id
+
+    spark.sql(f"drop table if exists {table_name}")
+    spark.sql(f"drop table if exists {table_name}_stats")
+    spark.sql(f"drop table if exists {table_name}_error")
+
+    _fixture_writer.save_df_as_table(_fixture_employee, table_name, options, True)
+    # Fetch table properties
+    table_properties = spark.sql(f"SHOW TBLPROPERTIES {table_name}").collect()
+    table_properties_dict = {row["key"]: row["value"] for row in table_properties}
+    assert table_properties_dict.get("product_id") is None
+
+
+@patch('time.sleep', autospec=True, spec_set=True, return_value=None)  # Mock time.sleep
+@patch('pyspark.sql.DataFrameWriter.saveAsTable', autospec=True, spec_set=True)
+@patch('pyspark.sql.DataFrameWriter.save', autospec=True, spec_set=True)
+def test_save_df_as_table_retries(save, save_as_table, time_sleep, _fixture_writer, _fixture_employee,
+                                  _fixture_create_employee_table):
+    # Arrange
+    save.side_effect = [Exception('write error'), None]  # fail on the first attempt, succeed on the second
+    table_name = 'employee_table'
+    options = {'mode': 'overwrite', 'format': 'bigquery', 'partitionBy': [], 'bucketBy': {}, 'sortBy': [],
+               'options': {}}
+
+    _fixture_writer.save_df_as_table(_fixture_employee, table_name, options, False)
     # Assert
-    # _spark_set.assert_called_with('spark.sql.session.timeZone', 'Etc/UTC')
+    assert save.call_count == 2  # check that save was called twice
+    assert time_sleep.call_count == 1  # check that time.sleep was called once
+
+    time_sleep.call_count = 0  # reset the call count
+
+    spark.sql(f"drop table if exists {table_name}")
+    spark.sql(f"drop table if exists {table_name}_stats")
+    spark.sql(f"drop table if exists {table_name}_error")
+
+    # Arrange
+    max_retries = 10
+    save_as_table.side_effect = [Exception('write error')] * (
+                max_retries + 1)  # fail more times than the maximum retry count
+    table_name = 'employee_table'
+    options = {'mode': 'overwrite', 'format': 'delta', 'partitionBy': [], 'bucketBy': {}, 'sortBy': [],
+               'options': {}}
+
+    with pytest.raises(SparkExpectationsWriteToTableException,
+                       match=r"Write failed in 10 retries for the table - "):
+        _fixture_writer.save_df_as_table(_fixture_employee, table_name, options, False)
+
+    # Assert
+    assert save_as_table.call_count == max_retries + 1  # check that saveAsTable was called the maximum number of times
+    assert time_sleep.call_count == max_retries  # check that time.sleep was called the maximum number of times
+
 
 @patch('pyspark.sql.DataFrameWriter.save', autospec=True, spec_set=True)
-def test_save_df_to_table_bq(save,  _fixture_writer, _fixture_employee, _fixture_create_employee_table):
+def test_save_df_to_table_bq(save, _fixture_writer, _fixture_employee, _fixture_create_employee_table):
     _fixture_writer.save_df_as_table(_fixture_employee, 'employee_table', {'mode': 'overwrite', 'format': 'bigquery',
-                                                                     'partitionBy':[], 'bucketBy': {}, 'sortBy':[], 'options':{}})
+                                                                           'partitionBy': [], 'bucketBy': {},
+                                                                           'sortBy': [], 'options': {}})
     save.assert_called_once_with(unittest.mock.ANY)
-
 
 
 @pytest.mark.parametrize('table_name, options',
@@ -439,7 +495,8 @@ def test_write_df_to_table(save_df_as_table,
          "output_percentage": 0.0,
          "success_percentage": 0.0,
          "error_percentage": 100.0,
-     }, {'mode': 'append', "format": "bigquery", 'partitionBy': [], 'bucketBy': {}, 'sortBy': [], 'options': {"mergeSchema": "true"}})
+     }, {'mode': 'append', "format": "bigquery", 'partitionBy': [], 'bucketBy': {}, 'sortBy': [],
+         'options': {"mergeSchema": "true"}})
 ])
 def test_write_error_stats(input_record,
                            expected_result,
@@ -502,8 +559,10 @@ def test_write_error_stats(input_record,
     setattr(_mock_context, 'get_dq_stats_table_name', 'test_dq_stats_table')
 
     if writer_config is None:
-        setattr(_mock_context, "_stats_table_writer_config", WrappedDataFrameWriter().mode("overwrite").format("delta").build())
-        setattr(_mock_context, 'get_stats_table_writer_config', WrappedDataFrameWriter().mode("overwrite").format("delta").build())
+        setattr(_mock_context, "_stats_table_writer_config",
+                WrappedDataFrameWriter().mode("overwrite").format("delta").build())
+        setattr(_mock_context, 'get_stats_table_writer_config',
+                WrappedDataFrameWriter().mode("overwrite").format("delta").build())
     else:
         setattr(_mock_context, "_stats_table_writer_config", writer_config)
         setattr(_mock_context, 'get_stats_table_writer_config', writer_config)
@@ -552,9 +611,6 @@ def test_write_error_stats(input_record,
         ).load().orderBy(col('timestamp').desc()).limit(1).selectExpr(
             "cast(value as string) as value").collect() == stats_table.selectExpr(
             "to_json(struct(*)) AS value").collect()
-
-
-
 
 
 @pytest.mark.parametrize('table_name, rule_type',
@@ -608,7 +664,8 @@ def test_write_error_records_final_dependent(save_df_as_table,
         .withColumn("meta_dq_run_date", lit("2022-12-27 10:39:44")) \
         .orderBy("id").collect()
     assert save_df_args[0][2] == table_name
-    save_df_as_table.assert_called_once_with(_fixture_writer, save_df_args[0][1], table_name, _fixture_writer._context.get_target_and_error_table_writer_config)
+    save_df_as_table.assert_called_once_with(_fixture_writer, save_df_args[0][1], table_name,
+                                             _fixture_writer._context.get_target_and_error_table_writer_config)
 
 
 @pytest.mark.parametrize("test_data, expected_result", [
@@ -646,6 +703,7 @@ def test_generate_summarised_row_dq_res(test_data, expected_result):
     # Check the results
     result = context.get_summarised_row_dq_res
     assert result == expected_result
+
 
 @pytest.mark.parametrize('dq_rules, summarised_row_dq, expected_result',
                          [

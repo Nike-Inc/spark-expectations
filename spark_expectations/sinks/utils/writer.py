@@ -1,3 +1,4 @@
+import time
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple, List
 from datetime import datetime
@@ -16,7 +17,7 @@ from pyspark.sql.functions import (
 from spark_expectations import _log
 from spark_expectations.core.exceptions import (
     SparkExpectationsUserInputOrConfigInvalidException,
-    SparkExpectationsMiscException,
+    SparkExpectationsMiscException, SparkExpectationsWriteToTableException,
 )
 from spark_expectations.secrets import SparkExpectationsSecretsBackend
 from spark_expectations.utils.udf import remove_empty_maps
@@ -82,16 +83,48 @@ class SparkExpectationsWriter:
                 )
             if config["options"] is not None and config["options"] != {}:
                 _df_writer = _df_writer.options(**config["options"])
+            
+            max_retries = 10
+            for attempt in range(1, max_retries + 2):
+                _log.info("Writing records to table: %s, attempt: %s", table_name, attempt)
+                try:
+                    if config["format"] == "bigquery":
+                        _df_writer.option("table", table_name).save()
+                    else:
+                        _df_writer.saveAsTable(name=table_name)
+                        if not stats_table:
+                            # Fetch table properties
+                            table_properties = self.spark.sql(
+                                f"SHOW TBLPROPERTIES {table_name}"
+                            ).collect()
+                            table_properties_dict = {
+                                row["key"]: row["value"] for row in table_properties
+                            }
 
-            if config["format"] == "bigquery":
-                _df_writer.option("table", table_name).save()
-            else:
-                _df_writer.saveAsTable(name=table_name)
-                self.spark.sql(
-                    f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = '{self._context.product_id}')"
-                )
-            _log.info("finished writing records to table: %s,", table_name)
-
+                            # Set product_id in table properties
+                            if table_properties_dict.get("product_id") is None or table_properties_dict.get(
+                                "product_id"
+                            ) != self._context.product_id:
+                                _log.info(
+                                    f"product_id is not set for table {table_name} in tableproperties, setting it now"
+                                )
+                                self.spark.sql(
+                                    f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = '{self._context.product_id}')"
+                                )
+                    _log.info("finished writing records to table: %s,", table_name)
+                    break
+                except Exception as e:
+                    if attempt == max_retries + 1:
+                        # If this was the last retry attempt, re-raise the exception
+                        raise SparkExpectationsWriteToTableException(
+                            f"Write failed in 10 retries for the table - {table_name}, with error: {e}"
+                        )
+                    else:
+                        # If there are more retry attempts left, log the error and continue with the next attempt
+                        _log.info(f"Retrying writing to table {table_name} as it failed with error. Attempt {attempt} of {max_retries}. sleeping for 30 seconds")
+                        time.sleep(30)
+        except SparkExpectationsWriteToTableException:
+            raise
         except Exception as e:
             raise SparkExpectationsUserInputOrConfigInvalidException(
                 f"error occurred while writing data in to the table - {table_name}: {e}"

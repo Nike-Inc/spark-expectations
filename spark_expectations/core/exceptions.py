@@ -41,9 +41,17 @@ class SparkExpectationsMiscException(Exception):
     pass
 
 
+class SparkExpectationsWriteToTableException(Exception):
+    """
+    Throw this exception when spark expectations encounters exceptions while writing to table
+    """
+
+    pass
+
+
 class SparkExpectationsSlackNotificationException(Exception):
     """
-    Throw this exception when spark expectations encounters miscellaneous exceptions
+    Throw this exception when spark expectations encounters exceptions while sending Slack notifications
     """
 
     pass
@@ -51,7 +59,7 @@ class SparkExpectationsSlackNotificationException(Exception):
 
 class SparkExpectationsTeamsNotificationException(Exception):
     """
-    Throw this exception when spark expectations encounters miscellaneous exceptions
+    Throw this exception when spark expectations encounters exceptions while sending Teams notifications
     """
 
     pass
@@ -59,7 +67,7 @@ class SparkExpectationsTeamsNotificationException(Exception):
 
 class SparkExpectationsEmailException(Exception):
     """
-    Throw this exception when spark expectations encounters miscellaneous exceptions
+    Throw this exception when spark expectations encounters exceptions while sending email notifications
     """
 
     pass
