@@ -41,14 +41,6 @@ class SparkExpectationsMiscException(Exception):
     pass
 
 
-class SparkExpectationsWriteToTableException(Exception):
-    """
-    Throw this exception when spark expectations encounters exceptions while writing to table
-    """
-
-    pass
-
-
 class SparkExpectationsSlackNotificationException(Exception):
     """
     Throw this exception when spark expectations encounters exceptions while sending Slack notifications

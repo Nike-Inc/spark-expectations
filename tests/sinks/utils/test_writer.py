@@ -1,8 +1,7 @@
 import os
 import unittest.mock
-from unittest.mock import patch, Mock, call
+from unittest.mock import patch, Mock
 
-import pyspark.sql
 import pytest
 from pyspark.sql.functions import col
 from pyspark.sql.functions import lit, to_timestamp
@@ -11,7 +10,7 @@ from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
 from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException,
-    SparkExpectationsUserInputOrConfigInvalidException, SparkExpectationsWriteToTableException
+    SparkExpectationsUserInputOrConfigInvalidException
 )
 from spark_expectations.core.expectations import WrappedDataFrameWriter
 
@@ -193,46 +192,6 @@ def test_save_df_as_table(table_name,
     table_properties = spark.sql(f"SHOW TBLPROPERTIES {table_name}").collect()
     table_properties_dict = {row["key"]: row["value"] for row in table_properties}
     assert table_properties_dict.get("product_id") is None
-
-
-@patch('time.sleep', autospec=True, spec_set=True, return_value=None)  # Mock time.sleep
-@patch('pyspark.sql.DataFrameWriter.saveAsTable', autospec=True, spec_set=True)
-@patch('pyspark.sql.DataFrameWriter.save', autospec=True, spec_set=True)
-def test_save_df_as_table_retries(save, save_as_table, time_sleep, _fixture_writer, _fixture_employee,
-                                  _fixture_create_employee_table):
-    # Arrange
-    save.side_effect = [Exception('write error'), None]  # fail on the first attempt, succeed on the second
-    table_name = 'employee_table'
-    options = {'mode': 'overwrite', 'format': 'bigquery', 'partitionBy': [], 'bucketBy': {}, 'sortBy': [],
-               'options': {}}
-
-    _fixture_writer.save_df_as_table(_fixture_employee, table_name, options, False)
-    # Assert
-    assert save.call_count == 2  # check that save was called twice
-    assert time_sleep.call_count == 1  # check that time.sleep was called once
-
-    time_sleep.call_count = 0  # reset the call count
-
-    spark.sql(f"drop table if exists {table_name}")
-    spark.sql(f"drop table if exists {table_name}_stats")
-    spark.sql(f"drop table if exists {table_name}_error")
-
-    # Arrange
-    max_retries = 10
-    save_as_table.side_effect = [Exception('write error')] * (
-                max_retries + 1)  # fail more times than the maximum retry count
-    table_name = 'employee_table'
-    options = {'mode': 'overwrite', 'format': 'delta', 'partitionBy': [], 'bucketBy': {}, 'sortBy': [],
-               'options': {}}
-
-    with pytest.raises(SparkExpectationsWriteToTableException,
-                       match=r"Write failed in 10 retries for the table - "):
-        _fixture_writer.save_df_as_table(_fixture_employee, table_name, options, False)
-
-    # Assert
-    assert save_as_table.call_count == max_retries + 1  # check that saveAsTable was called the maximum number of times
-    assert time_sleep.call_count == max_retries  # check that time.sleep was called the maximum number of times
-
 
 @patch('pyspark.sql.DataFrameWriter.save', autospec=True, spec_set=True)
 def test_save_df_to_table_bq(save, _fixture_writer, _fixture_employee, _fixture_create_employee_table):
