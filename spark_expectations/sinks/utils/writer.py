@@ -17,7 +17,8 @@ from pyspark.sql.functions import (
 from spark_expectations import _log
 from spark_expectations.core.exceptions import (
     SparkExpectationsUserInputOrConfigInvalidException,
-    SparkExpectationsMiscException, SparkExpectationsWriteToTableException,
+    SparkExpectationsMiscException,
+    SparkExpectationsWriteToTableException,
 )
 from spark_expectations.secrets import SparkExpectationsSecretsBackend
 from spark_expectations.utils.udf import remove_empty_maps
@@ -37,6 +38,7 @@ class SparkExpectationsWriter:
     def __post_init__(self) -> None:
         self.spark = self._context.spark
 
+    # pylint: disable=too-many-nested-blocks
     def save_df_as_table(
         self, df: DataFrame, table_name: str, config: dict, stats_table: bool = False
     ) -> None:
@@ -83,10 +85,12 @@ class SparkExpectationsWriter:
                 )
             if config["options"] is not None and config["options"] != {}:
                 _df_writer = _df_writer.options(**config["options"])
-            
+
             max_retries = 10
             for attempt in range(1, max_retries + 2):
-                _log.info("Writing records to table: %s, attempt: %s", table_name, attempt)
+                _log.info(
+                    "Writing records to table: %s, attempt: %s", table_name, attempt
+                )
                 try:
                     if config["format"] == "bigquery":
                         _df_writer.option("table", table_name).save()
@@ -102,14 +106,18 @@ class SparkExpectationsWriter:
                             }
 
                             # Set product_id in table properties
-                            if table_properties_dict.get("product_id") is None or table_properties_dict.get(
-                                "product_id"
-                            ) != self._context.product_id:
+                            if (
+                                table_properties_dict.get("product_id") is None
+                                or table_properties_dict.get("product_id")
+                                != self._context.product_id
+                            ):
                                 _log.info(
-                                    f"product_id is not set for table {table_name} in tableproperties, setting it now"
+                                    "product_id is not set for table %s in tableproperties, setting it now",
+                                    table_name,
                                 )
                                 self.spark.sql(
-                                    f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = '{self._context.product_id}')"
+                                    f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = "
+                                    f"'{self._context.product_id}')"
                                 )
                     _log.info("finished writing records to table: %s,", table_name)
                     break
@@ -119,16 +127,23 @@ class SparkExpectationsWriter:
                         raise SparkExpectationsWriteToTableException(
                             f"Write failed in 10 retries for the table - {table_name}, with error: {e}"
                         )
-                    else:
-                        # If there are more retry attempts left, log the error and continue with the next attempt
-                        _log.info(f"Retrying writing to table {table_name} as it failed with error. Attempt {attempt} of {max_retries}. sleeping for 30 seconds")
-                        time.sleep(30)
+
+                    _log.info(
+                        "Retrying writing to table %s as it failed with error. Attempt %s of %s. "
+                        "sleeping for 30 seconds",
+                        table_name,
+                        attempt,
+                        max_retries,
+                    )
+                    time.sleep(30)
         except SparkExpectationsWriteToTableException:
             raise
         except Exception as e:
             raise SparkExpectationsUserInputOrConfigInvalidException(
                 f"error occurred while writing data in to the table - {table_name}: {e}"
             )
+
+    # pylint: enable=too-many-nested-blocks
 
     def write_error_stats(self) -> None:
         """
