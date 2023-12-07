@@ -83,14 +83,36 @@ class SparkExpectationsWriter:
             if config["options"] is not None and config["options"] != {}:
                 _df_writer = _df_writer.options(**config["options"])
 
+            _log.info("Writing records to table: %s", table_name)
+
             if config["format"] == "bigquery":
                 _df_writer.option("table", table_name).save()
             else:
                 _df_writer.saveAsTable(name=table_name)
-                self.spark.sql(
-                    f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = '{self._context.product_id}')"
-                )
-            _log.info("finished writing records to table: %s,", table_name)
+                _log.info("finished writing records to table: %s,", table_name)
+                if not stats_table:
+                    # Fetch table properties
+                    table_properties = self.spark.sql(
+                        f"SHOW TBLPROPERTIES {table_name}"
+                    ).collect()
+                    table_properties_dict = {
+                        row["key"]: row["value"] for row in table_properties
+                    }
+
+                    # Set product_id in table properties
+                    if (
+                        table_properties_dict.get("product_id") is None
+                        or table_properties_dict.get("product_id")
+                        != self._context.product_id
+                    ):
+                        _log.info(
+                            "product_id is not set for table %s in tableproperties, setting it now",
+                            table_name,
+                        )
+                        self.spark.sql(
+                            f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = "
+                            f"'{self._context.product_id}')"
+                        )
 
         except Exception as e:
             raise SparkExpectationsUserInputOrConfigInvalidException(
