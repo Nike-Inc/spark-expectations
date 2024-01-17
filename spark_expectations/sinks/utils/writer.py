@@ -441,21 +441,30 @@ class SparkExpectationsWriter:
 
         """
         try:
-            df_exploded = df.select(explode(f"meta_{rule_type}_results").alias("row_dq_res"))
+            df_exploded = df.select(
+                explode(f"meta_{rule_type}_results").alias("row_dq_res")
+            )
 
-            keys = (df_exploded
-                    .select(explode("row_dq_res"))
-                    .select("key")
-                    .distinct()
-                    .rdd.flatMap(lambda x: x)
-                    .collect())
+            keys = (
+                df_exploded.select(explode("row_dq_res"))
+                .select("key")
+                .distinct()
+                .rdd.flatMap(lambda x: x)
+                .collect()
+            )
             nested_keys = [col("row_dq_res").getItem(k).alias(k) for k in keys]
 
             df_select = df_exploded.select(*nested_keys)
-            df_pivot = df_select.groupBy(df_select.columns).count().withColumnRenamed('count', 'failed_row_count')
+            df_pivot = (
+                df_select.groupBy(df_select.columns)
+                .count()
+                .withColumnRenamed("count", "failed_row_count")
+            )
 
-            keys += ['failed_row_count']
-            summarised_row_dq_list = df_pivot.rdd.map(lambda x: {i: x[i] for i in keys}).collect()
+            keys += ["failed_row_count"]
+            summarised_row_dq_list = df_pivot.rdd.map(
+                lambda x: {i: x[i] for i in keys}
+            ).collect()
 
             self._context.set_summarised_row_dq_res(summarised_row_dq_list)
 
