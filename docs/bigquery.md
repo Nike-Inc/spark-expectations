@@ -1,6 +1,6 @@
 ### Example - Write to Delta
 
-Setup SparkSession for bigquery to test in your local environment. Configure accordingly for higher environments.
+Setup SparkSession for BigQuery to test in your local environment. Configure accordingly for higher environments.
 Refer to Examples in [base_setup.py](../spark_expectations/examples/base_setup.py) and
 [delta.py](../spark_expectations/examples/sample_dq_bigquery.py)
 
@@ -22,7 +22,7 @@ spark.conf.set("viewsEnabled", "true")
 spark.conf.set("materializationDataset", "<temp_dataset>")
 ```
 
-Below is the configuration that can be used to run SparkExpectations and write to DeltaLake
+Below is the configuration that can be used to run SparkExpectations and write to Delta Lake
 
 ```python title="iceberg_write"
 import os

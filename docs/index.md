@@ -28,7 +28,7 @@ the data quality standards
 * Downstream users have to consume the same data with error, or they have to do additional computation to remove the 
 records that doesn't meet the standards
 * Another process is required as a corrective action to rectify the errors in the data and lot of planning is usually 
-required for this acitivity
+required for this activity
 
 `Spark-Expectations solves all of the above problems by following the below principles`
 
@@ -53,10 +53,10 @@ what needs to be done if a rule fails
 * Let's consider a hypothetical scenario, where we have 100 columns and with 200
 row level data quality rules, 10 aggregation data quality rules and 5 query data quality rules  computed against. When the dq job is run, there are
 10 rules that failed on a particular row and 4 aggregation rules fails- what determines if that row should end up in 
-final table or not? Below are the heirarchy of checks that happens?
-* Among the row level 10 rules failed, if there is atleast one rule which has an _action_if_failed_ as _fail_ - 
+final table or not? Below are the hierarchy of checks that happens?
+* Among the row level 10 rules failed, if there is at least one rule which has an _action_if_failed_ as _fail_ - 
   then the job will be failed 
-  * Among the 10 row level rules failed, if there is no rule that has an _action_if_failed_ as _fail_, but atleast 
+  * Among the 10 row level rules failed, if there is no rule that has an _action_if_failed_ as _fail_, but at least 
   has one rule with _action_if_failed_ as _drop_ - then the record/row will be dropped
   * Among the 10 row level rules failed, if no rule neither has _fail_ nor _drop_ as an _action_if_failed_ - then 
   the record will be end up in the final table. Note that, this record would also exist in the `_error` table

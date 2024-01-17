@@ -1,6 +1,6 @@
 ## Installation
-The library is available in the pypi and can be installed in your environment using the below command or 
-please add the library "spark-expectations" into the requirements.txt or poetry dependencies.
+The library is available in the Python Package Index (PyPi) and can be installed in your environment using the below command or 
+ add the library "spark-expectations" into the requirements.txt or poetry dependencies.
 
 ```shell
 pip install -U spark-expectations
@@ -9,7 +9,7 @@ pip install -U spark-expectations
 ## Required Tables
 
 There are two tables that need to be created for spark-expectations to run seamlessly and integrate with a spark job.
-The below sql statements used three namespaces which works with Databricks UnityCatalog, but if you are using hive
+The below SQL statements used three namespaces which works with Databricks Unity Catalog, but if you are using hive
 please update the namespaces accordingly and also provide necessary table metadata.
 
 
@@ -40,8 +40,8 @@ create table if not exists `catalog`.`schema`.`{product}_rules` (
 ### Rule Type For Rules
 
 The rules column has a column called "rule_type". It is important that this column should only accept one of 
-these three values - `[row_dq, agg_dq, query_dq]`. If other values are provided, the library may cause unforseen errors.
-Please run the below command to add constriants to the above created rules table
+these three values - `[row_dq, agg_dq, query_dq]`. If other values are provided, the library may cause unforeseen errors.
+Please run the below command to add constraints to the above created rules table
 
 ```sql
 ALTER TABLE `catalog`.`schema`.`{product}_rules` 
@@ -52,8 +52,8 @@ ADD CONSTRAINT rule_type_action CHECK (rule_type in ('row_dq', 'agg_dq', 'query_
 
 The rules column has a column called "action_if_failed". It is important that this column should only accept one of 
 these values - `[fail, drop or ignore]` for `'rule_type'='row_dq'` and `[fail, ignore]` for `'rule_type'='agg_dq' and 'rule_type'='query_dq'`. 
-If other values are provided, the library may cause unforseen errors.
-Please run the below command to add constriants to the above created rules table
+If other values are provided, the library may cause unforeseen errors.
+Please run the below command to add constraints to the above created rules table
 
 ```sql
 ALTER TABLE apla_nd_dq_rules ADD CONSTRAINT action CHECK 
@@ -65,7 +65,7 @@ ALTER TABLE apla_nd_dq_rules ADD CONSTRAINT action CHECK
 ### DQ Stats Table
 
 In order to collect the stats/metrics for each data quality job run, the spark-expectations job will
-automatically create the stats table if it does not exist. The below sql statement can be used to create the table
+automatically create the stats table if it does not exist. The below SQL statement can be used to create the table
 if you want to create it manually, but it is not recommended.
 
 ```sql

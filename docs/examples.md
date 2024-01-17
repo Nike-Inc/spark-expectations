@@ -27,13 +27,13 @@ se_user_conf = {
 2. The `user_config.se_notifications_email_smtp_host` parameter is set to "mailhost.com" by default and is used to specify the email SMTP domain host
 3. The `user_config.se_notifications_email_smtp_port` parameter, which accepts a port number, is set to "25" by default
 4. The `user_config.se_notifications_email_from` parameter is used to specify the email ID that will trigger the email notification
-5. The `user_configse_notifications_email_to_other_mail_id` parameter accepts a list of recipient email IDs
+5. The `user_config.se_notifications_email_to_other_mail_id` parameter accepts a list of recipient email IDs
 6. The `user_config.se_notifications_email_subject` parameter captures the subject line of the email
 7. The `user_config.se_notifications_enable_slack` parameter, which controls whether notifications are sent via slack, is set to false by default
 8. The `user_config/se_notifications_slack_webhook_url` parameter accepts the webhook URL of a Slack channel for sending notifications
 9. When `user_config.se_notifications_on_start` parameter set to `True` enables notification on start of the spark-expectations, variable by default set to `False`
 10. When `user_config.se_notifications_on_completion` parameter set to `True` enables notification on completion of spark-expectations framework, variable by default set to `False`
-11. When `user_config.se_notifications_on_fail` parameter set to `True` enables notification on failure of spark-expectations data qulaity framework, variable by default set to `True`
+11. When `user_config.se_notifications_on_fail` parameter set to `True` enables notification on failure of spark-expectations data quality framework, variable by default set to `True`
 12. When `user_config.se_notifications_on_error_drop_exceeds_threshold_breach` parameter set to `True` enables notification when error threshold reaches above the configured value
 13. The `user_config.se_notifications_on_error_drop_threshold` parameter captures error drop threshold value
 
@@ -41,7 +41,7 @@ se_user_conf = {
 
 For all the below examples the below import and SparkExpectations class instantiation is mandatory
 
-When store for sensitive details is Databricks secret scope,construct config dictionary for authentication of kafka and 
+When store for sensitive details is Databricks secret scope,construct config dictionary for authentication of Kafka and 
 avoid duplicate construction every time your project is initialized, you can create a dictionary with the following keys and their appropriate values. 
 This dictionary can be placed in the __init__.py file of your project or declared as a global variable.
 ```python
@@ -62,16 +62,16 @@ stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
 ```
 
 1. The `user_config.se_enable_streaming` parameter is used to control the enabling or disabling of Spark Expectations (SE) streaming functionality. When enabled, SE streaming stores the statistics of every batch run into Kafka.
-2. The `user_config.secret_type` used to define type of secret store and takes two values (`databricks`, `cererus`) by default will be `databricks`
-3. The `user_config.dbx_workspace_url` used to pass databricks workspace in the format `https://<workspace_name>.cloud.databricks.com`
+2. The `user_config.secret_type` used to define type of secret store and takes two values (`databricks`, `cerberus`) by default will be `databricks`
+3. The `user_config.dbx_workspace_url` used to pass Databricks workspace in the format `https://<workspace_name>.cloud.databricks.com`
 4. The `user_config.dbx_secret_scope` captures name of the secret scope
-5. The `user_config.dbx_kafka_server_url` captures secret key for the kafka url
-6. The ` user_config.dbx_secret_token_url` captures secret key for the kafka authentication app url
-7. The `user_config.dbx_secret_app_name` captures secret key for the kafka authentication app name
-8. The `user_config.dbx_secret_token` captures secret key for the kafka authentication app secret token
-9. The `user_config.dbx_topic_name` captures secret key for the kafka topic name
+5. The `user_config.dbx_kafka_server_url` captures secret key for the Kafka URL
+6. The ` user_config.dbx_secret_token_url` captures secret key for the Kafka authentication app URL
+7. The `user_config.dbx_secret_app_name` captures secret key for the Kafka authentication app name
+8. The `user_config.dbx_secret_token` captures secret key for the Kafka authentication app secret token
+9. The `user_config.dbx_topic_name` captures secret key for the Kafka topic name
 
-Similarly when sensitive store is cerberus: 
+Similarly when sensitive store is Cerberus: 
 
 ```python
 from typing import Dict, Union
@@ -83,7 +83,7 @@ stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
     user_config.cbs_url  : "https://<url>.cerberus.com", # (3)!
     user_config.cbs_sdb_path: "cerberus_sdb_path", # (4)!
     user_config.cbs_kafka_server_url: "se_streaming_server_url_secret_sdb_path", # (5)!
-    user_config.cbs_secret_token_url: "se_streaming_auth_secret_token_url_sdb_apth", # (6)!
+    user_config.cbs_secret_token_url: "se_streaming_auth_secret_token_url_sdb_path", # (6)!
     user_config.cbs_secret_app_name: "se_streaming_auth_secret_appid_sdb_path", # (7)!
     user_config.cbs_secret_token: "se_streaming_auth_secret_token_sdb_path", # (8)!
     user_config.cbs_topic_name: "se_streaming_topic_name_sdb_path", # (9)!
@@ -91,14 +91,14 @@ stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
 ```
 
 1. The `user_config.se_enable_streaming` parameter is used to control the enabling or disabling of Spark Expectations (SE) streaming functionality. When enabled, SE streaming stores the statistics of every batch run into Kafka.
-2. The `user_config.secret_type` used to define type of secret store and takes two values (`databricks`, `cererus`) by default will be `databricks`
-3. The `user_config.cbs_url` used to pass cerberus url
-4. The `user_config.cbs_sdb_path` captures cerberus secure data store path
-5. The `user_config.cbs_kafka_server_url` captures path where kafka url stored in the cerberus sdb
-6. The ` user_config.cbs_secret_token_url` captures path where kafka authentication app stored in the cerberus sdb
-7. The `user_config.cbs_secret_app_name` captures path where kafka authentication app name stored in the cerberus sdb
-8. The `user_config.cbs_secret_token` captures path where kafka authentication app name secret token stored in the cerberus sdb
-9. The `user_config.cbs_topic_name`  captures path where kafka topic name stored in the cerberus sdb
+2. The `user_config.secret_type` used to define type of secret store and takes two values (`databricks`, `cerberus`) by default will be `databricks`
+3. The `user_config.cbs_url` used to pass Cerberus URL
+4. The `user_config.cbs_sdb_path` captures Cerberus secure data store path
+5. The `user_config.cbs_kafka_server_url` captures path where Kafka URL stored in the Cerberus sdb
+6. The ` user_config.cbs_secret_token_url` captures path where Kafka authentication app stored in the Cerberus sdb
+7. The `user_config.cbs_secret_app_name` captures path where Kafka authentication app name stored in the Cerberus sdb
+8. The `user_config.cbs_secret_token` captures path where Kafka authentication app name secret token stored in the Cerberus sdb
+9. The `user_config.cbs_topic_name`  captures path where Kafka topic name stored in the Cerberus sdb
 
 You can disable the streaming functionality by setting the `user_config.se_enable_streaming` parameter to `False` 
 
@@ -183,7 +183,7 @@ def build_new() -> DataFrame:
 6. The `target_table_view` parameter is used to provide the name of a view that represents the target validated dataset for implementation of `query_dq` on the clean dataset from `row_dq`
 7. The `target_and_error_table_writer` parameter is used to write the final data into the table. By default, it is False. This is optional, if you just want to run the data quality checks. A good example will be a staging table or temporary view.
 8. View registration can be utilized when implementing `query_dq` expectations.
-9. Returning a dataframe is mandatory for the `spark_expectations` to work, if we do not return a dataframe - then an exceptionm will be raised
+9. Returning a dataframe is mandatory for the `spark_expectations` to work, if we do not return a dataframe - then an exception will be raised
 10. Instantiate `SparkExpectations` class which has all the required functions for running data quality rules
 11. The `product_id` parameter is used to specify the product ID of the data quality rules. This has to be a unique value
 12. The `rules_df` parameter is used to specify the dataframe that contains the data quality rules
@@ -191,4 +191,4 @@ def build_new() -> DataFrame:
 14. The `stats_table_writer` takes in the configuration that need to be used to write the stats table using pyspark
 15. The `target_and_error_table_writer` takes in the configuration that need to be used to write the target and error table using pyspark
 16. The `debugger` parameter is used to enable the debugger mode
-17. The `stats_streaming_options` parameter is used to specify the configurations for streaming statistics into Kafka. To not use kafka, uncomment this.
+17. The `stats_streaming_options` parameter is used to specify the configurations for streaming statistics into Kafka. To not use Kafka, uncomment this.

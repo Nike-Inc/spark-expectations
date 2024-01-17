@@ -35,12 +35,12 @@ We're delighted that you're interested in contributing to our project! To get st
 please carefully read and follow the guidelines provided in our [contributing](https://github.com/Nike-Inc/spark-expectations/blob/main/CONTRIBUTING.md) document
 
 # What is Spark Expectations?
-#### Spark Expectations is a Data quality framework built in Pyspark as a solution for the following problem statements:
+#### Spark Expectations is a Data quality framework built in PySpark as a solution for the following problem statements:
 
 1. The existing data quality tools validates the data in a table at rest and provides the success and error metrics. Users need to manually check the metrics to identify the error records
 2. The error data is not quarantined to an error table or there are no corrective actions taken to send only the valid data to downstream
 3. Users further downstream must consume the same data incorrectly, or they must perform additional calculations to eliminate records that don't comply with the data quality rules.
-4. Another process is required as a corrective action to rectify the errors in the data and lot of planning is usually required for this acitivity
+4. Another process is required as a corrective action to rectify the errors in the data and lot of planning is usually required for this activity
 
 #### Spark Expectations solves these issues using the following principles:
 
