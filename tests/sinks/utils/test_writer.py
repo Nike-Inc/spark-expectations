@@ -635,8 +635,8 @@ def test_write_error_records_final_dependent(save_df_as_table,
                 {"meta_row_dq_results": [{"rule": "rule2"}]},
             ],
             [
-                {"rule": "rule1", "failed_row_count": "2"},
-                {"rule": "rule2", "failed_row_count": "2"},
+                {"rule": "rule1", "failed_row_count": 2},
+                {"rule": "rule2", "failed_row_count": 2},
             ]
     ),
     (
@@ -645,7 +645,7 @@ def test_write_error_records_final_dependent(save_df_as_table,
                 {"meta_row_dq_results": [{"rule": "rule1"}]},
             ],
             [
-                {"rule": "rule1", "failed_row_count": "2"},
+                {"rule": "rule1", "failed_row_count": 2},
             ]
     )
 ])

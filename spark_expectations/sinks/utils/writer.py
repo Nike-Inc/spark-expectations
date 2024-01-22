@@ -12,6 +12,7 @@ from pyspark.sql.functions import (
     create_map,
     explode,
     to_json,
+    col,
 )
 from spark_expectations import _log
 from spark_expectations.core.exceptions import (
@@ -440,31 +441,32 @@ class SparkExpectationsWriter:
 
         """
         try:
-
-            def update_dict(accumulator: dict) -> dict:  # pragma: no cover
-                if accumulator.get("failed_row_count") is None:  # pragma: no cover
-                    accumulator["failed_row_count"] = str(2)  # pragma: no cover
-                else:  # pragma: no cover
-                    accumulator["failed_row_count"] = str(  # pragma: no cover
-                        int(accumulator["failed_row_count"]) + 1  # pragma: no cover
-                    )  # pragma: no cover
-
-                return accumulator  # pragma: no cover
-
-            summarised_row_dq_dict: Dict[str, Dict[str, str]] = (
-                df.select(explode(f"meta_{rule_type}_results").alias("row_dq_res"))
-                .rdd.map(
-                    lambda rule_meta_dict: (
-                        rule_meta_dict[0]["rule"],
-                        {**rule_meta_dict[0], "failed_row_count": 1},
-                    )
-                )
-                .reduceByKey(lambda acc, itr: update_dict(acc))
-            ).collectAsMap()
-
-            self._context.set_summarised_row_dq_res(
-                list(summarised_row_dq_dict.values())
+            df_exploded = df.select(
+                explode(f"meta_{rule_type}_results").alias("row_dq_res")
             )
+
+            keys = (
+                df_exploded.select(explode("row_dq_res"))
+                .select("key")
+                .distinct()
+                .rdd.flatMap(lambda x: x)
+                .collect()
+            )
+            nested_keys = [col("row_dq_res").getItem(k).alias(k) for k in keys]
+
+            df_select = df_exploded.select(*nested_keys)
+            df_pivot = (
+                df_select.groupBy(df_select.columns)
+                .count()
+                .withColumnRenamed("count", "failed_row_count")
+            )
+
+            keys += ["failed_row_count"]
+            summarised_row_dq_list = df_pivot.rdd.map(
+                lambda x: {i: x[i] for i in keys}
+            ).collect()
+
+            self._context.set_summarised_row_dq_res(summarised_row_dq_list)
 
         except Exception as e:
             raise SparkExpectationsMiscException(
