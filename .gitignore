@@ -488,3 +488,4 @@ spark-warehouse/
 .scannerwork/
 .pipeline/*
 .scannerwork/*
+.vscode/settings.json

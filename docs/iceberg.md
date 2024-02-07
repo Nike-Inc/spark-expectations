@@ -29,7 +29,7 @@ builder = (
 spark = builder.getOrCreate()
 ```
 
-Below is the configuration that can be used to run SparkExpectations and write to DeltaLake
+Below is the configuration that can be used to run SparkExpectations and write to Delta Lake
 
 ```python title="iceberg_write"
 import os
