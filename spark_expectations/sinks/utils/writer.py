@@ -494,10 +494,11 @@ class SparkExpectationsWriter:
         try:
             _log.info("_write_error_records_final started")
             df = df.withColumn("sequence_number", monotonically_increasing_id())
+            df.cache()
             df_seq = df
             df = df.select("sequence_number",
                            *[dq_column for dq_column in df.columns if dq_column.startswith(f"{rule_type}")])
-            df.cache()
+            
             failed_records = [
                 f"size({dq_column}) != 0"
                 for dq_column in df.columns
