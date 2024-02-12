@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Union, Dict
+from typing import Optional, Union, Dict, Tuple
 from dataclasses import dataclass
 
 from pyspark.sql import DataFrame
@@ -41,6 +41,8 @@ class SparkExpectationsReader:
                 user_config.se_notifications_slack_webhook_url: "",
                 user_config.se_notifications_enable_teams: False,
                 user_config.se_notifications_teams_webhook_url: "",
+				user_config.se_stats_relational_format: False,
+    			user_config.se_error_data_load_into_error_table: False,
             }
 
             _notification_dict: Dict[str, Union[str, int, bool]] = (
@@ -140,7 +142,7 @@ class SparkExpectationsReader:
         target_table: str,
         is_dlt: bool = False,
         tag: Optional[str] = None,
-    ) -> tuple[dict, dict]:
+    ) -> Tuple[Dict, Dict]:
         """
         This function fetches the data quality rules from the table and return it as a dictionary
 
