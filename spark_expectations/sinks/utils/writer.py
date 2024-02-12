@@ -1,10 +1,12 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple, List
+from typing import Dict, Optional, Tuple, List, Any
 from datetime import datetime
+from datetime import timezone
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import (
     lit,
     expr,
+    col,
     when,
     array,
     to_timestamp,
@@ -12,18 +14,20 @@ from pyspark.sql.functions import (
     create_map,
     explode,
     to_json,
-    col,
+    monotonically_increasing_id
 )
 from spark_expectations import _log
 from spark_expectations.core.exceptions import (
     SparkExpectationsUserInputOrConfigInvalidException,
     SparkExpectationsMiscException,
+    SparkExpectOrFailException
 )
 from spark_expectations.secrets import SparkExpectationsSecretsBackend
 from spark_expectations.utils.udf import remove_empty_maps
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.sinks import _sink_hook
 from spark_expectations.config.user_config import Constants as user_config
+from spark_expectations.utils.reader import SparkExpectationsReader
 
 
 @dataclass
@@ -119,6 +123,118 @@ class SparkExpectationsWriter:
             raise SparkExpectationsUserInputOrConfigInvalidException(
                 f"error occurred while writing data in to the table - {table_name}: {e}"
             )
+
+    def write_error_stats_relational(self, df) -> None:
+
+        table_name: str = self._context.get_table_name
+        input_count: int = self._context.get_input_count
+        error_count: int = self._context.get_error_count
+        output_count: int = self._context.get_output_count
+        DQ_Run_ID = self._context.get_run_id
+        product_id = self._context.product_id
+        dq_date = self._context.get_run_date
+        start_time = self._context.get_row_dq_start_time.replace(tzinfo=timezone.utc).strftime(
+            "%Y-%m-%d %H:%M:%S") if self._context.get_row_dq_start_time else '1900-01-01'
+        end_time = self._context.get_row_dq_end_time.replace(tzinfo=timezone.utc).strftime(
+            "%Y-%m-%d %H:%M:%S") if self._context.get_row_dq_end_time else '1900-01-01'
+
+        from pyspark.sql.functions import create_map, lit, explode, col, split, substring
+        from pyspark.sql.types import (
+            StructType,
+            StructField,
+            StringType,
+            IntegerType,
+            LongType,
+            FloatType,
+            DateType,
+            ArrayType,
+            MapType,
+            TimestampType,
+        )
+        rel_schema = StructType([
+            StructField("DQ_Run_ID", StringType(), True),
+            StructField("product_id", StringType(), True),
+            StructField("table_name", StringType(), True),
+            StructField("rule_type", StringType(), True),
+            StructField("rule", StringType(), True),
+            StructField("expectation", StringType(), True),
+            StructField("status", StringType(), True),
+            StructField("error_count", LongType(), True),
+            StructField("actual_result", LongType(), True),
+            StructField("row_input_count", LongType(), True),
+            StructField("dq_run_date", StringType(), True),
+            StructField("dq_rule_run_start_date_time", StringType(), True),
+            StructField("dq_rule_run_end_date_time", StringType(), True),
+        ])
+
+        rules = self._context.get_dq_expectations
+        all_rules = []
+        row_dq_result = []
+        rules = {key: rules[key] for key in rules.keys() & {'row_dq_rules'}}
+
+        for rule in rules:
+            for r in self._context.get_dq_expectations[rule]:
+                all_rules.append({'rule': r['rule'], 'expectation': r['expectation']})
+        if len(all_rules) > 0 :
+            failed_rules = []
+            if len(self._context.get_summarised_row_dq_res) > 0:
+                for i in self._context.get_summarised_row_dq_res:
+                    for j in all_rules:
+                        if i['rule'] == j['rule']:
+                            expectation = j['expectation']
+                    row_dq_result.append((DQ_Run_ID, product_id, table_name, i['rule_type'], i['rule'], expectation, 'fail',
+                                          i['failed_row_count'], (input_count - int(i['failed_row_count'])), input_count,
+                                          dq_date, start_time,
+                                          end_time))
+                    failed_rules.append(i['rule'])
+
+                for row_rule in all_rules:
+                    if row_rule['rule'] not in failed_rules:
+                        row_dq_result.append(
+                            (DQ_Run_ID, product_id, table_name, 'row_dq', row_rule['rule'], row_rule['expectation'],
+                             'pass', 0, input_count, input_count, dq_date, start_time, end_time))
+            else:
+                for row_rule in all_rules:
+                    row_dq_result.append(
+                            (DQ_Run_ID, product_id, table_name, 'row_dq', row_rule['rule'], row_rule['expectation'],
+                             'pass', 0, input_count, input_count, dq_date, start_time, end_time))
+
+            df_rel_format_all = self.spark.createDataFrame(row_dq_result, rel_schema)
+        else:
+            emptyRDD = self.spark.sparkContext.emptyRDD()
+            df_rel_format_all = self.spark.createDataFrame(emptyRDD,rel_schema)
+
+
+        if self._context.get_agg_dq_result_relational != None:
+            df_rel_format_agg = self.spark.createDataFrame(data=self._context.get_agg_dq_result_relational, schema=rel_schema)
+        else:
+            df_rel_format_agg = self.spark.createDataFrame([], rel_schema)
+
+        if self._context.get_query_dq_result_relational != None:
+            df_rel_format_query = self.spark.createDataFrame(data=self._context.get_query_dq_result_relational, schema=rel_schema)
+        else:
+            df_rel_format_query = self.spark.createDataFrame([], rel_schema)
+
+
+        df_rel_format_final = df_rel_format_all.union(df_rel_format_agg).union(df_rel_format_query)
+
+        df_rel_format_final = df_rel_format_final \
+            .withColumn("dq_dag_metadata_info", lit(self._context.get_dag_metadata)) \
+            .select("DQ_Run_ID", "product_id", "table_name", "rule_type", "rule", "expectation", "status",
+                    "error_count",
+                    "actual_result", "row_input_count", "dq_run_date", "dq_rule_run_start_date_time",
+                    "dq_rule_run_end_date_time", "dq_dag_metadata_info")
+
+        df_rel_format_final.show(truncate=False)
+
+        dq_stats_rel = f"{self._context.get_dq_stats_table_name}_rel"
+
+        self.save_df_as_table(
+            df_rel_format_final,
+            dq_stats_rel,
+            config=self._context.get_stats_table_writer_config,
+            stats_table=True,
+        )
 
     def write_error_stats(self) -> None:
         """
@@ -301,6 +417,8 @@ class SparkExpectationsWriter:
                 config=self._context.get_stats_table_writer_config,
                 stats_table=True,
             )
+            if self._context.get_se_stats_relational_format:
+                self.write_error_stats_relational(df)
 
             _log.info(
                 "Writing metrics to the stats table: %s, ended",
@@ -371,7 +489,11 @@ class SparkExpectationsWriter:
     ) -> Tuple[int, DataFrame]:
         try:
             _log.info("_write_error_records_final started")
-
+            df = df.withColumn("sequence_number", monotonically_increasing_id())
+            df_seq = df
+            df = df.select("sequence_number",
+                           *[dq_column for dq_column in df.columns if dq_column.startswith(f"{rule_type}")])
+            df.cache()
             failed_records = [
                 f"size({dq_column}) != 0"
                 for dq_column in df.columns
@@ -408,19 +530,25 @@ class SparkExpectationsWriter:
                     lit(self._context.get_run_date),
                 )
             )
-            error_df = df.filter(f"size(meta_{rule_type}_results) != 0")
+            error_df_seq = df.filter(f"size(meta_{rule_type}_results) != 0")
+            error_df = df_seq.join(error_df_seq, df_seq.sequence_number == error_df_seq.sequence_number, "inner")
+            # sequence number column removing from the data frame
+            error_df = error_df.select(
+                *[dq_column for dq_column in df.columns if dq_column.startswith("sequence_number") == False])
             self._context.print_dataframe_with_debugger(error_df)
 
-            self.save_df_as_table(
-                error_df,
-                error_table,
-                self._context.get_target_and_error_table_writer_config,
-            )
-
+            
+            if self._context.get_se_error_data_load_into_error_table:
+                self.save_df_as_table(
+                     error_df,
+                     error_table,
+                     self._context.get_target_and_error_table_writer_config,
+                 )
             _error_count = error_df.count()
             if _error_count > 0:
                 self.generate_summarised_row_dq_res(error_df, rule_type)
-
+            # sequence number adding to dataframe for passing to action function
+            df = df_seq.join(error_df_seq, df_seq.sequence_number == error_df_seq.sequence_number, "left").select(df_seq["*"],error_df_seq[f"meta_{rule_type}_results"])
             _log.info("_write_error_records_final ended")
             return _error_count, df
 
