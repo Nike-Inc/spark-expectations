@@ -1,5 +1,6 @@
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 from pyspark.sql import DataFrame
+from datetime import  datetime
 
 # from pyspark.sql.types import (
 #     StringType,
@@ -16,6 +17,7 @@ from pyspark.sql.functions import (
     struct,
     map_from_entries,
     array_contains,
+    monotonically_increasing_id
 )
 from spark_expectations.utils.udf import remove_empty_maps, get_actions_list
 from spark_expectations.core.context import SparkExpectationsContext
@@ -95,6 +97,47 @@ class SparkExpectationsActions:
         )
 
     @staticmethod
+    def agg_dq_result_relational(_context, agg_rule: Dict[str, str], df: DataFrame) -> Any:
+        import re
+        from datetime import datetime
+        current_date = datetime.now()
+        dq_agg_date = current_date.strftime("%Y-%m-%d")
+        dq_agg_start = datetime.strftime(current_date, "%Y-%m-%d %H:%M:%S")
+        row_count = _context.get_input_count
+        run_id = _context.get_run_id
+
+        if agg_rule['rule_type'] == 'agg_dq':
+            pattern = r'(\w+\(.+?\))([><=!]+.+)$'
+            match = re.match(pattern, agg_rule["expectation"])
+            if match:
+                part1 = match.group(1)
+                part2 = match.group(2)
+                condition_expression = expr(part1)
+                actual_count_value = int(df.agg(condition_expression).collect()[0][0])
+                expression_str = str(actual_count_value) + part2
+                status = 'pass' if eval(expression_str) else 'fail'
+                actual_count = row_count if eval(expression_str) else None
+                error_count = 0 if eval(expression_str) else row_count
+        elif agg_rule['rule_type'] == 'query_dq':
+            query = "SELECT (" + str(agg_rule['expectation']) + ") AS RESULT"
+            output = int(_context.spark.sql(query).collect()[0][0])
+            status = 'pass' if output == True else 'fail'
+            actual_count = row_count if output == True else None
+            error_count = 0 if output == True else row_count
+        else:
+            print("No match")
+            status = None
+            actual_count = None
+            error_count = None
+
+        dq_agg_end = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+        return (run_id, agg_rule["product_id"], agg_rule["table_name"], agg_rule["rule_type"], agg_rule["rule"],
+                agg_rule["expectation"], status, error_count, actual_count, row_count, dq_agg_date, dq_agg_start,
+                dq_agg_end)
+
+
+    @staticmethod
     def create_agg_dq_results(
         _context: SparkExpectationsContext, _df: DataFrame, _rule_type_name: str
     ) -> Optional[List[Dict[str, str]]]:
@@ -151,6 +194,7 @@ class SparkExpectationsActions:
         """
         try:
             condition_expressions = []
+            agg_dq_results = []
             if len(expectations) <= 0:
                 raise SparkExpectationsMiscException("no rules found to process")
 
@@ -183,6 +227,14 @@ class SparkExpectationsActions:
                         )
                         .alias(column)
                     )
+                    if _context.get_se_stats_relational_format:
+                        agg_dq_results.append(SparkExpectationsActions.agg_dq_result_relational(_context, rule, df))
+
+            if _context.get_se_stats_relational_format:
+                if rule['rule_type'] == 'agg_dq':
+                    _context.set_agg_dq_result_relational(agg_dq_result_relational = agg_dq_results)
+                elif rule['rule_type'] == 'query_dq':
+                    _context.set_query_dq_result_relational(query_dq_result_relational=agg_dq_results)
 
             if len(condition_expressions) > 0:
                 if rule_type in [
@@ -260,9 +312,17 @@ class SparkExpectationsActions:
 
         """
         try:
-            _df_dq = _df_dq.withColumn(
-                "action_if_failed", get_actions_list(col(f"meta_{_rule_type}_results"))
-            ).drop(f"meta_{_rule_type}_results")
+            _df_dq_main = _df_dq
+            if 'sequence_number' in [column for column in _df_dq.columns]:
+                _df_dq_seq = _df_dq.select("sequence_number", f"meta_{_rule_type}_results")
+                _df_dq = _df_dq_seq.withColumn(
+                    "action_if_failed", get_actions_list(col(f"meta_{_rule_type}_results"))
+                ).drop(f"meta_{_rule_type}_results")
+
+            else:
+                _df_dq = _df_dq.withColumn(
+                    "action_if_failed", get_actions_list(col(f"meta_{_rule_type}_results"))
+                ).drop(f"meta_{_rule_type}_results")
 
             if (
                 not _df_dq.filter(
@@ -289,9 +349,16 @@ class SparkExpectationsActions:
                     "suggested to fail"
                 )
 
-            return _df_dq.drop(_df_dq.action_if_failed)
+            if 'sequence_number' in [column for column in _df_dq.columns]:
+                _df_dq = _df_dq_main.join(_df_dq, _df_dq.sequence_number == _df_dq_main.sequence_number, "left").select(
+                    *[dq_column for dq_column in _df_dq_main.columns if
+                      dq_column.startswith("sequence_number") == False])
+            else:
+                _df_dq = _df_dq.select(
+                    *[dq_column for dq_column in _df_dq.columns if dq_column.startswith("action_if_failed") == False])
+            return _df_dq
 
         except Exception as e:
             raise SparkExpectationsMiscException(
-                f"error occured while taking action on given rules {e}"
+                f"error occurred while taking action on given rules {e}"
             )
