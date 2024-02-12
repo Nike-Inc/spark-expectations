@@ -219,11 +219,10 @@ class SparkExpectationsWriter:
         df_rel_format_final = df_rel_format_all.union(df_rel_format_agg).union(df_rel_format_query)
 
         df_rel_format_final = df_rel_format_final \
-            .withColumn("dq_dag_metadata_info", lit(self._context.get_dag_metadata)) \
             .select("DQ_Run_ID", "product_id", "table_name", "rule_type", "rule", "expectation", "status",
                     "error_count",
                     "actual_result", "row_input_count", "dq_run_date", "dq_rule_run_start_date_time",
-                    "dq_rule_run_end_date_time", "dq_dag_metadata_info")
+                    "dq_rule_run_end_date_time")
 
         df_rel_format_final.show(truncate=False)
 
