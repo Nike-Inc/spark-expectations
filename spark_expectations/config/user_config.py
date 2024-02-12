@@ -41,7 +41,7 @@ class Constants:
 
     se_enable_streaming = "se.enable.streaming"
     se_stats_relational_format = "spark.expectations.stats.relational.format"
-    se_error_data_load_into_error_table = "se.enable.error.table"
+    se_error_data_load_into_error_table = "spark.expectations.enable.error.table"
 
     secret_type = "se.streaming.secret.type"
 
