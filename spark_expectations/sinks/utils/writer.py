@@ -421,7 +421,7 @@ class SparkExpectationsWriter:
 
             _log.info(
                 "Writing metrics to the stats table: %s, ended",
-                {self._context.get_dq_stats_table_name},
+                self._context.get_dq_stats_table_name,
             )
 
             # TODO check if streaming_stats is set to off, if it's enabled only then this should run
