@@ -243,7 +243,6 @@ class SparkExpectations:
 
             if _se_stats_relational_format:
                 self._context.set_se_stats_relational_format(_se_stats_relational_format)
-                self._context.set_dag_metadata(_dag_metadata)
 
             @self._notification.send_notification_decorator
             @self._statistics_decorator.collect_stats_decorator
