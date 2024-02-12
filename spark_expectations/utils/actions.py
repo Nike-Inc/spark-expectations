@@ -227,7 +227,8 @@ class SparkExpectationsActions:
                         )
                         .alias(column)
                     )
-                    if _context.get_se_stats_relational_format:
+                    
+                    if _context.get_se_stats_relational_format and rule_type in ['agg_dq', 'query_dq']:
                         agg_dq_results.append(SparkExpectationsActions.agg_dq_result_relational(_context, rule, df))
 
             if _context.get_se_stats_relational_format:
@@ -332,6 +333,8 @@ class SparkExpectationsActions:
             ):
                 _df_dq = _df_dq.filter(~array_contains(_df_dq.action_if_failed, "drop"))
             else:
+                #added below line to raise expection after executing dq rules
+                _context._set_action_if_failed_fail = True
                 if _row_dq_flag:
                     _context.set_row_dq_status("Failed")
                 elif _source_agg_dq_flag:
@@ -343,11 +346,11 @@ class SparkExpectationsActions:
                 elif _final_query_dq_flag:
                     _context.set_final_query_dq_status("Failed")
 
-                raise SparkExpectOrFailException(
-                    f"Job failed, as there is a data quality issue at {_rule_type} "
-                    f"expectations and the action_if_failed "
-                    "suggested to fail"
-                )
+                # raise SparkExpectOrFailException(
+                #     f"Job failed, as there is a data quality issue at {_rule_type} "
+                #     f"expectations and the action_if_failed "
+                #     "suggested to fail"
+                # )
 
             if 'sequence_number' in [column for column in _df_dq.columns]:
                 _df_dq = _df_dq_main.join(_df_dq, _df_dq.sequence_number == _df_dq_main.sequence_number, "left").select(
