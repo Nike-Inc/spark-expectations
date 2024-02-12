@@ -474,8 +474,13 @@ class SparkExpectationsWriter:
                     }
                 )
             else:
-                _log.info(
-                    "Streaming stats to kafka is disabled, hence skipping writing to kafka"
+                _log.info("Streaming stats to kafka is disabled, hence skipping writing to kafka" )
+
+            if self._context.get_action_if_failed_for_fail:
+                raise SparkExpectOrFailException(
+                    f"Job failed, as there is a data quality issue at one of the rule "
+                    f"expectations and the action_if_failed "
+                    "suggested to fail"
                 )
 
         except Exception as e:
