@@ -46,7 +46,8 @@ class SparkExpectations:
 
     def __post_init__(self) -> None:
         if isinstance(self.rules_df, DataFrame):
-            self.spark: SparkSession = self.rules_df.sparkSession
+            #self.spark: SparkSession = self.rules_df.sparkSession
+            self.spark: SparkSession = SparkSession.getActiveSession()
         else:
             raise SparkExpectationsMiscException(
                 "Input rules_df is not of dataframe type"
@@ -113,6 +114,7 @@ class SparkExpectations:
                 user_config.se_notifications_on_fail: True,
                 user_config.se_notifications_on_error_drop_exceeds_threshold_breach: False,
                 user_config.se_notifications_on_error_drop_threshold: 100,
+                user_config.se_stats_relational_format: False
             }
             _notification_dict: Dict[str, Union[str, int, bool]] = (
                 {**_default_notification_dict, **user_conf}
@@ -215,12 +217,33 @@ class SparkExpectations:
                 else 100
             )
 
+            _se_stats_relational_format: bool = (
+                bool(
+                    _notification_dict[
+                        user_config.se_stats_relational_format
+                    ]
+                )
+                if isinstance(
+                    _notification_dict[
+                        user_config.se_stats_relational_format
+                    ],
+                    bool,
+                )
+                else False
+            )
+
+
             self.reader.set_notification_param(user_conf)
             self._context.set_notification_on_start(_notification_on_start)
             self._context.set_notification_on_completion(_notification_on_completion)
             self._context.set_notification_on_fail(_notification_on_fail)
+            self._context.set_dq_expectations(expectations)
 
             self._context.set_se_streaming_stats_dict(_se_stats_streaming_dict)
+
+            if _se_stats_relational_format:
+                self._context.set_se_stats_relational_format(_se_stats_relational_format)
+                self._context.set_dag_metadata(_dag_metadata)
 
             @self._notification.send_notification_decorator
             @self._statistics_decorator.collect_stats_decorator
@@ -302,7 +325,7 @@ class SparkExpectations:
 
                         if _source_agg_dq is True:
                             _log.info(
-                                "started processing data quality rules for agg level expectations on soure dataframe"
+                                "started processing data quality rules for agg level expectations on source dataframe"
                             )
                             self._context.set_source_agg_dq_status("Failed")
                             self._context.set_source_agg_dq_start_time()
@@ -332,7 +355,7 @@ class SparkExpectations:
 
                         if _source_query_dq is True:
                             _log.info(
-                                "started processing data quality rules for query level expectations on soure dataframe"
+                                "started processing data quality rules for query level expectations on source dataframe"
                             )
                             self._context.set_source_query_dq_status("Failed")
                             self._context.set_source_query_dq_start_time()
