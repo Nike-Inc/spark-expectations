@@ -40,6 +40,8 @@ user_conf = {
     user_config.se_notifications_on_fail: True,
     user_config.se_notifications_on_error_drop_exceeds_threshold_breach: True,
     user_config.se_notifications_on_error_drop_threshold: 15,
+    user_config.se_stats_relational_format: True,
+    user_config.se_error_data_load_into_error_table: True,
 }
 
 
