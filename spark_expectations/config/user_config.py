@@ -40,6 +40,8 @@ class Constants:
     )
 
     se_enable_streaming = "se.enable.streaming"
+    se_stats_relational_format = "spark.expectations.stats.relational.format"
+    se_error_data_load_into_error_table = "spark.expectations.enable.error.table"
 
     secret_type = "se.streaming.secret.type"
 
@@ -58,3 +60,4 @@ class Constants:
     dbx_secret_app_name = "se.streaming.dbx.secret.app.name"
     dbx_secret_token = "se.streaming.dbx.secret.token"
     dbx_topic_name = "se.streaming.dbx.topic.name"
+

@@ -4,7 +4,7 @@ from datetime import timezone
 from datetime import datetime
 from dataclasses import dataclass
 from uuid import uuid1
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Tuple
 from pyspark.sql import DataFrame, SparkSession
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
@@ -36,6 +36,10 @@ class SparkExpectationsContext:
         self._source_query_dq_status: str = "Skipped"
         self._final_query_dq_status: str = "Skipped"
         self._dq_run_status: str = "Failed"
+        self._dq_expectations: Optional[str] = None
+        self._se_stats_relational_format: bool = False
+        self._se_error_data_load_into_error_table: bool = False
+        self._set_action_if_failed_fail: bool = False
 
         # above configuration variable value has to be set to python
         self._dq_project_env_name = "spark_expectations"
@@ -67,6 +71,8 @@ class SparkExpectationsContext:
             "dq-sparkexpectations-row-dq-results"
         )
 
+        self._agg_dq_result_relational: Optional[List[Tuple]] = None
+        self._query_dq_result_relational: Optional[List[Tuple]] = None
         self._source_agg_dq_result: Optional[List[Dict[str, str]]] = None
         self._final_agg_dq_result: Optional[List[Dict[str, str]]] = None
         self._source_query_dq_result: Optional[List[Dict[str, str]]] = None
@@ -146,6 +152,24 @@ class SparkExpectationsContext:
 
         """
         return self._run_date
+
+    def set_dq_expectations(self,dq_expectations) -> None:
+        self._dq_expectations = dq_expectations
+
+    @property
+    def get_dq_expectations(self):
+        """
+        Get dq_expectations to which has rule infromation
+
+        Returns:
+            str: returns the rules_df
+        """
+        if self._dq_expectations:
+            return self._dq_expectations
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign '_dq_expectations' before 
+            accessing it"""
+        )
 
     def set_dq_stats_table_name(self, dq_stats_table_name: str) -> None:
         self._dq_stats_table_name = dq_stats_table_name
@@ -668,6 +692,36 @@ class SparkExpectationsContext:
         """
         return self._final_agg_dq_result
 
+    def set_agg_dq_result_relational(
+        self, agg_dq_result_relational: Optional[List[Tuple]] = None
+    ) -> None:
+        self._agg_dq_result_relational = agg_dq_result_relational
+
+    @property
+    def get_agg_dq_result_relational(self) -> Optional[List[Tuple]]:
+        """
+        This function return status of the agg_dq_result_relational
+        Returns:
+            dict: Returns agg_dq_result_relational which in list of tuple values
+
+        """
+        return self._agg_dq_result_relational
+    
+    def set_query_dq_result_relational(
+        self, query_dq_result_relational: Optional[List[Tuple]] = None
+    ) -> None:
+        self._query_dq_result_relational = query_dq_result_relational
+
+    @property
+    def get_query_dq_result_relational(self) -> Optional[List[Tuple]]:
+        """
+        This function return status of the agg_dq_result_relational
+        Returns:
+            dict: Returns agg_dq_result_relational which in list of tuple values
+
+        """
+        return self._query_dq_result_relational
+            
     def set_source_query_dq_result(
         self, source_query_dq_result: Optional[List[Dict[str, str]]] = None
     ) -> None:
@@ -1275,6 +1329,24 @@ class SparkExpectationsContext:
         return self.get_time_diff(self._dq_start_time, self._dq_end_time)
 
     @property
+    def get_row_dq_start_time(self) -> str:
+        """
+        This function implements start time for row dq run
+        Returns:
+            float: time in float
+        """
+        return self._row_dq_start_time
+
+    @property
+    def get_row_dq_end_time(self) -> str:
+        """
+        This function implements end time for row dq run
+        Returns:
+            float: time in float
+        """
+        return self._row_dq_end_time
+
+    @property
     def get_run_id_name(self) -> str:
         """
         This function returns name for the run_id column
@@ -1545,3 +1617,51 @@ class SparkExpectationsContext:
             dict: Returns stats_table_writer_config which in dict
         """
         return self._stats_table_writer_config
+
+    def set_se_stats_relational_format(self, se_stats_relational_format: bool) -> None:
+        """
+
+        Args:
+            _se_stats_relational_format:
+
+        Returns:
+
+        """
+        self._se_stats_relational_format = bool(se_stats_relational_format)
+
+    @property
+    def get_se_stats_relational_format(self) -> bool:
+        """
+        This function returns whether to enable relational table or not
+        Returns: Returns _se_stats_relational_format(bool)
+
+        """
+
+        return self._se_stats_relational_format
+
+    def set_se_error_data_load_into_error_table(self, se_error_data_load_into_error_table: bool) -> None:
+        """
+
+        Args:
+            _se_stats_relational_format:
+
+        Returns:
+
+        """
+        self._se_error_data_load_into_error_table = bool(se_error_data_load_into_error_table)
+
+    @property
+    def get_se_error_data_load_into_error_table(self) -> bool:
+        """
+        This function returns whether to enable relational table or not
+        Returns: Returns _se_error_data_load_into_error_table(bool)
+
+        """
+        return self._se_error_data_load_into_error_table
+
+    def set_action_if_failed_for_fail(self, set_action_if_failed_fail: bool) -> None:
+        self._set_action_if_failed_fail = bool(set_action_if_failed_fail)
+
+    @property
+    def get_action_if_failed_for_fail(self) -> bool:
+        return self._set_action_if_failed_fail
