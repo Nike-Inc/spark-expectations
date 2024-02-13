@@ -532,7 +532,7 @@ class SparkExpectationsWriter:
                     self._context.get_run_id_name, lit(self._context.get_run_id)
                 )
                 .withColumn(
-                    self._context.get_run_date_name,
+                    self._context.get_run_date_time_name,
                     lit(self._context.get_run_date),
                 )
             )
