@@ -132,7 +132,8 @@ class SparkExpectationsWriter:
         output_count: int = self._context.get_output_count
         DQ_Run_ID = self._context.get_run_id
         product_id = self._context.product_id
-        dq_date = self._context.get_run_date
+        dq_date = self._context.get_row_dq_start_time.replace(tzinfo=timezone.utc).strftime(
+            "%Y-%m-%d") if self._context.get_row_dq_start_time else '1900-01-01'
         start_time = self._context.get_row_dq_start_time.replace(tzinfo=timezone.utc).strftime(
             "%Y-%m-%d %H:%M:%S") if self._context.get_row_dq_start_time else '1900-01-01'
         end_time = self._context.get_row_dq_end_time.replace(tzinfo=timezone.utc).strftime(
