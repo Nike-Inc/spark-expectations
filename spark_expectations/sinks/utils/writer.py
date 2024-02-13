@@ -227,11 +227,11 @@ class SparkExpectationsWriter:
 
         df_rel_format_final.show(truncate=False)
 
-        dq_stats_rel = f"{self._context.get_dq_stats_table_name}_rel"
+        dq_stats_detail = f"{self._context.get_dq_stats_table_name}_detail"
 
         self.save_df_as_table(
             df_rel_format_final,
-            dq_stats_rel,
+            dq_stats_detail,
             config=self._context.get_stats_table_writer_config,
             stats_table=True,
         )
