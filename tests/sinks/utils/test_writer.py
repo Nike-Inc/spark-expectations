@@ -54,7 +54,7 @@ def fixture_writer():
     setattr(mock_context, "get_run_date", "2022-12-27 10:39:44")
     setattr(mock_context, "get_run_id", "product1_run_test")
     setattr(mock_context, "get_run_id_name", "meta_dq_run_id")
-    setattr(mock_context, "get_run_date_name", "meta_dq_run_date")
+    setattr(mock_context, "get_run_date_time_name", "meta_dq_run_date")
     mock_context.spark = spark
     mock_context.product_id = 'product1'
 
