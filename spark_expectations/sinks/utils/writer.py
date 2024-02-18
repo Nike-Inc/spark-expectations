@@ -59,7 +59,7 @@ class SparkExpectationsWriter:
                 df = df.withColumn(
                     self._context.get_run_id_name, lit(f"{self._context.get_run_id}")
                 ).withColumn(
-                    self._context.get_run_date_name,
+                    self._context.get_run_date_time_name,
                     to_timestamp(
                         lit(f"{self._context.get_run_date}"), "yyyy-MM-dd HH:mm:ss"
                     ),
