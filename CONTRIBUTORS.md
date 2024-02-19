@@ -10,6 +10,7 @@ Thanks to the contributors who helped on this project apart from the authors
 * [Holden Karau](https://www.linkedin.com/in/holdenkarau/)
 * [Araveti Venkata Bharat Kumar](https://www.linkedin.com/in/bharat-kumar-araveti/)
 * [Samy Coenen](https://github.com/SamyCoenen)
+* [Jagadapi Sivanaga Krishnam Raja Reddy](www.linkedin.com/in/jskrajareddy/)
 
 # Honorary Mentions
 Thanks to the team below for invaluable insights and support throughout the initial release of this project
