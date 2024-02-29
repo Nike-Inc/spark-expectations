@@ -41,6 +41,8 @@ class SparkExpectationsNotify:
                     # self._context.set_dq_start_time()
                     result = func(*args, **kwargs)
 
+                    print("verfing")
+
                     if self._context.get_notification_on_completion is True:
                         _on_completion()
                     # self._context.set_dq_end_time()
