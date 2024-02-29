@@ -125,7 +125,7 @@ class SparkExpectationsRegulateFlow:
                         f"{table_name}_error",
                         _context.get_row_dq_rule_type_name,
                     )
-                    if _context.get_summarised_row_dq_res:
+                    if _context.get_summarized_row_dq_res:
                         _notification.notify_rules_exceeds_threshold(expectations)
                         _writer.generate_rules_exceeds_threshold(expectations)
 

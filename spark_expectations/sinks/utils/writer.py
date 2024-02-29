@@ -139,18 +139,18 @@ class SparkExpectationsWriter:
             input_count: int = self._context.get_input_count
             error_count: int = self._context.get_error_count
             output_count: int = self._context.get_output_count
-            source_agg_dq_result: Optional[
-                List[Dict[str, str]]
-            ] = self._context.get_source_agg_dq_result
-            final_agg_dq_result: Optional[
-                List[Dict[str, str]]
-            ] = self._context.get_final_agg_dq_result
-            source_query_dq_result: Optional[
-                List[Dict[str, str]]
-            ] = self._context.get_source_query_dq_result
-            final_query_dq_result: Optional[
-                List[Dict[str, str]]
-            ] = self._context.get_final_query_dq_result
+            source_agg_dq_result: Optional[List[Dict[str, str]]] = (
+                self._context.get_source_agg_dq_result
+            )
+            final_agg_dq_result: Optional[List[Dict[str, str]]] = (
+                self._context.get_final_agg_dq_result
+            )
+            source_query_dq_result: Optional[List[Dict[str, str]]] = (
+                self._context.get_source_query_dq_result
+            )
+            final_query_dq_result: Optional[List[Dict[str, str]]] = (
+                self._context.get_final_query_dq_result
+            )
 
             error_stats_data = [
                 (
@@ -162,19 +162,27 @@ class SparkExpectationsWriter:
                     self._context.get_output_percentage,
                     self._context.get_success_percentage,
                     self._context.get_error_percentage,
-                    source_agg_dq_result
-                    if source_agg_dq_result and len(source_agg_dq_result) > 0
-                    else None,
-                    final_agg_dq_result
-                    if final_agg_dq_result and len(final_agg_dq_result) > 0
-                    else None,
-                    source_query_dq_result
-                    if source_query_dq_result and len(source_query_dq_result) > 0
-                    else None,
-                    final_query_dq_result
-                    if final_query_dq_result and len(final_query_dq_result) > 0
-                    else None,
-                    self._context.get_summarised_row_dq_res,
+                    (
+                        source_agg_dq_result
+                        if source_agg_dq_result and len(source_agg_dq_result) > 0
+                        else None
+                    ),
+                    (
+                        final_agg_dq_result
+                        if final_agg_dq_result and len(final_agg_dq_result) > 0
+                        else None
+                    ),
+                    (
+                        source_query_dq_result
+                        if source_query_dq_result and len(source_query_dq_result) > 0
+                        else None
+                    ),
+                    (
+                        final_query_dq_result
+                        if final_query_dq_result and len(final_query_dq_result) > 0
+                        else None
+                    ),
+                    self._context.get_summarized_row_dq_res,
                     self._context.get_rules_exceeds_threshold,
                     {
                         "run_status": self._context.get_dq_run_status,
@@ -208,7 +216,6 @@ class SparkExpectationsWriter:
                     ),
                 )
             ]
-            error_stats_rdd = self.spark.sparkContext.parallelize(error_stats_data)
 
             from pyspark.sql.types import (
                 StructType,
@@ -280,7 +287,7 @@ class SparkExpectationsWriter:
                 ]
             )
 
-            df = self.spark.createDataFrame(error_stats_rdd, schema=error_stats_schema)
+            df = self.spark.createDataFrame(error_stats_data, schema=error_stats_schema)
             self._context.print_dataframe_with_debugger(df)
 
             df = (
@@ -419,7 +426,7 @@ class SparkExpectationsWriter:
 
             _error_count = error_df.count()
             if _error_count > 0:
-                self.generate_summarised_row_dq_res(error_df, rule_type)
+                self.generate_summarized_row_dq_res(error_df, rule_type)
 
             _log.info("_write_error_records_final ended")
             return _error_count, df
@@ -429,9 +436,9 @@ class SparkExpectationsWriter:
                 f"error occurred while saving data into the final error table {e}"
             )
 
-    def generate_summarised_row_dq_res(self, df: DataFrame, rule_type: str) -> None:
+    def generate_summarized_row_dq_res(self, df: DataFrame, rule_type: str) -> None:
         """
-        This function implements/supports summarising row dq error result
+        This function implements/supports summarizing row dq error result
         Args:
             df: error dataframe(DataFrame)
             rule_type: type of the rule(str)
@@ -441,53 +448,21 @@ class SparkExpectationsWriter:
 
         """
         try:
-            # df_exploded = df.select(
-            #     explode(f"meta_{rule_type}_results").alias("row_dq_res")
-            # )
-            #
-            # keys = (
-            #     df_exploded.select(explode("row_dq_res"))
-            #     .select("key")
-            #     .distinct()
-            #     .rdd.flatMap(lambda x: x)
-            #     .collect()
-            # )
-            # nested_keys = [col("row_dq_res").getItem(k).alias(k) for k in keys]
-            #
-            # df_select = df_exploded.select(*nested_keys)
-            # df_pivot = (
-            #     df_select.groupBy(df_select.columns)
-            #     .count()
-            #     .withColumnRenamed("count", "failed_row_count")
-            # )
-            #
-            # keys += ["failed_row_count"]
-            # summarised_row_dq_list = df_pivot.rdd.map(
-            #     lambda x: {i: x[i] for i in keys}
-            # ).collect()
             df_explode = df.select(
                 explode(f"meta_{rule_type}_results").alias("row_dq_res")
             )
-            df_res = df_explode.withColumn(
-                "rule_type", col("row_dq_res")["rule_type"]
-            ).withColumn("rule", col("row_dq_res")["rule"]).withColumn(
-                "description", col("row_dq_res")["description"]
-            ).withColumn(
-                "tag", col("row_dq_res")["tag"]
-            ).withColumn(
-                "action_if_failed", col("row_dq_res")["action_if_failed"]
-            ).select(
-                "rule_type",
-                "rule",
-                "description",
-                "tag",
-                "action_if_failed"
-            ).groupBy(
-                "rule_type", "rule", "description", "tag", "action_if_failed"
-            ).count().withColumnRenamed(
-                "count", "failed_row_count"
+            df_res = (
+                df_explode.withColumn("rule_type", col("row_dq_res")["rule_type"])
+                .withColumn("rule", col("row_dq_res")["rule"])
+                .withColumn("description", col("row_dq_res")["description"])
+                .withColumn("tag", col("row_dq_res")["tag"])
+                .withColumn("action_if_failed", col("row_dq_res")["action_if_failed"])
+                .select("rule_type", "rule", "description", "tag", "action_if_failed")
+                .groupBy("rule_type", "rule", "description", "tag", "action_if_failed")
+                .count()
+                .withColumnRenamed("count", "failed_row_count")
             )
-            summarised_row_dq_list = [
+            summarized_row_dq_list = [
                 {
                     "rule_type": row.rule_type,
                     "rule": row.rule,
@@ -502,11 +477,11 @@ class SparkExpectationsWriter:
                     "description",
                     "tag",
                     "action_if_failed",
-                    "failed_row_count"
+                    "failed_row_count",
                 ).collect()
             ]
             failed_rule_list = []
-            for failed_rule in summarised_row_dq_list:
+            for failed_rule in summarized_row_dq_list:
                 failed_rule_list.append(failed_rule["rule"])
 
             for (
@@ -516,7 +491,7 @@ class SparkExpectationsWriter:
                 if each_rule_type in ["row_dq_rules"]:
                     for each_rule in all_rule_type_rules:
                         if each_rule["rule"] not in failed_rule_list:
-                            summarised_row_dq_list.append(
+                            summarized_row_dq_list.append(
                                 {
                                     "description": each_rule["description"],
                                     "tag": each_rule["tag"],
@@ -527,16 +502,16 @@ class SparkExpectationsWriter:
                                 }
                             )
 
-            self._context.set_summarised_row_dq_res(summarised_row_dq_list)
+            self._context.set_summarized_row_dq_res(summarized_row_dq_list)
 
         except Exception as e:
             raise SparkExpectationsMiscException(
-                f"error occurred created summarised row dq statistics {e}"
+                f"error occurred created summarized row dq statistics {e}"
             )
 
     def generate_rules_exceeds_threshold(self, rules: dict) -> None:
         """
-        This function implements/supports summarising row dq error threshold
+        This function implements/supports summarizing row dq error threshold
         Args:
             rules: accepts rule metadata within dict
         Returns:
@@ -545,12 +520,12 @@ class SparkExpectationsWriter:
         try:
             error_threshold_list = []
             rules_failed_row_count: Dict[str, int] = {}
-            if self._context.get_summarised_row_dq_res is None:
+            if self._context.get_summarized_row_dq_res is None:
                 return None
 
             rules_failed_row_count = {
                 itr["rule"]: int(itr["failed_row_count"])
-                for itr in self._context.get_summarised_row_dq_res
+                for itr in self._context.get_summarized_row_dq_res
             }
 
             for rule in rules[f"{self._context.get_row_dq_rule_type_name}_rules"]:

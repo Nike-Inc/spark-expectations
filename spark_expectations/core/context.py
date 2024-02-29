@@ -121,7 +121,7 @@ class SparkExpectationsContext:
             "num_final_query_dq_rules": 0,
         }
         self._num_dq_rules: int = 0
-        self._summarised_row_dq_res: Optional[List[Dict[str, str]]] = None
+        self._summarized_row_dq_res: Optional[List[Dict[str, str]]] = None
         self._rules_error_per: Optional[List[dict]] = None
 
         self._target_and_error_table_writer_config: dict = {}
@@ -1491,28 +1491,28 @@ class SparkExpectationsContext:
             accessing it"""
         )
 
-    def set_summarised_row_dq_res(
-        self, summarised_row_dq_res: Optional[List[Dict[str, str]]] = None
+    def set_summarized_row_dq_res(
+        self, summarized_row_dq_res: Optional[List[Dict[str, str]]] = None
     ) -> None:
         """
-        This function implements or supports to set row dq summarised res
+        This function implements or supports to set row dq summarized res
         Args:
-            summarised_row_dq_res: list(dict)
+            summarized_row_dq_res: list(dict)
         Returns: None
 
         """
-        self._summarised_row_dq_res = summarised_row_dq_res
+        self._summarized_row_dq_res = summarized_row_dq_res
 
     @property
-    def get_summarised_row_dq_res(self) -> Optional[List[Dict[str, str]]]:
+    def get_summarized_row_dq_res(self) -> Optional[List[Dict[str, str]]]:
         """
-        This function returns row dq summarised res
+        This function returns row dq summarized res
         Returns:
-            list(dict): Returns summarised_row_dq_res which in list of dict with str(key) and
+            list(dict): Returns summarized_row_dq_res which in list of dict with str(key) and
             str(value) of rule meta data
 
         """
-        return self._summarised_row_dq_res
+        return self._summarized_row_dq_res
 
     def set_rules_exceeds_threshold(self, rules: Optional[List[dict]] = None) -> None:
         """
