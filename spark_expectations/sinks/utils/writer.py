@@ -441,30 +441,91 @@ class SparkExpectationsWriter:
 
         """
         try:
-            df_exploded = df.select(
+            # df_exploded = df.select(
+            #     explode(f"meta_{rule_type}_results").alias("row_dq_res")
+            # )
+            #
+            # keys = (
+            #     df_exploded.select(explode("row_dq_res"))
+            #     .select("key")
+            #     .distinct()
+            #     .rdd.flatMap(lambda x: x)
+            #     .collect()
+            # )
+            # nested_keys = [col("row_dq_res").getItem(k).alias(k) for k in keys]
+            #
+            # df_select = df_exploded.select(*nested_keys)
+            # df_pivot = (
+            #     df_select.groupBy(df_select.columns)
+            #     .count()
+            #     .withColumnRenamed("count", "failed_row_count")
+            # )
+            #
+            # keys += ["failed_row_count"]
+            # summarised_row_dq_list = df_pivot.rdd.map(
+            #     lambda x: {i: x[i] for i in keys}
+            # ).collect()
+            df_explode = df.select(
                 explode(f"meta_{rule_type}_results").alias("row_dq_res")
             )
-
-            keys = (
-                df_exploded.select(explode("row_dq_res"))
-                .select("key")
-                .distinct()
-                .rdd.flatMap(lambda x: x)
-                .collect()
+            df_res = df_explode.withColumn(
+                "rule_type", col("row_dq_res")["rule_type"]
+            ).withColumn("rule", col("row_dq_res")["rule"]).withColumn(
+                "description", col("row_dq_res")["description"]
+            ).withColumn(
+                "tag", col("row_dq_res")["tag"]
+            ).withColumn(
+                "action_if_failed", col("row_dq_res")["action_if_failed"]
+            ).select(
+                "rule_type",
+                "rule",
+                "description",
+                "tag",
+                "action_if_failed"
+            ).groupBy(
+                "rule_type", "rule", "description", "tag", "action_if_failed"
+            ).count().withColumnRenamed(
+                "count", "failed_row_count"
             )
-            nested_keys = [col("row_dq_res").getItem(k).alias(k) for k in keys]
+            summarised_row_dq_list = [
+                {
+                    "rule_type": row.rule_type,
+                    "rule": row.rule,
+                    "description": row.description,
+                    "tag": row.tag,
+                    "action_if_failed": row.action_if_failed,
+                    "failed_row_count": row.failed_row_count,
+                }
+                for row in df_res.select(
+                    "rule_type",
+                    "rule",
+                    "description",
+                    "tag",
+                    "action_if_failed",
+                    "failed_row_count"
+                ).collect()
+            ]
+            failed_rule_list = []
+            for failed_rule in summarised_row_dq_list:
+                failed_rule_list.append(failed_rule["rule"])
 
-            df_select = df_exploded.select(*nested_keys)
-            df_pivot = (
-                df_select.groupBy(df_select.columns)
-                .count()
-                .withColumnRenamed("count", "failed_row_count")
-            )
-
-            keys += ["failed_row_count"]
-            summarised_row_dq_list = df_pivot.rdd.map(
-                lambda x: {i: x[i] for i in keys}
-            ).collect()
+            for (
+                each_rule_type,
+                all_rule_type_rules,
+            ) in self._context.get_dq_expectations.items():
+                if each_rule_type in ["row_dq_rules"]:
+                    for each_rule in all_rule_type_rules:
+                        if each_rule["rule"] not in failed_rule_list:
+                            summarised_row_dq_list.append(
+                                {
+                                    "description": each_rule["description"],
+                                    "tag": each_rule["tag"],
+                                    "rule": each_rule["rule"],
+                                    "action_if_failed": each_rule["action_if_failed"],
+                                    "rule_type": each_rule["rule_type"],
+                                    "failed_row_count": 0,
+                                }
+                            )
 
             self._context.set_summarised_row_dq_res(summarised_row_dq_list)
 
