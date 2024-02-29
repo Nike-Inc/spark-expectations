@@ -36,6 +36,7 @@ class SparkExpectationsContext:
         self._source_query_dq_status: str = "Skipped"
         self._final_query_dq_status: str = "Skipped"
         self._dq_run_status: str = "Failed"
+        self._dq_expectations: Optional[Dict[str, str]] = None
 
         # above configuration variable value has to be set to python
         self._dq_project_env_name = "spark_expectations"
@@ -162,6 +163,24 @@ class SparkExpectationsContext:
             return self._dq_stats_table_name
         raise SparkExpectationsMiscException(
             """The spark expectations context is not set completely, please assign '_dq_stats_table_name' before 
+            accessing it"""
+        )
+
+    def set_dq_expectations(self, dq_expectations: dict) -> None:
+        self._dq_expectations = dq_expectations
+
+    @property
+    def get_dq_expectations(self) -> dict:
+        """
+        Get dq_expectations to which has rule infromation
+
+        Returns:
+            str: returns the rules_df
+        """
+        if self._dq_expectations:
+            return self._dq_expectations
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign '_dq_expectations' before 
             accessing it"""
         )
 
