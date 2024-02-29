@@ -139,18 +139,18 @@ class SparkExpectationsWriter:
             input_count: int = self._context.get_input_count
             error_count: int = self._context.get_error_count
             output_count: int = self._context.get_output_count
-            source_agg_dq_result: Optional[List[Dict[str, str]]] = (
-                self._context.get_source_agg_dq_result
-            )
-            final_agg_dq_result: Optional[List[Dict[str, str]]] = (
-                self._context.get_final_agg_dq_result
-            )
-            source_query_dq_result: Optional[List[Dict[str, str]]] = (
-                self._context.get_source_query_dq_result
-            )
-            final_query_dq_result: Optional[List[Dict[str, str]]] = (
-                self._context.get_final_query_dq_result
-            )
+            source_agg_dq_result: Optional[
+                List[Dict[str, str]]
+            ] = self._context.get_source_agg_dq_result
+            final_agg_dq_result: Optional[
+                List[Dict[str, str]]
+            ] = self._context.get_final_agg_dq_result
+            source_query_dq_result: Optional[
+                List[Dict[str, str]]
+            ] = self._context.get_source_query_dq_result
+            final_query_dq_result: Optional[
+                List[Dict[str, str]]
+            ] = self._context.get_final_query_dq_result
 
             error_stats_data = [
                 (
