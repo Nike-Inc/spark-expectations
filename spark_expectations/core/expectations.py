@@ -45,7 +45,7 @@ class SparkExpectations:
     stats_streaming_options: Optional[Dict[str, Union[str, bool]]] = None
 
     def __post_init__(self) -> None:
-        print("Initializing _post_init in SparkExpectations")
+        
         if isinstance(self.rules_df, DataFrame):
             self.spark: SparkSession = self.rules_df.sparkSession
         else:
@@ -79,7 +79,7 @@ class SparkExpectations:
         self._context.set_dq_stats_table_name(self.stats_table)
         self._context.set_dq_detailed_stats_table_name(f"{self.stats_table}_custom")
         self.rules_df = self.rules_df.persist(StorageLevel.MEMORY_AND_DISK)
-        print("Completed _post_init in SparkExpectations")
+        
 
     # TODO Add target_error_table_writer and stats_table_writer as parameters to this function so this takes precedence
     #  if user provides it
@@ -112,7 +112,7 @@ class SparkExpectations:
 
         def _except(func: Any) -> Any:
             # variable used for enabling notification at different level
-            print("Initializing _except in with_expectations")
+            
             _default_notification_dict: Dict[str, Union[str, int, bool]] = {
                 user_config.se_notifications_on_start: False,
                 user_config.se_notifications_on_completion: False,
@@ -190,8 +190,7 @@ class SparkExpectations:
             expectations, rules_execution_settings = self.reader.get_rules_from_df(
                 self.rules_df, target_table
             )
-            print("expectations:", expectations)
-            print("rules_execution_settings:", rules_execution_settings)
+            
             _row_dq: bool = rules_execution_settings.get("row_dq", False)
             _source_agg_dq: bool = rules_execution_settings.get("source_agg_dq", False)
             _target_agg_dq: bool = rules_execution_settings.get("target_agg_dq", False)
@@ -274,7 +273,7 @@ class SparkExpectations:
             @functools.wraps(func)
             def wrapper(*args: tuple, **kwargs: dict) -> DataFrame:
                 try:
-                    print("Initialzing wrapper in with_expectations")
+                    
                     _log.info("The function dataframe is getting created")
                     # _df: DataFrame = func(*args, **kwargs)
                     _df: DataFrame = func(*args, **kwargs)
@@ -540,10 +539,10 @@ class SparkExpectations:
                         f"error occurred while processing spark expectations {e}"
                     )
 
-            print("completed wrapper in with_expectations")
+            
             return wrapper
 
-        print("completed _except in with_expectations")
+        
         return _except
 
 

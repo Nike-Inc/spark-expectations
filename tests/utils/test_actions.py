@@ -23,7 +23,7 @@ def fixture_df():
             {"row_id": 2, "col1": 3, "col2": "c"},
         ]
     )
-    print("_fixture_df", _fixture_df.show(truncate=False)   )
+    
     return _fixture_df
 
 
@@ -457,7 +457,7 @@ def test_agg_query_dq_detailed_result(_fixture_df,
                           _fixture_mock_context):
     result_df = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context, _fixture_agg_dq_rule,_fixture_df
                                                      )
-    print("result_df_test:",result_df)
+    
 
     
     assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get("result").get("product_id")
@@ -479,7 +479,7 @@ def test_agg_query_dq_detailed_result_without_detailed_context(_fixture_df,
                           _fixture_mock_context_without_detailed_stats):
     result_df = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context_without_detailed_stats, _fixture_agg_dq_rule,_fixture_df
                                                      )
-    print("result_df_test:",result_df)
+    
 
     
     assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("product_id")

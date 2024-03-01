@@ -16,9 +16,9 @@ class SparkExpectationsCollectStatistics:
     _writer: SparkExpectationsWriter
 
     def __post_init__(self) -> None:
-        print("Initialzing __post_init__ in SparkExpectationsCollectStatistics")
+        
         self.collect_stats_decorator = self.collect_stats_on_success_failure()
-        print("completed __post_init__ in SparkExpectationsCollectStatistics")
+        
 
     def collect_stats_on_success_failure(self) -> Any:
         """

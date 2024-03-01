@@ -187,14 +187,14 @@ class SparkExpectationsActions:
                 _querydq_status_query = (
                     "SELECT (" + str(_dq_rule["expectation"]) + ") AS OUTPUT"
                 )
-                print("querydq_status_query", _querydq_status_query)
+                
                 _querydq_source_query = _dq_rule["expectation_query_dq_source_query"]
                 _querydq_target_query = _dq_rule["expectation_query_dq_target_query"]
                 _query_dq_result = int(
                     _context.spark.sql(_querydq_status_query).collect()[0][0]
                 )
 
-                print("_query_dq_result check:", _query_dq_result)
+                
 
                 status = "pass" if _query_dq_result else "fail"
                 _querydq_source_query_output = (
@@ -215,8 +215,7 @@ class SparkExpectationsActions:
                     _querydq_source_query_output = _querydq_source_query_output[0:300]
                     _querydq_target_query_output = _querydq_target_query_output[0:300]
 
-                print("source_query_output", _querydq_source_query_output)
-                print("target_query_output", _querydq_target_query_output)
+               
 
                 expected_value = (
                     _querydq_source_query_output
@@ -337,10 +336,7 @@ class SparkExpectationsActions:
 
         """
         try:
-            print("rule_type in actions.py", rule_type)
-            print("_source_dq_enabled in actions.py", _source_dq_enabled)
-            print("_target_dq_enabled in actions.py", _target_dq_enabled)
-            print("Initilized run_dq_rules in execute_dq_process in actions.py")
+            
             condition_expressions = []
             _agg_query_dq_results = []
             if len(expectations) <= 0:
@@ -354,11 +350,7 @@ class SparkExpectationsActions:
                     f"zero expectations to process for {rule_type}_rules from the `dq_rules` table, "
                     f"please configure rules or avoid this error by setting {rule_type} to False"
                 )
-            print("###################################################################")
-            print("Iterating through run_dq_rules in execute_dq_process in actions.py")
-            print("###################################################################")
-            print("_source_dq_enabled", _source_dq_enabled)
-            print("_target_dq_enabled", _target_dq_enabled)
+           
             for rule in expectations[f"{rule_type}_rules"]:
                 _rule_is_active = SparkExpectationsActions.get_rule_is_active(
                     _context,
@@ -405,8 +397,7 @@ class SparkExpectationsActions:
                             )
                         )
 
-            print("###################################################################")
-            print("agg_query_dq_result in actions.py 287", _agg_query_dq_results)
+            
 
             if (
                 rule_type == _context.get_agg_dq_rule_type_name
@@ -443,15 +434,7 @@ class SparkExpectationsActions:
             ):
                 _context.set_target_query_dq_detailed_stats(_agg_query_dq_results)
 
-                print(
-                    "###################################################################"
-                )
-                print(
-                    "target_query_dq_detailed_stats in actions.py",
-                    _agg_query_dq_results,
-                )
-
-            print("condition_expressions in actions.py", condition_expressions)
+            
 
             if len(condition_expressions) > 0:
                 if rule_type in [

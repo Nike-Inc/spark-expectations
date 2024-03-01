@@ -15,11 +15,11 @@ class SparkExpectationsNotify:
     _context: SparkExpectationsContext
 
     def __post_init__(self) -> None:
-        print("Initializing __post_init__ in SparkExpectationsNotify")
+        
         self.send_notification_decorator: Any = self.notify_on_start_completion_failure(
             self.notify_on_start, self.notify_on_completion, self.notify_on_failure
         )
-        print("completed __post_init__ in SparkExpectationsNotify")
+        
 
     def notify_on_start_completion_failure(
         self, _on_start: Any, _on_completion: Any, _on_failure: Any
@@ -60,7 +60,7 @@ class SparkExpectationsNotify:
 
             return wrapper
 
-        print("completed notify_on_start_completion_failure in SparkExpectationsNotify")
+        
         return decorator
 
     def notify_on_start(self) -> None:
@@ -69,7 +69,7 @@ class SparkExpectationsNotify:
         Returns: None
 
         """
-        print("Initialzing notify_on_start in SparkExpectationsNotify")
+        
         _notification_message = (
             "Spark expectations job has started \n\n"
             f"table_name: {self._context.get_table_name}\n"
@@ -83,7 +83,7 @@ class SparkExpectationsNotify:
                 "message": _notification_message,
             },
         )
-        print("completed notify_on_start in SparkExpectationsNotify")
+        
 
     def notify_on_exceeds_of_error_threshold(self) -> None:
         """
@@ -122,7 +122,7 @@ class SparkExpectationsNotify:
         Returns: None
 
         """
-        print("Initialzing notify_on_completion in SparkExpectationsNotify")
+        
         _notification_message = (
             "Spark expectations job has been completed  \n\n"
             f"product_id: {self._context.product_id}\n"
@@ -144,7 +144,7 @@ class SparkExpectationsNotify:
         _notification_hook.send_notification(
             _context=self._context, _config_args={"message": _notification_message}
         )
-        print("completed notify_on_completion in SparkExpectationsNotify")
+        
 
     def notify_on_failure(self, _error: str) -> None:
         """
@@ -155,7 +155,7 @@ class SparkExpectationsNotify:
         Returns: None
 
         """
-        print("Initialzing notify_on_failure in SparkExpectationsNotify")
+        
         _notification_message = (
             "Spark expectations job has been failed  \n\n"
             f"product_id: {self._context.product_id}\n"
@@ -179,7 +179,7 @@ class SparkExpectationsNotify:
                 "message": _notification_message,
             },
         )
-        print("completed notify_on_failure in SparkExpectationsNotify")
+        
 
     def construct_message_for_each_rules(
         self,

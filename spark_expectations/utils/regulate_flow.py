@@ -45,7 +45,7 @@ class SparkExpectationsRegulateFlow:
                Any: returns function
 
         """
-        print("Initilized execute_dq_process in SparkExpectationsRegulateFlow")
+        
 
         def func_process(
             df: DataFrame,
@@ -77,7 +77,7 @@ class SparkExpectationsRegulateFlow:
 
             """
             try:
-                print("Initilized func_process in execute_dq_process")
+                
                 _error_df: Optional[DataFrame] = None
                 _error_count: int = error_count
 
@@ -107,10 +107,7 @@ class SparkExpectationsRegulateFlow:
                         final_query_dq_flag is True or final_agg_dq_flag is True
                     ),
                 )
-                print(
-                    "###################################################################"
-                )
-                print("df_dq dataframe in regulate flow", _df_dq.show(truncate=False))
+                
 
                 _log.info("The data quality dataframe is created for expectations")
                 _context.print_dataframe_with_debugger(_df_dq)
@@ -122,10 +119,7 @@ class SparkExpectationsRegulateFlow:
                     if row_dq_flag is False
                     else None
                 )
-                print(
-                    "###################################################################"
-                )
-                print("agg_dq_res in regulate flow", agg_dq_res)
+                
 
                 if row_dq_flag:
                     _log.info("Writing error records into the table started")
@@ -176,5 +170,4 @@ class SparkExpectationsRegulateFlow:
                     f"error occurred while executing func_process {e}"
                 )
 
-        print("completed func_process in execute_dq_process")
         return func_process

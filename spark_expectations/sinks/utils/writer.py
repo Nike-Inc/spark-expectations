@@ -54,7 +54,7 @@ class SparkExpectationsWriter:
 
         """
         try:
-            print("run date ", self._context.get_run_date)
+            
             if not stats_table:
                 df = df.withColumn(
                     self._context.get_run_id_name, lit(f"{self._context.get_run_id}")
@@ -192,7 +192,7 @@ class SparkExpectationsWriter:
                             _input_count,
                         )
                     )
-                print("_row_dq_result:", _row_dq_result)
+                
 
             return _row_dq_result
 
@@ -349,11 +349,6 @@ class SparkExpectationsWriter:
             if _source_aggdq_detailed_stats_result is not None:
                 _source_aggdq_detailed_stats_result.extend(_rowdq_detailed_stats_result)
 
-            print("_rowdq_detailed_stats_result:", _rowdq_detailed_stats_result)
-            print(
-                "__target_aggdq_detailed_stats_result 2:",
-                _target_aggdq_detailed_stats_result,
-            )
 
             if (
                 (_target_agg_dq is True or _target_query_dq is True)
@@ -400,11 +395,6 @@ class SparkExpectationsWriter:
                 )
             )
 
-            print("####################################################")
-            print(
-                "Initial _df_target_aggquery_detailed_stats",
-                _df_target_aggquery_detailed_stats.show(truncate=False),
-            )
 
             _df_detailed_stats = _df_source_aggquery_detailed_stats.join(
                 _df_target_aggquery_detailed_stats,
@@ -412,8 +402,6 @@ class SparkExpectationsWriter:
                 "full_outer",
             )
 
-            print("####################################################")
-            print("Initial _df_detailed_stats", _df_detailed_stats.show(truncate=False))
 
             _df_detailed_stats = _df_detailed_stats.withColumn(
                 "dq_date", F.current_date()
@@ -422,7 +410,6 @@ class SparkExpectationsWriter:
 
             self._context.print_dataframe_with_debugger(_df_detailed_stats)
 
-            print("final _df_detailed_stats", _df_detailed_stats)
 
             _log.info(
                 "Writing metrics to the detailed stats table: %s, started",
