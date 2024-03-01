@@ -214,13 +214,17 @@ class SparkExpectationsWriter:
         """
         try:
             self.spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
+            
 
             from pyspark.sql.types import (
                 StructType,
                 StructField,
                 StringType,
+                
                 LongType,
+                
                 ArrayType,
+                
             )
             from pyspark.sql import functions as F
 
@@ -415,6 +419,7 @@ class SparkExpectationsWriter:
                 "dq_date", F.current_date()
             ).withColumn("dq_time", F.lit(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
+
             self._context.print_dataframe_with_debugger(_df_detailed_stats)
 
             print("final _df_detailed_stats", _df_detailed_stats)
@@ -423,13 +428,6 @@ class SparkExpectationsWriter:
                 "Writing metrics to the detailed stats table: %s, started",
                 self._context.get_dq_detailed_stats_table_name,
             )
-            if (
-                self._context.get_detailed_stats_table_writer_config["format"]
-                == "bigquery"
-            ):
-                _df_detailed_stats = _df_detailed_stats.withColumn(
-                    "dq_rules", to_json(_df_detailed_stats["dq_rules"])
-                )
 
             self.save_df_as_table(
                 _df_detailed_stats,

@@ -48,9 +48,30 @@ def fixture_mock_context():
     return mock_object
 
 
+@pytest.fixture(name="_fixture_mock_context_without_detailed_stats")
+def fixture_mock_context_without_detailed_stats():
+    # fixture for mock context without_detailed_stats
+    mock_object = Mock(spec=SparkExpectationsContext)
+    mock_object.product_id = "product1"
+    mock_object.spark=spark
+    mock_object.get_row_dq_rule_type_name = "row_dq"
+    mock_object.get_agg_dq_rule_type_name = "agg_dq"
+    mock_object.get_query_dq_rule_type_name = "query_dq"
+    mock_object.get_agg_dq_detailed_stats_status = False
+    mock_object.get_query_dq_detailed_stats_status = False
+    mock_object.get_supported_df_query_dq = spark.createDataFrame(
+        [
+            {
+                "spark_expectations_test": "se_query_dq"
+            }
+        ]
+    )
+    return mock_object
 
-@pytest.fixture(name="_fixture_row_dq_rule")
-def fixture_row_dq_rule():
+
+
+@pytest.fixture(name="_fixture_agg_dq_rule")
+def fixture_agg_dq_rule():
     # Define the expectations for the data quality rules
     return {
                 "rule_type": "agg_dq",
@@ -62,6 +83,22 @@ def fixture_row_dq_rule():
                 "enable_for_source_dq_validation": True,
                 "description": "col1 sum gt 1",
                 "product_id": "product_1"
+            }
+
+
+@pytest.fixture(name="_fixture_query_dq_rule")
+def fixture_query_dq_rule():
+    # Define the expectations for the data quality rules
+    return {
+                "product_id": "product_1",
+                "rule_type": "query_dq",
+                "rule": "table_row_count_gt_1",
+                "expectation": "((select count(*) from query_test_table)-(select count(*) from query_test_table_target))>1",
+                "action_if_failed": "ignore",
+                "table_name": "test_table",
+                "tag": "validity",
+                "enable_for_target_dq_validation": True,
+                "description": "table count should be greater than 1"
             }
 
 
@@ -78,9 +115,7 @@ def fixture_expectations():
                 "action_if_failed": "ignore",
                 "table_name": "test_table",
                 "tag": "validity",
-                "description": "col1 gt or eq 1",
-                "expectation_query_dq_source_query": "",
-                "expectation_query_dq_target_query": ""
+                "description": "col1 gt or eq 1"
             },
             {
                 "product_id": "product_1",
@@ -90,9 +125,7 @@ def fixture_expectations():
                 "action_if_failed": "drop",
                 "table_name": "test_table",
                 "tag": "accuracy",
-                "description": "col1 gt or eq 2",
-                "expectation_query_dq_source_query": "",
-                "expectation_query_dq_target_query": ""
+                "description": "col1 gt or eq 2"
             },
             {
                 "product_id": "product_1",
@@ -102,9 +135,7 @@ def fixture_expectations():
                 "action_if_failed": "fail",
                 "table_name": "test_table",
                 "tag": "completeness",
-                "description": "col1 gt or eq 3",
-                "expectation_query_dq_source_query": "",
-                "expectation_query_dq_target_query": ""
+                "description": "col1 gt or eq 3"
             },
         ],
         "agg_dq_rules": [
@@ -117,9 +148,7 @@ def fixture_expectations():
                 "table_name": "test_table",
                 "tag": "validity",
                 "enable_for_source_dq_validation": True,
-                "description": "col1 sum gt 1",
-                "expectation_query_dq_source_query": "",
-                "expectation_query_dq_target_query": ""
+                "description": "col1 sum gt 1"
             },
             {
                 "product_id": "product_1",
@@ -130,9 +159,7 @@ def fixture_expectations():
                 "table_name": "test_table",
                 "tag": "accuracy",
                 "enable_for_source_dq_validation": True,
-                "description": "col2 unique value grater than 3",
-                "expectation_query_dq_source_query": "",
-                "expectation_query_dq_target_query": ""
+                "description": "col2 unique value grater than 3"
             }
         ],
         "query_dq_rules": [
@@ -140,27 +167,27 @@ def fixture_expectations():
                 "product_id": "product_1",
                 "rule_type": "query_dq",
                 "rule": "table_row_count_gt_1",
-                "expectation": "(select count(*) from query_test_table)>1",
+                "expectation": "((select count(*) from query_test_table)-(select count(*) from query_test_table_target))>1",
                 "action_if_failed": "ignore",
                 "table_name": "test_table",
                 "tag": "validity",
                 "enable_for_target_dq_validation": True,
                 "description": "table count should be greater than 1",
-                "expectation_query_dq_source_query": "",
-                "expectation_query_dq_target_query": ""
+                "expectation_query_dq_source_query": "select count(*) from query_test_table",
+                "expectation_query_dq_target_query": "select count(*) from query_test_table_target"
             },
             {
                 "product_id": "product_1",
                 "rule_type": "query_dq",
                 "rule": "table_distinct_count",
-                "expectation": "(select count(*) from (select distinct col1, col2 from query_test_table))>3",
+                "expectation": "((select count(*) from (select distinct col1, col2 from query_test_table))-(select count(*) from (select distinct col1, col2 from query_test_table_target)))>3",
                 "action_if_failed": "fail",
                 "table_name": "test_table",
                 "tag": "accuracy",
                 "enable_for_target_dq_validation": True,
                 "description": "table distinct row count should be greater than 3",
-                "expectation_query_dq_source_query": "",
-                "expectation_query_dq_target_query": ""
+                "expectation_query_dq_source_query": "select count(*) from (select distinct col1, col2 from query_test_table)",
+                "expectation_query_dq_target_query": "select count(*) from (select distinct col1, col2 from query_test_table_target)"
             }
         ]
 
@@ -183,6 +210,20 @@ def fixture_agg_dq_detailed_expected_result():
                 "description": "col1 sum gt 1",
                 "actual_value" : [6],
                 "expected_value" : ['>=6']
+                
+            },
+        "result_without_context": 
+            {
+                "product_id": "product_1",
+                "table_name": "test_table",
+                "rule_type": "agg_dq",
+                "rule": "col1_sum_gt_eq_6",
+                "expectation": "sum(col1)>=6",
+                "tag": "validity",
+                "status": None,
+                "description": "col1 sum gt 1",
+                "actual_value" : None,
+                "expected_value" : None
                 
             }
 
@@ -255,15 +296,23 @@ def fixture_query_dq_expected_result():
     # define the expected result for agg dq operations
     return {
         "result":
-            [{
-                "rule_type": "query_dq",
-                "rule": "table_distinct_count",
-                "action_if_failed": "fail",
-                "tag": "accuracy",
-                "description": "table distinct row count should be greater than 3"
-            }
-            ]
-    }
+            [
+             {
+              'rule': 'table_row_count_gt_1', 
+              'description': 'table count should be greater than 1',
+              'rule_type': 'query_dq', 
+              'tag': 'validity', 
+              'action_if_failed': 'ignore'
+             }, 
+             {
+              'rule': 'table_distinct_count',
+              'description': 'table distinct row count should be greater than 3',
+              'rule_type': 'query_dq', 
+              'tag': 'accuracy', 
+              'action_if_failed': 'fail'
+             }
+             ]
+             }
 
 
 import pytest
@@ -391,11 +440,22 @@ def test_create_agg_dq_results_exception(input_df,
         SparkExpectationsActions().create_agg_dq_results(_fixture_mock_context, input_df, "<test>", )
 
 
+
+def test_agg_query_dq_detailed_result_exception(_fixture_df,
+                          _fixture_query_dq_rule,
+                          _fixture_mock_context):
+    # faulty user input is given to test the exception functionality of the agg_query_dq_detailed_result
+    with pytest.raises(SparkExpectationsMiscException,
+                       match=r"error occurred while running agg_query_dq_detailed_result .*"):
+        SparkExpectationsActions().agg_query_dq_detailed_result(_fixture_mock_context, _fixture_query_dq_rule,_fixture_df )
+
+
+
 def test_agg_query_dq_detailed_result(_fixture_df,
-                          _fixture_row_dq_rule,
+                          _fixture_agg_dq_rule,
                           _fixture_agg_dq_detailed_expected_result,
                           _fixture_mock_context):
-    result_df = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context, _fixture_row_dq_rule,_fixture_df
+    result_df = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context, _fixture_agg_dq_rule,_fixture_df
                                                      )
     print("result_df_test:",result_df)
 
@@ -411,6 +471,29 @@ def test_agg_query_dq_detailed_result(_fixture_df,
     
     assert result_df[9] == _fixture_agg_dq_detailed_expected_result.get("result").get("actual_value")
     assert result_df[10] == _fixture_agg_dq_detailed_expected_result.get("result").get("expected_value")
+
+
+def test_agg_query_dq_detailed_result_without_detailed_context(_fixture_df,
+                          _fixture_agg_dq_rule,
+                          _fixture_agg_dq_detailed_expected_result,
+                          _fixture_mock_context_without_detailed_stats):
+    result_df = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context_without_detailed_stats, _fixture_agg_dq_rule,_fixture_df
+                                                     )
+    print("result_df_test:",result_df)
+
+    
+    assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("product_id")
+    assert result_df[2] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("table_name")
+    assert result_df[3] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("rule_type")
+    assert result_df[4] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("rule")
+    assert result_df[5] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("expectation")
+    assert result_df[6] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("tag")
+    assert result_df[7] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("description")
+    assert result_df[8] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("status")
+    
+    assert result_df[9] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("actual_value")
+    assert result_df[10] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("expected_value")
+
 
 
 def test_run_dq_rules_row(_fixture_df,
@@ -461,6 +544,7 @@ def test_run_dq_rules_query(_fixture_df,
                             _fixture_mock_context):
     # Apply the data quality rules
     _fixture_df.createOrReplaceTempView("query_test_table")
+    _fixture_df.createOrReplaceTempView("query_test_table_target")
     print(_fixture_expectations["query_dq_rules"])
     result_df = SparkExpectationsActions.run_dq_rules(_fixture_mock_context, _fixture_df, _fixture_expectations,
                                                       "query_dq", False, True)

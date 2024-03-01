@@ -17,6 +17,21 @@ from spark_expectations.core.expectations import WrappedDataFrameWriter
 spark = get_spark_session()
 
 
+@pytest.fixture(name="_fixture_mock_context")
+def fixture_mock_context():
+    # fixture for mock context
+    mock_object = Mock(spec=SparkExpectationsContext)
+    
+    mock_object.get_dq_expectations = {
+         'rule': 'table_row_count_gt_1', 
+         'description': 'table count should be greater than 1',
+         'rule_type': 'query_dq', 
+         'tag': 'validity', 
+         'action_if_failed': 'ignore',
+    }
+    
+    return mock_object
+
 @pytest.fixture(name="_fixture_local_kafka_topic")
 def fixture_setup_local_kafka_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -222,6 +237,31 @@ def test_write_df_to_table(save_df_as_table,
     save_df_as_table.assert_called_once_with(
         _fixture_writer, _fixture_employee, table_name, options
     )
+
+@pytest.mark.parametrize("input_record", [
+    ({
+    'row_dq_rules': {'product_id': 'your_product', 'table_name': 'dq_spark_local.customer_order',
+                    'rule_type': 'row_dq', 'rule': 'sales_greater_than_zero', 
+                    'column_name': 'sales', 'expectation': 'sales > 2', 'action_if_failed': 'drop', 
+                    'enable_for_source_dq_validation': False, 
+                    'enable_for_target_dq_validation': True, 'tag': 'accuracy', 'description': 'sales value should be greater than zero', 
+                    'enable_error_drop_alert': False, 'error_drop_threshold': 0
+                    }, 
+    })
+])
+def test_get_row_dq_detailed_stats_exception(
+                                         input_record,_fixture_writer):
+    
+    _mock_context = Mock(spec=SparkExpectationsContext)
+    setattr(_mock_context, "get_dq_expectations", input_record.get("row_dq_rules"))
+    _mock_context.spark = spark
+    _fixture_writer = SparkExpectationsWriter(_mock_context)
+    # faulty user input is given to test the exception functionality of the agg_dq_result
+    with pytest.raises(SparkExpectationsMiscException,
+                       match=r"error occurred while fetching the stats from get_row_dq_detailed_stats .*"):
+        _fixture_writer.get_row_dq_detailed_stats()
+
+
 
 
 @pytest.mark.parametrize("input_record, expected_result, writer_config", [
@@ -573,7 +613,6 @@ def test_write_error_stats(input_record,
 
 
 
-
 @pytest.mark.parametrize("input_record, expected_result, writer_config", [
     ({
          "input_count": 100,
@@ -599,13 +638,13 @@ def test_write_error_stats(input_record,
          "detailed_stats_table_writer_config" : {'mode': 'overwrite', "format": "delta", 'partitionBy': [], 'bucketBy': {}, 'sortBy': [],
                                                'options': {"mergeSchema": "true"}},
          
-         "rowdq_detailed_stats" : [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1','dq_spark_local.customer_order', 'row_dq', 'sales_greater_than_zero', 'sales > 2', 'accuracy', 'sales value should be greater than zero', 'fail', None, None, None, 5),
+         "rowdq_detailed_stats" : [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1','dq_spark_local.customer_order', 'row_dq', 'sales_greater_than_zero', 'sales > 2', 'accuracy', 'sales value should be greater than zero', 'fail', None, None, None, 4),
                                    ],
          
          "source_agg_dq_detailed_stats": [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1', 'dq_spark_local.customer_order', 'agg_dq', 'sum_of_sales', 'sum(sales)>10000', 'validity', 'regex format validation for quantity','fail', [1988], ['>10000'], 5), 
                                           ],
 
-         "target_agg_dq_detailed_stats": [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1', 'dq_spark_local.customer_order', 'agg_dq', 'sum_of_sales', 'sum(sales)>10000', 'validity', 'regex format validation for quantity','fail', [1030], ['>10000'], 5),
+         "target_agg_dq_detailed_stats": [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1', 'dq_spark_local.customer_order', 'agg_dq', 'sum_of_sales', 'sum(sales)>10000', 'validity', 'regex format validation for quantity','fail', [1030], ['>10000'], 4),
                                           ],
 
         "source_query_dq_detailed_stats": [('product_1_52fed65a-d670-11ee-8dfb-ae03267c3341', 'product_1', 'dq_spark_local.customer_order', 'query_dq', 'product_missing_count_threshold', '((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3', 'validity', 'row count threshold', 'pass', ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'], ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', '{"product_id":"OFF-ST-10000760","order_id":"US-2015-108966"}', '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'], 5)
@@ -625,7 +664,7 @@ def test_write_error_stats(input_record,
          "target_expectations": "sum(sales)>10000",
          "target_dq_status": "fail",
          "target_dq_actual_result": ['1030'],
-         "target_dq_row_count": 5,
+         "target_dq_row_count": 4,
          "source_expectations": "sum(sales)>10000",
     
      }, None),
@@ -653,13 +692,13 @@ def test_write_error_stats(input_record,
          "detailed_stats_table_writer_config" : {'mode': 'overwrite', "format": "delta", 'partitionBy': [], 'bucketBy': {}, 'sortBy': [],
                                                'options': {"mergeSchema": "true"}},
          
-         "rowdq_detailed_stats" : [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1','dq_spark_local.customer_order', 'row_dq', 'sales_greater_than_zero', 'sales > 2', 'accuracy', 'sales value should be greater than zero', 'fail', None, None, None, 5),
+         "rowdq_detailed_stats" : [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1','dq_spark_local.customer_order', 'row_dq', 'sales_greater_than_zero', 'sales > 2', 'accuracy', 'sales value should be greater than zero', 'fail', None, None, None, 4),
                                    ],
          
          "source_agg_dq_detailed_stats": [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1', 'dq_spark_local.customer_order', 'agg_dq', 'sum_of_sales', 'sum(sales)>10000', 'validity', 'regex format validation for quantity','fail', [1988], ['>10000'], 5), 
                                           ],
 
-         "target_agg_dq_detailed_stats": [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1', 'dq_spark_local.customer_order', 'agg_dq', 'sum_of_sales', 'sum(sales)>10000', 'validity', 'regex format validation for quantity','fail', [1030], ['>10000'], 5),
+         "target_agg_dq_detailed_stats": [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1', 'dq_spark_local.customer_order', 'agg_dq', 'sum_of_sales', 'sum(sales)>10000', 'validity', 'regex format validation for quantity','fail', [1030], ['>10000'], 4),
                                           ],
 
         "source_query_dq_detailed_stats": [('product_1_52fed65a-d670-11ee-8dfb-ae03267c3341', 'product_1', 'dq_spark_local.customer_order', 'query_dq', 'product_missing_count_threshold', '((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3', 'validity', 'row count threshold', 'pass', 
@@ -699,13 +738,13 @@ def test_write_error_stats(input_record,
                                              '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', 
                                              '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', 
                                              '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'],
-         "target_dq_row_count": 5,
+         "target_dq_row_count": 4,
         
     
-     }, None),
+     }, {'mode': 'append', "format": "bigquery", 'partitionBy': [], 'bucketBy': {}, 'sortBy': [],
+         'options': {"mergeSchema": "true"}}),
 
 ])
-
 def test_write_detailed_stats(input_record,
                            expected_result,
                            writer_config,) -> None:
@@ -743,11 +782,6 @@ def test_write_detailed_stats(input_record,
     setattr(_mock_context, "get_input_count", input_record.get("input_count"))
     setattr(_mock_context, "get_dq_expectations", input_record.get("dq_expectations"))
     
-    
-    
-    
-
-
 
     if writer_config is None:
         setattr(_mock_context, "_stats_table_writer_config",
@@ -764,11 +798,11 @@ def test_write_detailed_stats(input_record,
     _fixture_writer = SparkExpectationsWriter(_mock_context)
 
     if writer_config and writer_config['format'] == 'bigquery':
-        patcher = patch('pyspark.sql.DataFrameWriter.save', autospec=True, spec_set=True)
+        patcher = patch('pyspark.sql.DataFrameWriter.save')
         mock_bq = patcher.start()
         setattr(_mock_context, 'get_se_streaming_stats_dict', {'se.enable.streaming': False})
         _fixture_writer.write_detailed_stats()
-        mock_bq.assert_called_with(unittest.mock.ANY)
+        mock_bq.assert_called_with()
 
     else:
         setattr(_mock_context, 'get_se_streaming_stats_dict', {'se.enable.streaming': True})

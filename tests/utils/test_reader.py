@@ -296,6 +296,32 @@ def test_get_rules_dlt_exception(_fixture_reader):
         _fixture_reader.get_rules_from_df("product_rules_1", "table1", is_dlt=True, tag=None)
 
 
+
+
+
+
+@pytest.mark.usefixtures("_fixture_product_rules_view")
+@pytest.mark.parametrize("product_id, table_name", [
+    ("product1", "table1")
+])
+def test_get_rules_detailed_result_exception(product_id, table_name):
+
+    _mock_context = Mock(spec=SparkExpectationsContext)
+    _mock_context.spark = spark
+    _mock_context.product_id=product_id
+    setattr(_mock_context, "get_row_dq_rule_type_name", "row_dq")
+    setattr(_mock_context, "get_agg_dq_rule_type_name", "agg_dq")
+    setattr(_mock_context, "get_query_dq_rule_type_name", "query_dq")
+    setattr(_mock_context, "get_query_dq_detailed_stats_status", True)
+    _reader_handler = SparkExpectationsReader(_mock_context)
+
+
+    with pytest.raises(SparkExpectationsMiscException,
+                       match=r"error occurred while retrieving rules list .*"):
+        _reader_handler.get_rules_from_df(spark.sql(" select * from product_rules"),
+                                                                             table_name)
+
+
 def test_get_rules_from_table_exception(_fixture_reader):
     with pytest.raises(SparkExpectationsMiscException,
                        match=r"error occurred while retrieving rules list .*"):

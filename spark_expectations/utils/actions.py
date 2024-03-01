@@ -97,72 +97,6 @@ class SparkExpectationsActions:
         )
 
     @staticmethod
-    def _agg_dq_expectation_pattern_regex(
-        _context: SparkExpectationsContext, _dq_rule: Dict[str, str], df: DataFrame
-    ) -> Any:
-        import re
-        from ast import literal_eval
-
-        try:
-            if (
-                _dq_rule["rule_type"] == _context.get_agg_dq_rule_type_name
-                and _context.get_agg_dq_detailed_stats_status is True
-            ):
-                _pattern = f"{constant_config.se_agg_dq_expectation_regex_pattern}"
-                _re_compile = re.compile(_pattern)
-                _agg_dq_expectation_match = re.match(
-                    _re_compile, _dq_rule["expectation"]
-                )
-                if _agg_dq_expectation_match:
-                    print("inside match in agg_query_dq_detailed_result in actions.py")
-                    _agg_dq_expectation_aggstring = _agg_dq_expectation_match.group(1)
-                    _agg_dq_expectation_expr = _agg_dq_expectation_match.group(2)
-                    _agg_dq_expectation_cond_expr = expr(_agg_dq_expectation_aggstring)
-
-                    _agg_dq_actual_count_value = int(
-                        df.agg(_agg_dq_expectation_cond_expr).collect()[0][0]
-                    )
-                    _agg_dq_expression_str = (
-                        str(_agg_dq_actual_count_value) + _agg_dq_expectation_expr
-                    )
-                    status = "pass" if literal_eval(_agg_dq_expression_str) else "fail"
-                    actual_value = [
-                        _agg_dq_actual_count_value
-                        if (_agg_dq_actual_count_value is not None)
-                        else None
-                    ]
-                    expected_value = [
-                        str(_agg_dq_expectation_expr)
-                        if (_agg_dq_expectation_expr is not None)
-                        else None
-                    ]
-            else:
-                print(
-                    "Detailed stats not enabled for the rule type: ",
-                    _dq_rule["rule_type"],
-                )
-                status = None
-                expected_value = None
-                actual_value = None
-
-            return (
-                _context.get_run_id,
-                _dq_rule["product_id"],
-                _dq_rule["table_name"],
-                _dq_rule["rule_type"],
-                _dq_rule["rule"],
-                _dq_rule["expectation"],
-                status,
-                actual_value,
-                expected_value,
-                _context.get_input_count,
-            )
-        except Exception as e:
-            raise SparkExpectationsMiscException(
-                f"error occurred while running _agg_dq_expectation_pattern_regex {e}"
-            )
-
-    @staticmethod
     def agg_query_dq_detailed_result(
         _context: SparkExpectationsContext,
         _dq_rule: Dict[str, str],
@@ -208,13 +142,13 @@ class SparkExpectationsActions:
                         .alias("agg_dq_aggregation_check")
                     )
 
-                    df_test = df.select(*_agg_dq_expr_condition)
+                    _df_agg_dq_expr_result = df.select(*_agg_dq_expr_condition)
 
                     # status = "pass" if eval(_agg_dq_expression_str) else "fail"
 
                     status = (
                         "pass"
-                        if df_test.filter(df_test["agg_dq_aggregation_check"]).count()
+                        if _df_agg_dq_expr_result.filter(_df_agg_dq_expr_result["agg_dq_aggregation_check"]).count()
                         > 0
                         else "fail"
                     )
@@ -228,6 +162,14 @@ class SparkExpectationsActions:
                         if (_agg_dq_expectation_expr is not None)
                         else None
                     ]
+                    if _source_dq_status:
+                        row_count = _context.get_input_count
+                    elif _target_dq_status:
+                        row_count = _context.get_output_count
+                    else:
+                        row_count = None
+                
+
 
             elif (
                 _dq_rule["rule_type"] == _context.get_query_dq_rule_type_name
@@ -238,7 +180,8 @@ class SparkExpectationsActions:
                     and _dq_rule["expectation_query_dq_target_query"] is not None
                 ):
                     raise SparkExpectationsMiscException(
-                        """detailed_stats_enabled query_dq expectation should have 3 parts - boolean query, 
+                        """error occurred while running agg_query_dq_detailed_result-
+                        detailed_stats_enabled query_dq expectation should have 3 parts - boolean query, 
                         source query and target query"""
                     )
                 _querydq_status_query = (
@@ -286,6 +229,13 @@ class SparkExpectationsActions:
                     else None
                 )
 
+                if _source_dq_status:
+                    row_count = _context.get_input_count
+                elif _target_dq_status:
+                    row_count = _context.get_output_count
+                else:
+                    row_count = None
+
             else:
                 print(
                     "Detailed stats not enabled for the rule type: ",
@@ -294,6 +244,7 @@ class SparkExpectationsActions:
                 status = None
                 expected_value = None
                 actual_value = None
+                row_count = None
 
             print(
                 "result",
@@ -308,7 +259,7 @@ class SparkExpectationsActions:
                 status,
                 actual_value,
                 expected_value,
-                _context.get_input_count,
+                row_count,
             )
 
             return (
@@ -323,7 +274,7 @@ class SparkExpectationsActions:
                 status,
                 actual_value,
                 expected_value,
-                _context.get_input_count,
+                row_count,
             )
         except Exception as e:
             raise SparkExpectationsMiscException(
@@ -478,27 +429,12 @@ class SparkExpectationsActions:
             ):
                 _context.set_target_agg_dq_detailed_stats(_agg_query_dq_results)
 
-                print(
-                    "###################################################################"
-                )
-                print(
-                    "target_agg_dq_detailed_stats in actions.py", _agg_query_dq_results
-                )
-
             elif (
                 rule_type == _context.get_query_dq_rule_type_name
                 and _context.get_query_dq_detailed_stats_status is True
                 and _source_dq_enabled
             ):
                 _context.set_source_query_dq_detailed_stats(_agg_query_dq_results)
-
-                print(
-                    "###################################################################"
-                )
-                print(
-                    "source_query_dq_detailed_stats in actions.py",
-                    _agg_query_dq_results,
-                )
 
             elif (
                 rule_type == _context.get_query_dq_rule_type_name
