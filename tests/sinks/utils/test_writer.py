@@ -1,6 +1,6 @@
 import os
 import unittest.mock
-from unittest.mock import patch, Mock
+from unittest.mock import MagicMock, patch, Mock
 
 import pytest
 from pyspark.sql.functions import col
@@ -55,8 +55,43 @@ def fixture_employee_df():
     )
 
 
-@pytest.fixture(name="_fixture_writer")
-def fixture_writer():
+@pytest.fixture(name="_fixture_context")
+def fixture_context():
+    expectations = {
+        "row_dq_rules": [
+            {
+                "product_id": "product1",
+                "table_name": "test_final_table",
+                "rule_type": "row_dq",
+                "rule": "rule1",
+                "column_name": "col1",
+                "expectation": "col1 is not null",
+                "action_if_failed": "ignore",
+                "enable_for_source_dq_validation": True,
+                "enable_for_target_dq_validation": True,
+                "tag": "validity",
+                "description": "col1 should not be null",
+                "enable_error_drop_alert": False,
+                "error_drop_threshold": 0,
+            },
+            {
+                "product_id": "product1",
+                "table_name": "test_final_table",
+                "rule_type": "row_dq",
+                "rule": "rule2",
+                "column_name": "col2",
+                "expectation": "substr(col2, 1, 1) = 'A'",
+                "action_if_failed": "ignore",
+                "enable_for_source_dq_validation": True,
+                "enable_for_target_dq_validation": True,
+                "tag": "validity",
+                "description": "col2 should start with A",
+                "enable_error_drop_alert": False,
+                "error_drop_threshold": 0,
+            },
+        ]
+    }
+
     # create mock _context object
     mock_context = Mock(spec=SparkExpectationsContext)
     setattr(mock_context, "get_dq_stats_table_name", "test_dq_stats_table")
@@ -64,11 +99,18 @@ def fixture_writer():
     setattr(mock_context, "get_run_id", "product1_run_test")
     setattr(mock_context, "get_run_id_name", "meta_dq_run_id")
     setattr(mock_context, "get_run_date_time_name", "meta_dq_run_date")
+    setattr(mock_context, "get_dq_expectations", expectations)
+    mock_context.set_summarized_row_dq_res = MagicMock()
     mock_context.spark = spark
     mock_context.product_id = "product1"
 
+    return mock_context
+
+
+@pytest.fixture(name="_fixture_writer")
+def fixture_writer(_fixture_context):
     # Create an instance of the class and set the product_id
-    return SparkExpectationsWriter(mock_context)
+    return SparkExpectationsWriter(_fixture_context)
 
 
 @pytest.fixture(name="_fixture_create_employee_table")
@@ -1269,14 +1311,14 @@ def test_write_error_records_final_dependent(
                         {
                             "rule_type": "row_dq",
                             "rule": "rule1",
-                            "description": "customer_id should not be null",
+                            "description": "col1 should not be null",
                             "tag": "validity",
                             "action_if_failed": "ignore",
                         },
                         {
                             "rule_type": "row_dq",
                             "rule": "rule2",
-                            "description": "customer_id should not be null",
+                            "description": "col2 should start with A",
                             "tag": "validity",
                             "action_if_failed": "ignore",
                         },
@@ -1287,7 +1329,7 @@ def test_write_error_records_final_dependent(
                         {
                             "rule_type": "row_dq",
                             "rule": "rule1",
-                            "description": "customer_id should not be null",
+                            "description": "col1 should not be null",
                             "tag": "validity",
                             "action_if_failed": "ignore",
                         }
@@ -1298,7 +1340,7 @@ def test_write_error_records_final_dependent(
                         {
                             "rule_type": "row_dq",
                             "rule": "rule2",
-                            "description": "customer_id should not be null",
+                            "description": "col2 should start with A",
                             "tag": "validity",
                             "action_if_failed": "ignore",
                         }
@@ -1309,7 +1351,7 @@ def test_write_error_records_final_dependent(
                 {
                     "rule_type": "row_dq",
                     "rule": "rule1",
-                    "description": "customer_id should not be null",
+                    "description": "col1 should not be null",
                     "tag": "validity",
                     "action_if_failed": "ignore",
                     "failed_row_count": 2,
@@ -1317,7 +1359,7 @@ def test_write_error_records_final_dependent(
                 {
                     "rule_type": "row_dq",
                     "rule": "rule2",
-                    "description": "customer_id should not be null",
+                    "description": "col2 should start with A",
                     "tag": "validity",
                     "action_if_failed": "ignore",
                     "failed_row_count": 2,
@@ -1331,7 +1373,7 @@ def test_write_error_records_final_dependent(
                         {
                             "rule_type": "row_dq",
                             "rule": "rule1",
-                            "description": "customer_id should not be null",
+                            "description": "col1 should not be null",
                             "tag": "validity",
                             "action_if_failed": "ignore",
                         }
@@ -1342,8 +1384,7 @@ def test_write_error_records_final_dependent(
                         {
                             "rule_type": "row_dq",
                             "rule": "rule1",
-                            "description": "customer_id should not be null",
-                            "tag": "validity",
+                            "description": "col1 should not be null",
                             "action_if_failed": "ignore",
                         }
                     ]
@@ -1353,7 +1394,7 @@ def test_write_error_records_final_dependent(
                 {
                     "rule_type": "row_dq",
                     "rule": "rule1",
-                    "description": "customer_id should not be null",
+                    "description": "col1 should not be null",
                     "tag": "validity",
                     "action_if_failed": "ignore",
                     "failed_row_count": 2,
@@ -1361,7 +1402,7 @@ def test_write_error_records_final_dependent(
                 {
                     "rule_type": "row_dq",
                     "rule": "rule2",
-                    "description": "customer_id should not be null",
+                    "description": "col2 should start with A",
                     "tag": "validity",
                     "action_if_failed": "ignore",
                     "failed_row_count": 0,
@@ -1370,56 +1411,13 @@ def test_write_error_records_final_dependent(
         ),
     ],
 )
-def test_generate_summarized_row_dq_res(test_data, expected_result):
-    context = SparkExpectationsContext("product1", spark)
-    writer = SparkExpectationsWriter(context)
-    expectations = {
-        "row_dq_rules": [
-            {
-                "product_id": "product1",
-                "table_name": "test_final_table",
-                "rule_type": "row_dq",
-                "rule": "rule1",
-                "column_name": "customer_id",
-                "expectation": "customer_id is not null",
-                "action_if_failed": "ignore",
-                "enable_for_source_dq_validation": True,
-                "enable_for_target_dq_validation": True,
-                "tag": "validity",
-                "description": "customer_id should not be null",
-                "enable_error_drop_alert": False,
-                "error_drop_threshold": 0,
-            },
-            {
-                "product_id": "product1",
-                "table_name": "test_final_table",
-                "rule_type": "row_dq",
-                "rule": "rule2",
-                "column_name": "customer_id",
-                "expectation": "customer_id is not null",
-                "action_if_failed": "ignore",
-                "enable_for_source_dq_validation": True,
-                "enable_for_target_dq_validation": True,
-                "tag": "validity",
-                "description": "customer_id should not be null",
-                "enable_error_drop_alert": False,
-                "error_drop_threshold": 0,
-            },
-        ]
-    }
-    context.set_dq_expectations(expectations)
-
+def test_generate_summarized_row_dq_res(test_data, expected_result, _fixture_context):
+    writer = SparkExpectationsWriter(_fixture_context)
     # Create test DataFrame
     test_df = spark.createDataFrame(test_data)
-
-    # Call the function under test
     writer.generate_summarized_row_dq_res(test_df, "row_dq")
-
-    # Check the results
-    result = context.get_summarized_row_dq_res
-    result_sorted = sorted(result, key=lambda x: x.get("rule"))
-    expected_result_sorted = sorted(expected_result, key=lambda x: x.get("rule"))
-    assert result_sorted == expected_result_sorted
+    assert writer._context.set_summarized_row_dq_res.call_count == 1
+    writer._context.set_summarized_row_dq_res.assert_called_once_with(expected_result)
 
 
 @pytest.mark.parametrize(
