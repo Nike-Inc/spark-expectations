@@ -54,7 +54,6 @@ class SparkExpectationsWriter:
 
         """
         try:
-            
             if not stats_table:
                 df = df.withColumn(
                     self._context.get_run_id_name, lit(f"{self._context.get_run_id}")
@@ -192,7 +191,6 @@ class SparkExpectationsWriter:
                             _input_count,
                         )
                     )
-                
 
             return _row_dq_result
 
@@ -214,17 +212,13 @@ class SparkExpectationsWriter:
         """
         try:
             self.spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
-            
 
             from pyspark.sql.types import (
                 StructType,
                 StructField,
                 StringType,
-                
                 LongType,
-                
                 ArrayType,
-                
             )
             from pyspark.sql import functions as F
 
@@ -300,10 +294,6 @@ class SparkExpectationsWriter:
                     self._context.get_target_agg_dq_detailed_stats
                 )
 
-                print(
-                    "__target_aggdq_detailed_stats_result:",
-                    _target_aggdq_detailed_stats_result,
-                )
             else:
                 _target_aggdq_detailed_stats_result = []
 
@@ -349,7 +339,6 @@ class SparkExpectationsWriter:
             if _source_aggdq_detailed_stats_result is not None:
                 _source_aggdq_detailed_stats_result.extend(_rowdq_detailed_stats_result)
 
-
             if (
                 (_target_agg_dq is True or _target_query_dq is True)
                 and _row_dq is True
@@ -363,11 +352,6 @@ class SparkExpectationsWriter:
                 )
             else:
                 _target_aggdq_detailed_stats_result = []
-
-            print(
-                "__target_aggdq_detailed_stats_result 3:",
-                _target_aggdq_detailed_stats_result,
-            )
 
             _source_aggdq_detailed_stats_rdd = self.spark.sparkContext.parallelize(
                 _source_aggdq_detailed_stats_result
@@ -395,21 +379,17 @@ class SparkExpectationsWriter:
                 )
             )
 
-
             _df_detailed_stats = _df_source_aggquery_detailed_stats.join(
                 _df_target_aggquery_detailed_stats,
                 ["run_id", "product_id", "table_name", "rule_type", "rule"],
                 "full_outer",
             )
 
-
             _df_detailed_stats = _df_detailed_stats.withColumn(
                 "dq_date", F.current_date()
             ).withColumn("dq_time", F.lit(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
-
             self._context.print_dataframe_with_debugger(_df_detailed_stats)
-
 
             _log.info(
                 "Writing metrics to the detailed stats table: %s, started",

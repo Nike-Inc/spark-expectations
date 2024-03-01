@@ -45,7 +45,6 @@ class SparkExpectationsRegulateFlow:
                Any: returns function
 
         """
-        
 
         def func_process(
             df: DataFrame,
@@ -77,7 +76,6 @@ class SparkExpectationsRegulateFlow:
 
             """
             try:
-                
                 _error_df: Optional[DataFrame] = None
                 _error_count: int = error_count
 
@@ -107,7 +105,6 @@ class SparkExpectationsRegulateFlow:
                         final_query_dq_flag is True or final_agg_dq_flag is True
                     ),
                 )
-                
 
                 _log.info("The data quality dataframe is created for expectations")
                 _context.print_dataframe_with_debugger(_df_dq)
@@ -119,7 +116,6 @@ class SparkExpectationsRegulateFlow:
                     if row_dq_flag is False
                     else None
                 )
-                
 
                 if row_dq_flag:
                     _log.info("Writing error records into the table started")

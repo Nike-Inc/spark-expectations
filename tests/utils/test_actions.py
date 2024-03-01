@@ -545,7 +545,7 @@ def test_run_dq_rules_query(_fixture_df,
     # Apply the data quality rules
     _fixture_df.createOrReplaceTempView("query_test_table")
     _fixture_df.createOrReplaceTempView("query_test_table_target")
-    print(_fixture_expectations["query_dq_rules"])
+    
     result_df = SparkExpectationsActions.run_dq_rules(_fixture_mock_context, _fixture_df, _fixture_expectations,
                                                       "query_dq", False, True)
 

@@ -45,7 +45,6 @@ class SparkExpectations:
     stats_streaming_options: Optional[Dict[str, Union[str, bool]]] = None
 
     def __post_init__(self) -> None:
-        
         if isinstance(self.rules_df, DataFrame):
             self.spark: SparkSession = self.rules_df.sparkSession
         else:
@@ -79,7 +78,6 @@ class SparkExpectations:
         self._context.set_dq_stats_table_name(self.stats_table)
         self._context.set_dq_detailed_stats_table_name(f"{self.stats_table}_custom")
         self.rules_df = self.rules_df.persist(StorageLevel.MEMORY_AND_DISK)
-        
 
     # TODO Add target_error_table_writer and stats_table_writer as parameters to this function so this takes precedence
     #  if user provides it
@@ -112,7 +110,7 @@ class SparkExpectations:
 
         def _except(func: Any) -> Any:
             # variable used for enabling notification at different level
-            
+
             _default_notification_dict: Dict[str, Union[str, int, bool]] = {
                 user_config.se_notifications_on_start: False,
                 user_config.se_notifications_on_completion: False,
@@ -177,20 +175,11 @@ class SparkExpectations:
                     _query_dq_detailed_stats
                 )
 
-            print(
-                "enable_agg_dq_detailed_result status:",
-                self._context.get_agg_dq_detailed_stats_status,
-            )
-            print(
-                "enable_query_dq_detailed_result status:",
-                self._context.get_query_dq_detailed_stats_status,
-            )
-
             # need to call the get_rules_frm_table function to get the rules from the table as expectations
             expectations, rules_execution_settings = self.reader.get_rules_from_df(
                 self.rules_df, target_table
             )
-            
+
             _row_dq: bool = rules_execution_settings.get("row_dq", False)
             _source_agg_dq: bool = rules_execution_settings.get("source_agg_dq", False)
             _target_agg_dq: bool = rules_execution_settings.get("target_agg_dq", False)
@@ -273,7 +262,6 @@ class SparkExpectations:
             @functools.wraps(func)
             def wrapper(*args: tuple, **kwargs: dict) -> DataFrame:
                 try:
-                    
                     _log.info("The function dataframe is getting created")
                     # _df: DataFrame = func(*args, **kwargs)
                     _df: DataFrame = func(*args, **kwargs)
@@ -539,10 +527,8 @@ class SparkExpectations:
                         f"error occurred while processing spark expectations {e}"
                     )
 
-            
             return wrapper
 
-        
         return _except
 
 

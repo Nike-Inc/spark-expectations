@@ -118,10 +118,6 @@ class SparkExpectationsActions:
                 )
 
                 if _agg_dq_expectation_match:
-                    print(
-                        "inside match in agg_query_dq_detailed_result in actions.py:",
-                        _agg_dq_expectation_match,
-                    )
                     _agg_dq_expectation_aggstring = _agg_dq_expectation_match.group(1)
                     _agg_dq_expectation_expr = _agg_dq_expectation_match.group(2)
                     _agg_dq_expectation_cond_expr = expr(_agg_dq_expectation_aggstring)
@@ -148,7 +144,9 @@ class SparkExpectationsActions:
 
                     status = (
                         "pass"
-                        if _df_agg_dq_expr_result.filter(_df_agg_dq_expr_result["agg_dq_aggregation_check"]).count()
+                        if _df_agg_dq_expr_result.filter(
+                            _df_agg_dq_expr_result["agg_dq_aggregation_check"]
+                        ).count()
                         > 0
                         else "fail"
                     )
@@ -168,8 +166,6 @@ class SparkExpectationsActions:
                         row_count = _context.get_output_count
                     else:
                         row_count = None
-                
-
 
             elif (
                 _dq_rule["rule_type"] == _context.get_query_dq_rule_type_name
@@ -187,14 +183,12 @@ class SparkExpectationsActions:
                 _querydq_status_query = (
                     "SELECT (" + str(_dq_rule["expectation"]) + ") AS OUTPUT"
                 )
-                
+
                 _querydq_source_query = _dq_rule["expectation_query_dq_source_query"]
                 _querydq_target_query = _dq_rule["expectation_query_dq_target_query"]
                 _query_dq_result = int(
                     _context.spark.sql(_querydq_status_query).collect()[0][0]
                 )
-
-                
 
                 status = "pass" if _query_dq_result else "fail"
                 _querydq_source_query_output = (
@@ -215,8 +209,6 @@ class SparkExpectationsActions:
                     _querydq_source_query_output = _querydq_source_query_output[0:300]
                     _querydq_target_query_output = _querydq_target_query_output[0:300]
 
-               
-
                 expected_value = (
                     _querydq_source_query_output
                     if (_querydq_source_query_output is not None)
@@ -236,30 +228,10 @@ class SparkExpectationsActions:
                     row_count = None
 
             else:
-                print(
-                    "Detailed stats not enabled for the rule type: ",
-                    _dq_rule["rule_type"],
-                )
                 status = None
                 expected_value = None
                 actual_value = None
                 row_count = None
-
-            print(
-                "result",
-                _context.get_run_id,
-                _dq_rule["product_id"],
-                _dq_rule["table_name"],
-                _dq_rule["rule_type"],
-                _dq_rule["rule"],
-                _dq_rule["expectation"],
-                _dq_rule["tag"],
-                _dq_rule["description"],
-                status,
-                actual_value,
-                expected_value,
-                row_count,
-            )
 
             return (
                 _context.get_run_id,
@@ -336,7 +308,6 @@ class SparkExpectationsActions:
 
         """
         try:
-            
             condition_expressions = []
             _agg_query_dq_results = []
             if len(expectations) <= 0:
@@ -350,7 +321,7 @@ class SparkExpectationsActions:
                     f"zero expectations to process for {rule_type}_rules from the `dq_rules` table, "
                     f"please configure rules or avoid this error by setting {rule_type} to False"
                 )
-           
+
             for rule in expectations[f"{rule_type}_rules"]:
                 _rule_is_active = SparkExpectationsActions.get_rule_is_active(
                     _context,
@@ -381,12 +352,6 @@ class SparkExpectationsActions:
                         _context.get_agg_dq_detailed_stats_status is True
                         or _context.get_query_dq_detailed_stats_status is True
                     ):
-                        print(
-                            "###################################################################"
-                        )
-                        print(
-                            "inside line 263 - calling agg_query_dq_detailed_result in actions.py"
-                        )
                         _agg_query_dq_results.append(
                             SparkExpectationsActions.agg_query_dq_detailed_result(
                                 _context,
@@ -397,21 +362,12 @@ class SparkExpectationsActions:
                             )
                         )
 
-            
-
             if (
                 rule_type == _context.get_agg_dq_rule_type_name
                 and _context.get_agg_dq_detailed_stats_status is True
                 and _source_dq_enabled
             ):
                 _context.set_source_agg_dq_detailed_stats(_agg_query_dq_results)
-
-                print(
-                    "###################################################################"
-                )
-                print(
-                    "source_agg_dq_detailed_stats in actions.py", _agg_query_dq_results
-                )
 
             elif (
                 rule_type == _context.get_agg_dq_rule_type_name
@@ -434,8 +390,6 @@ class SparkExpectationsActions:
             ):
                 _context.set_target_query_dq_detailed_stats(_agg_query_dq_results)
 
-            
-
             if len(condition_expressions) > 0:
                 if rule_type in [
                     _context.get_query_dq_rule_type_name,
@@ -446,33 +400,11 @@ class SparkExpectationsActions:
                         if rule_type == _context.get_agg_dq_rule_type_name
                         else _context.get_supported_df_query_dq
                     )
-                    print(
-                        "###################################################################"
-                    )
-                    print(
-                        "dataframe before select * expressions in actions.py",
-                        df.show(truncate=False),
-                    )
 
                     df = df.select(*condition_expressions)
-                    print(
-                        "###################################################################"
-                    )
-                    print(
-                        "dataframe after select * expressions in actions.py",
-                        df.show(truncate=False),
-                    )
 
                     df = df.withColumn(
                         f"meta_{rule_type}_results", array(*list(df.columns))
-                    )
-
-                    print(
-                        "###################################################################"
-                    )
-                    print(
-                        "dataframe after adding meta_rulr_type_results in actions.py",
-                        df.show(truncate=False),
                     )
 
                     df = df.withColumn(
@@ -485,25 +417,11 @@ class SparkExpectationsActions:
                             if _col != f"meta_{rule_type}_results"
                         ]
                     )
-                    print(
-                        "###################################################################"
-                    )
-                    print(
-                        "dataframe after remove_empty_maps in actions.py",
-                        df.show(truncate=False),
-                    )
 
                     _context.print_dataframe_with_debugger(df)
 
                 elif rule_type == _context.get_row_dq_rule_type_name:
                     df = df.select(col("*"), *condition_expressions)
-                    print(
-                        "###################################################################"
-                    )
-                    print(
-                        "dataframe after select condiditon_expression with row_dq  in actions.py",
-                        df.show(truncate=False),
-                    )
 
             else:
                 raise SparkExpectationsMiscException(
