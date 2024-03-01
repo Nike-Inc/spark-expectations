@@ -29,6 +29,7 @@ def test_context_properties():
     context._run_id = 'test_run_id'
     context._run_date = 'test_run_date'
     context._dq_stats_table_name = 'test_dq_stats_table'
+    context._dq_detailed_stats_table_name = 'test_dq_stats_table'
     context._final_table_name = 'test_final_table'
     context._error_table_name = 'test_error_table'
     context._row_dq_rule_type_name = "row_dq_test"
@@ -65,6 +66,9 @@ def test_context_properties():
 
     context._notification_on_start = True
     context._notification_on_completion = True
+    context._enable_agg_dq_detailed_result = True
+
+    context._enable_query_dq_detailed_result = True
     context._notification_on_fail = True
     context._env = "dev"
     context._error_drop_threshold = 100
@@ -128,6 +132,7 @@ def test_context_properties():
     assert context.get_run_id == 'test_run_id'
     assert context.get_run_date == 'test_run_date'
     assert context._dq_stats_table_name == 'test_dq_stats_table'
+    assert context._dq_detailed_stats_table_name == 'test_dq_stats_table'
     assert context._final_table_name == 'test_final_table'
     assert context._error_table_name == 'test_error_table'
     assert context.get_row_dq_rule_type_name == "row_dq_test"
@@ -1446,3 +1451,146 @@ def test_get_rules_exceds_threshold():
         "error_drop_threshold": '10',
         "error_drop_percentage": '10.0',
     }]
+
+def test_set_agg_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_agg_dq_detailed_stats_status(True)
+    assert context.get_agg_dq_detailed_stats_status is True
+
+def test_get_agg_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    assert context.get_agg_dq_detailed_stats_status is True
+
+def test_set_query_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    assert context.get_query_dq_detailed_stats_status is True
+
+def test_get_query_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    assert context.get_query_dq_detailed_stats_status is False
+
+
+
+def test_set_target_agg_dq_detailed_stats():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    target_agg_dq_detailed_stats = [
+        ("column1", "rule1"),
+        ("column2", "rule2"),
+        ("column3", "rule3")
+    ]
+    context.set_target_agg_dq_detailed_stats(target_agg_dq_detailed_stats)
+    assert context.get_target_agg_dq_detailed_stats == target_agg_dq_detailed_stats
+
+def test_set_target_query_dq_detailed_stats():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    target_query_dq_detailed_stats = [
+        ("column1", "rule1"),
+        ("column2", "rule2"),
+        ("column3", "rule3")
+    ]
+    context.set_target_query_dq_detailed_stats(target_query_dq_detailed_stats)
+    assert context.get_target_query_dq_detailed_stats == target_query_dq_detailed_stats
+
+def test_set_source_agg_dq_detailed_stats():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    source_agg_dq_detailed_stats = [
+        ("column1", "rule1"),
+        ("column2", "rule2"),
+        ("column3", "rule3")
+    ]
+    context.set_source_agg_dq_detailed_stats(source_agg_dq_detailed_stats)
+    assert context.get_source_agg_dq_detailed_stats == source_agg_dq_detailed_stats
+
+def test_set_source_query_dq_detailed_stats():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    source_query_dq_detailed_stats = [
+        ("column1", "rule1"),
+        ("column2", "rule2"),
+        ("column3", "rule3")
+    ]
+    context.set_source_query_dq_detailed_stats(source_query_dq_detailed_stats)
+    assert context.get_source_query_dq_detailed_stats == source_query_dq_detailed_stats
+
+
+def test_set_detailed_stats_table_writer_config():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    config = {"key": "value"}
+    context.set_detailed_stats_table_writer_config(config)
+    assert context.get_detailed_stats_table_writer_config() == config
+
+
+# Add more test cases as needed
+def test_set_agg_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_agg_dq_detailed_stats_status(True)
+    assert context.get_agg_dq_detailed_stats_status is True
+
+def test_get_agg_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_agg_dq_detailed_stats_status(True)
+    assert context.get_agg_dq_detailed_stats_status is True
+
+def test_set_query_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    assert context.get_query_dq_detailed_stats_status is True
+
+def test_get_query_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    assert context.get_query_dq_detailed_stats_status is True
+
+
+def test_set_agg_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_agg_dq_detailed_stats_status(True)
+    assert context.get_agg_dq_detailed_stats_status is True
+
+def test_set_query_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    assert context.get_query_dq_detailed_stats_status is True
+
+
+def test_set_dq_stats_table_name():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_dq_stats_table_name("dq_stats_table_name")
+    assert context._dq_stats_table_name == "dq_stats_table_name"
+    assert context.get_dq_stats_table_name == "dq_stats_table_name"
+
+
+
+def test_set_dq_detailed_stats_table_name():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_dq_detailed_stats_table_name("dq_stats_table_name")
+
+    context._enable_agg_dq_detailed_result = True
+    context._enable_query_dq_detailed_result = True
+
+
+    assert context.get_agg_dq_detailed_stats_status is True
+    assert context.get_query_dq_detailed_stats_status is True
+       
+    assert context._dq_detailed_stats_table_name == "dq_stats_table_name"
+    assert context.get_dq_detailed_stats_table_name == "dq_stats_table_name"
+
+def test_set_detailed_stats_table_writer_config():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    config = {"setting1": "value1", "setting2": "value2"}
+    context.set_detailed_stats_table_writer_config(config)
+    assert context.get_detailed_stats_table_writer_config == config
+
+def test_set_dq_expectations():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    dq_expectations = {"column1": "expectation1", "column2": "expectation2"}
+    context.set_dq_expectations(dq_expectations)
+    assert context.get_dq_expectations == dq_expectations
+
+def test_set_rules_execution_settings_config():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    config = {"setting1": "value1", "setting2": "value2"}
+    context.set_rules_execution_settings_config(config)
+    assert context.get_rules_execution_settings_config == config
+
+

@@ -103,6 +103,7 @@ if __name__ == "__main__":
 
     _log.info("stats data in the kafka topic")
     # display posted statistics from the kafka topic
+    """
     spark.read.format("kafka").option(
         "kafka.bootstrap.servers", "localhost:9092"
     ).option("subscribe", "dq-sparkexpectations-stats").option(
@@ -114,7 +115,8 @@ if __name__ == "__main__":
     ).show(
         truncate=False
     )
+    """
 
     # remove docker container
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    os.system(f"sh {current_dir}/docker_scripts/docker_kafka_stop_script.sh")
+    # os.system(f"sh {current_dir}/docker_scripts/docker_kafka_stop_script.sh")

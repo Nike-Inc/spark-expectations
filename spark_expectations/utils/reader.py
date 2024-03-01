@@ -205,6 +205,23 @@ class SparkExpectationsReader:
                         "error_drop_threshold": row["error_drop_threshold"],
                     }
 
+                    if (
+                        self._context.get_query_dq_detailed_stats_status is True
+                        and row["rule_type"]
+                        == self._context.get_query_dq_rule_type_name
+                    ):
+                        if not len(row["expectation"].split("$")) == 3:
+                            raise SparkExpectationsMiscException(
+                                "detailed_stats_enabled Expectation should have 3 parts"
+                            )
+                        column_map["expectation"] = row["expectation"].split("$")[0]
+                        column_map["expectation_query_dq_source_query"] = row[
+                            "expectation"
+                        ].split("$")[1]
+                        column_map["expectation_query_dq_target_query"] = row[
+                            "expectation"
+                        ].split("$")[2]
+
                     if f"{row['rule_type']}_rules" in _expectations:
                         _expectations[f"{row['rule_type']}_rules"].append(column_map)
                     else:

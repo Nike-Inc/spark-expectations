@@ -16,7 +16,9 @@ class SparkExpectationsCollectStatistics:
     _writer: SparkExpectationsWriter
 
     def __post_init__(self) -> None:
+        print("Initialzing __post_init__ in SparkExpectationsCollectStatistics")
         self.collect_stats_decorator = self.collect_stats_on_success_failure()
+        print("completed __post_init__ in SparkExpectationsCollectStatistics")
 
     def collect_stats_on_success_failure(self) -> Any:
         """
@@ -24,6 +26,9 @@ class SparkExpectationsCollectStatistics:
         Returns:
             Any: function
         """
+        print(
+            "Initialzing collect_stats_on_success_failure in SparkExpectationsCollectStatistics"
+        )
 
         def decorator(func: Any) -> Any:
             def wrapper(*args: List, **kwargs: Dict) -> DataFrame:
@@ -47,4 +52,7 @@ class SparkExpectationsCollectStatistics:
 
             return wrapper
 
+        print(
+            "completed collect_stats_on_success_failure in SparkExpectationsCollectStatistics"
+        )
         return decorator

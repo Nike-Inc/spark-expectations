@@ -572,6 +572,225 @@ def test_write_error_stats(input_record,
             "to_json(struct(*)) AS value").collect()
 
 
+
+
+@pytest.mark.parametrize("input_record, expected_result, writer_config", [
+    ({
+         "input_count": 100,
+         "error_count": 10,
+         "output_count": 90,
+         "rules_execution_settings_config":
+             {'row_dq': True, 'source_agg_dq': True, 'source_query_dq': True, 'target_agg_dq': True, 'target_query_dq': True},
+         "agg_dq_detailed_stats_status": True,
+         "source_agg_dq_status": "Passed",
+         "final_agg_dq_status": "Passed",
+         "query_dq_detailed_stats_status": False,
+         "source_query_dq_status": "Passed",
+         "final_query_dq_status": "Passed",
+         "row_dq_status": "Passed",
+         "summarised_row_dq_res" : [{'rule_type':"row_dq", "rule" : "sales_greater_than_zero", "description" : "sales value should be greater than zero", "failed_row_count":  1, "tag" :"validity", "action_if_failed" : "drop"}],
+         "run_id" : "product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109",
+         "input_count" : 5,
+         "dq_expectations" : { 
+                             'row_dq_rules': [{'product_id': 'your_product', 'table_name': 'dq_spark_local.customer_order', 'rule_type': 'row_dq', 'rule': 'sales_greater_than_zero', 'column_name': 'sales', 'expectation': 'sales > 2', 'action_if_failed': 'drop', 'enable_for_source_dq_validation': False, 'enable_for_target_dq_validation': True, 'tag': 'accuracy', 'description': 'sales value should be greater than zero', 'enable_error_drop_alert': False, 'error_drop_threshold': 0}], 
+         },
+         "test_dq_detailed_stats_table":"test_dq_detailed_stats_table",
+
+         "detailed_stats_table_writer_config" : {'mode': 'overwrite', "format": "delta", 'partitionBy': [], 'bucketBy': {}, 'sortBy': [],
+                                               'options': {"mergeSchema": "true"}},
+         
+         "rowdq_detailed_stats" : [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1','dq_spark_local.customer_order', 'row_dq', 'sales_greater_than_zero', 'sales > 2', 'accuracy', 'sales value should be greater than zero', 'fail', None, None, None, 5),
+                                   ],
+         
+         "source_agg_dq_detailed_stats": [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1', 'dq_spark_local.customer_order', 'agg_dq', 'sum_of_sales', 'sum(sales)>10000', 'validity', 'regex format validation for quantity','fail', [1988], ['>10000'], 5), 
+                                          ],
+
+         "target_agg_dq_detailed_stats": [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1', 'dq_spark_local.customer_order', 'agg_dq', 'sum_of_sales', 'sum(sales)>10000', 'validity', 'regex format validation for quantity','fail', [1030], ['>10000'], 5),
+                                          ],
+
+        "source_query_dq_detailed_stats": [('product_1_52fed65a-d670-11ee-8dfb-ae03267c3341', 'product_1', 'dq_spark_local.customer_order', 'query_dq', 'product_missing_count_threshold', '((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3', 'validity', 'row count threshold', 'pass', ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'], ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', '{"product_id":"OFF-ST-10000760","order_id":"US-2015-108966"}', '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'], 5)
+                                          ],
+
+        "target_query_dq_detailed_stats": [('product_1_52fed65a-d670-11ee-8dfb-ae03267c3341', 'product_1', 'dq_spark_local.customer_order', 'query_dq', 'product_missing_count_threshold', '((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3', 'validity', 'row count threshold', 'pass', ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'], ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', '{"product_id":"OFF-ST-10000760","order_id":"US-2015-108966"}', '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'], 5)
+                                          ],
+     }, {
+         "product_id": "product_1",
+         "table_name": "dq_spark_local.customer_order",
+         "rule":"sum_of_sales",
+         "rule_type": "agg_dq",
+         "source_expectations": "sum(sales)>10000",
+         "source_dq_status": "fail",
+         "source_dq_actual_result": ['1988'],
+         "source_dq_row_count": 5,
+         "target_expectations": "sum(sales)>10000",
+         "target_dq_status": "fail",
+         "target_dq_actual_result": ['1030'],
+         "target_dq_row_count": 5,
+         "source_expectations": "sum(sales)>10000",
+    
+     }, None),
+     ({
+         "input_count": 100,
+         "error_count": 10,
+         "output_count": 90,
+         "rules_execution_settings_config":
+             {'row_dq': True, 'source_agg_dq': True, 'source_query_dq': True, 'target_agg_dq': True, 'target_query_dq': True},
+         "agg_dq_detailed_stats_status": False,
+         "source_agg_dq_status": "Passed",
+         "final_agg_dq_status": "Passed",
+         "query_dq_detailed_stats_status": True,
+         "source_query_dq_status": "Passed",
+         "final_query_dq_status": "Passed",
+         "row_dq_status": "Passed",
+         "summarised_row_dq_res" : [{'rule_type':"row_dq", "rule" : "sales_greater_than_zero", "description" : "sales value should be greater than zero", "failed_row_count":  1, "tag" :"validity", "action_if_failed" : "drop"}],
+         "run_id" : "product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109",
+         "input_count" : 5,
+         "dq_expectations" : { 
+                             'row_dq_rules': [{'product_id': 'your_product', 'table_name': 'dq_spark_local.customer_order', 'rule_type': 'row_dq', 'rule': 'sales_greater_than_zero', 'column_name': 'sales', 'expectation': 'sales > 2', 'action_if_failed': 'drop', 'enable_for_source_dq_validation': False, 'enable_for_target_dq_validation': True, 'tag': 'accuracy', 'description': 'sales value should be greater than zero', 'enable_error_drop_alert': False, 'error_drop_threshold': 0}], 
+         },
+         "test_dq_detailed_stats_table":"test_dq_detailed_stats_table",
+
+         "detailed_stats_table_writer_config" : {'mode': 'overwrite', "format": "delta", 'partitionBy': [], 'bucketBy': {}, 'sortBy': [],
+                                               'options': {"mergeSchema": "true"}},
+         
+         "rowdq_detailed_stats" : [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1','dq_spark_local.customer_order', 'row_dq', 'sales_greater_than_zero', 'sales > 2', 'accuracy', 'sales value should be greater than zero', 'fail', None, None, None, 5),
+                                   ],
+         
+         "source_agg_dq_detailed_stats": [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1', 'dq_spark_local.customer_order', 'agg_dq', 'sum_of_sales', 'sum(sales)>10000', 'validity', 'regex format validation for quantity','fail', [1988], ['>10000'], 5), 
+                                          ],
+
+         "target_agg_dq_detailed_stats": [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1', 'dq_spark_local.customer_order', 'agg_dq', 'sum_of_sales', 'sum(sales)>10000', 'validity', 'regex format validation for quantity','fail', [1030], ['>10000'], 5),
+                                          ],
+
+        "source_query_dq_detailed_stats": [('product_1_52fed65a-d670-11ee-8dfb-ae03267c3341', 'product_1', 'dq_spark_local.customer_order', 'query_dq', 'product_missing_count_threshold', '((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3', 'validity', 'row count threshold', 'pass', 
+                                            ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', 
+                                             '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', 
+                                             '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', 
+                                             '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'], 
+                                             ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', 
+                                              '{"product_id":"OFF-ST-10000760","order_id":"US-2015-108966"}', 
+                                              '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', 
+                                              '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', 
+                                              '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'], 5)
+                                          ],
+
+        "target_query_dq_detailed_stats": [('product_1_52fed65a-d670-11ee-8dfb-ae03267c3341', 'product_1', 'dq_spark_local.customer_order', 'query_dq', 'product_missing_count_threshold', '((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3', 'validity', 'row count threshold', 'pass', 
+                                            ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', 
+                                             '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', 
+                                             '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', 
+                                             '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'],
+                                              ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', '{"product_id":"OFF-ST-10000760","order_id":"US-2015-108966"}', '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'], 5)
+                                          ],
+     }, {
+         "product_id": "product_1",
+         "table_name": "dq_spark_local.customer_order",
+         "rule":"product_missing_count_threshold",
+         "rule_type": "query_dq",
+         "source_expectations": "((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3",
+         "source_dq_status": "pass",
+         "source_dq_actual_result": ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', 
+                                             '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', 
+                                             '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', 
+                                             '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'],
+         "source_dq_row_count": 5,
+         "target_expectations": "((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3",
+         "target_dq_status": "pass",
+         "target_dq_actual_result": ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', 
+                                             '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', 
+                                             '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', 
+                                             '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'],
+         "target_dq_row_count": 5,
+        
+    
+     }, None),
+
+])
+
+def test_write_detailed_stats(input_record,
+                           expected_result,
+                           writer_config,) -> None:
+    """
+    This functions writes the detailed stats for all rule type into the detailed stats table
+
+    Args:
+        config: Provide the config to write the dataframe into the table
+
+    Returns:
+        None:
+
+
+    """
+    _mock_context = Mock(spec=SparkExpectationsContext)
+    setattr(_mock_context, "get_rules_execution_settings_config", input_record.get("rules_execution_settings_config"))
+    setattr(_mock_context, "get_agg_dq_detailed_stats_status", input_record.get("agg_dq_detailed_stats_status")) 
+    setattr(_mock_context, "get_source_agg_dq_status", input_record.get("source_agg_dq_status"))
+    setattr(_mock_context, "get_final_agg_dq_status", input_record.get("final_agg_dq_status"))
+    setattr(_mock_context, "get_query_dq_detailed_stats_status", input_record.get("query_dq_detailed_stats_status"))
+    setattr(_mock_context, "get_source_query_dq_status", input_record.get("source_query_dq_status"))
+    setattr(_mock_context, "get_final_query_dq_status", input_record.get("final_query_dq_status"))
+    setattr(_mock_context, "get_row_dq_status", input_record.get("row_dq_status"))
+    setattr(_mock_context, "get_summarised_row_dq_res", input_record.get("summarised_row_dq_res"))
+    setattr(_mock_context, "get_source_agg_dq_detailed_stats", input_record.get("source_agg_dq_detailed_stats"))
+    setattr(_mock_context, "get_target_agg_dq_detailed_stats", input_record.get("target_agg_dq_detailed_stats"))
+    setattr(_mock_context, "get_target_query_dq_detailed_stats", input_record.get("target_query_dq_detailed_stats"))
+    setattr(_mock_context, "get_source_query_dq_detailed_stats", input_record.get("source_query_dq_detailed_stats"))
+    setattr(_mock_context, "get_detailed_stats_table_writer_config", input_record.get("detailed_stats_table_writer_config"))
+    setattr(_mock_context, "get_dq_detailed_stats_table_name", input_record.get("test_dq_detailed_stats_table"))
+    #setattr(_mock_context, "get_row_dq_detailed_stats", input_record.get("rowdq_detailed_stats"))
+    setattr(_mock_context, "get_run_id", input_record.get("run_id"))
+    setattr(_mock_context, "product_id", "product_1")
+    setattr(_mock_context, "get_table_name", "dq_spark_local.customer_order")
+    setattr(_mock_context, "get_input_count", input_record.get("input_count"))
+    setattr(_mock_context, "get_dq_expectations", input_record.get("dq_expectations"))
+    
+    
+    
+    
+
+
+
+    if writer_config is None:
+        setattr(_mock_context, "_stats_table_writer_config",
+                WrappedDataFrameWriter().mode("overwrite").format("delta").build())
+        setattr(_mock_context, 'get_stats_table_writer_config',
+                WrappedDataFrameWriter().mode("overwrite").format("delta").build())
+    else:
+        setattr(_mock_context, "_stats_table_writer_config", writer_config)
+        setattr(_mock_context, 'get_detailed_stats_table_writer_config', writer_config)
+
+    _mock_context.spark = spark
+    _mock_context.product_id = 'product1'
+
+    _fixture_writer = SparkExpectationsWriter(_mock_context)
+
+    if writer_config and writer_config['format'] == 'bigquery':
+        patcher = patch('pyspark.sql.DataFrameWriter.save', autospec=True, spec_set=True)
+        mock_bq = patcher.start()
+        setattr(_mock_context, 'get_se_streaming_stats_dict', {'se.enable.streaming': False})
+        _fixture_writer.write_detailed_stats()
+        mock_bq.assert_called_with(unittest.mock.ANY)
+
+    else:
+        setattr(_mock_context, 'get_se_streaming_stats_dict', {'se.enable.streaming': True})
+        _fixture_writer.write_detailed_stats()
+        
+        stats_table = spark.sql("select * from test_dq_detailed_stats_table where rule_type in ('agg_dq','query_dq')")
+        assert stats_table.count() == 1
+        row = stats_table.first()
+        assert row.product_id == expected_result.get("product_id")
+        assert row.table_name == "dq_spark_local.customer_order"
+        assert row.rule_type == expected_result.get("rule_type")
+        assert row.rule == expected_result.get("rule")
+        assert row.source_expectations == expected_result.get("source_expectations")
+        assert row.source_dq_status == expected_result.get("source_dq_status")
+        assert row.source_dq_actual_result == expected_result.get("source_dq_actual_result")
+        assert row.source_dq_row_count == expected_result.get("source_dq_row_count")
+        assert row.target_expectations == expected_result.get("target_expectations")
+        assert row.target_dq_status == expected_result.get("target_dq_status")
+        assert row.target_dq_actual_result == expected_result.get("target_dq_actual_result")
+        assert row.target_dq_row_count == expected_result.get("target_dq_row_count")
+
+
 @pytest.mark.parametrize('table_name, rule_type',
                          [('test_error_table',
                            'row_dq'

@@ -40,6 +40,8 @@ user_conf = {
     user_config.se_notifications_on_fail: True,
     user_config.se_notifications_on_error_drop_exceeds_threshold_breach: True,
     user_config.se_notifications_on_error_drop_threshold: 15,
+    user_config.enable_query_dq_detailed_result: True,
+    user_config.enable_agg_dq_detailed_result: True,
 }
 
 
@@ -50,12 +52,19 @@ user_conf = {
     target_table_view="order",
 )
 def build_new() -> DataFrame:
-    _df_order: DataFrame = (
+    _df_order_source: DataFrame = (
         spark.read.option("header", "true")
         .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
+        .csv(os.path.join(os.path.dirname(__file__), "resources/order_s.csv"))
     )
-    _df_order.createOrReplaceTempView("order")
+    _df_order_source.createOrReplaceTempView("order_source")
+
+    _df_order_target: DataFrame = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(os.path.join(os.path.dirname(__file__), "resources/order_t.csv"))
+    )
+    _df_order_target.createOrReplaceTempView("order_target")
 
     _df_product: DataFrame = (
         spark.read.option("header", "true")
@@ -72,7 +81,7 @@ def build_new() -> DataFrame:
 
     _df_customer.createOrReplaceTempView("customer")
 
-    return _df_order
+    return _df_order_source
 
 
 if __name__ == "__main__":
@@ -80,14 +89,17 @@ if __name__ == "__main__":
 
     spark.sql("use dq_spark_local")
     spark.sql("select * from dq_spark_local.dq_stats").show(truncate=False)
+    spark.sql("select * from dq_spark_local.dq_stats_custom").show(truncate=False)
     spark.sql("select * from dq_spark_local.dq_stats").printSchema()
     spark.sql("select * from dq_spark_local.customer_order").show(truncate=False)
-    spark.sql("select count(*) from dq_spark_local.customer_order_error").show(
-        truncate=False
-    )
+    # spark.sql("select count(*) from dq_spark_local.customer_order_error").show(
+    #    truncate=False
+    # )
 
     _log.info("stats data in the kafka topic")
     # display posted statistics from the kafka topic
+
+    """
     spark.read.format("kafka").option(
         "kafka.bootstrap.servers", "localhost:9092"
     ).option("subscribe", "dq-sparkexpectations-stats").option(
@@ -99,7 +111,8 @@ if __name__ == "__main__":
     ).show(
         truncate=False
     )
+    """
 
     # remove docker container
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    os.system(f"sh {current_dir}/docker_scripts/docker_kafka_stop_script.sh")
+    # os.system(f"sh {current_dir}/docker_scripts/docker_kafka_stop_script.sh")

@@ -58,3 +58,10 @@ class Constants:
     dbx_secret_app_name = "se.streaming.dbx.secret.app.name"
     dbx_secret_token = "se.streaming.dbx.secret.token"
     dbx_topic_name = "se.streaming.dbx.topic.name"
+
+    # declare const user config variables for agg query dq detailed satats
+    enable_agg_dq_detailed_result = "spark.expectations.agg.dq.detailed.stats"
+    enable_query_dq_detailed_result = "spark.expectations.query.dq.detailed.stats"
+
+    # declare const variable for agg query dq detailed satats
+    se_agg_dq_expectation_regex_pattern = r"(\w+\(.+?\))([<>!=]+.+)$"
