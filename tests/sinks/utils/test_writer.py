@@ -1322,7 +1322,9 @@ def test_write_error_records_final_dependent(
                             "tag": "validity",
                             "action_if_failed": "ignore",
                         },
-                    ]
+                    ],
+                    "meta_dq_run_id": "run_id",
+                    "meta_dq_run_date": "2022-12-27 10:39:44"
                 },
                 {
                     "meta_row_dq_results": [
@@ -1333,7 +1335,9 @@ def test_write_error_records_final_dependent(
                             "tag": "validity",
                             "action_if_failed": "ignore",
                         }
-                    ]
+                    ],
+                    "meta_dq_run_id": "run_id",
+                    "meta_dq_run_date": "2022-12-27 10:39:44"
                 },
                 {
                     "meta_row_dq_results": [
@@ -1344,7 +1348,9 @@ def test_write_error_records_final_dependent(
                             "tag": "validity",
                             "action_if_failed": "ignore",
                         }
-                    ]
+                    ],
+                    "meta_dq_run_id": "run_id",
+                    "meta_dq_run_date": "2022-12-27 10:39:44"
                 },
             ],
             [
@@ -1377,7 +1383,9 @@ def test_write_error_records_final_dependent(
                             "tag": "validity",
                             "action_if_failed": "ignore",
                         }
-                    ]
+                    ],
+                    "meta_dq_run_id": "run_id",
+                    "meta_dq_run_date": "2022-12-27 10:39:44"
                 },
                 {
                     "meta_row_dq_results": [
@@ -1385,9 +1393,12 @@ def test_write_error_records_final_dependent(
                             "rule_type": "row_dq",
                             "rule": "rule1",
                             "description": "col1 should not be null",
+                            "tag": "validity",
                             "action_if_failed": "ignore",
                         }
-                    ]
+                    ],
+                    "meta_dq_run_id": "run_id",
+                    "meta_dq_run_date": "2022-12-27 10:39:44"
                 },
             ],
             [
