@@ -1,6 +1,6 @@
 # pylint: disable=too-many-lines
 import os
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 import pytest
 from pyspark.sql.functions import lit
 from spark_expectations.core import get_spark_session
@@ -219,7 +219,7 @@ def fixture_create_stats_table():
                              ),
                              (
                                      # test case 3
-                                     # In the this test case, the action for failed rows is "fail",
+                                     # In this test case, the action for failed rows is "fail",
                                      # so the function should raise an error.
                                      # collect stats in the test_stats_table and log the error records into the error
                                      # table.
@@ -1579,6 +1579,7 @@ def test_execute_dq_process(_mock_notify,
                             _fixture_create_stats_table):
     spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
     df.createOrReplaceTempView("test_table")
+    _fixture_context._dq_expectations = expectations
     writer = SparkExpectationsWriter(_fixture_context)
     regulate_flow = SparkExpectationsRegulateFlow("product1")
 
