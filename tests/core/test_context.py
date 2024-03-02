@@ -1633,3 +1633,12 @@ def test_get_rules_exceds_threshold():
             "error_drop_percentage": "10.0",
         }
     ]
+
+def test_get_dq_expectations_exception():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    with pytest.raises(
+        SparkExpectationsMiscException,
+        match="The spark expectations context is not set completely, please assign '_dq_expectations' before \n       "
+              "     accessing it",
+    ):
+        context.get_dq_expectations
