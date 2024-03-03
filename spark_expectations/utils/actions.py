@@ -199,7 +199,7 @@ class SparkExpectationsActions:
                     _context.spark.sql(_querydq_target_query).toJSON().collect()
                 )
                 if (
-                    len(_querydq_source_query_output)
+                    len(_querydq_source_query_output) > 300
                     or len(_querydq_target_query_output) > 300
                 ):
                     _log.info(
