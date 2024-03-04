@@ -123,7 +123,7 @@ class SparkExpectations:
                 user_config.se_enable_streaming: True,
                 user_config.secret_type: "databricks",
                 user_config.dbx_workspace_url: "https://workspace.cloud.databricks.com",
-                user_config.dbx_secret_scope: "sercet_scope",
+                user_config.dbx_secret_scope: "secret_scope",
                 user_config.dbx_kafka_server_url: "se_streaming_server_url_secret_key",
                 user_config.dbx_secret_token_url: "se_streaming_auth_secret_token_url_key",
                 user_config.dbx_secret_app_name: "se_streaming_auth_secret_appid_key",
@@ -255,7 +255,8 @@ class SparkExpectations:
                     self._context.set_final_agg_dq_result()
                     self._context.set_source_query_dq_result()
                     self._context.set_final_query_dq_result()
-                    self._context.set_summarised_row_dq_res()
+                    self._context.set_summarized_row_dq_res()
+                    self._context.set_dq_expectations(expectations)
 
                     # initialize variables of start and end time with default values
                     self._context._source_agg_dq_start_time = None

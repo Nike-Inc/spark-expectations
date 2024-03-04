@@ -238,12 +238,12 @@ class SparkExpectationsNotify:
         try:
             rules_failed_row_count: Dict[str, int] = {}
             notification_body = ""
-            if self._context.get_summarised_row_dq_res is None:
+            if self._context.get_summarized_row_dq_res is None:
                 return None
 
             rules_failed_row_count = {
                 itr["rule"]: int(itr["failed_row_count"])
-                for itr in self._context.get_summarised_row_dq_res
+                for itr in self._context.get_summarized_row_dq_res
             }
 
             for rule in rules[f"{self._context.get_row_dq_rule_type_name}_rules"]:

@@ -36,6 +36,7 @@ class SparkExpectationsContext:
         self._source_query_dq_status: str = "Skipped"
         self._final_query_dq_status: str = "Skipped"
         self._dq_run_status: str = "Failed"
+        self._dq_expectations: Optional[Dict[str, str]] = None
 
         # above configuration variable value has to be set to python
         self._dq_project_env_name = "spark_expectations"
@@ -120,7 +121,7 @@ class SparkExpectationsContext:
             "num_final_query_dq_rules": 0,
         }
         self._num_dq_rules: int = 0
-        self._summarised_row_dq_res: Optional[List[Dict[str, str]]] = None
+        self._summarized_row_dq_res: Optional[List[Dict[str, str]]] = None
         self._rules_error_per: Optional[List[dict]] = None
 
         self._target_and_error_table_writer_config: dict = {}
@@ -162,6 +163,24 @@ class SparkExpectationsContext:
             return self._dq_stats_table_name
         raise SparkExpectationsMiscException(
             """The spark expectations context is not set completely, please assign '_dq_stats_table_name' before 
+            accessing it"""
+        )
+
+    def set_dq_expectations(self, dq_expectations: dict) -> None:
+        self._dq_expectations = dq_expectations
+
+    @property
+    def get_dq_expectations(self) -> dict:
+        """
+        Get dq_expectations to which has rule infromation
+
+        Returns:
+            str: returns the rules_df
+        """
+        if self._dq_expectations:
+            return self._dq_expectations
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign '_dq_expectations' before 
             accessing it"""
         )
 
@@ -1472,28 +1491,28 @@ class SparkExpectationsContext:
             accessing it"""
         )
 
-    def set_summarised_row_dq_res(
-        self, summarised_row_dq_res: Optional[List[Dict[str, str]]] = None
+    def set_summarized_row_dq_res(
+        self, summarized_row_dq_res: Optional[List[Dict[str, str]]] = None
     ) -> None:
         """
-        This function implements or supports to set row dq summarised res
+        This function implements or supports to set row dq summarized res
         Args:
-            summarised_row_dq_res: list(dict)
+            summarized_row_dq_res: list(dict)
         Returns: None
 
         """
-        self._summarised_row_dq_res = summarised_row_dq_res
+        self._summarized_row_dq_res = summarized_row_dq_res
 
     @property
-    def get_summarised_row_dq_res(self) -> Optional[List[Dict[str, str]]]:
+    def get_summarized_row_dq_res(self) -> Optional[List[Dict[str, str]]]:
         """
-        This function returns row dq summarised res
+        This function returns row dq summarized res
         Returns:
-            list(dict): Returns summarised_row_dq_res which in list of dict with str(key) and
+            list(dict): Returns summarized_row_dq_res which in list of dict with str(key) and
             str(value) of rule meta data
 
         """
-        return self._summarised_row_dq_res
+        return self._summarized_row_dq_res
 
     def set_rules_exceeds_threshold(self, rules: Optional[List[dict]] = None) -> None:
         """
