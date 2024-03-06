@@ -1566,9 +1566,7 @@ class SparkExpectationsContext:
         """
         return self._stats_table_writer_config
 
-    def set_se_enable_error_table(
-        self, se_enable_error_table: bool
-    ) -> None:
+    def set_se_enable_error_table(self, se_enable_error_table: bool) -> None:
         """
 
         Args:
@@ -1577,9 +1575,7 @@ class SparkExpectationsContext:
         Returns:
 
         """
-        self._se_enable_error_table = bool(
-            se_enable_error_table
-        )
+        self._se_enable_error_table = bool(se_enable_error_table)
 
     @property
     def get_se_enable_error_table(self) -> bool:
@@ -1589,4 +1585,3 @@ class SparkExpectationsContext:
 
         """
         return self._se_enable_error_table
-
