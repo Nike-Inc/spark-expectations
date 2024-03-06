@@ -37,8 +37,8 @@ se_user_conf = {
 10. When `user_config.se_notifications_on_completion` parameter set to `True` enables notification on completion of spark-expectations framework, variable by default set to `False`
 11. When `user_config.se_notifications_on_fail` parameter set to `True` enables notification on failure of spark-expectations data quality framework, variable by default set to `True`
 12. When `user_config.se_notifications_on_error_drop_exceeds_threshold_breach` parameter set to `True` enables notification when error threshold reaches above the configured value
-13. The `user_config.se_notifications_on_error_drop_threshold` parameter, which controls whether error data to load into error table, is set to true by default
-14. The `user_config.se_enable_error_table`
+13. The `user_config.se_notifications_on_error_drop_threshold` parameter captures error drop threshold value
+14. The `user_config.se_enable_error_table` parameter, which controls whether error data to load into error table, is set to true by default
 
 ### Spark Expectations Initialization 
 
