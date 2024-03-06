@@ -37,6 +37,7 @@ class SparkExpectationsContext:
         self._final_query_dq_status: str = "Skipped"
         self._dq_run_status: str = "Failed"
         self._dq_expectations: Optional[Dict[str, str]] = None
+        self._se_enable_error_table: bool = True
 
         # above configuration variable value has to be set to python
         self._dq_project_env_name = "spark_expectations"
@@ -1564,3 +1565,28 @@ class SparkExpectationsContext:
             dict: Returns stats_table_writer_config which in dict
         """
         return self._stats_table_writer_config
+
+    def set_se_enable_error_table(
+        self, se_enable_error_table: bool
+    ) -> None:
+        """
+
+        Args:
+            _se_enable_error_table:
+
+        Returns:
+
+        """
+        self._se_enable_error_table = bool(
+            se_enable_error_table
+        )
+
+    @property
+    def get_se_enable_error_table(self) -> bool:
+        """
+        This function returns whether to enable relational table or not
+        Returns: Returns _se_enable_error_table(bool)
+
+        """
+        return self._se_enable_error_table
+

@@ -974,7 +974,7 @@ def test_action_on_dq_rules(_mock_set_row_dq_status, _mock_set_source_agg_dq_sta
 
     # assert for exception when spark expectations set to fail
     if isinstance(expected_output, type) and issubclass(expected_output, Exception):
-        with pytest.raises(expected_output, match=r"error occured while taking action on given rules .*"):
+        with pytest.raises(expected_output, match=r"error occurred while taking action on given rules .*"):
             SparkExpectationsActions.action_on_rules(_fixture_mock_context,
                                                      input_df,
                                                      input_count,
@@ -1078,7 +1078,7 @@ def test_action_on_rules_exception(input_df,
                                    _fixture_mock_context):
     # test exception functionality with faulty user input
     with pytest.raises(SparkExpectationsMiscException,
-                       match=r"error occured while taking action on given rules .*"):
+                       match=r"error occurred while taking action on given rules .*"):
         SparkExpectationsActions.action_on_rules(_fixture_mock_context,
                                                  input_df,
                                                  table_name,

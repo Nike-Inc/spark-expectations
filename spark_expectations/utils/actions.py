@@ -293,5 +293,5 @@ class SparkExpectationsActions:
 
         except Exception as e:
             raise SparkExpectationsMiscException(
-                f"error occured while taking action on given rules {e}"
+                f"error occurred while taking action on given rules {e}"
             )
