@@ -418,11 +418,12 @@ class SparkExpectationsWriter:
             error_df = df.filter(f"size(meta_{rule_type}_results) != 0")
             self._context.print_dataframe_with_debugger(error_df)
 
-            self.save_df_as_table(
-                error_df,
-                error_table,
-                self._context.get_target_and_error_table_writer_config,
-            )
+            if self._context.get_se_enable_error_table:
+                self.save_df_as_table(
+                    error_df,
+                    error_table,
+                    self._context.get_target_and_error_table_writer_config,
+                )
 
             _error_count = error_df.count()
             if _error_count > 0:

@@ -30,6 +30,8 @@ def test_constants():
 
     assert user_config.se_enable_streaming == "se.enable.streaming"
 
+    assert user_config.se_enable_error_table == "se.enable.error.table"
+
     assert user_config.secret_type == "se.streaming.secret.type"
 
     assert user_config.cbs_url == "se.streaming.cerberus.url"

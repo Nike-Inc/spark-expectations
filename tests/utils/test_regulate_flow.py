@@ -1597,7 +1597,7 @@ def test_execute_dq_process(_mock_notify,
     if isinstance(expected_df, type) and issubclass(expected_df, Exception):
         with pytest.raises(expected_df,
                            match=r"error occurred while executing func_process error "
-                                 r"occured while taking action on given rules "
+                                 r"occurred while taking action on given rules "
                                  r"Job failed, as there is a data quality issue .*"):
             (_df, _agg_dq_res, _error_count, _status) = func_process(df,
                                                                      rule_type,
@@ -1617,8 +1617,6 @@ def test_execute_dq_process(_mock_notify,
             assert row.input_count == input_count
             assert row.error_count == error_count
             assert row.output_count == output_count
-            # assert row.source_agg_dq_results == source_agg_dq_results
-            # assert row.final_agg_dq_results == final_agg_dq_results
             assert row.status.get("source_agg") == status.get("source_agg_dq_status")
             assert row.status.get("row_dq") == status.get("row_dq_status")
             assert row.status.get("final_agg") == status.get("final_agg_dq_status")
