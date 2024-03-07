@@ -1575,7 +1575,7 @@ class SparkExpectationsContext:
         Returns:
 
         """
-        self._se_enable_error_table = bool(se_enable_error_table)
+        self._se_enable_error_table = se_enable_error_table
 
     @property
     def get_se_enable_error_table(self) -> bool:
