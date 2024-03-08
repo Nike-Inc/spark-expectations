@@ -194,7 +194,7 @@ class SparkExpectationsActions:
                         if rule_type == _context.get_agg_dq_rule_type_name
                         else _context.get_supported_df_query_dq
                     )
-
+                    print(f"condition_expressions : {condition_expressions}")
                     df = df.select(*condition_expressions)
                     df = df.withColumn(
                         f"meta_{rule_type}_results", array(*list(df.columns))
@@ -212,6 +212,7 @@ class SparkExpectationsActions:
                     _context.print_dataframe_with_debugger(df)
 
                 elif rule_type == _context.get_row_dq_rule_type_name:
+                    print(f"condition_expressions : {condition_expressions}")
                     df = df.select(col("*"), *condition_expressions)
             else:
                 raise SparkExpectationsMiscException(

@@ -140,6 +140,7 @@ class SparkExpectationsReader:
         target_table: str,
         is_dlt: bool = False,
         tag: Optional[str] = None,
+        params: dict = {},
     ) -> tuple[dict, dict]:
         """
         This function fetches the data quality rules from the table and return it as a dictionary
@@ -179,19 +180,19 @@ class SparkExpectationsReader:
             if is_dlt:
                 if tag:
                     for row in _rules_df.filter(_rules_df.tag == tag).collect():
-                        _expectations[row["rule"]] = row["expectation"]
+                        _expectations[row["rule"]] = row["expectation"].format(**params)
                 else:
                     for row in _rules_df.collect():
-                        _expectations[row["rule"]] = row["expectation"]
+                        _expectations[row["rule"]] = row["expectation"].format(**params)
             else:
                 for row in _rules_df.collect():
                     column_map = {
-                        "product_id": row["product_id"],
-                        "table_name": row["table_name"],
+                        "product_id": row["product_id"].format(**params),
+                        "table_name": row["table_name"].format(**params),
                         "rule_type": row["rule_type"],
-                        "rule": row["rule"],
+                        "rule": row["rule"].format(**params),
                         "column_name": row["column_name"],
-                        "expectation": row["expectation"],
+                        "expectation": row["expectation"].format(**params),
                         "action_if_failed": row["action_if_failed"],
                         "enable_for_source_dq_validation": row[
                             "enable_for_source_dq_validation"
