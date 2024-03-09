@@ -2065,7 +2065,7 @@ def fixture_spark_expectations(_fixture_rules_df):
                              ),
                             (
                              # Test case 23
-                             # In this test case, dq run set for query_dq source_query_dq
+                             # In this test case, dq run set for query_dq source_query_dq and one of the rule is parameterized
                              # with action_if_failed (ignore) for query_dq
                              # collect stats in the test_stats_table & error into error_table
                              spark.createDataFrame(
