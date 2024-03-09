@@ -1659,10 +1659,10 @@ def test_set_enable_error_table():
 
 
 def test_set_dq_rules_params():
-    # default case is True for enabling error table
+    # default case is empty dictionary for dq rules params and testing negative scenario
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     assert context.get_dq_rules_params == {}
 
-    # testing for False do not write error records in error table
+    # testing when passing parameterizied values to dq rules
     context._dq_rules_params = {'env': 'local'}
     assert context.get_dq_rules_params == {'env': 'local'}
