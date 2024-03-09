@@ -150,7 +150,7 @@ class SparkExpectationsReader:
             target_table: Provide the full table name for which the data quality rules are being run
             is_dlt: True if this for fetching the rules for dlt job
             tag: If is_dlt is True, provide the KPI for which you are running the data quality rule
-            params:
+            params: dictionary values for dynamically updating dq rules
 
         Returns:
             tuple: returns a tuple of two dictionaries with key as 'rule_type' and 'rules_table_row' as value in
