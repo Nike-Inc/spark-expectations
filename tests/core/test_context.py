@@ -1657,11 +1657,12 @@ def test_set_enable_error_table():
     context.set_se_enable_error_table(False)
     assert context.get_se_enable_error_table is False
 
+
 def test_set_dq_rules_params():
     # default case is True for enabling error table
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     assert context.get_dq_rules_params == {}
 
     # testing for False do not write error records in error table
-    context._dq_rules_params = {'env' : 'local'}
-    assert context.get_dq_rules_params == {'env' : 'local'}
+    context._dq_rules_params = {'env': 'local'}
+    assert context.get_dq_rules_params == {'env': 'local'}

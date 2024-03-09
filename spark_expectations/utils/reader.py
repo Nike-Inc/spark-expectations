@@ -140,7 +140,7 @@ class SparkExpectationsReader:
         target_table: str,
         is_dlt: bool = False,
         tag: Optional[str] = None,
-        params: dict = {},
+        params: Optional[dict] = None,
     ) -> tuple[dict, dict]:
         """
         This function fetches the data quality rules from the table and return it as a dictionary
@@ -150,6 +150,7 @@ class SparkExpectationsReader:
             target_table: Provide the full table name for which the data quality rules are being run
             is_dlt: True if this for fetching the rules for dlt job
             tag: If is_dlt is True, provide the KPI for which you are running the data quality rule
+            params:
 
         Returns:
             tuple: returns a tuple of two dictionaries with key as 'rule_type' and 'rules_table_row' as value in
@@ -172,6 +173,9 @@ class SparkExpectationsReader:
                 & (rules_df.table_name == target_table)
                 & rules_df.is_active
             )
+
+            if not params:
+                params = {}
 
             self._context.print_dataframe_with_debugger(_rules_df)
 
