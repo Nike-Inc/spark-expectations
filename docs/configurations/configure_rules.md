@@ -46,7 +46,7 @@ false, false, true)
 ```
 
 
-Please set up rules for checking the quality of the columns in the artificially order table, using the specified format
+Please set up rules for checking the quality of the columns in the artificial order table, using the specified format
 
 ```sql
 insert into `catalog`.`schema`.`{product}_rules` (product_id, table_name, rule_type, rule, column_name, expectation, 
