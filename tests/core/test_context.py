@@ -41,6 +41,7 @@ def test_context_properties():
     context._final_agg_dq_status = "test_skipped"
     context._dq_run_status = "test_failed"
     context._se_enable_error_table = True
+    context._dq_rules_params = {}
 
     context._dq_project_env_name = "APLAD-5063"
     context._dq_config_file_name = "dq_spark_expectations_config.ini"
@@ -1655,3 +1656,13 @@ def test_set_enable_error_table():
     # testing for False do not write error records in error table
     context.set_se_enable_error_table(False)
     assert context.get_se_enable_error_table is False
+
+
+def test_set_dq_rules_params():
+    # default case is empty dictionary for dq rules params and testing negative scenario
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    assert context.get_dq_rules_params == {}
+
+    # testing when passing parameterizied values to dq rules
+    context._dq_rules_params = {'env': 'local'}
+    assert context.get_dq_rules_params == {'env': 'local'}

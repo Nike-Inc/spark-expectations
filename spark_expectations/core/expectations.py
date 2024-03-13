@@ -107,14 +107,16 @@ class SparkExpectations:
         def _except(func: Any) -> Any:
             # variable used for enabling notification at different level
 
-            _default_notification_dict: Dict[str, Union[str, int, bool]] = {
+            _default_notification_dict: Dict[
+                str, Union[str, int, bool, Dict[str, str]]
+            ] = {
                 user_config.se_notifications_on_start: False,
                 user_config.se_notifications_on_completion: False,
                 user_config.se_notifications_on_fail: True,
                 user_config.se_notifications_on_error_drop_exceeds_threshold_breach: False,
                 user_config.se_notifications_on_error_drop_threshold: 100,
             }
-            _notification_dict: Dict[str, Union[str, int, bool]] = (
+            _notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = (
                 {**_default_notification_dict, **user_conf}
                 if user_conf
                 else _default_notification_dict
@@ -136,6 +138,18 @@ class SparkExpectations:
                 else _default_stats_streaming_dict
             )
 
+            enable_error_table = _notification_dict.get(
+                user_config.se_enable_error_table, True
+            )
+            self._context.set_se_enable_error_table(
+                enable_error_table if isinstance(enable_error_table, bool) else True
+            )
+
+            dq_rules_params = _notification_dict.get(user_config.se_dq_rules_params, {})
+            self._context.set_dq_rules_params(
+                dq_rules_params if isinstance(dq_rules_params, dict) else {}
+            )
+
             # Overwrite the writers if provided by the user in the with_expectations explicitly
             if target_and_error_table_writer:
                 self._context.set_target_and_error_table_writer_config(
@@ -144,7 +158,7 @@ class SparkExpectations:
 
             # need to call the get_rules_frm_table function to get the rules from the table as expectations
             expectations, rules_execution_settings = self.reader.get_rules_from_df(
-                self.rules_df, target_table
+                self.rules_df, target_table, params=self._context.get_dq_rules_params
             )
 
             _row_dq: bool = rules_execution_settings.get("row_dq", False)
@@ -200,18 +214,13 @@ class SparkExpectations:
                 )
                 else False
             )
+
+            notifications_on_error_drop_threshold = _notification_dict.get(
+                user_config.se_notifications_on_error_drop_threshold, 100
+            )
             _error_drop_threshold: int = (
-                int(
-                    _notification_dict[
-                        user_config.se_notifications_on_error_drop_threshold
-                    ]
-                )
-                if isinstance(
-                    _notification_dict[
-                        user_config.se_notifications_on_error_drop_threshold
-                    ],
-                    int,
-                )
+                notifications_on_error_drop_threshold
+                if isinstance(notifications_on_error_drop_threshold, int)
                 else 100
             )
 
@@ -416,6 +425,7 @@ class SparkExpectations:
                             #        _dq_final_agg_results: final agg dq result in dictionary
                             #        _: number of error records
                             #        status: status of the execution
+
                             (
                                 _final_dq_df,
                                 _dq_final_agg_results,

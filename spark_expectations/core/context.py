@@ -38,6 +38,7 @@ class SparkExpectationsContext:
         self._dq_run_status: str = "Failed"
         self._dq_expectations: Optional[Dict[str, str]] = None
         self._se_enable_error_table: bool = True
+        self._dq_rules_params: Dict[str, str] = {}
 
         # above configuration variable value has to be set to python
         self._dq_project_env_name = "spark_expectations"
@@ -1566,7 +1567,7 @@ class SparkExpectationsContext:
         """
         return self._stats_table_writer_config
 
-    def set_se_enable_error_table(self, se_enable_error_table: bool) -> None:
+    def set_se_enable_error_table(self, _enable_error_table: bool) -> None:
         """
 
         Args:
@@ -1575,7 +1576,7 @@ class SparkExpectationsContext:
         Returns:
 
         """
-        self._se_enable_error_table = se_enable_error_table
+        self._se_enable_error_table = _enable_error_table
 
     @property
     def get_se_enable_error_table(self) -> bool:
@@ -1585,3 +1586,23 @@ class SparkExpectationsContext:
 
         """
         return self._se_enable_error_table
+
+    def set_dq_rules_params(self, _dq_rules_params: dict) -> None:
+        """
+        This function set params for dq rules
+        Args:
+            _se_dq_rules_params:
+
+        Returns:
+
+        """
+        self._dq_rules_params = _dq_rules_params
+
+    @property
+    def get_dq_rules_params(self) -> dict:
+        """
+        This function returns params which are mapping in dq rules
+        Returns: _dq_rules_params(dict)
+
+        """
+        return self._dq_rules_params

@@ -140,6 +140,7 @@ class SparkExpectationsReader:
         target_table: str,
         is_dlt: bool = False,
         tag: Optional[str] = None,
+        params: Optional[dict] = None,
     ) -> tuple[dict, dict]:
         """
         This function fetches the data quality rules from the table and return it as a dictionary
@@ -149,6 +150,7 @@ class SparkExpectationsReader:
             target_table: Provide the full table name for which the data quality rules are being run
             is_dlt: True if this for fetching the rules for dlt job
             tag: If is_dlt is True, provide the KPI for which you are running the data quality rule
+            params: dictionary values for dynamically updating dq rules
 
         Returns:
             tuple: returns a tuple of two dictionaries with key as 'rule_type' and 'rules_table_row' as value in
@@ -172,6 +174,9 @@ class SparkExpectationsReader:
                 & rules_df.is_active
             )
 
+            if not params:
+                params = {}
+
             self._context.print_dataframe_with_debugger(_rules_df)
 
             _expectations: dict = {}
@@ -179,19 +184,19 @@ class SparkExpectationsReader:
             if is_dlt:
                 if tag:
                     for row in _rules_df.filter(_rules_df.tag == tag).collect():
-                        _expectations[row["rule"]] = row["expectation"]
+                        _expectations[row["rule"]] = row["expectation"].format(**params)
                 else:
                     for row in _rules_df.collect():
-                        _expectations[row["rule"]] = row["expectation"]
+                        _expectations[row["rule"]] = row["expectation"].format(**params)
             else:
                 for row in _rules_df.collect():
                     column_map = {
-                        "product_id": row["product_id"],
-                        "table_name": row["table_name"],
+                        "product_id": row["product_id"].format(**params),
+                        "table_name": row["table_name"].format(**params),
                         "rule_type": row["rule_type"],
-                        "rule": row["rule"],
+                        "rule": row["rule"].format(**params),
                         "column_name": row["column_name"],
-                        "expectation": row["expectation"],
+                        "expectation": row["expectation"].format(**params),
                         "action_if_failed": row["action_if_failed"],
                         "enable_for_source_dq_validation": row[
                             "enable_for_source_dq_validation"

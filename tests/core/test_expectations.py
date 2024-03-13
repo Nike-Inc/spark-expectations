@@ -2062,7 +2062,81 @@ def fixture_spark_expectations(_fixture_rules_df):
                                      {"row_dq_status": "Passed", "source_agg_dq_status": "Passed",
                                       "final_agg_dq_status": "Passed", "run_status": "Passed",
                                       "source_query_dq_status": "Passed", "final_query_dq_status": "Passed"}  # status
-                             )
+                             ),
+                            (
+                             # Test case 23
+                             # In this test case, dq run set for query_dq source_query_dq and one of the rule is parameterized
+                             # with action_if_failed (ignore) for query_dq
+                             # collect stats in the test_stats_table & error into error_table
+                             spark.createDataFrame(
+                                 [
+                                     # sum of col1 must be greater than 10(ignore)
+                                     # standard deviation of col3 must be greater than 0(ignore)
+                                     {"col1": 1, "col2": "a", "col3": 4},
+                                     # row doesn't meet row_dq expectation1(drop)
+                                     {"col1": 2, "col2": "b", "col3": 5},
+                                     # row meets all row_dq_expectations
+                                     {"col1": 3, "col2": "c", "col3": 6},
+                                     # row meets all row_dq_expectations
+                                 ]
+                             ),
+                             [
+                                 {
+                                     "product_id": "product1",
+                                     "table_name": "dq_spark.test_final_table",
+                                     "rule_type": "query_dq",
+                                     "rule": "sum_col1_threshold",
+                                     "column_name": "col1",
+                                     "expectation": "(select sum(col1) from {table}) > 10",
+                                     "action_if_failed": "ignore",
+                                     "tag": "validity",
+                                     "description": "sum of col1 value must be greater than 10",
+                                     "enable_for_source_dq_validation": True,
+                                     "enable_for_target_dq_validation": True,
+                                     "is_active": True,
+                                     "enable_error_drop_alert": False,
+                                     "error_drop_threshold": "20",
+                                 },
+                                 {
+                                     "product_id": "product1",
+                                     "table_name": "dq_spark.test_final_table",
+                                     "rule_type": "query_dq",
+                                     "rule": "stddev_col3_threshold",
+                                     "column_name": "col3",
+                                     "expectation": "(select stddev(col3) from test_table) > 0",
+                                     "action_if_failed": "ignore",
+                                     "tag": "validity",
+                                     "description": "stddev of col3 value must be greater than 0",
+                                     "enable_for_source_dq_validation": True,
+                                     "enable_for_target_dq_validation": True,
+                                     "is_active": True,
+                                     "enable_error_drop_alert": False,
+                                     "error_drop_threshold": "20",
+                                 }
+                             ],
+                             False,  # write to table
+                             False,  # write to temp table
+                             None,  # expected result
+                             3,  # input count
+                             0,  # error count
+                             0,  # output count
+                             None,  # source_agg_result
+                             None,  # final_agg_result
+                             # final_agg_result
+                             [{"description": "sum of col1 value must be greater than 10",
+                               "rule": "sum_col1_threshold",
+                               "rule_type": "query_dq", "action_if_failed": "ignore", "tag": "validity"}],
+                             # source_query_dq_res
+                             None,  # final_query_dq_res
+                             {"rules": {"num_dq_rules": 2, "num_row_dq_rules": 0},
+                              "query_dq_rules": {"num_final_query_dq_rules": 2, "num_source_query_dq_rules": 2,
+                                                 "num_query_dq_rules": 2},  # dq_rules
+                              "agg_dq_rules": {"num_source_agg_dq_rules": 0, "num_agg_dq_rules": 0,
+                                               "num_final_agg_dq_rules": 0}},
+                             {"row_dq_status": "Skipped", "source_agg_dq_status": "Skipped",
+                              "final_agg_dq_status": "Skipped", "run_status": "Passed",
+                              "source_query_dq_status": "Passed", "final_query_dq_status": "Skipped"}  # status
+                            ),
                          ])
 def test_with_expectations(input_df,
                            expectations,
@@ -2102,10 +2176,11 @@ def test_with_expectations(input_df,
     se._context.set_error_count(0)
     se._context._run_id = "product1_run_test"
 
+
     # Decorate the mock function with required args
     @se.with_expectations(
         "dq_spark.test_final_table",
-        user_conf={user_config.se_notifications_on_fail: False},
+        user_conf={user_config.se_notifications_on_fail: False, user_config.se_dq_rules_params: {'table' : 'test_table'} },
         write_to_table=write_to_table,
         write_to_temp_table=write_to_temp_table
     )
@@ -2243,7 +2318,7 @@ def test_with_expectations_dataframe_not_returned_exception(_fixture_create_data
 def test_with_expectations_exception(_fixture_create_database,
                                      _fixture_spark_expectations,
                                      _fixture_local_kafka_topic):
-    rules_dict = {
+    rules_dict = [{
         "product_id": "product1",
         "table_name": "dq_spark.test_table",
         "rule_type": "row_dq",
@@ -2259,7 +2334,9 @@ def test_with_expectations_exception(_fixture_create_database,
         "enable_error_drop_alert": True,
         "error_drop_threshold": "10"
     }
-    rules_df = spark.createDataFrame([rules_dict])
+        ]
+
+    rules_df = spark.createDataFrame(rules_dict)
     writer = WrappedDataFrameWriter().mode("append").format("delta")
     se = SparkExpectations(product_id="product1",
                            rules_df=rules_df,
@@ -2287,7 +2364,55 @@ def test_with_expectations_exception(_fixture_create_database,
             spark.sql(f"DROP DATABASE {db.name} CASCADE")
     spark.sql("CLEAR CACHE")
 
+def test_with_expectations_negative_parameter(_fixture_create_database,
+                                     _fixture_spark_expectations,
+                                     _fixture_local_kafka_topic):
+    rules_dict = [
+        {
+            "product_id": "product1",
+            "table_name": "dq_spark.test_final_table",
+            "rule_type": "query_dq",
+            "rule": "sum_col1_threshold",
+            "column_name": "col1",
+            "expectation": "(select sum(col1) from {table2}) > 10",
+            "action_if_failed": "ignore",
+            "tag": "validity",
+            "description": "sum of col1 value must be greater than 10",
+            "enable_for_source_dq_validation": True,
+            "enable_for_target_dq_validation": True,
+            "is_active": True,
+            "enable_error_drop_alert": False,
+            "error_drop_threshold": "20",
+        }
+        ]
 
+    rules_df = spark.createDataFrame(rules_dict)
+    writer = WrappedDataFrameWriter().mode("append").format("delta")
+    se = SparkExpectations(product_id="product1",
+                           rules_df=rules_df,
+                           stats_table="dq_spark.test_dq_stats_table",
+                           stats_table_writer=writer,
+                           target_and_error_table_writer=writer,
+                           debugger=False,
+                           )
+    partial_func = se.with_expectations(
+        "dq_spark.test_final_table",
+        user_conf={user_config.se_notifications_on_fail: False}
+    )
+
+    with pytest.raises(SparkExpectationsMiscException,
+                       match=r"error occurred while retrieving rules list from the table 'table2'"):
+        # Create a mock object with a list return value
+        mock_func = Mock(return_value=["apple", "banana", "pineapple", "orange"])
+
+        # Decorate the mock function with required args
+        decorated_func = partial_func(mock_func)
+        decorated_func()
+
+    for db in spark.catalog.listDatabases():
+        if db.name != "default":
+            spark.sql(f"DROP DATABASE {db.name} CASCADE")
+    spark.sql("CLEAR CACHE")
 # @patch('spark_expectations.core.expectations.SparkExpectationsNotify', autospec=True,
 #        spec_set=True)
 # @patch('spark_expectations.notifications.push.spark_expectations_notify._notification_hook', autospec=True,
