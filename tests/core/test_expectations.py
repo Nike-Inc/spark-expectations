@@ -2136,7 +2136,7 @@ def fixture_spark_expectations(_fixture_rules_df):
                              {"row_dq_status": "Skipped", "source_agg_dq_status": "Skipped",
                               "final_agg_dq_status": "Skipped", "run_status": "Passed",
                               "source_query_dq_status": "Passed", "final_query_dq_status": "Skipped"}  # status
-                            )
+                            ),
                          ])
 def test_with_expectations(input_df,
                            expectations,
@@ -2175,6 +2175,7 @@ def test_with_expectations(input_df,
     se._context.set_output_count(100)
     se._context.set_error_count(0)
     se._context._run_id = "product1_run_test"
+
 
     # Decorate the mock function with required args
     @se.with_expectations(
@@ -2317,7 +2318,7 @@ def test_with_expectations_dataframe_not_returned_exception(_fixture_create_data
 def test_with_expectations_exception(_fixture_create_database,
                                      _fixture_spark_expectations,
                                      _fixture_local_kafka_topic):
-    rules_dict = {
+    rules_dict = [{
         "product_id": "product1",
         "table_name": "dq_spark.test_table",
         "rule_type": "row_dq",
@@ -2333,7 +2334,9 @@ def test_with_expectations_exception(_fixture_create_database,
         "enable_error_drop_alert": True,
         "error_drop_threshold": "10"
     }
-    rules_df = spark.createDataFrame([rules_dict])
+        ]
+
+    rules_df = spark.createDataFrame(rules_dict)
     writer = WrappedDataFrameWriter().mode("append").format("delta")
     se = SparkExpectations(product_id="product1",
                            rules_df=rules_df,
@@ -2361,7 +2364,55 @@ def test_with_expectations_exception(_fixture_create_database,
             spark.sql(f"DROP DATABASE {db.name} CASCADE")
     spark.sql("CLEAR CACHE")
 
+def test_with_expectations_negative_parameter(_fixture_create_database,
+                                     _fixture_spark_expectations,
+                                     _fixture_local_kafka_topic):
+    rules_dict = [
+        {
+            "product_id": "product1",
+            "table_name": "dq_spark.test_final_table",
+            "rule_type": "query_dq",
+            "rule": "sum_col1_threshold",
+            "column_name": "col1",
+            "expectation": "(select sum(col1) from {table2}) > 10",
+            "action_if_failed": "ignore",
+            "tag": "validity",
+            "description": "sum of col1 value must be greater than 10",
+            "enable_for_source_dq_validation": True,
+            "enable_for_target_dq_validation": True,
+            "is_active": True,
+            "enable_error_drop_alert": False,
+            "error_drop_threshold": "20",
+        }
+        ]
 
+    rules_df = spark.createDataFrame(rules_dict)
+    writer = WrappedDataFrameWriter().mode("append").format("delta")
+    se = SparkExpectations(product_id="product1",
+                           rules_df=rules_df,
+                           stats_table="dq_spark.test_dq_stats_table",
+                           stats_table_writer=writer,
+                           target_and_error_table_writer=writer,
+                           debugger=False,
+                           )
+    partial_func = se.with_expectations(
+        "dq_spark.test_final_table",
+        user_conf={user_config.se_notifications_on_fail: False}
+    )
+
+    with pytest.raises(SparkExpectationsMiscException,
+                       match=r"error occurred while retrieving rules list from the table 'table2'"):
+        # Create a mock object with a list return value
+        mock_func = Mock(return_value=["apple", "banana", "pineapple", "orange"])
+
+        # Decorate the mock function with required args
+        decorated_func = partial_func(mock_func)
+        decorated_func()
+
+    for db in spark.catalog.listDatabases():
+        if db.name != "default":
+            spark.sql(f"DROP DATABASE {db.name} CASCADE")
+    spark.sql("CLEAR CACHE")
 # @patch('spark_expectations.core.expectations.SparkExpectationsNotify', autospec=True,
 #        spec_set=True)
 # @patch('spark_expectations.notifications.push.spark_expectations_notify._notification_hook', autospec=True,
