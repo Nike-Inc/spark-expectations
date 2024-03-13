@@ -79,7 +79,7 @@ action_if_failed, tag, description) values
 --The query dq rule is established to check product_id difference between two table if difference is more than 20% 
 --from source table, the metadata of the rule will be captured in the statistics table as "action_if_failed" is "ignore"
 ,('apla_nd', '`catalog`.`schema`.customer_order', 'query_dq', 'product_missing_count_threshold', '*', 
-'((select count(distinct product_id) from product) - (select count(distinct product_id) from order))>
+'((select count(distinct product_id) from {table}) - (select count(distinct product_id) from order))>
 (select count(distinct product_id) from product)*0.2', 'ignore', 'validity', 'row count threshold difference must 
 be less than 20%', true, true, true)
  
@@ -87,7 +87,7 @@ be less than 20%', true, true, true)
 --metadata of the rule will be captured in the statistics table along with fails the job as "action_if_failed" is 
 --"fail" and enabled for source dataset
 ,('apla_nd', '`catalog`.`schema`.customer_order', 'query_dq', 'product_category', '*', '(select count(distinct category) 
-from product) < 5', 'fail', 'validity', 'distinct product category must be less than 5', true, False, true)
+from {table}) < 5', 'fail', 'validity', 'distinct product category must be less than 5', true, False, true)
 
 --The query dq rule is established to check count of the dataset should be less than 10000 other wise the metadata 
 --of the rule will be captured in the statistics table as "action_if_failed" is "ignore" and enabled only for target dataset
