@@ -176,9 +176,13 @@ class SparkExpectations:
                 )
 
             # need to call the get_rules_frm_table function to get the rules from the table as expectations
-            expectations, rules_execution_settings = self.reader.get_rules_from_df(
-                self.rules_df, target_table
-            )
+            (
+                dq_queries_dict,
+                expectations,
+                rules_execution_settings,
+            ) = self.reader.get_rules_from_df(self.rules_df, target_table)
+
+            print("get_rules_from_df from expectations:", expectations)
 
             _row_dq: bool = rules_execution_settings.get("row_dq", False)
             _source_agg_dq: bool = rules_execution_settings.get("source_agg_dq", False)
@@ -256,6 +260,7 @@ class SparkExpectations:
             self._context.set_se_streaming_stats_dict(_se_stats_streaming_dict)
             self._context.set_dq_expectations(expectations)
             self._context.set_rules_execution_settings_config(rules_execution_settings)
+            self._context.set_querydq_secondary_queries(dq_queries_dict)
 
             @self._notification.send_notification_decorator
             @self._statistics_decorator.collect_stats_decorator

@@ -1,4 +1,4 @@
-from typing import Dict, List, Any, Optional
+from typing import Dict, List, Any, Optional, Tuple
 from pyspark.sql import DataFrame
 
 # from pyspark.sql.types import (
@@ -6,6 +6,8 @@ from pyspark.sql import DataFrame
 #     ArrayType,
 #     MapType,
 # )
+
+# qa
 from pyspark.sql.functions import (
     create_map,
     expr,
@@ -17,7 +19,6 @@ from pyspark.sql.functions import (
     map_from_entries,
     array_contains,
 )
-from spark_expectations import _log
 from spark_expectations.utils.udf import remove_empty_maps, get_actions_list
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.config.user_config import Constants as constant_config
@@ -96,11 +97,28 @@ class SparkExpectationsActions:
             ]
         )
 
+    import re
+
+    @staticmethod
+    def match_parentheses(dq_query_string: str) -> bool:
+        _parentheses_branch_check: List = []
+        for _index_val, _dq_query_string_char in enumerate(dq_query_string):
+            if _dq_query_string_char == "(":
+                _parentheses_branch_check.append(_index_val)
+            elif _dq_query_string_char == ")":
+                if not _parentheses_branch_check:
+                    return False
+                _parentheses_branch_check.pop()
+        return (
+            not _parentheses_branch_check
+        )  # return True if no unmatched left parentheses remain
+
     @staticmethod
     def agg_query_dq_detailed_result(
         _context: SparkExpectationsContext,
         _dq_rule: Dict[str, str],
         df: DataFrame,
+        querydq_output: List[Tuple[str, str, str, str, Any, str, dict, str]],
         _source_dq_status: bool = False,
         _target_dq_status: bool = False,
     ) -> Any:
@@ -150,16 +168,7 @@ class SparkExpectationsActions:
                         > 0
                         else "fail"
                     )
-                    actual_value = [
-                        _agg_dq_actual_count_value
-                        if (_agg_dq_actual_count_value is not None)
-                        else None
-                    ]
-                    expected_value = [
-                        str(_agg_dq_expectation_expr)
-                        if (_agg_dq_expectation_expr is not None)
-                        else None
-                    ]
+
                     if _source_dq_status:
                         row_count = _context.get_input_count
                     elif _target_dq_status:
@@ -167,58 +176,163 @@ class SparkExpectationsActions:
                     else:
                         row_count = None
 
+                    actual_row_count = row_count if status == "pass" else None
+                    error_row_count = 0 if status == "pass" else row_count
+
+                    actual_outcome = (
+                        _agg_dq_actual_count_value
+                        if (_agg_dq_actual_count_value is not None)
+                        else None
+                    )
+                    expected_outcome = (
+                        str(_agg_dq_expectation_expr)
+                        if (_agg_dq_expectation_expr is not None)
+                        else None
+                    )
+
             elif (
                 _dq_rule["rule_type"] == _context.get_query_dq_rule_type_name
                 and _context.get_query_dq_detailed_stats_status is True
             ):
-                if not (
-                    _dq_rule["expectation_query_dq_source_query"] is not None
-                    and _dq_rule["expectation_query_dq_target_query"] is not None
-                ):
-                    raise SparkExpectationsMiscException(
-                        """error occurred while running agg_query_dq_detailed_result-
-                        detailed_stats_enabled query_dq expectation should have 3 parts - boolean query, 
-                        source query and target query"""
+                _querydq_secondary_query = _context.get_querydq_secondary_queries
+                print("_querydq_secondary_query:", _querydq_secondary_query)
+
+                if _source_dq_status is True:
+                    _query_prefix = "_source_dq"
+                elif _target_dq_status is True:
+                    _query_prefix = "_target_dq"
+                else:
+                    _query_prefix = ""
+
+                if (_dq_rule["enable_custom_output"] == "true") and (
+                    sub_key_value := _querydq_secondary_query.get(
+                        _dq_rule["product_id"]
+                        + "|"
+                        + _dq_rule["table_name"]
+                        + "|"
+                        + _dq_rule["rule"],
+                        {},
                     )
+                ):
+                    for _key, _querydq_query in sub_key_value.items():
+                        querydq_output.append(
+                            (
+                                _context.get_run_id,
+                                _dq_rule["product_id"],
+                                _dq_rule["table_name"],
+                                _dq_rule["rule"],
+                                _key,
+                                _query_prefix,
+                                dict(
+                                    [
+                                        (
+                                            _key,
+                                            _context.spark.sql(
+                                                _dq_rule["expectation" + "_" + _key]
+                                            )
+                                            .toJSON()
+                                            .collect(),
+                                        )
+                                    ]
+                                ),
+                                _context.get_run_date,
+                            )
+                        )
+                    print("_querydq_output in agg_query_dq_detailed:", querydq_output)
+
+                if SparkExpectationsActions.match_parentheses(_dq_rule["expectation"]):
+                    pattern = r"(\(.*\)) ([<>!=]=?) ((\d+)|(\(.*\)))|(\(.*\))"
+                    match = re.search(pattern, _dq_rule["expectation"])
+                    if match:
+                        print("Match found")
+                        print("Group 1:", match.group(1))
+                        print("Group 2:", match.group(2))
+                        print("Group 3:", match.group(3))
+                        print("Group 4:", match.group(4))  # digits
+                        print("Group 5:", match.group(5))
+
+                        if match.group(1):
+                            _querydq_status_query = (
+                                "SELECT (" + str(match.group(1)) + ") AS OUTPUT"
+                            )
+
+                            _querydq_source_query_output = _context.spark.sql(
+                                _querydq_status_query
+                            ).collect()[0][0]
+                        else:
+                            _querydq_source_query_output = None
+
+                        if match.group(4):
+                            _querydq_target_query_output = match.group(4)
+                        elif match.group(5):
+                            _querydq_target_query_output = _context.spark.sql(
+                                match.group(5)
+                            ).collect()[0][0]
+                        else:
+                            _querydq_target_query_output = None
+
+                        actual_outcome = (
+                            _querydq_source_query_output
+                            if (_querydq_source_query_output is not None)
+                            else None
+                        )
+                        expected_outcome = (
+                            str(match.group(2)) + str(_querydq_target_query_output)
+                            if (_querydq_target_query_output is not None)
+                            else None
+                        )
+
+                    else:
+                        print("Match not found")
+                else:
+                    print("Parentheses are not balanced")
+                    raise SparkExpectationsMiscException(
+                        """error occurred while running agg_query_dq_detailed_result: 
+                        Sql query is invalid. Parentheses are missing in the sql query."""
+                    )
+
                 _querydq_status_query = (
                     "SELECT (" + str(_dq_rule["expectation"]) + ") AS OUTPUT"
                 )
 
-                _querydq_source_query = _dq_rule["expectation_query_dq_source_query"]
-                _querydq_target_query = _dq_rule["expectation_query_dq_target_query"]
+                # _querydq_source_query = _dq_rule["expectation_query_dq_source_query"]
+                # _querydq_target_query = _dq_rule["expectation_query_dq_target_query"]
                 _query_dq_result = int(
                     _context.spark.sql(_querydq_status_query).collect()[0][0]
                 )
 
                 status = "pass" if _query_dq_result else "fail"
-                _querydq_source_query_output = (
-                    _context.spark.sql(_querydq_source_query).toJSON().collect()
-                )
 
-                _querydq_target_query_output = (
-                    _context.spark.sql(_querydq_target_query).toJSON().collect()
-                )
-                if (
-                    len(_querydq_source_query_output) > 300
-                    or len(_querydq_target_query_output) > 300
-                ):
-                    _log.info(
-                        """The query output for query_dq [source and target] is more than the designated 300 rows. 
-                        Writing only 300 records to detailed stats"""
-                    )
-                    _querydq_source_query_output = _querydq_source_query_output[0:300]
-                    _querydq_target_query_output = _querydq_target_query_output[0:300]
+                # if match.group(1):
+                #     _querydq_status_query = (
+                #         "SELECT (" + str(match.group(1)) + ") AS OUTPUT"
+                #     )
 
-                expected_value = (
-                    _querydq_source_query_output
-                    if (_querydq_source_query_output is not None)
-                    else None
-                )
-                actual_value = (
-                    _querydq_target_query_output
-                    if (_querydq_target_query_output is not None)
-                    else None
-                )
+                #     _querydq_source_query_output = _context.spark.sql(
+                #         _querydq_status_query
+                #     ).collect()[0][0]
+                # else:
+                #     _querydq_source_query_output = None
+
+                # if match.group(4):
+                #     _querydq_target_query_output = match.group(4)
+                # elif match.group(5):
+                #     _querydq_target_query_output = _context.spark.sql(
+                #         match.group(5)
+                #     ).collect()[0][0]
+                # else:
+                #     _querydq_target_query_output = None
+
+                # actual_outcome = (
+                #     _querydq_source_query_output
+                #     if (_querydq_source_query_output is not None)
+                #     else None
+                # )
+                # expected_outcome = (
+                #     str(match.group(2)) + str(_querydq_target_query_output)
+                #     if (_querydq_target_query_output is not None)
+                #     else None
+                # )
 
                 if _source_dq_status:
                     row_count = _context.get_input_count
@@ -227,13 +341,21 @@ class SparkExpectationsActions:
                 else:
                     row_count = None
 
+                actual_row_count = row_count if _query_dq_result else None
+
+                error_row_count = 0 if _query_dq_result else row_count
+
             else:
                 status = None
-                expected_value = None
-                actual_value = None
+                actual_row_count = None
+                error_row_count = None
                 row_count = None
+                actual_outcome = None
+                expected_outcome = None
 
-            return (
+            print(
+                " the output from agg_query_dq_detailed_result :",
+                querydq_output,
                 _context.get_run_id,
                 _dq_rule["product_id"],
                 _dq_rule["table_name"],
@@ -243,8 +365,27 @@ class SparkExpectationsActions:
                 _dq_rule["tag"],
                 _dq_rule["description"],
                 status,
-                actual_value,
-                expected_value,
+                actual_outcome,
+                expected_outcome,
+                actual_row_count,
+                error_row_count,
+                row_count,
+            )
+
+            return querydq_output, (
+                _context.get_run_id,
+                _dq_rule["product_id"],
+                _dq_rule["table_name"],
+                _dq_rule["rule_type"],
+                _dq_rule["rule"],
+                _dq_rule["expectation"],
+                _dq_rule["tag"],
+                _dq_rule["description"],
+                status,
+                actual_outcome,
+                expected_outcome,
+                actual_row_count,
+                error_row_count,
                 row_count,
             )
         except Exception as e:
@@ -308,8 +449,9 @@ class SparkExpectationsActions:
 
         """
         try:
-            condition_expressions = []
-            _agg_query_dq_results = []
+            condition_expressions: List = []
+            _agg_query_dq_results: List = []
+            querydq_output: List = []
             if len(expectations) <= 0:
                 raise SparkExpectationsMiscException("no rules found to process")
 
@@ -352,15 +494,19 @@ class SparkExpectationsActions:
                         _context.get_agg_dq_detailed_stats_status is True
                         or _context.get_query_dq_detailed_stats_status is True
                     ):
-                        _agg_query_dq_results.append(
-                            SparkExpectationsActions.agg_query_dq_detailed_result(
-                                _context,
-                                rule,
-                                df,
-                                _source_dq_status=_source_dq_enabled,
-                                _target_dq_status=_target_dq_enabled,
-                            )
+                        (
+                            _querydq_output_list,
+                            _agg_query_dq_output_tuple,
+                        ) = SparkExpectationsActions.agg_query_dq_detailed_result(
+                            _context,
+                            rule,
+                            df,
+                            querydq_output,
+                            _source_dq_status=_source_dq_enabled,
+                            _target_dq_status=_target_dq_enabled,
                         )
+
+                        _agg_query_dq_results.append(_agg_query_dq_output_tuple)
 
             if (
                 rule_type == _context.get_agg_dq_rule_type_name
@@ -382,6 +528,11 @@ class SparkExpectationsActions:
                 and _source_dq_enabled
             ):
                 _context.set_source_query_dq_detailed_stats(_agg_query_dq_results)
+                print(
+                    "querydq_output in actions source before setting:",
+                    _querydq_output_list,
+                )
+                _context.set_source_query_dq_output(_querydq_output_list)
 
             elif (
                 rule_type == _context.get_query_dq_rule_type_name
@@ -389,6 +540,11 @@ class SparkExpectationsActions:
                 and _target_dq_enabled
             ):
                 _context.set_target_query_dq_detailed_stats(_agg_query_dq_results)
+                print(
+                    "querydq_output in actions target before setting:",
+                    _querydq_output_list,
+                )
+                _context.set_target_query_dq_output(_querydq_output_list)
 
             if len(condition_expressions) > 0:
                 if rule_type in [

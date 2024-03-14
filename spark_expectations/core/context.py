@@ -139,6 +139,11 @@ class SparkExpectationsContext:
 
         self._dq_expectations: Dict[str, str]
         self._rules_execution_settings_config: Dict[str, str]
+        self._querydq_secondary_queries: dict
+
+        self._source_query_dq_output: Optional[List[dict]]
+
+        self._target_query_dq_output: Optional[List[dict]]
 
     @property
     def get_run_id(self) -> str:
@@ -1784,3 +1789,61 @@ class SparkExpectationsContext:
             dict: Returns detailed_stats_table_writer_config which in dict
         """
         return self._rules_execution_settings_config
+
+    def set_querydq_secondary_queries(self, querydq_secondary_queries: dict) -> None:
+        """
+        This function sets row dq secondary queries
+        Args:
+            querydq_secondary_queries: dict
+        Returns: None
+        """
+        self._querydq_secondary_queries = querydq_secondary_queries
+
+    @property
+    def get_querydq_secondary_queries(self) -> dict:
+        """
+        This function gets row dq secondary queries
+        Returns:
+            dict: Returns querydq_secondary_queries
+        """
+        return self._querydq_secondary_queries
+
+    def set_source_query_dq_output(
+        self, source_query_dq_output: Optional[List[dict]] = None
+    ) -> None:
+        """
+        This function sets row dq secondary queries
+        Args:
+            source_query_dq_output: List[dict]
+        Returns: None
+        """
+        self._source_query_dq_output = source_query_dq_output
+
+    @property
+    def get_source_query_dq_output(self) -> Optional[List[dict]]:
+        """
+        This function gets row dq secondary queries
+        Returns:
+            dict: Returns source_query_dq_output
+        """
+        return self._source_query_dq_output
+
+    def set_target_query_dq_output(
+        self, target_query_dq_output: Optional[List[dict]] = None
+    ) -> None:
+        """
+        This function sets row dq secondary queries
+        Args:
+            target_query_dq_output: List[dict]
+        Returns: None
+        """
+        self._target_query_dq_output = target_query_dq_output
+
+    @property
+    def get_target_query_dq_output(self) -> Optional[List[dict]]:
+        """
+        This function gets row dq secondary queries
+        Returns:
+            dict: Returns target_query_dq_output
+        """
+        return self._target_query_dq_output

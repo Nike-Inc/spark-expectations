@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, Optional, Tuple, List, Union
+from typing import Dict, Optional, Tuple, List
 from datetime import datetime
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import (
@@ -13,7 +13,10 @@ from pyspark.sql.functions import (
     explode,
     to_json,
     col,
+    split,
+    current_date,
 )
+
 from spark_expectations import _log
 from spark_expectations.core.exceptions import (
     SparkExpectationsUserInputOrConfigInvalidException,
@@ -122,20 +125,7 @@ class SparkExpectationsWriter:
     def get_row_dq_detailed_stats(
         self,
     ) -> List[
-        Tuple[
-            str,
-            str,
-            str,
-            Union[str, Any],
-            Union[str, Any],
-            str,
-            str,
-            str,
-            str,
-            List[int],
-            List[Union[str, Any]],
-            int,
-        ]
+        Tuple[str, str, str, str, str, str, str, str, str, None, None, int, str, int]
     ]:
         """
         This function writes the detailed stats for row dq into the detailed stats table
@@ -186,8 +176,10 @@ class SparkExpectationsWriter:
                             _rule_tag,
                             _rule_desc,
                             "fail",
-                            [(_input_count - int(_dq_res["failed_row_count"]))],
-                            [_dq_res["failed_row_count"]],
+                            None,
+                            None,
+                            (_input_count - int(_dq_res["failed_row_count"])),
+                            _dq_res["failed_row_count"],
                             _input_count,
                         )
                     )
@@ -217,10 +209,9 @@ class SparkExpectationsWriter:
                 StructType,
                 StructField,
                 StringType,
-                LongType,
-                ArrayType,
             )
-            from pyspark.sql import functions as F
+
+            # from pyspark.sql import functions as F
 
             rules_execution_settings = self._context.get_rules_execution_settings_config
             _row_dq: bool = rules_execution_settings.get("row_dq", False)
@@ -241,15 +232,15 @@ class SparkExpectationsWriter:
                     StructField("tag", StringType(), True),
                     StructField("description", StringType(), True),
                     StructField("source_dq_status", StringType(), True),
+                    StructField("source_dq_actual_outcome", StringType(), True),
                     StructField(
-                        "source_dq_actual_result", ArrayType(StringType()), True
-                    ),
-                    StructField(
-                        "source_dq_expected_result_|_error_count",
-                        ArrayType(StringType()),
+                        "source_dq_expected_outcome",
+                        StringType(),
                         True,
                     ),
-                    StructField("source_dq_row_count", LongType(), True),
+                    StructField("source_dq_actual_row_count", StringType(), True),
+                    StructField("source_dq_error_row_count", StringType(), True),
+                    StructField("source_dq_row_count", StringType(), True),
                 ]
             )
 
@@ -264,15 +255,28 @@ class SparkExpectationsWriter:
                     StructField("tag", StringType(), True),
                     StructField("description", StringType(), True),
                     StructField("target_dq_status", StringType(), True),
+                    StructField("target_dq_actual_outcome", StringType(), True),
                     StructField(
-                        "target_dq_actual_result", ArrayType(StringType()), True
-                    ),
-                    StructField(
-                        "target_dq_expected_result_|_error_count",
-                        ArrayType(StringType()),
+                        "target_dq_expected_outcome",
+                        StringType(),
                         True,
                     ),
-                    StructField("target_dq_row_count", LongType(), True),
+                    StructField("target_dq_actual_row_count", StringType(), True),
+                    StructField("target_dq_error_row_count", StringType(), True),
+                    StructField("target_dq_row_count", StringType(), True),
+                ]
+            )
+
+            _custom_querydq_output_source_schema = StructType(
+                [
+                    StructField("run_id", StringType(), True),
+                    StructField("product_id", StringType(), True),
+                    StructField("table_name", StringType(), True),
+                    StructField("rule", StringType(), True),
+                    StructField("alias", StringType(), True),
+                    StructField("dq_type", StringType(), True),
+                    StructField("source_dq", StringType(), True),
+                    StructField("run_date", StringType(), True),
                 ]
             )
 
@@ -386,8 +390,8 @@ class SparkExpectationsWriter:
             )
 
             _df_detailed_stats = _df_detailed_stats.withColumn(
-                "dq_date", F.current_date()
-            ).withColumn("dq_time", F.lit(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+                "dq_date", current_date()
+            ).withColumn("dq_time", lit(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
             self._context.print_dataframe_with_debugger(_df_detailed_stats)
 
@@ -407,6 +411,77 @@ class SparkExpectationsWriter:
                 "Writing metrics to the detailed stats table: %s, ended",
                 {self._context.get_dq_detailed_stats_table_name},
             )
+
+            if (
+                self._context.get_source_query_dq_output is not None
+                and self._context.get_query_dq_detailed_stats_status is True
+            ):
+                _querydq_secondary_query_source_output = (
+                    self._context.get_source_query_dq_output
+                )
+            else:
+                _querydq_secondary_query_source_output = []
+
+            if (
+                self._context.get_target_query_dq_output is not None
+                and self._context.get_query_dq_detailed_stats_status is True
+            ):
+                _querydq_secondary_query_target_output = (
+                    self._context.get_target_query_dq_output
+                )
+
+            else:
+                _querydq_secondary_query_target_output = []
+
+            _querydq_secondary_query_source_output.extend(
+                _querydq_secondary_query_target_output
+            )
+
+            _df_custom_detailed_stats_source = self.spark.createDataFrame(
+                _querydq_secondary_query_source_output,
+                schema=_custom_querydq_output_source_schema,
+            )
+
+            _df_custom_detailed_stats_source = _df_custom_detailed_stats_source.withColumn(
+                "compare",
+                # pylint: disable=unsubscriptable-object
+                split(_df_custom_detailed_stats_source["alias"], "_").getItem(0),
+            ).withColumn(
+                "alias_comp",
+                # pylint: disable=unsubscriptable-object
+                split(_df_custom_detailed_stats_source["alias"], "_").getItem(1),
+            )
+
+            _df_custom_detailed_stats_source.createOrReplaceTempView(
+                "_df_custom_detailed_stats_source"
+            )
+
+            _df_custom_detailed_stats_source = self._context.spark.sql(
+                "select distinct source.run_id,source.product_id, source.table_name,"
+                + "source.rule,source.alias,source.dq_type,source.source_dq as source_output,"
+                + "target.source_dq as target_output from _df_custom_detailed_stats_source as source "
+                + "left outer join _df_custom_detailed_stats_source as target "
+                + "on source.run_id=target.run_id and source.product_id=target.product_id and "
+                + "source.table_name=target.table_name and source.rule=target.rule "
+                + "and source.dq_type = target.dq_type "
+                + "and source.alias_comp=target.alias_comp "
+                + "and source.compare = 'source' and target.compare = 'target' "
+            )
+
+            _df_custom_detailed_stats_source = (
+                _df_custom_detailed_stats_source.withColumn(
+                    "dq_time", lit(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+                )
+            )
+
+            self.save_df_as_table(
+                _df_custom_detailed_stats_source,
+                "dq_spark_local.dq_stats_detailed_output",
+                config=self._context.get_detailed_stats_table_writer_config,
+                stats_table=True,
+            )
+
+            # print("querydq_output_s:",_querydq_secondary_query_source_output)
 
         except Exception as e:
             raise SparkExpectationsMiscException(

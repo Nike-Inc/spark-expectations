@@ -25,7 +25,6 @@ se: SparkExpectations = SparkExpectations(
     # stats_streaming_options={user_config.se_enable_streaming: False},
 )
 
-
 user_conf = {
     user_config.se_notifications_enable_email: False,
     user_config.se_notifications_email_smtp_host: "mailhost.com",
@@ -42,6 +41,7 @@ user_conf = {
     user_config.se_notifications_on_error_drop_threshold: 15,
     user_config.enable_query_dq_detailed_result: True,
     user_config.enable_agg_dq_detailed_result: True,
+    user_config.querydq_output_custom_table_name: "dq_spark_local.dq_stats_detailed_output",
 }
 
 
@@ -73,13 +73,20 @@ def build_new() -> DataFrame:
     )
     _df_product.createOrReplaceTempView("product")
 
-    _df_customer: DataFrame = (
+    _df_customer_source: DataFrame = (
         spark.read.option("header", "true")
         .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/customer.csv"))
+        .csv(os.path.join(os.path.dirname(__file__), "resources/customer_source.csv"))
     )
 
-    _df_customer.createOrReplaceTempView("customer")
+    _df_customer_source.createOrReplaceTempView("customer_source")
+
+    _df_customer_target: DataFrame = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(os.path.join(os.path.dirname(__file__), "resources/customer_source.csv"))
+    )
+    _df_customer_target.createOrReplaceTempView("customer_target")
 
     return _df_order_source
 
@@ -90,9 +97,12 @@ if __name__ == "__main__":
     spark.sql("use dq_spark_local")
     spark.sql("select * from dq_spark_local.dq_stats").show(truncate=False)
     spark.sql("select * from dq_spark_local.dq_stats_custom").show(truncate=False)
+    spark.sql("select * from dq_spark_local.dq_stats_detailed_output").show(
+        truncate=False
+    )
     spark.sql("select * from dq_spark_local.dq_stats").printSchema()
     spark.sql("select * from dq_spark_local.customer_order").show(truncate=False)
-    # spark.sql("select count(*) from dq_spark_local.customer_order_error").show(
+    # spark.sql("select count(*) from dq_spark_local.customer_order_error ").show(
     #    truncate=False
     # )
 
