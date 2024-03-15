@@ -38,6 +38,23 @@ def fixture_mock_context():
     mock_object.get_query_dq_rule_type_name = "query_dq"
     mock_object.get_agg_dq_detailed_stats_status = True
     mock_object.get_query_dq_detailed_stats_status = True
+    mock_object.get_querydq_secondary_queries = {
+
+             'product_1|test_table|table_row_count_gt_1' : 
+
+             {
+                  'source_f1': 'select count(*) from query_test_table','target_f1': 'select count(*) from query_test_table_target'
+             },
+
+             'product_1|test_table|table_distinct_count' : 
+
+             {
+                  'source_f1': 'select distinct col1, col2 from query_test_table','target_f1': 'elect distinct col1, col2 from query_test_table_target'
+             }
+
+
+            }
+
     mock_object.get_supported_df_query_dq = spark.createDataFrame(
         [
             {
@@ -98,6 +115,9 @@ def fixture_query_dq_rule():
                 "table_name": "test_table",
                 "tag": "validity",
                 "enable_for_target_dq_validation": True,
+                "enable_querydq_custom_output": "true",
+                "expectation_source_f1": "select count(*) from query_test_table",
+                "expectation_target_f1": "select count(*) from query_test_table_target",
                 "description": "table count should be greater than 1"
             }
 
@@ -168,26 +188,28 @@ def fixture_expectations():
                 "rule_type": "query_dq",
                 "rule": "table_row_count_gt_1",
                 "expectation": "((select count(*) from query_test_table)-(select count(*) from query_test_table_target))>1",
+                "enable_querydq_custom_output": "true",
                 "action_if_failed": "ignore",
                 "table_name": "test_table",
                 "tag": "validity",
                 "enable_for_target_dq_validation": True,
                 "description": "table count should be greater than 1",
-                "expectation_query_dq_source_query": "select count(*) from query_test_table",
-                "expectation_query_dq_target_query": "select count(*) from query_test_table_target"
+                "expectation_source_f1": "select count(*) from query_test_table",
+                "expectation_target_f1": "select count(*) from query_test_table_target"
             },
             {
                 "product_id": "product_1",
                 "rule_type": "query_dq",
                 "rule": "table_distinct_count",
                 "expectation": "((select count(*) from (select distinct col1, col2 from query_test_table))-(select count(*) from (select distinct col1, col2 from query_test_table_target)))>3",
+                "enable_querydq_custom_output": "false",
                 "action_if_failed": "fail",
                 "table_name": "test_table",
                 "tag": "accuracy",
                 "enable_for_target_dq_validation": True,
                 "description": "table distinct row count should be greater than 3",
-                "expectation_query_dq_source_query": "select count(*) from (select distinct col1, col2 from query_test_table)",
-                "expectation_query_dq_target_query": "select count(*) from (select distinct col1, col2 from query_test_table_target)"
+                "expectation_source_f1": "select count(*) from (select distinct col1, col2 from query_test_table)",
+                "expectation_target_f1": "select count(*) from (select distinct col1, col2 from query_test_table_target)"
             }
         ]
 
@@ -208,8 +230,22 @@ def fixture_agg_dq_detailed_expected_result():
                 "tag": "validity",
                 "status": "pass",
                 "description": "col1 sum gt 1",
-                "actual_value" : [6],
-                "expected_value" : ['>=6']
+                "actual_value" : 6,
+                "expected_value" : '>=6'
+                
+            },
+        "result_query_dq": 
+            {
+                "product_id": "product_1",
+                "table_name": "test_table",
+                "rule_type": "query_dq",
+                "rule": "table_row_count_gt_1",
+                "expectation": "((select count(*) from query_test_table)-(select count(*) from query_test_table_target))>1",
+                "tag": "validity",
+                "status": "fail",
+                "description": "table count should be greater than 1",
+                "actual_value" : 0,
+                "expected_value" : '>1'
                 
             },
         "result_without_context": 
@@ -447,7 +483,7 @@ def test_agg_query_dq_detailed_result_exception(_fixture_df,
     # faulty user input is given to test the exception functionality of the agg_query_dq_detailed_result
     with pytest.raises(SparkExpectationsMiscException,
                        match=r"error occurred while running agg_query_dq_detailed_result .*"):
-        SparkExpectationsActions().agg_query_dq_detailed_result(_fixture_mock_context, _fixture_query_dq_rule,_fixture_df )
+        SparkExpectationsActions().agg_query_dq_detailed_result(_fixture_mock_context, _fixture_query_dq_rule,_fixture_df,[] )
 
 
 
@@ -455,7 +491,7 @@ def test_agg_query_dq_detailed_result(_fixture_df,
                           _fixture_agg_dq_rule,
                           _fixture_agg_dq_detailed_expected_result,
                           _fixture_mock_context):
-    result_df = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context, _fixture_agg_dq_rule,_fixture_df
+    result_out,result_df = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context, _fixture_agg_dq_rule,_fixture_df,[]
                                                      )
     
 
@@ -473,11 +509,37 @@ def test_agg_query_dq_detailed_result(_fixture_df,
     assert result_df[10] == _fixture_agg_dq_detailed_expected_result.get("result").get("expected_value")
 
 
+def test_agg_query_dq_detailed_result_with_querdq(_fixture_df,
+                          _fixture_query_dq_rule,
+                          _fixture_agg_dq_detailed_expected_result,
+                          _fixture_mock_context):
+    
+    _fixture_df.createOrReplaceTempView("query_test_table")
+    _fixture_df.createOrReplaceTempView("query_test_table_target")
+    result_out,result_df = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context, _fixture_query_dq_rule,_fixture_df,[]
+                                                     )
+    print("result_df:",result_df)
+
+    
+    assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("product_id")
+    assert result_df[2] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("table_name")
+    assert result_df[3] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("rule_type")
+    assert result_df[4] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("rule")
+    assert result_df[5] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("expectation")
+    assert result_df[6] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("tag")
+    assert result_df[7] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("description")
+    assert result_df[8] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("status")
+    
+    assert result_df[9] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("actual_value")
+    assert result_df[10] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("expected_value")
+
+
+
 def test_agg_query_dq_detailed_result_without_detailed_context(_fixture_df,
                           _fixture_agg_dq_rule,
                           _fixture_agg_dq_detailed_expected_result,
                           _fixture_mock_context_without_detailed_stats):
-    result_df = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context_without_detailed_stats, _fixture_agg_dq_rule,_fixture_df
+    result_out,result_df = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context_without_detailed_stats, _fixture_agg_dq_rule,_fixture_df,[]
                                                      )
     
 

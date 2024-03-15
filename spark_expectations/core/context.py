@@ -145,6 +145,8 @@ class SparkExpectationsContext:
 
         self._target_query_dq_output: Optional[List[dict]]
 
+        self._query_dq_output_custom_table_name: str
+
     @property
     def get_run_id(self) -> str:
         """
@@ -1728,6 +1730,30 @@ class SparkExpectationsContext:
         raise SparkExpectationsMiscException(
             """The spark expectations context is not set completely, please assign 
             '_dq_detailed_stats_table_name' before 
+            accessing it"""
+        )
+
+    def set_query_dq_output_custom_table_name(
+        self, query_dq_output_custom_table_name: str
+    ) -> None:
+        self._query_dq_output_custom_table_name = query_dq_output_custom_table_name
+
+    @property
+    def get_query_dq_output_custom_table_name(self) -> str:
+        """
+        Get query_dq_detailed_stats_status to which the final output of the query of the querydq  will be written into
+
+        Returns:
+            str: returns the query_dq_output_custom_table_name
+        """
+        if (
+            self.get_query_dq_detailed_stats_status
+            and self._dq_detailed_stats_table_name
+        ):
+            return self._query_dq_output_custom_table_name
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign 
+            '_dq_detailed_stats_table_name,query_dq_detailed_stats_status' before 
             accessing it"""
         )
 

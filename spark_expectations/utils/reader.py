@@ -154,15 +154,17 @@ class SparkExpectationsReader:
         if len(_dq_query_delimiter_check) == 3:
             _dq_query_delimiter = _dq_query_delimiter_check[1]
             column_map["rule"] = _dq_query_delimiter_check[0]
-            column_map["enable_custom_output"] = _dq_query_delimiter_check[2]
+            column_map["enable_querydq_custom_output"] = str(
+                _dq_query_delimiter_check[2]
+            ).lower()
 
         elif len(_dq_query_delimiter_check) == 2:
             _dq_query_delimiter = _dq_query_delimiter_check[1]
             column_map["rule"] = _dq_query_delimiter_check[0]
-            column_map["enable_custom_output"] = "true"
+            column_map["enable_querydq_custom_output"] = "true"
         else:
             _dq_query_delimiter = "$"
-            column_map["enable_custom_output"] = "true"
+            column_map["enable_querydq_custom_output"] = "true"
 
         _rowdq_secondary_queries = row["expectation"].split(_dq_query_delimiter)
 
@@ -280,9 +282,10 @@ class SparkExpectationsReader:
                         "error_drop_threshold": row["error_drop_threshold"],
                     }
 
-                    _dq_queries_dict, column_map = self._process_rules_df(
-                        _dq_queries_dict, column_map, row
-                    )
+                    if row["rule_type"] == self._context.get_query_dq_rule_type_name:
+                        _dq_queries_dict, column_map = self._process_rules_df(
+                            _dq_queries_dict, column_map, row
+                        )
 
                     # _dq_query_delimiter_check = row["rule"].split(",")
 

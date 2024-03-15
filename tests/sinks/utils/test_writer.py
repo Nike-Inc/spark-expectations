@@ -635,23 +635,68 @@ def test_write_error_stats(input_record,
          },
          "test_dq_detailed_stats_table":"test_dq_detailed_stats_table",
 
+         "test_querydq_output_custom_table_name": "test_querydq_output_custom_table_name",
+
          "detailed_stats_table_writer_config" : {'mode': 'overwrite', "format": "delta", 'partitionBy': [], 'bucketBy': {}, 'sortBy': [],
                                                'options': {"mergeSchema": "true"}},
          
-         "rowdq_detailed_stats" : [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1','dq_spark_local.customer_order', 'row_dq', 'sales_greater_than_zero', 'sales > 2', 'accuracy', 'sales value should be greater than zero', 'fail', None, None, None, 4),
+         "rowdq_detailed_stats" : [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1','dq_spark_local.customer_order', 'row_dq', 'sales_greater_than_zero', 'sales > 2', 'accuracy', 'sales value should be greater than zero', 'fail', None, None, None, 4,0,4),
                                    ],
          
-         "source_agg_dq_detailed_stats": [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1', 'dq_spark_local.customer_order', 'agg_dq', 'sum_of_sales', 'sum(sales)>10000', 'validity', 'regex format validation for quantity','fail', [1988], ['>10000'], 5), 
+         "source_agg_dq_detailed_stats": [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1', 'dq_spark_local.customer_order', 'agg_dq', 'sum_of_sales', 'sum(sales)>10000', 'validity', 'regex format validation for quantity','fail', 1988, '>10000', 5,0,5), 
                                           ],
 
-         "target_agg_dq_detailed_stats": [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1', 'dq_spark_local.customer_order', 'agg_dq', 'sum_of_sales', 'sum(sales)>10000', 'validity', 'regex format validation for quantity','fail', [1030], ['>10000'], 4),
+         "target_agg_dq_detailed_stats": [('product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109', 'product_1', 'dq_spark_local.customer_order', 'agg_dq', 'sum_of_sales', 'sum(sales)>10000', 'validity', 'regex format validation for quantity','fail', 1030, '>10000', 4,0,4),
                                           ],
 
-        "source_query_dq_detailed_stats": [('product_1_52fed65a-d670-11ee-8dfb-ae03267c3341', 'product_1', 'dq_spark_local.customer_order', 'query_dq', 'product_missing_count_threshold', '((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3', 'validity', 'row count threshold', 'pass', ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'], ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', '{"product_id":"OFF-ST-10000760","order_id":"US-2015-108966"}', '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'], 5)
+        "source_query_dq_detailed_stats": [('product_1_52fed65a-d670-11ee-8dfb-ae03267c3341', 'product_1', 'dq_spark_local.customer_order', 'query_dq', 'product_missing_count_threshold', '((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3', 'validity', 'row count threshold', 'pass', 
+                                            1, 
+                                             '<3', 5,0,5)
                                           ],
 
-        "target_query_dq_detailed_stats": [('product_1_52fed65a-d670-11ee-8dfb-ae03267c3341', 'product_1', 'dq_spark_local.customer_order', 'query_dq', 'product_missing_count_threshold', '((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3', 'validity', 'row count threshold', 'pass', ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'], ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', '{"product_id":"OFF-ST-10000760","order_id":"US-2015-108966"}', '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'], 5)
+        "target_query_dq_detailed_stats": [('product_1_52fed65a-d670-11ee-8dfb-ae03267c3341', 'product_1', 'dq_spark_local.customer_order', 'query_dq', 'product_missing_count_threshold', '((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3', 'validity', 'row count threshold', 'pass', 
+                                            1, 
+                                             '<3', 5,0,5)
+        
                                           ],
+
+        
+        "source_query_dq_output": [('your_product_96bb003e-e1cf-11ee-9a59-ae03267c3340', 
+                                    'your_product', 'dq_spark_local.customer_order', 
+                                    'product_missing_count_threshold', 'source_f1', '_source_dq', 
+                                    {'source_f1': ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}',
+                                                   '{"product_id":"OFF-ST-10000760","order_id":"US-2015-108966"}', 
+                                                   '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}',
+                                                   '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', 
+                                                   '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}']}, '2024-03-14 06:53:39'), 
+                                   ('your_product_96bb003e-e1cf-11ee-9a59-ae03267c3340', 
+                                    'your_product', 'dq_spark_local.customer_order', 
+                                    'product_missing_count_threshold', 'target_f1', '_source_dq', 
+                                    {'target_f1': ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', 
+                                                   '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', 
+                                                   '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', 
+                                                  '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}']}, '2024-03-14 06:53:39'), 
+                                                  ],
+        "target_query_dq_output": [('your_product_96bb003e-e1cf-11ee-9a59-ae03267c3340', 
+                                    'your_product', 'dq_spark_local.customer_order', 
+                                    'product_missing_count_threshold', 'source_f1', '_target_dq', 
+                                    {'source_f1': ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', 
+                                                   '{"product_id":"OFF-ST-10000760","order_id":"US-2015-108966"}',
+                                                   '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}',
+                                                   '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}',
+                                                   '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}']}, '2024-03-14 06:53:39'), 
+                                   ('your_product_96bb003e-e1cf-11ee-9a59-ae03267c3340', 
+                                    'your_product', 'dq_spark_local.customer_order', 
+                                    'product_missing_count_threshold', 'target_f1', '_target_dq', 
+                                    {'target_f1': ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', 
+                                                   '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', 
+                                                   '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', 
+                                                   '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}']}, '2024-03-14 06:53:39')
+                                                  ],
+
+
+
+
      }, {
          "product_id": "product_1",
          "table_name": "dq_spark_local.customer_order",
@@ -659,12 +704,12 @@ def test_write_error_stats(input_record,
          "rule_type": "agg_dq",
          "source_expectations": "sum(sales)>10000",
          "source_dq_status": "fail",
-         "source_dq_actual_result": ['1988'],
-         "source_dq_row_count": 5,
+         "source_dq_actual_result": '1988',
+         "source_dq_row_count": '5',
          "target_expectations": "sum(sales)>10000",
          "target_dq_status": "fail",
-         "target_dq_actual_result": ['1030'],
-         "target_dq_row_count": 4,
+         "target_dq_actual_result": '1030',
+         "target_dq_row_count": '4',
          "source_expectations": "sum(sales)>10000",
     
      }, None),
@@ -689,6 +734,8 @@ def test_write_error_stats(input_record,
          },
          "test_dq_detailed_stats_table":"test_dq_detailed_stats_table",
 
+         "test_querydq_output_custom_table_name": "test_querydq_output_custom_table_name",
+
          "detailed_stats_table_writer_config" : {'mode': 'overwrite', "format": "delta", 'partitionBy': [], 'bucketBy': {}, 'sortBy': [],
                                                'options': {"mergeSchema": "true"}},
          
@@ -702,24 +749,49 @@ def test_write_error_stats(input_record,
                                           ],
 
         "source_query_dq_detailed_stats": [('product_1_52fed65a-d670-11ee-8dfb-ae03267c3341', 'product_1', 'dq_spark_local.customer_order', 'query_dq', 'product_missing_count_threshold', '((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3', 'validity', 'row count threshold', 'pass', 
-                                            ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', 
-                                             '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', 
-                                             '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', 
-                                             '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'], 
-                                             ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', 
-                                              '{"product_id":"OFF-ST-10000760","order_id":"US-2015-108966"}', 
-                                              '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', 
-                                              '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', 
-                                              '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'], 5)
+                                            1, 
+                                             '<3', 5,0,5)
                                           ],
 
         "target_query_dq_detailed_stats": [('product_1_52fed65a-d670-11ee-8dfb-ae03267c3341', 'product_1', 'dq_spark_local.customer_order', 'query_dq', 'product_missing_count_threshold', '((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3', 'validity', 'row count threshold', 'pass', 
-                                            ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', 
-                                             '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', 
-                                             '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', 
-                                             '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'],
-                                              ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', '{"product_id":"OFF-ST-10000760","order_id":"US-2015-108966"}', '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'], 5)
+                                            1,
+                                              '<3', 4,0,4)
                                           ],
+
+        "source_query_dq_output": [('your_product_96bb003e-e1cf-11ee-9a59-ae03267c3340', 
+                                    'your_product', 'dq_spark_local.customer_order', 
+                                    'product_missing_count_threshold', 'source_f1', '_source_dq', 
+                                    {'source_f1': ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}',
+                                                   '{"product_id":"OFF-ST-10000760","order_id":"US-2015-108966"}', 
+                                                   '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}',
+                                                   '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', 
+                                                   '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}']}, '2024-03-14 06:53:39'), 
+                                   ('your_product_96bb003e-e1cf-11ee-9a59-ae03267c3340', 
+                                    'your_product', 'dq_spark_local.customer_order', 
+                                    'product_missing_count_threshold', 'target_f1', '_source_dq', 
+                                    {'target_f1': ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', 
+                                                   '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', 
+                                                   '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', 
+                                                  '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}']}, '2024-03-14 06:53:39'), 
+                                                  ],
+        "target_query_dq_output": [('your_product_96bb003e-e1cf-11ee-9a59-ae03267c3340', 
+                                    'your_product', 'dq_spark_local.customer_order', 
+                                    'product_missing_count_threshold', 'source_f1', '_target_dq', 
+                                    {'source_f1': ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', 
+                                                   '{"product_id":"OFF-ST-10000760","order_id":"US-2015-108966"}',
+                                                   '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}',
+                                                   '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}',
+                                                   '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}']}, '2024-03-14 06:53:39'), 
+                                   ('your_product_96bb003e-e1cf-11ee-9a59-ae03267c3340', 
+                                    'your_product', 'dq_spark_local.customer_order', 
+                                    'product_missing_count_threshold', 'target_f1', '_target_dq', 
+                                    {'target_f1': ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', 
+                                                   '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', 
+                                                   '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', 
+                                                   '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}']}, '2024-03-14 06:53:39')
+                                                  ],
+
+
      }, {
          "product_id": "product_1",
          "table_name": "dq_spark_local.customer_order",
@@ -727,17 +799,11 @@ def test_write_error_stats(input_record,
          "rule_type": "query_dq",
          "source_expectations": "((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3",
          "source_dq_status": "pass",
-         "source_dq_actual_result": ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', 
-                                             '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', 
-                                             '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', 
-                                             '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'],
+         "source_dq_actual_result": 5,
          "source_dq_row_count": 5,
          "target_expectations": "((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3",
          "target_dq_status": "pass",
-         "target_dq_actual_result": ['{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966"}', 
-                                             '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156"}', 
-                                             '{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156"}', 
-                                             '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688"}'],
+         "target_dq_actual_result": 5,
          "target_dq_row_count": 4,
         
     
@@ -775,6 +841,14 @@ def test_write_detailed_stats(input_record,
     setattr(_mock_context, "get_source_query_dq_detailed_stats", input_record.get("source_query_dq_detailed_stats"))
     setattr(_mock_context, "get_detailed_stats_table_writer_config", input_record.get("detailed_stats_table_writer_config"))
     setattr(_mock_context, "get_dq_detailed_stats_table_name", input_record.get("test_dq_detailed_stats_table"))
+    setattr(_mock_context, "get_query_dq_output_custom_table_name", input_record.get("test_querydq_output_custom_table_name"))
+
+    setattr(_mock_context, "get_source_query_dq_output", input_record.get("source_query_dq_output"))
+    setattr(_mock_context, "get_target_query_dq_output", input_record.get("target_query_dq_output"))
+
+
+
+
     #setattr(_mock_context, "get_row_dq_detailed_stats", input_record.get("rowdq_detailed_stats"))
     setattr(_mock_context, "get_run_id", input_record.get("run_id"))
     setattr(_mock_context, "product_id", "product_1")
@@ -817,11 +891,11 @@ def test_write_detailed_stats(input_record,
         assert row.rule == expected_result.get("rule")
         assert row.source_expectations == expected_result.get("source_expectations")
         assert row.source_dq_status == expected_result.get("source_dq_status")
-        assert row.source_dq_actual_result == expected_result.get("source_dq_actual_result")
+        assert row.source_dq_actual_outcome == expected_result.get("source_dq_actual_result")
         assert row.source_dq_row_count == expected_result.get("source_dq_row_count")
         assert row.target_expectations == expected_result.get("target_expectations")
         assert row.target_dq_status == expected_result.get("target_dq_status")
-        assert row.target_dq_actual_result == expected_result.get("target_dq_actual_result")
+        assert row.target_dq_actual_outcome == expected_result.get("target_dq_actual_result")
         assert row.target_dq_row_count == expected_result.get("target_dq_row_count")
 
 

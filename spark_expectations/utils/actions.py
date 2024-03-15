@@ -204,7 +204,7 @@ class SparkExpectationsActions:
                 else:
                     _query_prefix = ""
 
-                if (_dq_rule["enable_custom_output"] == "true") and (
+                if (_dq_rule["enable_querydq_custom_output"] == "true") and (
                     sub_key_value := _querydq_secondary_query.get(
                         _dq_rule["product_id"]
                         + "|"
@@ -241,7 +241,8 @@ class SparkExpectationsActions:
                     print("_querydq_output in agg_query_dq_detailed:", querydq_output)
 
                 if SparkExpectationsActions.match_parentheses(_dq_rule["expectation"]):
-                    pattern = r"(\(.*\)) ([<>!=]=?) ((\d+)|(\(.*\)))|(\(.*\))"
+                    # pattern = r"(\(.*\)) ([<>!=]=?) ((\d+)|(\(.*\)))|(\(.*\))"
+                    pattern = r"(\(.*\))\s*([<>!=]=?)\s*((\d+)|(\(.*\)))|(\(.*\))"
                     match = re.search(pattern, _dq_rule["expectation"])
                     if match:
                         print("Match found")

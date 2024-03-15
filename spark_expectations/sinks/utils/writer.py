@@ -419,6 +419,9 @@ class SparkExpectationsWriter:
                 _querydq_secondary_query_source_output = (
                     self._context.get_source_query_dq_output
                 )
+
+                print("querydq_output_s:", _querydq_secondary_query_source_output)
+
             else:
                 _querydq_secondary_query_source_output = []
 
@@ -429,6 +432,8 @@ class SparkExpectationsWriter:
                 _querydq_secondary_query_target_output = (
                     self._context.get_target_query_dq_output
                 )
+
+                print("querydq_output_t:", _querydq_secondary_query_target_output)
 
             else:
                 _querydq_secondary_query_target_output = []
@@ -476,7 +481,7 @@ class SparkExpectationsWriter:
 
             self.save_df_as_table(
                 _df_custom_detailed_stats_source,
-                "dq_spark_local.dq_stats_detailed_output",
+                self._context.get_query_dq_output_custom_table_name,
                 config=self._context.get_detailed_stats_table_writer_config,
                 stats_table=True,
             )

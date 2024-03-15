@@ -41,7 +41,7 @@ user_conf = {
     user_config.se_notifications_on_error_drop_threshold: 15,
     user_config.enable_query_dq_detailed_result: True,
     user_config.enable_agg_dq_detailed_result: True,
-    user_config.querydq_output_custom_table_name: "dq_spark_local.dq_stats_detailed_output",
+    # user_config.querydq_output_custom_table_name: "dq_spark_local.dq_stats_detailed_outputt",
 }
 
 
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     spark.sql("use dq_spark_local")
     spark.sql("select * from dq_spark_local.dq_stats").show(truncate=False)
     spark.sql("select * from dq_spark_local.dq_stats_custom").show(truncate=False)
-    spark.sql("select * from dq_spark_local.dq_stats_detailed_output").show(
+    spark.sql("select * from dq_spark_local.dq_stats_querydq_output").show(
         truncate=False
     )
     spark.sql("select * from dq_spark_local.dq_stats").printSchema()

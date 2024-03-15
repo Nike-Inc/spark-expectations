@@ -119,6 +119,7 @@ class SparkExpectations:
                 user_config.se_notifications_on_error_drop_threshold: 100,
                 user_config.enable_agg_dq_detailed_result: False,
                 user_config.enable_query_dq_detailed_result: False,
+                user_config.querydq_output_custom_table_name: f"{self.stats_table}_querydq_output",
             }
 
             _notification_dict: Dict[str, Union[str, int, bool]] = (
@@ -167,12 +168,21 @@ class SparkExpectations:
                 else False
             )
 
-            if _agg_dq_detailed_stats:
-                self._context.set_agg_dq_detailed_stats_status(_agg_dq_detailed_stats)
+            if _agg_dq_detailed_stats or _query_dq_detailed_stats:
+                if _agg_dq_detailed_stats:
+                    self._context.set_agg_dq_detailed_stats_status(
+                        _agg_dq_detailed_stats
+                    )
 
-            if _query_dq_detailed_stats:
-                self._context.set_query_dq_detailed_stats_status(
-                    _query_dq_detailed_stats
+                if _query_dq_detailed_stats:
+                    self._context.set_query_dq_detailed_stats_status(
+                        _query_dq_detailed_stats
+                    )
+
+                self._context.set_query_dq_output_custom_table_name(
+                    str(
+                        _notification_dict[user_config.querydq_output_custom_table_name]
+                    )
                 )
 
             # need to call the get_rules_frm_table function to get the rules from the table as expectations
