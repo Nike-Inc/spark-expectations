@@ -1180,7 +1180,8 @@ class SparkExpectationsContext:
         if self._row_dq_start_time:
             return self._row_dq_start_time
         raise SparkExpectationsMiscException(
-            """The spark expectations context is not set completely, please assign '_row_dq_start_time'  before 
+            """The spark expectations context is not set completely, 
+            please assign '_row_dq_start_time'  before 
             accessing it"""
         )
 

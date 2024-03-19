@@ -115,6 +115,7 @@ def fixture_query_dq_rule():
                 "table_name": "test_table",
                 "tag": "validity",
                 "enable_for_target_dq_validation": True,
+                "enable_for_source_dq_validation": True,
                 "enable_querydq_custom_output": "true",
                 "expectation_source_f1": "select count(*) from query_test_table",
                 "expectation_target_f1": "select count(*) from query_test_table_target",
@@ -168,6 +169,7 @@ def fixture_expectations():
                 "table_name": "test_table",
                 "tag": "validity",
                 "enable_for_source_dq_validation": True,
+                "enable_for_target_dq_validation": True,
                 "description": "col1 sum gt 1"
             },
             {
@@ -179,6 +181,7 @@ def fixture_expectations():
                 "table_name": "test_table",
                 "tag": "accuracy",
                 "enable_for_source_dq_validation": True,
+                "enable_for_target_dq_validation": True,
                 "description": "col2 unique value grater than 3"
             }
         ],
@@ -193,6 +196,7 @@ def fixture_expectations():
                 "table_name": "test_table",
                 "tag": "validity",
                 "enable_for_target_dq_validation": True,
+                "enable_for_source_dq_validation": True,
                 "description": "table count should be greater than 1",
                 "expectation_source_f1": "select count(*) from query_test_table",
                 "expectation_target_f1": "select count(*) from query_test_table_target"
@@ -207,6 +211,7 @@ def fixture_expectations():
                 "table_name": "test_table",
                 "tag": "accuracy",
                 "enable_for_target_dq_validation": True,
+                "enable_for_source_dq_validation": True,
                 "description": "table distinct row count should be greater than 3",
                 "expectation_source_f1": "select count(*) from (select distinct col1, col2 from query_test_table)",
                 "expectation_target_f1": "select count(*) from (select distinct col1, col2 from query_test_table_target)"
@@ -421,6 +426,141 @@ def test_create_rules_map(_rule_map, expected_output):
     compare_result(actual_output, expected_output)
 
 
+
+
+@pytest.mark.parametrize("_query_dq_rule, query_dq_detailed_expected_result, _source_dq_status,_target_dq_status", [
+    # expectations rule
+    ({
+                "product_id": "product_1",
+                "rule_type": "query_dq",
+                "rule": "table_row_count_gt_1",
+                "expectation": "((select count(*) from query_test_table)-(select count(*) from query_test_table_target))>(select count(*) from query_test_table)",
+                "enable_querydq_custom_output": "true",
+                "action_if_failed": "ignore",
+                "table_name": "test_table",
+                "tag": "validity",
+                "enable_for_target_dq_validation": True,
+                "enable_for_source_dq_validation": True,
+                "description": "table count should be greater than 1",
+                "expectation_source_f1": "select count(*) from query_test_table",
+                "expectation_target_f1": "select count(*) from query_test_table_target"
+    },
+     # result in spark col object
+     {
+                "product_id": "product_1",
+                "table_name": "test_table",
+                "rule_type": "query_dq",
+                "rule": "table_row_count_gt_1",
+                "expectation": "((select count(*) from query_test_table)-(select count(*) from query_test_table_target))>(select count(*) from query_test_table)",
+                "tag": "validity",
+                "status": "fail",
+                "description": "table count should be greater than 1",
+                "actual_value" : 0,
+                "expected_value" : '>3'
+    },True,False),
+    # expectations rule
+    ({
+                "product_id": "product_1",
+                "rule_type": "query_dq",
+                "rule": "table_distinct_count",
+                "expectation": "((select count(*) from (select distinct col1, col2 from query_test_table))-(select count(*) from (select distinct col1, col2 from query_test_table_target)))>(select count(*) from (select distinct col1, col2 from query_test_table_target))",
+                "enable_querydq_custom_output": "false",
+                "action_if_failed": "fail",
+                "table_name": "test_table",
+                "tag": "accuracy",
+                "enable_for_target_dq_validation": True,
+                "enable_for_source_dq_validation": True,
+                "description": "table distinct row count should be greater than 3",
+                "expectation_source_f1": "select count(*) from (select distinct col1, col2 from query_test_table)",
+                "expectation_target_f1": "select count(*) from (select distinct col1, col2 from query_test_table_target)"
+    },
+     # result in spark col object
+     {
+                "product_id": "product_1",
+                "table_name": "test_table",
+                "rule_type": "query_dq",
+                "rule": "table_distinct_count",
+                "expectation": "((select count(*) from (select distinct col1, col2 from query_test_table))-(select count(*) from (select distinct col1, col2 from query_test_table_target)))>(select count(*) from (select distinct col1, col2 from query_test_table_target))",
+                "tag": "accuracy",
+                "status": "fail",
+                "description": "table distinct row count should be greater than 3",
+                "actual_value" : 0,
+                "expected_value" : '>3'
+    },False, True
+     ),
+])
+def test_agg_query_dq_detailed_result_with_querdq_v2(_fixture_df,
+                          _query_dq_rule,
+                          query_dq_detailed_expected_result,
+                          _fixture_mock_context,_source_dq_status,_target_dq_status):
+    
+    _fixture_df.createOrReplaceTempView("query_test_table")
+    _fixture_df.createOrReplaceTempView("query_test_table_target")
+    result_out,result_output = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context, _query_dq_rule,_fixture_df,[],_source_dq_status=_source_dq_status,_target_dq_status=_target_dq_status
+                                                     )
+    print("result_df:",result_output)
+    print("query_dq_detailed_expected_result:",query_dq_detailed_expected_result)
+    
+
+    assert result_output[1] == query_dq_detailed_expected_result.get("product_id")
+    assert result_output[2] == query_dq_detailed_expected_result.get("table_name")
+    assert result_output[3] == query_dq_detailed_expected_result.get("rule_type")
+    assert result_output[4] == query_dq_detailed_expected_result.get("rule")
+    assert result_output[5] == query_dq_detailed_expected_result.get("expectation")
+    assert result_output[6] == query_dq_detailed_expected_result.get("tag")
+    assert result_output[7] == query_dq_detailed_expected_result.get("description")
+    assert result_output[8] == query_dq_detailed_expected_result.get("status")
+    
+    assert result_output[9] == query_dq_detailed_expected_result.get("actual_value")
+    assert result_output[10] == query_dq_detailed_expected_result.get("expected_value")
+
+
+
+@pytest.mark.parametrize("_query_dq_rule_exception", [
+    # expectations rule
+    ({
+                "product_id": "product_1",
+                "rule_type": "query_dq",
+                "rule": "table_row_count_gt_1",
+                "expectation": "(select count(*) from query_test_table)-(select count(*) from query_test_table_target))>(select count(*) from query_test_table)",
+                "enable_querydq_custom_output": "true",
+                "action_if_failed": "ignore",
+                "table_name": "test_table",
+                "tag": "validity",
+                "enable_for_target_dq_validation": True,
+                "description": "table count should be greater than 1",
+                "expectation_source_f1": "select count(*) from query_test_table",
+                "expectation_target_f1": "select count(*) from query_test_table_target"
+    }
+    ),
+    # expectations rule
+    ({
+                "product_id": "product_1",
+                "rule_type": "query_dq",
+                "rule": "table_distinct_count",
+                "expectation": "(select count(*) from (select distinct col1, col2 from query_test_table))-(select count(*) from (select distinct col1, col2 from query_test_table_target)))>(select count(*) from (select distinct col1, col2 from query_test_table_target))",
+                "enable_querydq_custom_output": "false",
+                "action_if_failed": "fail",
+                "table_name": "test_table",
+                "tag": "accuracy",
+                "enable_for_target_dq_validation": True,
+                "enable_for_source_dq_validation": True,
+                "description": "table distinct row count should be greater than 3",
+                "expectation_source_f1": "select count(*) from (select distinct col1, col2 from query_test_table)",
+                "expectation_target_f1": "select count(*) from (select distinct col1, col2 from query_test_table_target)"
+    }
+     ),
+])
+def test_agg_query_dq_detailed_result_exception_v2(_fixture_df,
+                          _query_dq_rule_exception,_fixture_mock_context):
+    # faulty user input is given to test the exception functionality of the agg_query_dq_detailed_result
+    _fixture_df.createOrReplaceTempView("query_test_table")
+    _fixture_df.createOrReplaceTempView("query_test_table_target")
+    with pytest.raises(SparkExpectationsMiscException,
+                       match=r"error occurred while running agg_query_dq_detailed_result Sql query is invalid. *"):
+        SparkExpectationsActions().agg_query_dq_detailed_result(_fixture_mock_context, _query_dq_rule_exception,_fixture_df,[] )
+
+
 @pytest.mark.parametrize("input_df, rule_type_name, expected_output",
                          # input_df
                          [(spark.createDataFrame(
@@ -478,12 +618,13 @@ def test_create_agg_dq_results_exception(input_df,
 
 
 def test_agg_query_dq_detailed_result_exception(_fixture_df,
-                          _fixture_query_dq_rule,
-                          _fixture_mock_context):
+                          _fixture_query_dq_rule):
+    _mock_object_context = Mock(spec=SparkExpectationsContext)
     # faulty user input is given to test the exception functionality of the agg_query_dq_detailed_result
+    
     with pytest.raises(SparkExpectationsMiscException,
                        match=r"error occurred while running agg_query_dq_detailed_result .*"):
-        SparkExpectationsActions().agg_query_dq_detailed_result(_fixture_mock_context, _fixture_query_dq_rule,_fixture_df,[] )
+        SparkExpectationsActions().agg_query_dq_detailed_result(_mock_object_context, "_fixture_query_dq_rule","<df>",[] )
 
 
 
@@ -582,13 +723,20 @@ def test_run_dq_rules_row(_fixture_df,
             "row_dq_col1_gt_eq_3")
 
 
+@pytest.mark.parametrize("agg_dq_source_dq_status,agg_dq_target_dq_status", [
+    (True, False),
+    (False, True),
+])
+
 def test_run_dq_rules_agg(_fixture_df,
                           _fixture_expectations,
                           _fixture_agg_dq_expected_result,
-                          _fixture_mock_context):
+                          _fixture_mock_context,agg_dq_source_dq_status,agg_dq_target_dq_status):
     # Apply the data quality rules
-    result_df = SparkExpectationsActions.run_dq_rules(_fixture_mock_context, _fixture_df, _fixture_expectations,
-                                                      "agg_dq", True)
+    # result_df = SparkExpectationsActions.run_dq_rules(_fixture_mock_context, _fixture_df, _fixture_expectations,
+    #                                                   "agg_dq", True)
+
+    result_df = SparkExpectationsActions.run_dq_rules(_fixture_mock_context, _fixture_df, _fixture_expectations,"agg_dq",agg_dq_source_dq_status,agg_dq_target_dq_status)
 
     # Assert that the result dataframe has the expected number of columns
     assert len(result_df.columns) == 1
@@ -600,16 +748,24 @@ def test_run_dq_rules_agg(_fixture_df,
     assert row.meta_agg_dq_results == _fixture_agg_dq_expected_result.get("result")
 
 
+
+
+@pytest.mark.parametrize("query_dq_source_dq_status,query_dq_target_dq_status", [
+    (True, False),
+    (False, True),
+])
 def test_run_dq_rules_query(_fixture_df,
                             _fixture_expectations,
                             _fixture_query_dq_expected_result,
-                            _fixture_mock_context):
+                            _fixture_mock_context,query_dq_source_dq_status,query_dq_target_dq_status):
     # Apply the data quality rules
     _fixture_df.createOrReplaceTempView("query_test_table")
     _fixture_df.createOrReplaceTempView("query_test_table_target")
     
-    result_df = SparkExpectationsActions.run_dq_rules(_fixture_mock_context, _fixture_df, _fixture_expectations,
-                                                      "query_dq", False, True)
+    # result_df = SparkExpectationsActions.run_dq_rules(_fixture_mock_context, _fixture_df, _fixture_expectations,
+    #                                                   "query_dq", False, True)
+
+    result_df = SparkExpectationsActions.run_dq_rules(_fixture_mock_context, _fixture_df, _fixture_expectations,"query_dq",query_dq_source_dq_status,query_dq_target_dq_status)
 
     # Assert that the result dataframe has the expected number of columns
     assert len(result_df.columns) == 1

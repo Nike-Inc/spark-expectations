@@ -899,6 +899,35 @@ def test_write_detailed_stats(input_record,
         assert row.target_dq_row_count == expected_result.get("target_dq_row_count")
 
 
+
+def test_write_detailed_stats_exception() -> None:
+    """
+    This functions writes the detailed stats for all rule type into the detailed stats table
+
+    Args:
+        config: Provide the config to write the dataframe into the table
+
+    Returns:
+        None:
+
+
+    """
+    _mock_context = Mock(spec=SparkExpectationsContext)
+    setattr(_mock_context, "get_rules_execution_settings_config", {'row_dq': True, 'source_agg_dq': True, 'source_query_dq': True, 'target_agg_dq': True, 'target_query_dq': True})
+    setattr(_mock_context, "get_agg_dq_detailed_stats_status", True) 
+    setattr(_mock_context, "get_source_agg_dq_status", "Passed")
+    
+
+    _mock_context.spark = spark
+    _mock_context.product_id = 'product1'
+
+    _fixture_writer = SparkExpectationsWriter(_mock_context)
+
+    with pytest.raises(SparkExpectationsMiscException,
+                       match=r"error occurred while saving the data into the stats table .*"):
+        _fixture_writer.write_detailed_stats()
+
+
 @pytest.mark.parametrize('table_name, rule_type',
                          [('test_error_table',
                            'row_dq'

@@ -46,9 +46,9 @@ def fixture_product_rules_pipe():
     )
 
     # Set up the mock dataframe as a temporary table
-    df.createOrReplaceTempView("product_rules")
+    df.createOrReplaceTempView("product_rules_pipe")
     yield "product_rules_view"
-    spark.catalog.dropTempView("product_rules")
+    spark.catalog.dropTempView("product_rules_pipe")
 
 
 @pytest.mark.parametrize("notification, expected_result", [
@@ -263,6 +263,23 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                 "enable_querydq_custom_output": "false",
                 "expectation_source_f1": "expectation13a",
                 "error_drop_threshold": 0
+            },
+            {
+                "product_id": "product1",
+                "table_name": "table1",
+                "rule_type": "query_dq",
+                "rule": "rule13",
+                "column_name": "column10",
+                "expectation": "expectation13",
+                "action_if_failed": "fail",
+                "enable_for_source_dq_validation": True,
+                "enable_for_target_dq_validation": False,
+                "tag": "tag13",
+                "description": "description13",
+                "enable_error_drop_alert": False,
+                "enable_querydq_custom_output": "true",
+                "expectation_source_f1": "expectation13a",
+                "error_drop_threshold": 0
             }
         ]
     }, {
@@ -288,7 +305,7 @@ def test_get_rules_from_table(product_id, table_name,
 
     reader_handler = SparkExpectationsReader(mock_context)
 
-    dq_queries_dict,expectations, rule_execution_settings = reader_handler.get_rules_from_df(spark.sql(" select * from product_rules"),
+    dq_queries_dict,expectations, rule_execution_settings = reader_handler.get_rules_from_df(spark.sql(" select * from product_rules_pipe"),
                                                                              table_name,
                                                                              is_dlt=False
                                                                              )

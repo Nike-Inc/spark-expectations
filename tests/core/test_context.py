@@ -1594,3 +1594,131 @@ def test_set_rules_execution_settings_config():
     assert context.get_rules_execution_settings_config == config
 
 
+def test_get_row_dq_start_time():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._row_dq_start_time = datetime.now()
+    assert context.get_row_dq_start_time == context._row_dq_start_time
+
+def test_get_row_dq_end_time(): 
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._row_dq_end_time = datetime.now()
+    assert context.get_row_dq_end_time == context._row_dq_end_time
+
+
+
+def test_get_row_dq_start_time_exception():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._row_dq_start_time = None
+    with pytest.raises(SparkExpectationsMiscException,
+                       match="""The spark expectations context is not set completely, 
+            please assign '_row_dq_start_time'  before 
+            accessing it"""):
+        context.get_row_dq_start_time
+
+def test_get_row_dq_end_time_exception():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._row_dq_end_time = None
+    with pytest.raises(SparkExpectationsMiscException,
+        match="""The spark expectations context is not set completely, please assign '_row_dq_end_time'  before 
+            accessing it"""):
+        context.get_row_dq_end_time
+
+
+def test_set_query_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    assert context._enable_query_dq_detailed_result == True
+    assert context.get_query_dq_detailed_stats_status == True
+
+
+def test_get_query_dq_output_custom_table_name():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    context.set_dq_detailed_stats_table_name("test_table")
+    context.set_query_dq_output_custom_table_name("test_table")
+    assert context.get_query_dq_output_custom_table_name == "test_table"
+
+def test_get_query_dq_output_custom_table_name_exception():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    context.set_dq_detailed_stats_table_name(None)
+    with pytest.raises(SparkExpectationsMiscException,
+        match="""The spark expectations context is not set completely, please assign 
+            '_dq_detailed_stats_table_name,query_dq_detailed_stats_status' before 
+            accessing it"""):
+        context.get_query_dq_output_custom_table_name
+
+
+def test_get_dq_detailed_stats_table_name():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    context.set_dq_detailed_stats_table_name("test_table")
+    assert context.get_dq_detailed_stats_table_name == "test_table"
+
+def test_get_dq_detailed_stats_table_name_exception():  
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    context.set_dq_detailed_stats_table_name(None)
+    with pytest.raises(SparkExpectationsMiscException,
+        match="""The spark expectations context is not set completely, please assign 
+            '_dq_detailed_stats_table_name' before 
+            accessing it"""):
+        context.get_dq_detailed_stats_table_name
+
+def test_get_dq_expectations(): 
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    dq_expectations = {"column1": "expectation1", "column2": "expectation2"}
+    context.set_dq_expectations(dq_expectations)
+    assert context.get_dq_expectations == dq_expectations
+
+def test_get_dq_expectations_exception():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._dq_expectations = None
+    with pytest.raises(SparkExpectationsMiscException,
+        match="""The spark expectations context is not set completely, please assign '_dq_expectations' before 
+            accessing it"""):
+        context.get_dq_expectations
+
+def test_set_querydq_secondary_queries():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    querydq_secondary_queries = {"query1": "query1", "query2": "query2"}
+    context.set_querydq_secondary_queries(querydq_secondary_queries)
+    assert context.get_querydq_secondary_queries == querydq_secondary_queries
+
+def test_get_querydq_secondary_queries():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    querydq_secondary_queries = {"query1": "query1", "query2": "query2"}
+    context.set_querydq_secondary_queries(querydq_secondary_queries)
+    assert context.get_querydq_secondary_queries == querydq_secondary_queries
+
+def test_get_source_query_dq_output():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    source_query_dq_output = [{"column1": "value1", "column2": "value2"}]
+    context._source_query_dq_output = source_query_dq_output
+    assert context.get_source_query_dq_output == source_query_dq_output
+
+
+def test_set_target_query_dq_output():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    target_query_dq_output = [{"column1": "value1", "column2": "value2"}]
+    context.set_target_query_dq_output(target_query_dq_output)
+    assert context._target_query_dq_output == target_query_dq_output
+
+def test_get_target_query_dq_output():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    target_query_dq_output = [{"column1": "value1", "column2": "value2"}]
+    context._target_query_dq_output = target_query_dq_output
+    assert context.get_target_query_dq_output == target_query_dq_output
+
+def test_get_source_query_dq_output():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    source_query_dq_output = [{"column1": "value1", "column2": "value2"}]
+    context._source_query_dq_output = source_query_dq_output
+    assert context.get_source_query_dq_output == source_query_dq_output
+
+def test_set_source_query_dq_output():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    source_query_dq_output = [{"column1": "value1", "column2": "value2"}]
+    context.set_source_query_dq_output(source_query_dq_output)
+    assert context._source_query_dq_output == source_query_dq_output
+

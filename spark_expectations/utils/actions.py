@@ -288,8 +288,7 @@ class SparkExpectationsActions:
                 else:
                     print("Parentheses are not balanced")
                     raise SparkExpectationsMiscException(
-                        """error occurred while running agg_query_dq_detailed_result: 
-                        Sql query is invalid. Parentheses are missing in the sql query."""
+                        """Sql query is invalid. Parentheses are missing in the sql query."""
                     )
 
                 _querydq_status_query = (
