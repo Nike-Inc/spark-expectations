@@ -149,8 +149,11 @@ class SparkExpectationsReader:
             tuple: A tuple containing the updated query dictionary and column map.
         """
 
+        print("_row:", _row)
+
         if ("query_dq_delimiter" in _row.keys()) and (
             _row["query_dq_delimiter"] is not None
+            and _row["query_dq_delimiter"] != "null"
         ):
             _dq_query_delimiter = _row["query_dq_delimiter"]
             column_map["enable_querydq_custom_output"] = True
@@ -160,10 +163,25 @@ class SparkExpectationsReader:
 
         if ("enable_querydq_custom_output" in _row.keys()) and (
             _row["enable_querydq_custom_output"] is not None
+            and _row["enable_querydq_custom_output"] != "null"
         ):
-            column_map["enable_querydq_custom_output"] = _row[
+            if isinstance(_row["enable_querydq_custom_output"], bool):
+                column_map["enable_querydq_custom_output"] = _row[
+                    "enable_querydq_custom_output"
+                ]
+            elif isinstance(_row["enable_querydq_custom_output"], str) and _row[
                 "enable_querydq_custom_output"
-            ]
+            ].lower() in ["true"]:
+                column_map["enable_querydq_custom_output"] = True
+
+            elif isinstance(_row["enable_querydq_custom_output"], str) and _row[
+                "enable_querydq_custom_output"
+            ].lower() in ["false"]:
+                column_map["enable_querydq_custom_output"] = False
+
+            else:
+                column_map["enable_querydq_custom_output"] = False
+
         else:
             column_map["enable_querydq_custom_output"] = False
             _log.info(
@@ -187,12 +205,18 @@ class SparkExpectationsReader:
         #     _dq_query_delimiter = "$"
         #     column_map["enable_querydq_custom_output"] = "true"
 
+        print("_dq_query_delimiter:", _dq_query_delimiter)
+
         _querydq_secondary_queries = _row["expectation"].split(_dq_query_delimiter)
+
+        print("_querydq_secondary_queries before:", _querydq_secondary_queries)
 
         _querydq_secondary_queries = [_querydq_secondary_queries[0]] + [
             f"{_querydq_secondary_queries[i]}:{_querydq_secondary_queries[i+1]}"
             for i in range(1, len(_querydq_secondary_queries), 2)
         ]
+
+        print("_querydq_secondary_queries after:", _querydq_secondary_queries)
 
         if len(_querydq_secondary_queries) > 1:
             _dq_queries_dict[
