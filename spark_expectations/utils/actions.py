@@ -204,7 +204,8 @@ class SparkExpectationsActions:
                 else:
                     _query_prefix = ""
 
-                if (_dq_rule["enable_querydq_custom_output"] == "true") and (
+                # if (_dq_rule["enable_querydq_custom_output"] == "true") and (
+                if (_dq_rule["enable_querydq_custom_output"]) and (
                     sub_key_value := _querydq_secondary_query.get(
                         _dq_rule["product_id"]
                         + "|"
