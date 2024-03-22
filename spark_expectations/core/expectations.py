@@ -111,7 +111,9 @@ class SparkExpectations:
         def _except(func: Any) -> Any:
             # variable used for enabling notification at different level
 
-            _default_notification_dict: Dict[str, Union[str, int, bool]] = {
+            _default_notification_dict: Dict[
+                str, Union[str, int, bool, Dict[str, str]]
+            ] = {
                 user_config.se_notifications_on_start: False,
                 user_config.se_notifications_on_completion: False,
                 user_config.se_notifications_on_fail: True,
@@ -122,7 +124,7 @@ class SparkExpectations:
                 user_config.querydq_output_custom_table_name: f"{self.stats_table}_querydq_output",
             }
 
-            _notification_dict: Dict[str, Union[str, int, bool]] = (
+            _notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = (
                 {**_default_notification_dict, **user_conf}
                 if user_conf
                 else _default_notification_dict
@@ -131,7 +133,7 @@ class SparkExpectations:
                 user_config.se_enable_streaming: True,
                 user_config.secret_type: "databricks",
                 user_config.dbx_workspace_url: "https://workspace.cloud.databricks.com",
-                user_config.dbx_secret_scope: "sercet_scope",
+                user_config.dbx_secret_scope: "secret_scope",
                 user_config.dbx_kafka_server_url: "se_streaming_server_url_secret_key",
                 user_config.dbx_secret_token_url: "se_streaming_auth_secret_token_url_key",
                 user_config.dbx_secret_app_name: "se_streaming_auth_secret_appid_key",
@@ -144,11 +146,24 @@ class SparkExpectations:
                 else _default_stats_streaming_dict
             )
 
+            enable_error_table = _notification_dict.get(
+                user_config.se_enable_error_table, True
+            )
+            self._context.set_se_enable_error_table(
+                enable_error_table if isinstance(enable_error_table, bool) else True
+            )
+
+            dq_rules_params = _notification_dict.get(user_config.se_dq_rules_params, {})
+            self._context.set_dq_rules_params(
+                dq_rules_params if isinstance(dq_rules_params, dict) else {}
+            )
+
             # Overwrite the writers if provided by the user in the with_expectations explicitly
             if target_and_error_table_writer:
                 self._context.set_target_and_error_table_writer_config(
                     target_and_error_table_writer.build()
                 )
+
 
             _agg_dq_detailed_stats: bool = (
                 bool(_notification_dict[user_config.enable_agg_dq_detailed_result])
@@ -157,6 +172,7 @@ class SparkExpectations:
                     bool,
                 )
                 else False
+
             )
 
             _query_dq_detailed_stats: bool = (
@@ -190,7 +206,7 @@ class SparkExpectations:
                 dq_queries_dict,
                 expectations,
                 rules_execution_settings,
-            ) = self.reader.get_rules_from_df(self.rules_df, target_table)
+            ) = self.reader.get_rules_from_df(self.rules_df, target_table,params=self._context.get_dq_rules_params)
 
             print("get_rules_from_df from expectations:", expectations)
 
@@ -247,18 +263,13 @@ class SparkExpectations:
                 )
                 else False
             )
+
+            notifications_on_error_drop_threshold = _notification_dict.get(
+                user_config.se_notifications_on_error_drop_threshold, 100
+            )
             _error_drop_threshold: int = (
-                int(
-                    _notification_dict[
-                        user_config.se_notifications_on_error_drop_threshold
-                    ]
-                )
-                if isinstance(
-                    _notification_dict[
-                        user_config.se_notifications_on_error_drop_threshold
-                    ],
-                    int,
-                )
+                notifications_on_error_drop_threshold
+                if isinstance(notifications_on_error_drop_threshold, int)
                 else 100
             )
 
@@ -305,7 +316,8 @@ class SparkExpectations:
                     self._context.set_final_agg_dq_result()
                     self._context.set_source_query_dq_result()
                     self._context.set_final_query_dq_result()
-                    self._context.set_summarised_row_dq_res()
+                    self._context.set_summarized_row_dq_res()
+                    self._context.set_dq_expectations(expectations)
 
                     # initialize variables of start and end time with default values
                     self._context._source_agg_dq_start_time = None
@@ -465,6 +477,7 @@ class SparkExpectations:
                             #        _dq_final_agg_results: final agg dq result in dictionary
                             #        _: number of error records
                             #        status: status of the execution
+
                             (
                                 _final_dq_df,
                                 _dq_final_agg_results,

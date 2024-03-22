@@ -20,6 +20,12 @@ se_user_conf = {
     user_config.se_notifications_on_fail: True,  # (11)!
     user_config.se_notifications_on_error_drop_exceeds_threshold_breach: True,  # (12)!
     user_config.se_notifications_on_error_drop_threshold: 15,  # (13)!
+    user_config.se_enable_error_table: True,  # (14)!
+    user_config.se_dq_rules_params: {
+        "env": "local",
+        "table": "product",
+     }, # (15)!
+}
 }
 ```
 
@@ -36,6 +42,8 @@ se_user_conf = {
 11. When `user_config.se_notifications_on_fail` parameter set to `True` enables notification on failure of spark-expectations data quality framework, variable by default set to `True`
 12. When `user_config.se_notifications_on_error_drop_exceeds_threshold_breach` parameter set to `True` enables notification when error threshold reaches above the configured value
 13. The `user_config.se_notifications_on_error_drop_threshold` parameter captures error drop threshold value
+14. The `user_config.se_enable_error_table` parameter, which controls whether error data to load into error table, is set to true by default
+15. The `user_config.se_dq_rules_params` parameter, which are required to dynamically update dq rules
 
 ### Spark Expectations Initialization 
 

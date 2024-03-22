@@ -40,6 +40,8 @@ class Constants:
     )
 
     se_enable_streaming = "se.enable.streaming"
+    se_enable_error_table = "se.enable.error.table"
+    se_dq_rules_params = "se.dq.rules.params"
 
     secret_type = "se.streaming.secret.type"
 
