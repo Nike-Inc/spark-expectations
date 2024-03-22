@@ -2266,7 +2266,7 @@ def test_with_expectations_patch(_write_error_stats,
                                  _fixture_rules_df):
     decorated_func = _fixture_spark_expectations.with_expectations(
         "dq_spark.test_final_table",
-        user_conf={user_config.se_notifications_on_fail: False},
+        user_conf={user_config.se_notifications_on_fail: False,user_config.enable_query_dq_detailed_result: True, user_config.enable_agg_dq_detailed_result: True},
     )(Mock(return_value=_fixture_df))
 
     decorated_func()

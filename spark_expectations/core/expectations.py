@@ -71,8 +71,12 @@ class SparkExpectations:
             self.target_and_error_table_writer.build()
         )
         self._context.set_stats_table_writer_config(self.stats_table_writer.build())
+        self._context.set_detailed_stats_table_writer_config(
+            self.stats_table_writer.build()
+        )
         self._context.set_debugger_mode(self.debugger)
         self._context.set_dq_stats_table_name(self.stats_table)
+        self._context.set_dq_detailed_stats_table_name(f"{self.stats_table}_custom")
         self.rules_df = self.rules_df.persist(StorageLevel.MEMORY_AND_DISK)
 
     # TODO Add target_error_table_writer and stats_table_writer as parameters to this function so this takes precedence
@@ -115,7 +119,11 @@ class SparkExpectations:
                 user_config.se_notifications_on_fail: True,
                 user_config.se_notifications_on_error_drop_exceeds_threshold_breach: False,
                 user_config.se_notifications_on_error_drop_threshold: 100,
+                user_config.enable_agg_dq_detailed_result: False,
+                user_config.enable_query_dq_detailed_result: False,
+                user_config.querydq_output_custom_table_name: f"{self.stats_table}_querydq_output",
             }
+
             _notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = (
                 {**_default_notification_dict, **user_conf}
                 if user_conf
@@ -156,10 +164,51 @@ class SparkExpectations:
                     target_and_error_table_writer.build()
                 )
 
-            # need to call the get_rules_frm_table function to get the rules from the table as expectations
-            expectations, rules_execution_settings = self.reader.get_rules_from_df(
-                self.rules_df, target_table, params=self._context.get_dq_rules_params
+
+            _agg_dq_detailed_stats: bool = (
+                bool(_notification_dict[user_config.enable_agg_dq_detailed_result])
+                if isinstance(
+                    _notification_dict[user_config.enable_agg_dq_detailed_result],
+                    bool,
+                )
+                else False
+
             )
+
+            _query_dq_detailed_stats: bool = (
+                bool(_notification_dict[user_config.enable_query_dq_detailed_result])
+                if isinstance(
+                    _notification_dict[user_config.enable_query_dq_detailed_result],
+                    bool,
+                )
+                else False
+            )
+
+            if _agg_dq_detailed_stats or _query_dq_detailed_stats:
+                if _agg_dq_detailed_stats:
+                    self._context.set_agg_dq_detailed_stats_status(
+                        _agg_dq_detailed_stats
+                    )
+
+                if _query_dq_detailed_stats:
+                    self._context.set_query_dq_detailed_stats_status(
+                        _query_dq_detailed_stats
+                    )
+
+                self._context.set_query_dq_output_custom_table_name(
+                    str(
+                        _notification_dict[user_config.querydq_output_custom_table_name]
+                    )
+                )
+
+            # need to call the get_rules_frm_table function to get the rules from the table as expectations
+            (
+                dq_queries_dict,
+                expectations,
+                rules_execution_settings,
+            ) = self.reader.get_rules_from_df(self.rules_df, target_table,params=self._context.get_dq_rules_params)
+
+            print("get_rules_from_df from expectations:", expectations)
 
             _row_dq: bool = rules_execution_settings.get("row_dq", False)
             _source_agg_dq: bool = rules_execution_settings.get("source_agg_dq", False)
@@ -230,6 +279,9 @@ class SparkExpectations:
             self._context.set_notification_on_fail(_notification_on_fail)
 
             self._context.set_se_streaming_stats_dict(_se_stats_streaming_dict)
+            self._context.set_dq_expectations(expectations)
+            self._context.set_rules_execution_settings_config(rules_execution_settings)
+            self._context.set_querydq_secondary_queries(dq_queries_dict)
 
             @self._notification.send_notification_decorator
             @self._statistics_decorator.collect_stats_decorator

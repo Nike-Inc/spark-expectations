@@ -1,8 +1,8 @@
 import os
 from typing import Optional, Union, Dict
 from dataclasses import dataclass
-
 from pyspark.sql import DataFrame
+from spark_expectations import _log
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.exceptions import (
@@ -134,6 +134,132 @@ class SparkExpectationsReader:
                 f"error occurred while reading notification configurations {e}"
             )
 
+    def _process_rules_df(
+        self, _dq_queries_dict: dict, column_map: dict, _row: dict
+    ) -> DataFrame:
+        """
+        Process the rules DataFrame and generate the query dictionary and column map.
+
+        Args:
+            _dq_queries_dict (dict): The dictionary to store the generated queries.
+            column_map (dict): The mapping of column names.
+            row (dict): The row containing the rule and expectation information.
+
+        Returns:
+            tuple: A tuple containing the updated query dictionary and column map.
+        """
+
+        print("_row:", _row)
+
+        if ("query_dq_delimiter" in _row.keys()) and (
+            _row["query_dq_delimiter"] is not None
+            and _row["query_dq_delimiter"] != "null"
+        ):
+            _dq_query_delimiter = _row["query_dq_delimiter"]
+            column_map["enable_querydq_custom_output"] = True
+        else:
+            _dq_query_delimiter = "$"
+            column_map["enable_querydq_custom_output"] = False
+
+        if ("enable_querydq_custom_output" in _row.keys()) and (
+            _row["enable_querydq_custom_output"] is not None
+            and _row["enable_querydq_custom_output"] != "null"
+        ):
+            if isinstance(_row["enable_querydq_custom_output"], bool):
+                column_map["enable_querydq_custom_output"] = _row[
+                    "enable_querydq_custom_output"
+                ]
+            elif isinstance(_row["enable_querydq_custom_output"], str) and _row[
+                "enable_querydq_custom_output"
+            ].lower() in ["true"]:
+                column_map["enable_querydq_custom_output"] = True
+
+            elif isinstance(_row["enable_querydq_custom_output"], str) and _row[
+                "enable_querydq_custom_output"
+            ].lower() in ["false"]:
+                column_map["enable_querydq_custom_output"] = False
+
+            else:
+                column_map["enable_querydq_custom_output"] = False
+
+        else:
+            column_map["enable_querydq_custom_output"] = False
+            _log.info(
+                "enable_querydq_custom_output is a boolean column and is not set, defaulting to False"
+            )
+
+        # _dq_query_delimiter_check = row["rule"].split(",")
+
+        # if len(_dq_query_delimiter_check) == 3:
+        #     _dq_query_delimiter = _dq_query_delimiter_check[1]
+        #     column_map["rule"] = _dq_query_delimiter_check[0]
+        #     column_map["enable_querydq_custom_output"] = str(
+        #         _dq_query_delimiter_check[2]
+        #     ).lower()
+
+        # elif len(_dq_query_delimiter_check) == 2:
+        #     _dq_query_delimiter = _dq_query_delimiter_check[1]
+        #     column_map["rule"] = _dq_query_delimiter_check[0]
+        #     column_map["enable_querydq_custom_output"] = "true"
+        # else:
+        #     _dq_query_delimiter = "$"
+        #     column_map["enable_querydq_custom_output"] = "true"
+
+        print("_dq_query_delimiter:", _dq_query_delimiter)
+
+        _querydq_secondary_queries = _row["expectation"].split(_dq_query_delimiter)
+
+        print("_querydq_secondary_queries before:", _querydq_secondary_queries)
+
+        _querydq_secondary_queries = [_querydq_secondary_queries[0]] + [
+            f"{_querydq_secondary_queries[i]}:{_querydq_secondary_queries[i+1]}"
+            for i in range(1, len(_querydq_secondary_queries), 2)
+        ]
+
+        print("_querydq_secondary_queries after:", _querydq_secondary_queries)
+
+        if len(_querydq_secondary_queries) > 1:
+            _dq_queries_dict[
+                column_map["product_id"]
+                + "|"
+                + column_map["table_name"]
+                + "|"
+                + column_map["rule"]
+            ] = {}
+            for _index, _dq_queries in enumerate(_querydq_secondary_queries):
+                if _index == 0:
+                    column_map["expectation"] = _dq_queries
+                else:
+                    _dq_queries_list = _dq_queries.split(":")
+                    print("_dq_queries_list:", _dq_queries_list)
+
+                    _dq_queries_dict[
+                        column_map["product_id"]
+                        + "|"
+                        + column_map["table_name"]
+                        + "|"
+                        + column_map["rule"]
+                    ][_dq_queries_list[0]] = _dq_queries_list[1]
+
+                    print("_index:", _index)
+                    column_map[
+                        "expectation" + "_" + str(_dq_queries_list[0])
+                    ] = _dq_queries_list[1]
+
+            print("_dq_queries_dict:", _dq_queries_dict)
+            column_map["expectation"] = column_map["expectation"].format(
+                **_dq_queries_dict[
+                    column_map["product_id"]
+                    + "|"
+                    + column_map["table_name"]
+                    + "|"
+                    + column_map["rule"]
+                ]
+            )
+
+        print("column_map after second queries:", column_map)
+        return _dq_queries_dict, column_map
+
     def get_rules_from_df(
         self,
         rules_df: DataFrame,
@@ -141,7 +267,8 @@ class SparkExpectationsReader:
         is_dlt: bool = False,
         tag: Optional[str] = None,
         params: Optional[dict] = None,
-    ) -> tuple[dict, dict]:
+    ) -> tuple[dict, dict, dict]:
+
         """
         This function fetches the data quality rules from the table and return it as a dictionary
 
@@ -180,6 +307,7 @@ class SparkExpectationsReader:
             self._context.print_dataframe_with_debugger(_rules_df)
 
             _expectations: dict = {}
+            _dq_queries_dict: dict = {}
             _rules_execution_settings: dict = {}
             if is_dlt:
                 if tag:
@@ -189,6 +317,7 @@ class SparkExpectationsReader:
                     for row in _rules_df.collect():
                         _expectations[row["rule"]] = row["expectation"].format(**params)
             else:
+                print("_rules_df.collect():", _rules_df.collect())
                 for row in _rules_df.collect():
                     column_map = {
                         "product_id": row["product_id"].format(**params),
@@ -209,6 +338,77 @@ class SparkExpectationsReader:
                         "enable_error_drop_alert": row["enable_error_drop_alert"],
                         "error_drop_threshold": row["error_drop_threshold"],
                     }
+
+                    if row["rule_type"] == self._context.get_query_dq_rule_type_name:
+                        _dq_queries_dict, column_map = self._process_rules_df(
+                            _dq_queries_dict, column_map, row.asDict()
+                        )
+
+                    # _dq_query_delimiter_check = row["rule"].split(",")
+
+                    # if len(_dq_query_delimiter_check) == 3:
+                    #     _dq_query_delimiter = _dq_query_delimiter_check[1]
+                    #     column_map["rule"] = _dq_query_delimiter_check[0]
+                    #     column_map["enable_custom_output"] = _dq_query_delimiter_check[
+                    #         2
+                    #     ]
+
+                    # elif len(_dq_query_delimiter_check) == 2:
+                    #     _dq_query_delimiter = _dq_query_delimiter_check[1]
+                    #     column_map["rule"] = _dq_query_delimiter_check[0]
+                    #     column_map["enable_custom_output"] = "true"
+                    # else:
+                    #     _dq_query_delimiter = "$"
+                    #     column_map["enable_custom_output"] = "true"
+
+                    # _rowdq_secondary_queries = row["expectation"].split(
+                    #     _dq_query_delimiter
+                    # )
+
+                    # # self._context.set_querydq_secondary_queries(_rowdq_secondary_queries)
+
+                    # if len(_rowdq_secondary_queries) > 1:
+                    #     _dq_queries_dict[
+                    #         column_map["product_id"]
+                    #         + "|"
+                    #         + column_map["table_name"]
+                    #         + "|"
+                    #         + column_map["rule"]
+                    #     ] = {}
+                    #     for _index, _dq_queries in enumerate(_rowdq_secondary_queries):
+                    #         if _index == 0:
+                    #             column_map["expectation"] = _dq_queries
+                    #         else:
+                    #             _dq_queries_list = _dq_queries.split(":")
+                    #             print("_dq_queries_list:", _dq_queries_list)
+
+                    #             # _dq_queries_dict[str(_index)] = {}
+
+                    #             _dq_queries_dict[
+                    #                 column_map["product_id"]
+                    #                 + "|"
+                    #                 + column_map["table_name"]
+                    #                 + "|"
+                    #                 + column_map["rule"]
+                    #             ][_dq_queries_list[0]] = _dq_queries_list[1]
+
+                    #             print("_index:", _index)
+                    #             column_map[
+                    #                 "expectation" + "_" + str(_dq_queries_list[0])
+                    #             ] = _dq_queries_list[1]
+
+                    #     print("_dq_queries_dict:", _dq_queries_dict)
+                    #     column_map["expectation"] = column_map["expectation"].format(
+                    #         **_dq_queries_dict[
+                    #             column_map["product_id"]
+                    #             + "|"
+                    #             + column_map["table_name"]
+                    #             + "|"
+                    #             + column_map["rule"]
+                    #         ]
+                    #     )
+
+                    # print("column_map after second queries:", column_map)
 
                     if f"{row['rule_type']}_rules" in _expectations:
                         _expectations[f"{row['rule_type']}_rules"].append(column_map)
@@ -233,7 +433,10 @@ class SparkExpectationsReader:
                     _rules_execution_settings = self._get_rules_execution_settings(
                         _rules_df
                     )
-            return _expectations, _rules_execution_settings
+
+                    print("_dq_queries_dict  from reader :", _dq_queries_dict)
+
+            return _dq_queries_dict, _expectations, _rules_execution_settings
         except Exception as e:
             raise SparkExpectationsMiscException(
                 f"error occurred while retrieving rules list from the table {e}"

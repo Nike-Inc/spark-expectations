@@ -36,6 +36,21 @@ def fixture_product_rules():
     spark.catalog.dropTempView("product_rules")
 
 
+@pytest.fixture(name="_fixture_product_rules_view_pipecsv")
+def fixture_product_rules_pipe():
+    df = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .option("delimiter", "|")
+        .csv(os.path.join(os.path.dirname(__file__), "../resources/product_rules_pipe.csv"))
+    )
+
+    # Set up the mock dataframe as a temporary table
+    df.createOrReplaceTempView("product_rules_pipe")
+    yield "product_rules_view"
+    spark.catalog.dropTempView("product_rules_pipe")
+
+
 @pytest.mark.parametrize("notification, expected_result", [
     ({}, None),
     ({
@@ -141,14 +156,14 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
     mock_context.product_id = product_id
     # Create an instance of the class and set the product_id
     reade_handler = SparkExpectationsReader(mock_context)
-    rules_dlt, rules_settings = reade_handler.get_rules_from_df(spark.sql("select * from product_rules"), table_name,
+    dq_queries,rules_dlt, rules_settings = reade_handler.get_rules_from_df(spark.sql("select * from product_rules"), table_name,
                                                                 True, tag)
 
     # Assert
     assert rules_dlt == expected_output
 
 
-@pytest.mark.usefixtures("_fixture_product_rules_view")
+@pytest.mark.usefixtures("_fixture_product_rules_view_pipecsv")
 @pytest.mark.parametrize("product_id, table_name, expected_expectations, expected_rule_execution_settings", [
     ("product1", "table1", {
         "target_table_name": "table1",
@@ -238,13 +253,32 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                 "rule_type": "query_dq",
                 "rule": "rule13",
                 "column_name": "column10",
-                "expectation": "expectation13",
+                "expectation": "expectation13expectation13a",
                 "action_if_failed": "fail",
                 "enable_for_source_dq_validation": True,
                 "enable_for_target_dq_validation": False,
                 "tag": "tag13",
                 "description": "description13",
                 "enable_error_drop_alert": False,
+                "enable_querydq_custom_output": True,
+                "expectation_source_f1": "expectation13a",
+                "error_drop_threshold": 0
+            },
+            {
+                "product_id": "product1",
+                "table_name": "table1",
+                "rule_type": "query_dq",
+                "rule": "rule13",
+                "column_name": "column10",
+                "expectation": "expectation13expectation13a",
+                "action_if_failed": "fail",
+                "enable_for_source_dq_validation": True,
+                "enable_for_target_dq_validation": False,
+                "tag": "tag13",
+                "description": "description13",
+                "enable_error_drop_alert": False,
+                "enable_querydq_custom_output": False,
+                "expectation_source_f1": "expectation13a",
                 "error_drop_threshold": 0
             }
         ]
@@ -259,7 +293,7 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
 ])
 def test_get_rules_from_table(product_id, table_name,
                               expected_expectations, expected_rule_execution_settings,
-                              _fixture_product_rules_view):
+                              _fixture_product_rules_view_pipecsv):
     # Create an instance of the class and set the product_id
 
     mock_context = Mock(spec=SparkExpectationsContext)
@@ -271,7 +305,7 @@ def test_get_rules_from_table(product_id, table_name,
 
     reader_handler = SparkExpectationsReader(mock_context)
 
-    expectations, rule_execution_settings = reader_handler.get_rules_from_df(spark.sql(" select * from product_rules"),
+    dq_queries_dict,expectations, rule_execution_settings = reader_handler.get_rules_from_df(spark.sql(" select * from product_rules_pipe"),
                                                                              table_name,
                                                                              is_dlt=False
                                                                              )
@@ -294,6 +328,32 @@ def test_get_rules_dlt_exception(_fixture_reader):
     with pytest.raises(SparkExpectationsMiscException,
                        match=r"error occurred while retrieving rules list .*"):
         _fixture_reader.get_rules_from_df("product_rules_1", "table1", is_dlt=True, tag=None)
+
+
+
+
+
+
+@pytest.mark.usefixtures("_fixture_product_rules_view")
+@pytest.mark.parametrize("product_id, table_name", [
+    ("product1", "table1")
+])
+def test_get_rules_detailed_result_exception(product_id, table_name):
+
+    _mock_context = Mock(spec=SparkExpectationsContext)
+    _mock_context.spark = spark
+    product_id=product_id
+    setattr(_mock_context, "get_row_dq_rule_type_name", "row_dq")
+    setattr(_mock_context, "get_agg_dq_rule_type_name", "agg_dq")
+    setattr(_mock_context, "get_query_dq_rule_type_name", "query_dq")
+    setattr(_mock_context, "get_query_dq_detailed_stats_status", True)
+    _reader_handler = SparkExpectationsReader(_mock_context)
+
+
+    with pytest.raises(SparkExpectationsMiscException,
+                       match=r"error occurred while retrieving rules list .*"):
+        _reader_handler.get_rules_from_df(spark.sql(" select * from product_rules"),
+                                                                             table_name)
 
 
 def test_get_rules_from_table_exception(_fixture_reader):
