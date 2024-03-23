@@ -164,7 +164,6 @@ class SparkExpectations:
                     target_and_error_table_writer.build()
                 )
 
-
             _agg_dq_detailed_stats: bool = (
                 bool(_notification_dict[user_config.enable_agg_dq_detailed_result])
                 if isinstance(
@@ -172,7 +171,6 @@ class SparkExpectations:
                     bool,
                 )
                 else False
-
             )
 
             _query_dq_detailed_stats: bool = (
@@ -206,7 +204,9 @@ class SparkExpectations:
                 dq_queries_dict,
                 expectations,
                 rules_execution_settings,
-            ) = self.reader.get_rules_from_df(self.rules_df, target_table,params=self._context.get_dq_rules_params)
+            ) = self.reader.get_rules_from_df(
+                self.rules_df, target_table, params=self._context.get_dq_rules_params
+            )
 
             print("get_rules_from_df from expectations:", expectations)
 

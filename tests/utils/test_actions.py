@@ -550,6 +550,7 @@ def test_agg_query_dq_detailed_result_with_querdq_v2(_fixture_df,
                 "expectation_target_f1": "select count(*) from (select distinct col1, col2 from query_test_table_target)"
     }
      ),
+    
 ])
 def test_agg_query_dq_detailed_result_exception_v2(_fixture_df,
                           _query_dq_rule_exception,_fixture_mock_context):
@@ -557,7 +558,7 @@ def test_agg_query_dq_detailed_result_exception_v2(_fixture_df,
     _fixture_df.createOrReplaceTempView("query_test_table")
     _fixture_df.createOrReplaceTempView("query_test_table_target")
     with pytest.raises(SparkExpectationsMiscException,
-                       match=r"error occurred while running agg_query_dq_detailed_result Sql query is invalid. *"):
+                       match=r"(error occurred while running agg_query_dq_detailed_result Sql query is invalid. *)|(error occurred while running agg_query_dq_detailed_result Regex match not found. *)"):
         SparkExpectationsActions().agg_query_dq_detailed_result(_fixture_mock_context, _query_dq_rule_exception,_fixture_df,[] )
 
 
@@ -1494,10 +1495,46 @@ def test_run_dq_rules_condition_expression_exception(_fixture_df,
             "tag": "validity",
             "enable_for_target_dq_validation": False,
             "description": "table count should be greater than 1"
-        }]}
+        },
+        
+        ],
+        }
     _fixture_df.createOrReplaceTempView("query_test_table")
 
     with pytest.raises(SparkExpectationsMiscException,
                        match=r"error occurred while running expectations .*"):
+        
         SparkExpectationsActions.run_dq_rules(_fixture_mock_context, _fixture_df, _expectations,
-                                              "query_dq", False, True)
+                                             "query_dq", False, True)
+
+
+@pytest.mark.parametrize("_rule_test", [
+    
+    ({"rule_type": "query"}),
+    
+])
+def test_run_dq_rules_condition_expression_dynamic_exception(_fixture_df,
+                                                     _fixture_query_dq_expected_result,
+                                                     _fixture_mock_context,_rule_test):
+    # Apply the data quality rules
+    _expectations = {"query_rules": [
+        {
+            "rule_type": "query",
+            "rule": "table_row_count_gt_1",
+            "expectation": "(select count(*) from query_test_table)>1",
+            "action_if_failed": "ignore",
+            "table_name": "test_table",
+            "tag": "validity",
+            "enable_for_target_dq_validation": False,
+            "description": "table count should be greater than 1"
+        },
+        
+        ],
+        }
+    _fixture_df.createOrReplaceTempView("query_test_table")
+
+    with pytest.raises(SparkExpectationsMiscException,
+                       match=r"error occurred while running expectations .*"):
+        _rule_type= _rule_test.get("rule_type")
+        SparkExpectationsActions.run_dq_rules(_fixture_mock_context, _fixture_df, _expectations,
+                                             _rule_type, False, True)

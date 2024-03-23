@@ -10,8 +10,9 @@ product1|table2|agg_dq|rule8|column5|expectation8|ignore|tag8|description8|true|
 product1|table2|agg_dq|rule9|column6|expectation9|ignore|tag9|description9|true|true|false|false|0|null|null
 product1|table1|agg_dq|rule10|column7|expectation10|ignore|tag10|description10|false|true|true|false|0|null|null
 product1|table2|agg_dq|rule11|column8|expectation11|ignore|tag11|description11|true|false|true|false|0|null|null
-product2|table1|query_dq|rule12|column9|expectation12{source_f1}@source_f1@expectation12a|ignore|tag12|description12|true|true|true|false|0|@|null
 product1|table1|query_dq|rule13|column10|expectation13{source_f1}$source_f1$expectation13a|fail|tag13|description13|true|false|true|false|0|null|true
-product1|table1|query_dq|rule13|column10|expectation13{source_f1}$source_f1$expectation13a|fail|tag13|description13|true|false|true|false|0|null|null
+product1|table1|query_dq|rule13|column10|expectation13{source_f1}@source_f1@expectation13a|fail|tag13|description13|true|false|true|false|0|@|false
+product1|table1|query_dq|rule13|column10|expectation13{source_f1}@source_f1@expectation13a|fail|tag13|description13|true|false|true|false|0|@|null
+product1|table1|query_dq|rule13|column10|expectation13{source_f1}@source_f1@expectation13a|fail|tag13|description13|true|false|true|false|0|@|fal
 product1|table2|query_dq|rule14|column11|expectation14|fail|tag14|description14|false|false|true|false|0|null|null
 product1|table2|query_dq|rule15|column12|expectation15|ignore|tag15|description15|false|true|true|false|0|null|null

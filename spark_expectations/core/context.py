@@ -140,7 +140,6 @@ class SparkExpectationsContext:
         self._enable_agg_dq_detailed_result: bool = False
         self._enable_query_dq_detailed_result: bool = False
 
-        self._dq_expectations: Dict[str, str]
         self._rules_execution_settings_config: Dict[str, str]
         self._querydq_secondary_queries: dict
 
@@ -1617,7 +1616,6 @@ class SparkExpectationsContext:
         """
         return self._stats_table_writer_config
 
-
     def set_agg_dq_detailed_stats_status(
         self, agg_dq_detailed_result_status: bool
     ) -> None:
@@ -1798,29 +1796,6 @@ class SparkExpectationsContext:
         """
         return self._stats_table_writer_config
 
-    def set_dq_expectations(self, dq_expectations: dict) -> None:
-        """
-        This function sets stats table writer config
-        Args:
-            config: dict
-        Returns: None
-        """
-        self._dq_expectations = dq_expectations
-
-    @property
-    def get_dq_expectations(self) -> dict:
-        """
-        This function returns stats table writer config
-        Returns:
-            dict: Returns detailed_stats_table_writer_config which in dict
-        """
-        if self._dq_expectations:
-            return self._dq_expectations
-        raise SparkExpectationsMiscException(
-            """The spark expectations context is not set completely, please assign '_dq_expectations' before 
-            accessing it"""
-        )
-
     def set_rules_execution_settings_config(self, config: dict) -> None:
         """
         This function sets stats table writer config
@@ -1896,8 +1871,7 @@ class SparkExpectationsContext:
             dict: Returns target_query_dq_output
         """
         return self._target_query_dq_output
-      
-     
+
     def set_se_enable_error_table(self, _enable_error_table: bool) -> None:
         """
 
@@ -1937,4 +1911,3 @@ class SparkExpectationsContext:
 
         """
         return self._dq_rules_params
-

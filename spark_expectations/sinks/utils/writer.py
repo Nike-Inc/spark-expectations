@@ -147,8 +147,8 @@ class SparkExpectationsWriter:
             _row_dq_result = []
             _rowdq_rule_dict = {}
             if (
-                self._context.get_summarised_row_dq_res is not None
-                and len(self._context.get_summarised_row_dq_res) > 0
+                self._context.get_summarized_row_dq_res is not None
+                and len(self._context.get_summarized_row_dq_res) > 0
             ):
                 _rowdq_expectations = self._context.get_dq_expectations
                 for _rowdq_rule in _rowdq_expectations["row_dq_rules"]:
@@ -160,7 +160,7 @@ class SparkExpectationsWriter:
                         + _rowdq_rule["description"]
                     )
 
-                for _dq_res in self._context.get_summarised_row_dq_res:
+                for _dq_res in self._context.get_summarized_row_dq_res:
                     _rowdq_rules = str(_rowdq_rule_dict[_dq_res["rule"]]).split("|")
                     _rule_expectations = _rowdq_rules[0]
                     _rule_tag = _rowdq_rules[1]
@@ -332,8 +332,8 @@ class SparkExpectationsWriter:
 
             if (
                 self._context.get_row_dq_status != "Skipped"
-                and self._context.get_summarised_row_dq_res is not None
-                and len(self._context.get_summarised_row_dq_res) > 0
+                and self._context.get_summarized_row_dq_res is not None
+                and len(self._context.get_summarized_row_dq_res) > 0
             ):
                 _rowdq_detailed_stats_result = self.get_row_dq_detailed_stats()
 

@@ -1938,3 +1938,25 @@ def test_set_dq_rules_params():
     context._dq_rules_params = {'env': 'local'}
     assert context.get_dq_rules_params == {'env': 'local'}
 
+def test_get_dq_expectations():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_dq_expectations({"rule1": "expectation1", "rule2": "expectation2"})
+
+    # Test when _dq_expectations is set
+    assert context.get_dq_expectations == {"rule1": "expectation1", "rule2": "expectation2"}
+
+    # Test when _dq_expectations is not set
+    context._dq_expectations = None
+    with pytest.raises(SparkExpectationsMiscException):
+        context.get_dq_expectations()
+        
+
+def test_set_dq_expectations():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    dq_expectations = {
+        "rule1": "expectation1",
+        "rule2": "expectation2",
+        "rule3": "expectation3"
+    }
+    context.set_dq_expectations(dq_expectations)
+    assert context._dq_expectations == dq_expectations

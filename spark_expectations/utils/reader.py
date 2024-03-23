@@ -135,7 +135,7 @@ class SparkExpectationsReader:
             )
 
     def _process_rules_df(
-        self, _dq_queries_dict: dict, column_map: dict, _row: dict
+        self, _dq_queries_dict: dict, column_map: dict, _row: dict, params: dict
     ) -> DataFrame:
         """
         Process the rules DataFrame and generate the query dictionary and column map.
@@ -248,14 +248,21 @@ class SparkExpectationsReader:
 
             print("_dq_queries_dict:", _dq_queries_dict)
             column_map["expectation"] = column_map["expectation"].format(
-                **_dq_queries_dict[
-                    column_map["product_id"]
-                    + "|"
-                    + column_map["table_name"]
-                    + "|"
-                    + column_map["rule"]
-                ]
+                **{
+                    **_dq_queries_dict[
+                        column_map["product_id"]
+                        + "|"
+                        + column_map["table_name"]
+                        + "|"
+                        + column_map["rule"]
+                    ],
+                    **params,
+                }
             )
+        else:
+            column_map["expectation"] = column_map["expectation"].format(**params)
+
+        print("**params:", params)
 
         print("column_map after second queries:", column_map)
         return _dq_queries_dict, column_map
@@ -268,7 +275,6 @@ class SparkExpectationsReader:
         tag: Optional[str] = None,
         params: Optional[dict] = None,
     ) -> tuple[dict, dict, dict]:
-
         """
         This function fetches the data quality rules from the table and return it as a dictionary
 
@@ -325,7 +331,7 @@ class SparkExpectationsReader:
                         "rule_type": row["rule_type"],
                         "rule": row["rule"].format(**params),
                         "column_name": row["column_name"],
-                        "expectation": row["expectation"].format(**params),
+                        "expectation": row["expectation"],
                         "action_if_failed": row["action_if_failed"],
                         "enable_for_source_dq_validation": row[
                             "enable_for_source_dq_validation"
@@ -341,7 +347,7 @@ class SparkExpectationsReader:
 
                     if row["rule_type"] == self._context.get_query_dq_rule_type_name:
                         _dq_queries_dict, column_map = self._process_rules_df(
-                            _dq_queries_dict, column_map, row.asDict()
+                            _dq_queries_dict, column_map, row.asDict(), params
                         )
 
                     # _dq_query_delimiter_check = row["rule"].split(",")

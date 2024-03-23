@@ -253,39 +253,74 @@ class SparkExpectationsActions:
                         print("Group 4:", match.group(4))  # digits
                         print("Group 5:", match.group(5))
 
-                        if match.group(1):
-                            _querydq_status_query = (
-                                "SELECT (" + str(match.group(1)) + ") AS OUTPUT"
+                        # function to execute SQL and get the result
+                        def execute_sql_and_get_result(
+                            _se_context: SparkExpectationsContext, query: str
+                        ) -> int:
+                            return (
+                                _se_context.spark.sql(
+                                    f"SELECT ({query}) AS OUTPUT"
+                                ).collect()[0][0]
+                                if query
+                                else None
                             )
+                            # if query:
+                            #     return context.spark.sql(f"SELECT ({query}) AS OUTPUT").collect()[0][0]
+                            # return None
 
-                            _querydq_source_query_output = _context.spark.sql(
-                                _querydq_status_query
-                            ).collect()[0][0]
-                        else:
-                            _querydq_source_query_output = None
-
-                        if match.group(4):
-                            _querydq_target_query_output = match.group(4)
-                        elif match.group(5):
-                            _querydq_target_query_output = _context.spark.sql(
-                                match.group(5)
-                            ).collect()[0][0]
-                        else:
-                            _querydq_target_query_output = None
-
-                        actual_outcome = (
-                            _querydq_source_query_output
-                            if (_querydq_source_query_output is not None)
-                            else None
+                        # function to get the query outputs
+                        _querydq_source_query_output = execute_sql_and_get_result(
+                            _context, match.group(1)
                         )
+                        _querydq_target_query_output = match.group(
+                            4
+                        ) or execute_sql_and_get_result(_context, match.group(5))
+
+                        # assignment of actual_outcome and expected_outcome
+                        actual_outcome = _querydq_source_query_output
                         expected_outcome = (
                             str(match.group(2)) + str(_querydq_target_query_output)
-                            if (_querydq_target_query_output is not None)
+                            if _querydq_target_query_output
                             else None
                         )
 
-                    else:
-                        print("Match not found")
+                        # if match.group(1):
+                        #     _querydq_status_query = (
+                        #         "SELECT (" + str(match.group(1)) + ") AS OUTPUT"
+                        #     )
+
+                        #     _querydq_source_query_output = _context.spark.sql(
+                        #         _querydq_status_query
+                        #     ).collect()[0][0]
+                        # else:
+                        #     _querydq_source_query_output = None
+
+                        # if match.group(4):
+                        #     _querydq_target_query_output = match.group(4)
+                        # elif match.group(5):
+                        #     _querydq_target_query_output = _context.spark.sql(
+                        #         match.group(5)
+                        #     ).collect()[0][0]
+                        # else:
+                        #     _querydq_target_query_output = None
+
+                        # actual_outcome = (
+                        #     _querydq_source_query_output
+                        #     if (_querydq_source_query_output is not None)
+                        #     else None
+                        # )
+                        # expected_outcome = (
+                        #     str(match.group(2)) + str(_querydq_target_query_output)
+                        #     if (_querydq_target_query_output is not None)
+                        #     else None
+                        # )
+
+                    # else:
+                    #     print("Match not found")
+                    #     raise SparkExpectationsMiscException(
+                    #     """Regex match not found."""
+                    # )
+
                 else:
                     print("Parentheses are not balanced")
                     raise SparkExpectationsMiscException(
