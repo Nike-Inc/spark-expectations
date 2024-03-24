@@ -197,12 +197,33 @@ class SparkExpectationsWriter:
         dq_status: str,
         dq_detailed_stats: Optional[List[Tuple]],
     ) -> Optional[List[Tuple]]:
+        """
+        Returns the detailed statistics result based on the aggregation status and data quality status.
+
+        Args:
+            agg_dq_detailed_stats_status (bool): The status of the aggregated detailed statistics.
+            dq_status (str): The status of the data quality.
+            dq_detailed_stats (Optional[List[Tuple]]): The detailed statistics.
+
+        Returns:
+            Optional[List[Tuple]]: The detailed statistics result if the aggregation status is True
+            and the data quality status is not "Skipped", otherwise an empty list.
+        """
         if agg_dq_detailed_stats_status is True and dq_status != "Skipped":
             return dq_detailed_stats
         else:
             return []
 
     def _create_schema(self, field_names: List[str]) -> StructType:
+        """
+        Create a schema for the given field names.
+
+        Args:
+            field_names (List[str]): A list of field names.
+
+        Returns:
+            StructType: The created schema.
+        """
         from pyspark.sql.types import (
             StructField,
             StringType,
@@ -215,9 +236,37 @@ class SparkExpectationsWriter:
     def _create_dataframe(
         self, data: Optional[List[Tuple]], schema: StructType
     ) -> DataFrame:
+        """
+        Create a DataFrame from the given data and schema.
+
+        Args:
+            data (Optional[List[Tuple]]): The data to be converted into a DataFrame.
+            schema (StructType): The schema of the DataFrame.
+
+        Returns:
+            DataFrame: The created DataFrame.
+        """
         return self.spark.createDataFrame(data, schema=schema)
 
     def _prep_secondary_query_output(self) -> List[Tuple]:
+        """
+        Prepares the secondary query output by performing various transformations and joins.
+
+        Returns:
+            A DataFrame containing the secondary query output with the following columns:
+            - run_id
+            - product_id
+            - table_name
+            - rule
+            - alias
+            - dq_type
+            - source_dq
+            - run_date
+            - compare
+            - alias_comp
+            - target_output
+            - dq_time
+        """
         _querydq_secondary_query_source_output = (
             self._context.get_source_query_dq_output
             if self._context.get_source_query_dq_output is not None
@@ -293,6 +342,22 @@ class SparkExpectationsWriter:
         _target_aggdq_detailed_stats_result: Optional[List[Tuple]],
         _target_querydq_detailed_stats_result: Optional[List[Tuple]],
     ) -> Optional[List[Tuple]]:
+        """
+        Prepares detailed statistics for the data quality checks.
+
+        Args:
+            _source_aggdq_detailed_stats_result (Optional[List[Tuple]]):
+            Detailed statistics result for source aggregated data quality checks.
+            _source_querydq_detailed_stats_result (Optional[List[Tuple]]):
+            Detailed statistics result for source query-based data quality checks.
+            _target_aggdq_detailed_stats_result (Optional[List[Tuple]]):
+            Detailed statistics result for target aggregated data quality checks.
+            _target_querydq_detailed_stats_result (Optional[List[Tuple]]):
+            Detailed statistics result for target query-based data quality checks.
+
+        Returns:
+            Optional[List[Tuple]]: Detailed statistics for the data quality checks.
+        """
         _detailed_stats_source_dq_schema = self._create_schema(
             [
                 "run_id",
