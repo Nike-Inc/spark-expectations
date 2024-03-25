@@ -53,7 +53,7 @@ Please find the different types of possible expectations
 
 | rule_description | rule_type | tag | rule_expectation |
 |------------------|-----------|-----|------------------|
-| Expect distinct values in a column must be greater than threshold value | expect_column_distinct_values_greater_than_threshold_value | accuracy | ``` (select count(distinct [col_name]) from [table_name]) > [threshold_value]``` | 
+| Expect distinct values in a column must be greater than threshold value | expect_column_distinct_values_greater_than_threshold_value | accuracy | ```(select count(distinct [col_name]) from [table_name]) > [threshold_value]``` | 
 | Expect count between two table or view must be same| expect_count_between_two_table_same | consistency | ```(select count(*) from [table_a]) = (select count(*) from [table_b])``` |
 | Expect the median value of a column to be within a certain range| expect_column_median_to_be_between | consistency | ```(select percentile_approx([column_name], 0.5) from [table_name]) between [lower_bound] and [upper_bound]``` |
 | Expect the standard deviation of a column's values to fall within a specified range | expect_column_stdev_to_be_between | consistency | ```(select stddev([col_name]) from [table_name]) between [lower_bound] and [upper_bound]``` |
@@ -61,7 +61,7 @@ Please find the different types of possible expectations
 | Expect the maximum value in a column to fall within a specified range| expect_column_max_to_be_between |accuracy |```(select max([col_name]) from [table_name]) between [lower_bound] and [upper_bound]``` |
 | Expect the minimum value in a column fall within a specified range | expect_column_min_to_be_between |accuracy  | ```(select min([col_name]) from [table_name]) between [lower_bound] and [upper_bound]``` |
 | Expect referential integrity  | expect_referential_integrity_between_two_table_should_be_less_than_100 | accuracy | ```with refrentail_check as ( select * from [table_a] left join [table_b] on [condition] where [table_b.column] is null) select count(*) from refrentail_check) < 100``` |
-
+| Compare the source table and target table output | customer_missing_count_threshold | validity | ```((select count(*) from ({source_f1}) a join ({source_f2}) b on a.customer_id = b.customer_id) - (select count(*) from ({target_f1}) a join ({target_f2}) b on source_column = target_column)) > ({target_f3})$source_f1$select column, count(*) from source_tbl group by column$source_f2$select column2, count(*) from table2 group by column2$target_f1$select column, count(*) from target_tbl  group by column$target_f2$select column2, count(*) from target_tbl2 group by column2$target_f3$select count(*) from source_tbl ``` |
 
 
 

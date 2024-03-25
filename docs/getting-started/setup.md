@@ -33,7 +33,9 @@ create table if not exists `catalog`.`schema`.`{product}_rules` (
     enable_for_target_dq_validation BOOLEAN,
     is_active BOOLEAN,
     enable_error_drop_alert BOOLEAN,
-    error_drop_threshold INT
+    error_drop_threshold INT,
+    query_dq_delimiter STRING,
+    enable_querydq_custom_output BOOLEAN
 );
 ```
 
