@@ -69,22 +69,27 @@ required fields within a variable. This involves creating a variable and ensurin
 is provided in the appropriate fields.
 
 ```python
-from spark_expectations.config.user_config import *
+from spark_expectations.config.user_config import Constants as user_config
 
 se_user_conf = {
-    se_notifications_enable_email: False,
-    se_notifications_email_smtp_host: "mailhost.nike.com",
-    se_notifications_email_smtp_port: 25,
-    se_notifications_email_from: "<sender_email_id>",
-    se_notifications_email_to_other_nike_mail_id: "<receiver_email_id's>",
-    se_notifications_email_subject: "spark expectations - data quality - notifications", 
-    se_notifications_enable_slack: True,
-    se_notifications_slack_webhook_url: "<slack-webhook-url>", 
-    se_notifications_on_start: True, 
-    se_notifications_on_completion: True,
-    se_notifications_on_fail: True,
-    se_notifications_on_error_drop_exceeds_threshold_breach: True, 
-    se_notifications_on_error_drop_threshold: 15,
+    user_config.se_notifications_enable_email: False,
+    user_config.se_notifications_email_smtp_host: "mailhost.nike.com",
+    user_config.se_notifications_email_smtp_port: 25,
+    user_config.se_notifications_email_from: "<sender_email_id>",
+    user_config.se_notifications_email_to_other_nike_mail_id: "<receiver_email_id's>",
+    user_config.se_notifications_email_subject: "spark expectations - data quality - notifications", 
+    user_config.se_notifications_enable_slack: True,
+    user_config.se_notifications_slack_webhook_url: "<slack-webhook-url>", 
+    user_config.se_notifications_on_start: True, 
+    user_config.se_notifications_on_completion: True,
+    user_config.se_notifications_on_fail: True,
+    user_config.se_notifications_on_error_drop_exceeds_threshold_breach: True, 
+    user_config.se_notifications_on_error_drop_threshold: 15,
+    #Optional
+    #Below two params are optional and need to be enabled to capture the detailed stats in the <stats_table_name>_detailed.
+    #user_config.enable_query_dq_detailed_result: True,
+    #user_config.enable_agg_dq_detailed_result: True,
+    
 }
 ```
 
