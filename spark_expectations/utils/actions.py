@@ -195,7 +195,6 @@ class SparkExpectationsActions:
                 and _context.get_query_dq_detailed_stats_status is True
             ):
                 _querydq_secondary_query = _context.get_querydq_secondary_queries
-                print("_querydq_secondary_query:", _querydq_secondary_query)
 
                 if _source_dq_status is True:
                     _query_prefix = "_source_dq"
@@ -204,7 +203,6 @@ class SparkExpectationsActions:
                 else:
                     _query_prefix = ""
 
-                # if (_dq_rule["enable_querydq_custom_output"] == "true") and (
                 if (_dq_rule["enable_querydq_custom_output"]) and (
                     sub_key_value := _querydq_secondary_query.get(
                         _dq_rule["product_id"]
@@ -239,20 +237,11 @@ class SparkExpectationsActions:
                                 _context.get_run_date,
                             )
                         )
-                    print("_querydq_output in agg_query_dq_detailed:", querydq_output)
 
                 if SparkExpectationsActions.match_parentheses(_dq_rule["expectation"]):
-                    # pattern = r"(\(.*\)) ([<>!=]=?) ((\d+)|(\(.*\)))|(\(.*\))"
                     pattern = r"(\(.*\))\s*([<>!=]=?)\s*((\d+)|(\(.*\)))|(\(.*\))"
                     match = re.search(pattern, _dq_rule["expectation"])
                     if match:
-                        print("Match found")
-                        print("Group 1:", match.group(1))
-                        print("Group 2:", match.group(2))
-                        print("Group 3:", match.group(3))
-                        print("Group 4:", match.group(4))  # digits
-                        print("Group 5:", match.group(5))
-
                         # function to execute SQL and get the result
                         def execute_sql_and_get_result(
                             _se_context: SparkExpectationsContext, query: str
@@ -264,9 +253,6 @@ class SparkExpectationsActions:
                                 if query
                                 else None
                             )
-                            # if query:
-                            #     return context.spark.sql(f"SELECT ({query}) AS OUTPUT").collect()[0][0]
-                            # return None
 
                         # function to get the query outputs
                         _querydq_source_query_output = execute_sql_and_get_result(
@@ -284,45 +270,7 @@ class SparkExpectationsActions:
                             else None
                         )
 
-                        # if match.group(1):
-                        #     _querydq_status_query = (
-                        #         "SELECT (" + str(match.group(1)) + ") AS OUTPUT"
-                        #     )
-
-                        #     _querydq_source_query_output = _context.spark.sql(
-                        #         _querydq_status_query
-                        #     ).collect()[0][0]
-                        # else:
-                        #     _querydq_source_query_output = None
-
-                        # if match.group(4):
-                        #     _querydq_target_query_output = match.group(4)
-                        # elif match.group(5):
-                        #     _querydq_target_query_output = _context.spark.sql(
-                        #         match.group(5)
-                        #     ).collect()[0][0]
-                        # else:
-                        #     _querydq_target_query_output = None
-
-                        # actual_outcome = (
-                        #     _querydq_source_query_output
-                        #     if (_querydq_source_query_output is not None)
-                        #     else None
-                        # )
-                        # expected_outcome = (
-                        #     str(match.group(2)) + str(_querydq_target_query_output)
-                        #     if (_querydq_target_query_output is not None)
-                        #     else None
-                        # )
-
-                    # else:
-                    #     print("Match not found")
-                    #     raise SparkExpectationsMiscException(
-                    #     """Regex match not found."""
-                    # )
-
                 else:
-                    print("Parentheses are not balanced")
                     raise SparkExpectationsMiscException(
                         """Sql query is invalid. Parentheses are missing in the sql query."""
                     )
@@ -331,44 +279,11 @@ class SparkExpectationsActions:
                     "SELECT (" + str(_dq_rule["expectation"]) + ") AS OUTPUT"
                 )
 
-                # _querydq_source_query = _dq_rule["expectation_query_dq_source_query"]
-                # _querydq_target_query = _dq_rule["expectation_query_dq_target_query"]
                 _query_dq_result = int(
                     _context.spark.sql(_querydq_status_query).collect()[0][0]
                 )
 
                 status = "pass" if _query_dq_result else "fail"
-
-                # if match.group(1):
-                #     _querydq_status_query = (
-                #         "SELECT (" + str(match.group(1)) + ") AS OUTPUT"
-                #     )
-
-                #     _querydq_source_query_output = _context.spark.sql(
-                #         _querydq_status_query
-                #     ).collect()[0][0]
-                # else:
-                #     _querydq_source_query_output = None
-
-                # if match.group(4):
-                #     _querydq_target_query_output = match.group(4)
-                # elif match.group(5):
-                #     _querydq_target_query_output = _context.spark.sql(
-                #         match.group(5)
-                #     ).collect()[0][0]
-                # else:
-                #     _querydq_target_query_output = None
-
-                # actual_outcome = (
-                #     _querydq_source_query_output
-                #     if (_querydq_source_query_output is not None)
-                #     else None
-                # )
-                # expected_outcome = (
-                #     str(match.group(2)) + str(_querydq_target_query_output)
-                #     if (_querydq_target_query_output is not None)
-                #     else None
-                # )
 
                 if _source_dq_status:
                     row_count = _context.get_input_count
@@ -388,25 +303,6 @@ class SparkExpectationsActions:
                 row_count = None
                 actual_outcome = None
                 expected_outcome = None
-
-            print(
-                " the output from agg_query_dq_detailed_result :",
-                querydq_output,
-                _context.get_run_id,
-                _dq_rule["product_id"],
-                _dq_rule["table_name"],
-                _dq_rule["rule_type"],
-                _dq_rule["rule"],
-                _dq_rule["expectation"],
-                _dq_rule["tag"],
-                _dq_rule["description"],
-                status,
-                actual_outcome,
-                expected_outcome,
-                actual_row_count,
-                error_row_count,
-                row_count,
-            )
 
             return querydq_output, (
                 _context.get_run_id,
@@ -564,10 +460,7 @@ class SparkExpectationsActions:
                 and _source_dq_enabled
             ):
                 _context.set_source_query_dq_detailed_stats(_agg_query_dq_results)
-                print(
-                    "querydq_output in actions source before setting:",
-                    _querydq_output_list,
-                )
+
                 _context.set_source_query_dq_output(_querydq_output_list)
 
             elif (
@@ -576,10 +469,7 @@ class SparkExpectationsActions:
                 and _target_dq_enabled
             ):
                 _context.set_target_query_dq_detailed_stats(_agg_query_dq_results)
-                print(
-                    "querydq_output in actions target before setting:",
-                    _querydq_output_list,
-                )
+
                 _context.set_target_query_dq_output(_querydq_output_list)
 
             if len(condition_expressions) > 0:
@@ -592,7 +482,7 @@ class SparkExpectationsActions:
                         if rule_type == _context.get_agg_dq_rule_type_name
                         else _context.get_supported_df_query_dq
                     )
-                    print(f"condition_expressions : {condition_expressions}")
+
                     df = df.select(*condition_expressions)
 
                     df = df.withColumn(
@@ -613,7 +503,6 @@ class SparkExpectationsActions:
                     _context.print_dataframe_with_debugger(df)
 
                 elif rule_type == _context.get_row_dq_rule_type_name:
-                    print(f"condition_expressions : {condition_expressions}")
                     df = df.select(col("*"), *condition_expressions)
 
             else:

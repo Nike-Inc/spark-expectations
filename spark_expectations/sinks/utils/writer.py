@@ -536,8 +536,6 @@ class SparkExpectationsWriter:
                 stats_table=True,
             )
 
-            # print("querydq_output_s:",_querydq_secondary_query_source_output)
-
         except Exception as e:
             raise SparkExpectationsMiscException(
                 f"error occurred while saving the data into the stats table {e}"
