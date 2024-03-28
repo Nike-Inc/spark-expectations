@@ -208,8 +208,6 @@ class SparkExpectations:
                 self.rules_df, target_table, params=self._context.get_dq_rules_params
             )
 
-            print("get_rules_from_df from expectations:", expectations)
-
             _row_dq: bool = rules_execution_settings.get("row_dq", False)
             _source_agg_dq: bool = rules_execution_settings.get("source_agg_dq", False)
             _target_agg_dq: bool = rules_execution_settings.get("target_agg_dq", False)
