@@ -143,9 +143,9 @@ class SparkExpectationsContext:
         self._rules_execution_settings_config: Dict[str, str]
         self._querydq_secondary_queries: dict
 
-        self._source_query_dq_output: Optional[List[dict]]
+        self._source_query_dq_output: Optional[List[dict]] = None
 
-        self._target_query_dq_output: Optional[List[dict]]
+        self._target_query_dq_output: Optional[List[dict]] = None
 
         self._query_dq_output_custom_table_name: str
 

@@ -1,10 +1,13 @@
 import os
 from typing import Optional, Union, Dict
 from dataclasses import dataclass
+from functools import reduce
 from pyspark.sql import DataFrame
+from pyspark.sql.functions import expr
 from spark_expectations import _log
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.config.user_config import Constants as user_config
+
 from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException,
 )
@@ -300,6 +303,18 @@ class SparkExpectationsReader:
             self._context.reset_num_dq_rules()
             self._context.reset_num_row_dq_rules()
             self._context.reset_num_query_dq_rules()
+
+            if params is not None:
+                rules_df = reduce(
+                    lambda df, kv: df.withColumn(
+                        "table_name",
+                        expr(f"REPLACE(table_name, '{{{kv[0]}}}', '{kv[1]}')"),
+                    ),
+                    params.items(),
+                    rules_df,
+                )
+
+            rules_df.show(truncate=False)
 
             _rules_df = rules_df.filter(
                 (rules_df.product_id == self._context.product_id)
