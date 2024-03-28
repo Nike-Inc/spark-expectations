@@ -189,23 +189,6 @@ class SparkExpectationsReader:
                 "enable_querydq_custom_output is a boolean column and is not set, defaulting to False"
             )
 
-        # _dq_query_delimiter_check = row["rule"].split(",")
-
-        # if len(_dq_query_delimiter_check) == 3:
-        #     _dq_query_delimiter = _dq_query_delimiter_check[1]
-        #     column_map["rule"] = _dq_query_delimiter_check[0]
-        #     column_map["enable_querydq_custom_output"] = str(
-        #         _dq_query_delimiter_check[2]
-        #     ).lower()
-
-        # elif len(_dq_query_delimiter_check) == 2:
-        #     _dq_query_delimiter = _dq_query_delimiter_check[1]
-        #     column_map["rule"] = _dq_query_delimiter_check[0]
-        #     column_map["enable_querydq_custom_output"] = "true"
-        # else:
-        #     _dq_query_delimiter = "$"
-        #     column_map["enable_querydq_custom_output"] = "true"
-
         _querydq_secondary_queries = _row["expectation"].split(_dq_query_delimiter)
 
         _querydq_secondary_queries = [_querydq_secondary_queries[0]] + [
@@ -299,8 +282,6 @@ class SparkExpectationsReader:
                     params.items(),
                     rules_df,
                 )
-
-            rules_df.show(truncate=False)
 
             _rules_df = rules_df.filter(
                 (rules_df.product_id == self._context.product_id)
