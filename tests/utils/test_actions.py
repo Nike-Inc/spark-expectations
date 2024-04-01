@@ -734,8 +734,6 @@ def test_run_dq_rules_agg(_fixture_df,
                           _fixture_agg_dq_expected_result,
                           _fixture_mock_context,agg_dq_source_dq_status,agg_dq_target_dq_status):
     # Apply the data quality rules
-    # result_df = SparkExpectationsActions.run_dq_rules(_fixture_mock_context, _fixture_df, _fixture_expectations,
-    #                                                   "agg_dq", True)
 
     result_df = SparkExpectationsActions.run_dq_rules(_fixture_mock_context, _fixture_df, _fixture_expectations,"agg_dq",agg_dq_source_dq_status,agg_dq_target_dq_status)
 
@@ -763,9 +761,6 @@ def test_run_dq_rules_query(_fixture_df,
     _fixture_df.createOrReplaceTempView("query_test_table")
     _fixture_df.createOrReplaceTempView("query_test_table_target")
     
-    # result_df = SparkExpectationsActions.run_dq_rules(_fixture_mock_context, _fixture_df, _fixture_expectations,
-    #                                                   "query_dq", False, True)
-
     result_df = SparkExpectationsActions.run_dq_rules(_fixture_mock_context, _fixture_df, _fixture_expectations,"query_dq",query_dq_source_dq_status,query_dq_target_dq_status)
 
     # Assert that the result dataframe has the expected number of columns
@@ -1379,18 +1374,6 @@ def test_action_on_dq_rules(_mock_set_row_dq_status, _mock_set_source_agg_dq_sta
                                                      source_query_dq_flag,
                                                      final_query_dq_flag
                                                      )
-
-        # _mock_stats_writer.assert_called_once_with(
-        #     SparkExpectationsWriter(_fixture_mock_context.product_id, _fixture_mock_context),
-        #     table_name,
-        #     input_count,
-        #     error_count, output_count, source_agg_result, final_agg_result)
-        # if row_dq_flag is True:
-        #     _fixture_mock_context.set_row_dq_status.assert_called_once_with("Failed")
-        # elif source_agg_flag is True:
-        #     _fixture_mock_context.set_source_agg_dq_status("Failed")
-        # elif final_agg_flag is True:
-        #     _fixture_mock_context.set_final_agg_dq_status("Failed")
 
 
     else:

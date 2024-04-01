@@ -381,9 +381,6 @@ def test_get_rules_from_table(product_id, table_name,
     assert expectations == expected_expectations
     assert rule_execution_settings == expected_rule_execution_settings
 
-    # mock_context.set_final_table_name.assert_called_once_with(table_name)
-    # mock_context.set_error_table_name.assert_called_once_with(f"{table_name}_error")
-
 
 def test_set_notification_param_exception(_fixture_reader):
     with pytest.raises(SparkExpectationsMiscException,

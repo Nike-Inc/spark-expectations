@@ -1,13 +1,8 @@
 from typing import Dict, List, Any, Optional, Tuple
+import re
 from pyspark.sql import DataFrame
 
-# from pyspark.sql.types import (
-#     StringType,
-#     ArrayType,
-#     MapType,
-# )
 
-# qa
 from pyspark.sql.functions import (
     create_map,
     expr,
@@ -97,10 +92,17 @@ class SparkExpectationsActions:
             ]
         )
 
-    import re
-
     @staticmethod
     def match_parentheses(dq_query_string: str) -> bool:
+        """
+        Check if the parentheses in the given query string are properly matched.
+
+        Args:
+            dq_query_string (str): The query string to check.
+
+        Returns:
+            bool: True if all parentheses are properly matched, False otherwise.
+        """
         _parentheses_branch_check: List = []
         for _index_val, _dq_query_string_char in enumerate(dq_query_string):
             if _dq_query_string_char == "(":
@@ -122,9 +124,25 @@ class SparkExpectationsActions:
         _source_dq_status: bool = False,
         _target_dq_status: bool = False,
     ) -> Any:
-        try:
-            import re
+        """
+        Executes detailed result aggregation for query-based data quality rules.
 
+        Args:
+            _context (SparkExpectationsContext): The context object containing Spark session and other information.
+            _dq_rule (Dict[str, str]): The dictionary containing the data quality rule details.
+            df (DataFrame): The input DataFrame to be evaluated against the data quality rule.
+            querydq_output (List[Tuple[str, str, str, str, Any, str, dict, str]]):
+            The list to store the querydq output.
+            _source_dq_status (bool, optional):
+            The flag indicating if the rule is for source data quality. Defaults to False.
+            _target_dq_status (bool, optional):
+            The flag indicating if the rule is for target data quality. Defaults to False.
+
+        Returns:
+            Any: The querydq_output and detailed result of the data quality rule.
+        """
+
+        try:
             if (
                 _dq_rule["rule_type"] == _context.get_agg_dq_rule_type_name
                 and _context.get_agg_dq_detailed_stats_status is True

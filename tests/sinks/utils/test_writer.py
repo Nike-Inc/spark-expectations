@@ -1417,12 +1417,6 @@ def test_write_error_stats(
     setattr(_mock_context, "get_run_id", "product1_run_test")
 
 
-
-    #setattr(_mock_context, "get_agg_dq_detailed_stats_status", True) 
-    
-    #setattr(_mock_context, "get_query_dq_detailed_stats_status", True)
-
-
     setattr(
         _mock_context, "get_dq_run_status", input_record.get("status").get("run_status")
     )
@@ -1566,18 +1560,9 @@ def test_write_error_stats(
     )
     setattr(_mock_context, "get_dq_stats_table_name", "test_dq_stats_table")
 
-
-
-
     setattr(_mock_context, "get_rules_execution_settings_config", input_record.get("rules_execution_settings_config"))
     setattr(_mock_context, "get_agg_dq_detailed_stats_status", input_record.get("agg_dq_detailed_stats_status")) 
-    #setattr(_mock_context, "get_source_agg_dq_status", input_record.get("source_agg_dq_status"))
-    #setattr(_mock_context, "get_final_agg_dq_status", input_record.get("final_agg_dq_status"))
     setattr(_mock_context, "get_query_dq_detailed_stats_status", input_record.get("query_dq_detailed_stats_status"))
-    #setattr(_mock_context, "get_source_query_dq_status", input_record.get("source_query_dq_status"))
-    #setattr(_mock_context, "get_final_query_dq_status", input_record.get("final_query_dq_status"))
-    #setattr(_mock_context, "get_row_dq_status", input_record.get("row_dq_status"))
-    #setattr(_mock_context, "get_summarized_row_dq_res", input_record.get("summarised_row_dq_res"))
     setattr(_mock_context, "get_source_agg_dq_detailed_stats", input_record.get("source_agg_dq_detailed_stats"))
     setattr(_mock_context, "get_target_agg_dq_detailed_stats", input_record.get("target_agg_dq_detailed_stats"))
     setattr(_mock_context, "get_target_query_dq_detailed_stats", input_record.get("target_query_dq_detailed_stats"))
@@ -1585,25 +1570,10 @@ def test_write_error_stats(
     setattr(_mock_context, "get_detailed_stats_table_writer_config", input_record.get("detailed_stats_table_writer_config"))
     setattr(_mock_context, "get_dq_detailed_stats_table_name", input_record.get("test_dq_detailed_stats_table"))
     setattr(_mock_context, "get_query_dq_output_custom_table_name", input_record.get("test_querydq_output_custom_table_name"))
-
     setattr(_mock_context, "get_source_query_dq_output", input_record.get("source_query_dq_output"))
     setattr(_mock_context, "get_target_query_dq_output", input_record.get("target_query_dq_output"))
-
-
-
-
-    #setattr(_mock_context, "get_row_dq_detailed_stats", input_record.get("rowdq_detailed_stats"))
-    #setattr(_mock_context, "get_run_id", input_record.get("run_id"))
     setattr(_mock_context, "product_id", "product_1")
-    #setattr(_mock_context, "get_table_name", "employee_table")
-    #setattr(_mock_context, "get_input_count", input_record.get("input_count"))
     setattr(_mock_context, "get_dq_expectations", input_record.get("dq_expectations"))
-
-
-
-
-
-
 
 
     if writer_config is None:
