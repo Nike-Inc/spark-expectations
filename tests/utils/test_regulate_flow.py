@@ -1,6 +1,6 @@
 # pylint: disable=too-many-lines
 import os
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, MagicMock
 import pytest
 from pyspark.sql.functions import lit
 from spark_expectations.core import get_spark_session
@@ -219,7 +219,7 @@ def fixture_create_stats_table():
                              ),
                              (
                                      # test case 3
-                                     # In the this test case, the action for failed rows is "fail",
+                                     # In this test case, the action for failed rows is "fail",
                                      # so the function should raise an error.
                                      # collect stats in the test_stats_table and log the error records into the error
                                      # table.
@@ -330,7 +330,7 @@ def fixture_create_stats_table():
                              ),
                              (
                                      # test case 5
-                                     # In the this test case, the action for failed rows is "ignore" and "fail"
+                                     # In this test case, the action for failed rows is "ignore" and "fail"
                                      # Includes row and source_agg data quality checks
                                      # so the function should raise an error. Collect stats in the test_stats_table and
                                      # log the error records into the error table.
@@ -407,7 +407,7 @@ def fixture_create_stats_table():
                              ),
                              (
                                      # test case 6
-                                     # In the this test case, the action for failed rows is "drop" and "fail",
+                                     # In this test case, the action for failed rows is "drop" and "fail",
                                      # Includes source agg and row data quality checks
                                      # so the function should return a filtered DataFrame
                                      # with only the rows that satisfy the rules,
@@ -491,7 +491,7 @@ def fixture_create_stats_table():
 
                              (
                                      # test case 7
-                                     # In the this test case, the action for failed rows is "ignore", "drop" and "fail",
+                                     # In this test case, the action for failed rows is "ignore", "drop" and "fail",
                                      # so the function should return a filtered DataFrame
                                      # with only the rows that satisfy the rules,
                                      # collect stats in the test_stats_table and
@@ -570,8 +570,8 @@ def fixture_create_stats_table():
                              ),
                              (
                                      # test case 8
-                                     # In the this test case, the action for failed agg dq is "ignore" on source data,
-                                     # function should returns a empty dataframe with no columns,
+                                     # In this test case, the action for failed agg dq is "ignore" on source data,
+                                     # function should return an empty dataframe with no columns,
                                      # returns status of the flow
                                      spark.createDataFrame(
                                          [
@@ -616,7 +616,7 @@ def fixture_create_stats_table():
                              ),
                              (
                                      # test case 9
-                                     # In the this test case, the action for failed agg dq is "fail" on source data,
+                                     # In this test case, the action for failed agg dq is "fail" on source data,
                                      # function raises error due to failed expectations with action "fail",
                                      # log the stats into the stats table
                                      spark.createDataFrame(
@@ -662,7 +662,7 @@ def fixture_create_stats_table():
                              ),
                              (
                                      # test case 10
-                                     # In the this test case, the action for failed
+                                     # In this test case, the action for failed
                                      # agg dq is "ignore" on source dataset,
                                      # function returns final dq result set for failed expectations,
                                      # log the stats into the stats table
@@ -712,7 +712,7 @@ def fixture_create_stats_table():
                                       "source_query_dq_status": "Skipped", "final_query_dq_status": "Skipped"}
                              ),
                              # test case 11
-                             # In the this test case, the action for failed agg dq is "ignore" on final dataset,
+                             # In this test case, the action for failed agg dq is "ignore" on final dataset,
                              # there no failed expectations, function returns final dq result set with None,
                              # log the stats into the stats table
                              (
@@ -759,7 +759,7 @@ def fixture_create_stats_table():
                              ),
                              (
                                      # test case 12
-                                     # In the this test case, the action for failed agg dq is "fail" on final dataset,
+                                     # In this test case, the action for failed agg dq is "fail" on final dataset,
                                      # there are failed expectation for action "fail", function raises err
                                      # log the stats into the stats table
                                      spark.createDataFrame(
@@ -803,7 +803,7 @@ def fixture_create_stats_table():
                              ),
                              (
                                      # test case 13
-                                     # In the this test case, the action for failed agg dq is "ignore" on final dataset,
+                                     # In this test case, the action for failed agg dq is "ignore" on final dataset,
                                      # function returns agg_result_set for failed expectations
                                      # log the stats into the stats table
                                      spark.createDataFrame(
@@ -852,7 +852,7 @@ def fixture_create_stats_table():
 
                              (
                                      # test case 14
-                                     # In the this test case, the action for failed
+                                     # In this test case, the action for failed
                                      # agg dq is "ignore" on source dataset,
                                      # function returns agg_result_set for failed expectations
                                      # log the stats into the stats table
@@ -936,7 +936,7 @@ def fixture_create_stats_table():
                              ),
                              (
                                      # test case 15
-                                     # In the this test case, the action for failed agg dq is "ignore" on final dataset,
+                                     # In this test case, the action for failed agg dq is "ignore" on final dataset,
                                      # function returns agg_result_set for failed expectations
                                      # log the stats into the stats table
                                      spark.createDataFrame(
@@ -1020,9 +1020,9 @@ def fixture_create_stats_table():
                              ),
                              (
                                      # test case 16
-                                     # In the this test case, the action for failed
+                                     # In this test case, the action for failed
                                      # agg dq is "ignore" , "fail" on source dataset,
-                                     # given dataset doesn't meets expectation 1 & 2, function raises err
+                                     # given dataset doesn't meet expectation 1 & 2, function raises err
                                      # log the stats into the stats table
                                      spark.createDataFrame(
                                          [
@@ -1101,7 +1101,7 @@ def fixture_create_stats_table():
                              ),
                              (
                                      # test case 17
-                                     # In the this test case, the action for failed
+                                     # In this test case, the action for failed
                                      # agg dq is "ignore" , "fail" on source dataset,
                                      # given datset meets all expectations, function returns agg_res with None
                                      # log the stats into the stats table
@@ -1173,7 +1173,7 @@ def fixture_create_stats_table():
                              ),
                              (
                                      # test case 18
-                                     # In the this test case, the action for failed agg dq is "fail" on final dataset,
+                                     # In this test case, the action for failed agg dq is "fail" on final dataset,
                                      # function raises error, due to dataset doesn't meet expectation1
                                      # log the stats into the stats table
                                      spark.createDataFrame(
@@ -1238,7 +1238,7 @@ def fixture_create_stats_table():
                              ),
                              (
                                      # test case 19
-                                     # In the this test case, the action for failed query dq is "ignore" on source dataset,
+                                     # In this test case, the action for failed query dq is "ignore" on source dataset,
                                      # function captures  error, due to dataset doesn't meet expectation1
                                      # log the stats into the stats table
                                      spark.createDataFrame(
@@ -1288,7 +1288,7 @@ def fixture_create_stats_table():
                              ),
 
                              (  # test case 20
-                                     # In the this test case, the action for failed query dq is "fail" on source dataset,
+                                     # In this test case, the action for failed query dq is "fail" on source dataset,
                                      # function raises error, due to dataset doesn't meet expectation1
                                      # log the stats into the stats table
                                      spark.createDataFrame(
@@ -1353,7 +1353,7 @@ def fixture_create_stats_table():
                              ),
 
                              (  # test case 21
-                                     # In the this test case, the action for failed query dq is "ignore" on final dataset,
+                                     # In this test case, the action for failed query dq is "ignore" on final dataset,
                                      # function captures error, due to dataset doesn't meet expectation1
                                      # log the stats into the stats table
                                      spark.createDataFrame(
@@ -1403,7 +1403,7 @@ def fixture_create_stats_table():
                                       "source_query_dq_status": "Skipped", "final_query_dq_status": "Passed"}
                              ),
                              (  # test case 22
-                                     # In the this test case, the action for failed query dq is "fail" on final dataset,
+                                     # In this test case, the action for failed query dq is "fail" on final dataset,
                                      # function captures error, due to dataset doesn't meet expectation1
                                      # log the stats into the stats table
                                      spark.createDataFrame(
@@ -1480,7 +1480,7 @@ def fixture_create_stats_table():
                                       "source_query_dq_status": "Skipped", "final_query_dq_status": "Passed"}
                              ),
                              (  # test case 23
-                                     # In the this test case, the action for failed query dq is "fail" on final dataset,
+                                     # In this test case, the action for failed query dq is "fail" on final dataset,
                                      # function captures error, due to dataset doesn't meet expectation1
                                      # log the stats into the stats table
                                      spark.createDataFrame(
@@ -1579,6 +1579,7 @@ def test_execute_dq_process(_mock_notify,
                             _fixture_create_stats_table):
     spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
     df.createOrReplaceTempView("test_table")
+    _fixture_context._dq_expectations = expectations
     writer = SparkExpectationsWriter(_fixture_context)
     regulate_flow = SparkExpectationsRegulateFlow("product1")
 
@@ -1596,7 +1597,7 @@ def test_execute_dq_process(_mock_notify,
     if isinstance(expected_df, type) and issubclass(expected_df, Exception):
         with pytest.raises(expected_df,
                            match=r"error occurred while executing func_process error "
-                                 r"occured while taking action on given rules "
+                                 r"occurred while taking action on given rules "
                                  r"Job failed, as there is a data quality issue .*"):
             (_df, _agg_dq_res, _error_count, _status) = func_process(df,
                                                                      rule_type,
@@ -1616,8 +1617,6 @@ def test_execute_dq_process(_mock_notify,
             assert row.input_count == input_count
             assert row.error_count == error_count
             assert row.output_count == output_count
-            # assert row.source_agg_dq_results == source_agg_dq_results
-            # assert row.final_agg_dq_results == final_agg_dq_results
             assert row.status.get("source_agg") == status.get("source_agg_dq_status")
             assert row.status.get("row_dq") == status.get("row_dq_status")
             assert row.status.get("final_agg") == status.get("final_agg_dq_status")

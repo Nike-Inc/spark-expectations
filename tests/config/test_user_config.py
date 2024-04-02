@@ -30,6 +30,10 @@ def test_constants():
 
     assert user_config.se_enable_streaming == "se.enable.streaming"
 
+    assert user_config.se_enable_error_table == "se.enable.error.table"
+
+    assert user_config.se_dq_rules_params == "se.dq.rules.params"
+
     assert user_config.secret_type == "se.streaming.secret.type"
 
     assert user_config.cbs_url == "se.streaming.cerberus.url"
@@ -47,3 +51,6 @@ def test_constants():
     assert user_config.dbx_secret_app_name == "se.streaming.dbx.secret.app.name"
     assert user_config.dbx_secret_token == "se.streaming.dbx.secret.token"
     assert user_config.dbx_topic_name == "se.streaming.dbx.topic.name"
+
+    assert user_config.enable_agg_dq_detailed_result == "spark.expectations.agg.dq.detailed.stats"
+    assert user_config.enable_query_dq_detailed_result == "spark.expectations.query.dq.detailed.stats"

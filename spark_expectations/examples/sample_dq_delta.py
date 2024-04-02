@@ -17,14 +17,13 @@ spark = set_up_delta()
 
 se: SparkExpectations = SparkExpectations(
     product_id="your_product",
-    rules_df=spark.table("dq_spark_local.dq_rules"),
-    stats_table="dq_spark_local.dq_stats",
+    rules_df=spark.table("dq_spark_dev.dq_rules"),
+    stats_table="dq_spark_dev.dq_stats",
     stats_table_writer=writer,
     target_and_error_table_writer=writer,
     debugger=False,
     # stats_streaming_options={user_config.se_enable_streaming: False},
 )
-
 
 user_conf = {
     user_config.se_notifications_enable_email: False,
@@ -40,22 +39,37 @@ user_conf = {
     user_config.se_notifications_on_fail: True,
     user_config.se_notifications_on_error_drop_exceeds_threshold_breach: True,
     user_config.se_notifications_on_error_drop_threshold: 15,
+    user_config.enable_query_dq_detailed_result: True,
+    user_config.enable_agg_dq_detailed_result: True,
+    # user_config.querydq_output_custom_table_name: "dq_spark_local.dq_stats_detailed_outputt",
+    user_config.se_enable_error_table: True,
+    user_config.se_dq_rules_params: {
+        "env": "dev",
+        "table": "product",
+    },
 }
 
 
 @se.with_expectations(
-    target_table="dq_spark_local.customer_order",
+    target_table="dq_spark_dev.customer_order",
     write_to_table=True,
     user_conf=user_conf,
     target_table_view="order",
 )
 def build_new() -> DataFrame:
-    _df_order: DataFrame = (
+    _df_order_source: DataFrame = (
         spark.read.option("header", "true")
         .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
+        .csv(os.path.join(os.path.dirname(__file__), "resources/order_s.csv"))
     )
-    _df_order.createOrReplaceTempView("order")
+    _df_order_source.createOrReplaceTempView("order_source")
+
+    _df_order_target: DataFrame = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(os.path.join(os.path.dirname(__file__), "resources/order_t.csv"))
+    )
+    _df_order_target.createOrReplaceTempView("order_target")
 
     _df_product: DataFrame = (
         spark.read.option("header", "true")
@@ -64,30 +78,42 @@ def build_new() -> DataFrame:
     )
     _df_product.createOrReplaceTempView("product")
 
-    _df_customer: DataFrame = (
+    _df_customer_source: DataFrame = (
         spark.read.option("header", "true")
         .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/customer.csv"))
+        .csv(os.path.join(os.path.dirname(__file__), "resources/customer_source.csv"))
     )
 
-    _df_customer.createOrReplaceTempView("customer")
+    _df_customer_source.createOrReplaceTempView("customer_source")
 
-    return _df_order
+    _df_customer_target: DataFrame = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(os.path.join(os.path.dirname(__file__), "resources/customer_source.csv"))
+    )
+    _df_customer_target.createOrReplaceTempView("customer_target")
+
+    return _df_order_source
 
 
 if __name__ == "__main__":
     build_new()
 
-    spark.sql("use dq_spark_local")
-    spark.sql("select * from dq_spark_local.dq_stats").show(truncate=False)
-    spark.sql("select * from dq_spark_local.dq_stats").printSchema()
-    spark.sql("select * from dq_spark_local.customer_order").show(truncate=False)
-    spark.sql("select count(*) from dq_spark_local.customer_order_error").show(
-        truncate=False
-    )
+    spark.sql("use dq_spark_dev")
+    spark.sql("select * from dq_spark_dev.dq_stats").show(truncate=False)
+    spark.sql("select * from dq_spark_dev.dq_stats_detailed").show(truncate=False)
+    spark.sql("select * from dq_spark_dev.dq_stats_querydq_output").show(truncate=False)
+    spark.sql("select * from dq_spark_dev.dq_stats").printSchema()
+    spark.sql("select * from dq_spark_dev.dq_stats_detailed").printSchema()
+    spark.sql("select * from dq_spark_dev.customer_order").show(truncate=False)
+    # spark.sql("select count(*) from dq_spark_local.customer_order_error ").show(
+    #    truncate=False
+    # )
 
     _log.info("stats data in the kafka topic")
     # display posted statistics from the kafka topic
+
+    """
     spark.read.format("kafka").option(
         "kafka.bootstrap.servers", "localhost:9092"
     ).option("subscribe", "dq-sparkexpectations-stats").option(
@@ -99,7 +125,8 @@ if __name__ == "__main__":
     ).show(
         truncate=False
     )
+    """
 
     # remove docker container
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    os.system(f"sh {current_dir}/docker_scripts/docker_kafka_stop_script.sh")
+    # os.system(f"sh {current_dir}/docker_scripts/docker_kafka_stop_script.sh")

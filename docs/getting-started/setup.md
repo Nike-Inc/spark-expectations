@@ -33,7 +33,9 @@ create table if not exists `catalog`.`schema`.`{product}_rules` (
     enable_for_target_dq_validation BOOLEAN,
     is_active BOOLEAN,
     enable_error_drop_alert BOOLEAN,
-    error_drop_threshold INT
+    error_drop_threshold INT,
+    query_dq_delimiter STRING,
+    enable_querydq_custom_output BOOLEAN
 );
 ```
 
@@ -93,3 +95,35 @@ create table if not exists `catalog`.`schema`.`dq_stats` (
 );
 ```
 
+### DQ Detailed Stats Table
+
+This table provides detailed stats of all the expectations along with the status provided in the stats table in a relational format.
+This table need not be created. It gets auto created with "_detailed " to the dq stats table name.
+Below is the schema
+
+
+```
+run_id string,    
+product_id string ,  
+table_name string ,  
+rule_type string ,  
+rule string ,
+source_expectations string,
+tag string ,
+description string,
+source_dq_status string ,
+source_dq_actual_outcome string ,
+source_dq_expected_outcome string ,
+source_dq_actual_row_count string ,
+source_dq_error_row_count string ,
+source_dq_row_count string ,
+target_expectations string ,
+target_dq_status string ,
+target_dq_actual_outcome string ,
+target_dq_expected_outcome string ,
+target_dq_actual_row_count string ,
+target_dq_error_row_count string ,
+target_dq_row_count string ,
+dq_date date ,
+dq_time string
+```

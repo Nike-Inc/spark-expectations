@@ -7,36 +7,44 @@ from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from datetime import datetime, date
+
 spark = get_spark_session()
+
+
 @patch("spark_expectations.core.context.uuid1")
 def test_context_init(mock_uuid):
     # Test that the product_id is set correctly
     mock_uuid.return_value = "hghg-gjgu-jgj"
-    context = SparkExpectationsContext(product_id='test_product', spark=spark)
-    assert context.product_id == 'test_product'
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    assert context.product_id == "test_product"
 
     # Test that the run_id is set correctly
     assert context.get_run_id == "test_product_hghg-gjgu-jgj"
 
     # Test that the run_date is set correctly
     run_date = context.get_run_date
-    assert isinstance(datetime.strptime(run_date, '%Y-%m-%d %H:%M:%S'), datetime)
+    assert isinstance(datetime.strptime(run_date, "%Y-%m-%d %H:%M:%S"), datetime)
 
 
 def test_context_properties():
     # Test that the getter properties return the correct values
     context = SparkExpectationsContext(product_id="product1", spark=spark)
+
     context._run_id = 'test_run_id'
     context._run_date = 'test_run_date'
     context._dq_stats_table_name = 'test_dq_stats_table'
+    context._dq_detailed_stats_table_name = 'test_dq_stats_table'
     context._final_table_name = 'test_final_table'
     context._error_table_name = 'test_error_table'
+
     context._row_dq_rule_type_name = "row_dq_test"
     context._agg_dq_rule_type_name = "agg_dq_test"
     context._source_agg_dq_status = "test_skipped"
     context._row_dq_status = "test_skipped"
     context._final_agg_dq_status = "test_skipped"
     context._dq_run_status = "test_failed"
+    context._se_enable_error_table = True
+    context._dq_rules_params = {}
 
     context._dq_project_env_name = "APLAD-5063"
     context._dq_config_file_name = "dq_spark_expectations_config.ini"
@@ -57,14 +65,27 @@ def test_context_properties():
     context._output_count = 90
     context._kafka_stats_topic_name = "spark_expectations_stats_topic"
     context._source_agg_dq_result = [
-        {"action_if_failed": "ignore", "rule_type": "agg_dq", "rule_name": "sum_of_salary_threshold",
-         "rule": "sum(salary)>100"}]
+        {
+            "action_if_failed": "ignore",
+            "rule_type": "agg_dq",
+            "rule_name": "sum_of_salary_threshold",
+            "rule": "sum(salary)>100",
+        }
+    ]
     context._final_agg_dq_result = [
-        {"action_if_failed": "ignore", "rule_type": "agg_dq", "rule_name": "sum_of_salary_threshold",
-         "rule": "sum(salary)>100"}]
+        {
+            "action_if_failed": "ignore",
+            "rule_type": "agg_dq",
+            "rule_name": "sum_of_salary_threshold",
+            "rule": "sum(salary)>100",
+        }
+    ]
 
     context._notification_on_start = True
     context._notification_on_completion = True
+    context._enable_agg_dq_detailed_result = True
+
+    context._enable_query_dq_detailed_result = True
     context._notification_on_fail = True
     context._env = "dev"
     context._error_drop_threshold = 100
@@ -114,28 +135,31 @@ def test_context_properties():
     context._num_dq_rules = 1
     context._num_agg_dq_rules = {"source_agg_dq": 1, "final_agg_dq": 1}
     context._num_query_dq_rules = {"source_query_dq": 1, "final_query_dq": 1}
-    context._summarised_row_dq_res = [{"rule": "rule_1",
-                                       "action_if_failed": "ignore",
-                                       "failed_row_count": 2}, {"rule": "rule_2",
-                                                                "action_if_failed": "fail",
-                                                                "failed_row_count": 4}]
+    context._summarized_row_dq_res = [
+        {"rule": "rule_1", "action_if_failed": "ignore", "failed_row_count": 2},
+        {"rule": "rule_2", "action_if_failed": "fail", "failed_row_count": 4},
+    ]
 
     context._kafka_row_dq_res_topic_name = "abc"
 
     context._se_streaming_stats_dict = {"a": "b", "c": "d"}
     context._se_streaming_stats_topic_name = "test_topic"
 
+
     assert context.get_run_id == 'test_run_id'
     assert context.get_run_date == 'test_run_date'
     assert context._dq_stats_table_name == 'test_dq_stats_table'
+    assert context._dq_detailed_stats_table_name == 'test_dq_stats_table'
     assert context._final_table_name == 'test_final_table'
     assert context._error_table_name == 'test_error_table'
+
     assert context.get_row_dq_rule_type_name == "row_dq_test"
     assert context.get_agg_dq_rule_type_name == "agg_dq_test"
     assert context.get_source_agg_dq_status == "test_skipped"
     assert context.get_row_dq_status == "test_skipped"
     assert context.get_final_agg_dq_status == "test_skipped"
     assert context.get_dq_run_status == "test_failed"
+    assert context.get_se_enable_error_table == True
 
     assert context._dq_project_env_name == "APLAD-5063"
     assert context._dq_config_file_name == "dq_spark_expectations_config.ini"
@@ -156,11 +180,21 @@ def test_context_properties():
     assert context._output_count == 90
     assert context._kafka_stats_topic_name == "spark_expectations_stats_topic"
     assert context._source_agg_dq_result == [
-        {"action_if_failed": "ignore", "rule_type": "agg_dq", "rule_name": "sum_of_salary_threshold",
-         "rule": "sum(salary)>100"}]
+        {
+            "action_if_failed": "ignore",
+            "rule_type": "agg_dq",
+            "rule_name": "sum_of_salary_threshold",
+            "rule": "sum(salary)>100",
+        }
+    ]
     assert context._final_agg_dq_result == [
-        {"action_if_failed": "ignore", "rule_type": "agg_dq", "rule_name": "sum_of_salary_threshold",
-         "rule": "sum(salary)>100"}]
+        {
+            "action_if_failed": "ignore",
+            "rule_type": "agg_dq",
+            "rule_name": "sum_of_salary_threshold",
+            "rule": "sum(salary)>100",
+        }
+    ]
 
     assert context._notification_on_start is True
     assert context._notification_on_completion is True
@@ -183,13 +217,16 @@ def test_context_properties():
     assert context._run_date_name == "run_date"
     assert context._run_date_time_name == "run_date_time"
 
-    assert context._supported_df_query_dq == spark.createDataFrame(
+    assert (
+            context._supported_df_query_dq
+            == spark.createDataFrame(
         [
             {
                 "spark_expectations_query_check": "supported_place_holder_dataset_to_run_query_check"
             }
         ]
     ).collect()
+    )
 
     assert context._source_agg_dq_start_time == datetime_now
     assert context._final_agg_dq_start_time == datetime_now
@@ -209,11 +246,10 @@ def test_context_properties():
     assert context._num_dq_rules == 1
     assert context._num_agg_dq_rules == {"source_agg_dq": 1, "final_agg_dq": 1}
     assert context._num_query_dq_rules == {"source_query_dq": 1, "final_query_dq": 1}
-    assert context._summarised_row_dq_res == [{"rule": "rule_1",
-                                               "action_if_failed": "ignore",
-                                               "failed_row_count": 2}, {"rule": "rule_2",
-                                                                        "action_if_failed": "fail",
-                                                                        "failed_row_count": 4}]
+    assert context._summarized_row_dq_res == [
+        {"rule": "rule_1", "action_if_failed": "ignore", "failed_row_count": 2},
+        {"rule": "rule_2", "action_if_failed": "fail", "failed_row_count": 4},
+    ]
 
     assert context._debugger_mode == False
 
@@ -288,81 +324,94 @@ def test_set_dq_run_status():
 def test_get_source_agg_dq_status_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._source_agg_dq_status = None
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="The spark expectations context is not set completely, please assign "
-                             "'_source_agg_dq_status' before \n            accessing it"):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_source_agg_dq_status' before \n            accessing it",
+    ):
         context.get_source_agg_dq_status
 
 
 def test_get_row_dq_status_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._row_dq_status = None
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="The spark expectations context is not set completely, please assign "
-                             "'_row_dq_status' before \n            accessing it"):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_row_dq_status' before \n            accessing it",
+    ):
         context.get_row_dq_status
 
 
 def test_get_final_agg_dq_status_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._final_agg_dq_status = None
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="The spark expectations context is not set completely, please assign "
-                             "'_final_agg_dq_status' before \n            accessing it"):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_final_agg_dq_status' before \n            accessing it",
+    ):
         context.get_final_agg_dq_status
 
 
 def test_get_dq_run_status_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._dq_run_status = None
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="The spark expectations context is not set completely, please assign "
-                             "'_dq_run_status' before \n            accessing it"):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_dq_run_status' before \n            accessing it",
+    ):
         context.get_dq_run_status
 
 
 def test_get_row_dq_rule_type_name_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._row_dq_rule_type_name = None
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="The spark expectations context is not set completely, please assign "
-                             "'_row_dq_rule_type_name' before \n            accessing it"):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_row_dq_rule_type_name' before \n            accessing it",
+    ):
         context.get_row_dq_rule_type_name
 
 
 def test_get_agg_dq_rule_type_name_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._agg_dq_rule_type_name = None
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="The spark expectations context is not set completely, please assign "
-                             "'_agg_dq_rule_type_name' before \n            accessing it"):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_agg_dq_rule_type_name' before \n            accessing it",
+    ):
         context.get_agg_dq_rule_type_name
-
 
 
 def test_set_source_query_dq_result():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    value = [{'1':'2'}]
+    value = [{"1": "2"}]
     context.set_source_query_dq_result(value)
     context.get_source_query_dq_result == value
 
 
 def test_set_final_query_dq_result():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    value = [{'1':'2'}]
+    value = [{"1": "2"}]
     context.set_final_query_dq_result(value)
     context.get_final_query_dq_result == value
 
 
 def test_get_query_dq_rule_type_name():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    values = [None, 'query_dq']
+    values = [None, "query_dq"]
     for value in values:
         context._query_dq_rule_type_name = value
         if value is None:
-            with pytest.raises(SparkExpectationsMiscException,
-                               match="The spark expectations context is not set completely, please assign "
-                                     "'_query_dq_rule_type_name' before \n            accessing it"):
+            with pytest.raises(
+                    SparkExpectationsMiscException,
+                    match="The spark expectations context is not set completely, please assign "
+                          "'_query_dq_rule_type_name' before \n            accessing it",
+            ):
                 context.get_query_dq_rule_type_name
         else:
             context.get_query_dq_rule_type_name == value
@@ -370,25 +419,31 @@ def test_get_query_dq_rule_type_name():
 
 def test_get_dq_stats_table_name_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="The spark expectations context is not set completely, please assign "
-                             "'_dq_stats_table_name' before \n            accessing it"):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_dq_stats_table_name' before \n            accessing it",
+    ):
         context.get_dq_stats_table_name
 
 
 def test_get_final_table_name_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="The spark expectations context is not set completely, please assign "
-                             "'_final_table_name' before \n            accessing it"):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_final_table_name' before \n            accessing it",
+    ):
         context.get_final_table_name
 
 
 def test_get_error_table_name_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="The spark expectations context is not set completely, please assign "
-                             "'_error_table_name' before \n            accessing it"):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_error_table_name' before \n            accessing it",
+    ):
         context.get_error_table_name
 
 
@@ -402,9 +457,11 @@ def test_get_config_file_path():
 def test_get_config_file_path_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._dq_config_abs_path = None
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign '_dq_config_abs_path' before
-            accessing it"""):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign '_dq_config_abs_path' before
+            accessing it""",
+    ):
         context.get_config_file_path
 
 
@@ -518,100 +575,149 @@ def test_set_output_count():
 
 def test_set_kafka_source_agg_dq_result():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_source_agg_dq_result([
-        {"action_if_failed": "ignore", "rule_type": "agg_dq", "rule_name": "sum_of_salary_threshold",
-         "rule": "sum(salary)>100"}])
+    context.set_source_agg_dq_result(
+        [
+            {
+                "action_if_failed": "ignore",
+                "rule_type": "agg_dq",
+                "rule_name": "sum_of_salary_threshold",
+                "rule": "sum(salary)>100",
+            }
+        ]
+    )
     assert context._source_agg_dq_result == [
-        {"action_if_failed": "ignore", "rule_type": "agg_dq", "rule_name": "sum_of_salary_threshold",
-         "rule": "sum(salary)>100"}]
+        {
+            "action_if_failed": "ignore",
+            "rule_type": "agg_dq",
+            "rule_name": "sum_of_salary_threshold",
+            "rule": "sum(salary)>100",
+        }
+    ]
     assert context.get_source_agg_dq_result == [
-        {"action_if_failed": "ignore", "rule_type": "agg_dq", "rule_name": "sum_of_salary_threshold",
-         "rule": "sum(salary)>100"}]
+        {
+            "action_if_failed": "ignore",
+            "rule_type": "agg_dq",
+            "rule_name": "sum_of_salary_threshold",
+            "rule": "sum(salary)>100",
+        }
+    ]
 
 
 def test_set_kafka_final_agg_dq_result():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_final_agg_dq_result([
-        {"action_if_failed": "ignore", "rule_type": "agg_dq", "rule_name": "sum_of_salary_threshold",
-         "rule": "sum(salary)>100"}])
+    context.set_final_agg_dq_result(
+        [
+            {
+                "action_if_failed": "ignore",
+                "rule_type": "agg_dq",
+                "rule_name": "sum_of_salary_threshold",
+                "rule": "sum(salary)>100",
+            }
+        ]
+    )
     assert context._final_agg_dq_result == [
-        {"action_if_failed": "ignore", "rule_type": "agg_dq", "rule_name": "sum_of_salary_threshold",
-         "rule": "sum(salary)>100"}]
+        {
+            "action_if_failed": "ignore",
+            "rule_type": "agg_dq",
+            "rule_name": "sum_of_salary_threshold",
+            "rule": "sum(salary)>100",
+        }
+    ]
     assert context.get_final_agg_dq_result == [
-        {"action_if_failed": "ignore", "rule_type": "agg_dq", "rule_name": "sum_of_salary_threshold",
-         "rule": "sum(salary)>100"}]
+        {
+            "action_if_failed": "ignore",
+            "rule_type": "agg_dq",
+            "rule_name": "sum_of_salary_threshold",
+            "rule": "sum(salary)>100",
+        }
+    ]
 
 
 def test_get_mail_smtp_server_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._mail_smtp_server = None
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="The spark expectations context is not set completely, please assign "
-                             "'_mail_smtp_server' before \n            accessing it"):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_mail_smtp_server' before \n            accessing it",
+    ):
         context.get_mail_smtp_server
 
 
 def test_get_mail_smtp_port_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._mail_smtp_port = 0
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="The spark expectations context is not set completely, please assign "
-                             "'_mail_smtp_port' before \n            accessing it"):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_mail_smtp_port' before \n            accessing it",
+    ):
         context.get_mail_smtp_port
 
 
 def test_get_to_mail_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._to_mail = False
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="The spark expectations context is not set completely, please assign "
-                             "'_to_mail' before \n            accessing it"):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_to_mail' before \n            accessing it",
+    ):
         context.get_to_mail
 
 
 def test_get_mail_subject_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._to_mail = False
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="The spark expectations context is not set completely, please assign "
-                             "'_mail_subject' before \n            accessing it"):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_mail_subject' before \n            accessing it",
+    ):
         context.get_mail_subject
 
 
 def test_get_mail_from_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._mail_from = False
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="The spark expectations context is not set completely, please assign "
-                             "'_mail_from' before \n            accessing it"):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_mail_from' before \n            accessing it",
+    ):
         context.get_mail_from
 
 
 def test_get_slack_webhook_url_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._slack_webhook_url = False
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="The spark expectations context is not set completely, please assign "
-                             "'_slack_webhook_url' before \n            accessing it"):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_slack_webhook_url' before \n            accessing it",
+    ):
         context.get_slack_webhook_url
 
 
 def test_get_teams_webhook_url_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._teams_webhook_url = False
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="The spark expectations context is not set completely, please assign "
-                             "'_teams_webhook_url' before \n            accessing it"):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_teams_webhook_url' before \n            accessing it",
+    ):
         context.get_teams_webhook_url
-
 
 
 def test_get_table_name_expection():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._table_name = ""
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="The spark expectations context is not set completely, please assign "
-                             "'_table_name' before \n            accessing it"):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_table_name' before \n            accessing it",
+    ):
         context.get_table_name
 
 
@@ -711,36 +817,44 @@ def test_set_error_threshold():
 def test_get_error_threshold():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._error_drop_threshold = 0
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign '_error_drop_threshold'  before 
-            accessing it"""):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign '_error_drop_threshold'  before 
+            accessing it""",
+    ):
         context.get_error_drop_threshold
 
 
 def test_get_cerberus_url_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._cerberus_url = None
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign '_cerberus_url'  before 
-            accessing it"""):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign '_cerberus_url'  before 
+            accessing it""",
+    ):
         context.get_cerberus_url
 
 
 def test_get_cerberus_cred_path_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._cerberus_cred_path = None
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign '_cerberus_cred_path'  before 
-            accessing it"""):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign '_cerberus_cred_path'  before 
+            accessing it""",
+    ):
         context.get_cerberus_cred_path
 
 
 def test_get_cerberus_token_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._cerberus_token = None
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign '_cerberus_token'  before 
-            accessing it"""):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign '_cerberus_token'  before 
+            accessing it""",
+    ):
         context.get_cerberus_token
 
 
@@ -937,12 +1051,14 @@ def test_get_dq_run_time():
 
 def test_get_run_id_name():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    values = [None, 'test']
+    values = [None, "test"]
     for value in values:
         context._run_id_name = value
         if not value:
-            with pytest.raises(SparkExpectationsMiscException,
-                               match="""The spark expectations context is not set completely, please assign '_run_id_name'  .*"""):
+            with pytest.raises(
+                    SparkExpectationsMiscException,
+                    match="""The spark expectations context is not set completely, please assign '_run_id_name'  .*""",
+            ):
                 context.get_run_id_name
         else:
             context.get_run_id_name == value
@@ -950,12 +1066,14 @@ def test_get_run_id_name():
 
 def test_get_run_date_name():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    values = [None, 'test']
+    values = [None, "test"]
     for value in values:
         context._run_date_name = value
         if not value:
-            with pytest.raises(SparkExpectationsMiscException,
-                               match="""The spark expectations context is not set completely, please assign '_run_date_name'  .*"""):
+            with pytest.raises(
+                    SparkExpectationsMiscException,
+                    match="""The spark expectations context is not set completely, please assign '_run_date_name'  .*""",
+            ):
                 context.get_run_date_name
         else:
             context.get_run_date_name == value
@@ -963,12 +1081,14 @@ def test_get_run_date_name():
 
 def test_get_run_date_time_name():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    values = [None, 'test']
+    values = [None, "test"]
     for value in values:
         context._run_date_time_name = value
         if not value:
-            with pytest.raises(SparkExpectationsMiscException,
-                               match="""The spark expectations context is not set completely, please assign '_run_date_time_name'  .*"""):
+            with pytest.raises(
+                    SparkExpectationsMiscException,
+                    match="""The spark expectations context is not set completely, please assign '_run_date_time_name'  .*""",
+            ):
                 context.get_run_date_time_name
         else:
             context.get_run_date_time_name == value
@@ -984,24 +1104,30 @@ def test_set_num_row_dq_rules():
 def test_set_num_agg_dq_rules():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_num_agg_dq_rules(True, True)
-    assert context.get_num_agg_dq_rules == {"num_source_agg_dq_rules": 1,
-                                            "num_final_agg_dq_rules": 1,
-                                            "num_agg_dq_rules": 1}
+    assert context.get_num_agg_dq_rules == {
+        "num_source_agg_dq_rules": 1,
+        "num_final_agg_dq_rules": 1,
+        "num_agg_dq_rules": 1,
+    }
 
 
 def test_set_num_query_dq_rules():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_num_query_dq_rules(True, True)
-    assert context.get_num_query_dq_rules == {"num_source_query_dq_rules": 1,
-                                              "num_final_query_dq_rules": 1,
-                                              "num_query_dq_rules": 1}
+    assert context.get_num_query_dq_rules == {
+        "num_source_query_dq_rules": 1,
+        "num_final_query_dq_rules": 1,
+        "num_query_dq_rules": 1,
+    }
 
 
 def test_get_num_row_dq_rules():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
 
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign '_num_row_dq_rules'  .*"""):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign '_num_row_dq_rules'  .*""",
+    ):
         context._num_row_dq_rules = None
         context.get_num_row_dq_rules
 
@@ -1013,25 +1139,31 @@ def test_get_num_row_dq_rules():
 def test_get_num_agg_dq_rules_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._num_agg_dq_rules = [1, 2, 3, 4]
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign '_num_agg_dq_rules'  before 
-            accessing it"""):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign '_num_agg_dq_rules'  before 
+            accessing it""",
+    ):
         context.get_num_agg_dq_rules
 
 
 def test_get_num_query_dq_rules_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._num_query_dq_rules = [1, 2, 3, 4]
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign '_num_query_dq_rules'  before 
-            accessing it"""):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign '_num_query_dq_rules'  before 
+            accessing it""",
+    ):
         context.get_num_query_dq_rules
 
 
 def test_get_num_dq_rules():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign '_num_dq_rules'  .*"""):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign '_num_dq_rules'  .*""",
+    ):
         context._num_dq_rules = None
         context.get_num_dq_rules
 
@@ -1039,32 +1171,34 @@ def test_get_num_dq_rules():
     context.get_num_dq_rules == 0
 
 
-def test_set_summarised_row_dq_res():
+def test_set_summarized_row_dq_res():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_summarised_row_dq_res( [{"rule": "rule_1",
-                                       "action_if_failed": "ignore",
-                                       "failed_row_count": 2}, {"rule": "rule_2",
-                                                                "action_if_failed": "fail",
-                                                                "failed_row_count": 4}])
+    context.set_summarized_row_dq_res(
+        [
+            {"rule": "rule_1", "action_if_failed": "ignore", "failed_row_count": 2},
+            {"rule": "rule_2", "action_if_failed": "fail", "failed_row_count": 4},
+        ]
+    )
 
-    assert context.get_summarised_row_dq_res == [{"rule": "rule_1",
-                                                  "action_if_failed": "ignore",
-                                                  "failed_row_count": 2}, {"rule": "rule_2",
-                                                                           "action_if_failed": "fail",
-                                                                           "failed_row_count": 4}]
+    assert context.get_summarized_row_dq_res == [
+        {"rule": "rule_1", "action_if_failed": "ignore", "failed_row_count": 2},
+        {"rule": "rule_2", "action_if_failed": "fail", "failed_row_count": 4},
+    ]
+
 
 def test_set_target_and_error_table_writer_config():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_target_and_error_table_writer_config({'format': 'bigquery'})
+    context.set_target_and_error_table_writer_config({"format": "bigquery"})
 
-    assert context.get_target_and_error_table_writer_config == {'format': 'bigquery'}
+    assert context.get_target_and_error_table_writer_config == {"format": "bigquery"}
 
 
 def test_set_stats_table_writer_config():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_stats_table_writer_config({'format': 'bigquery'})
+    context.set_stats_table_writer_config({"format": "bigquery"})
 
-    assert context.get_stats_table_writer_config == {'format': 'bigquery'}
+    assert context.get_stats_table_writer_config == {"format": "bigquery"}
+
 
 # def test_set_kafka_row_dq_res_topic_name():
 #     context = SparkExpectationsContext(product_id="product1")
@@ -1078,6 +1212,7 @@ def test_set_stats_table_writer_config():
 #                        match= """The spark expectations context is not set completely, please assign '_kafka_row_dq_res_topic_name' before
 #             accessing it"""):
 #         context.get_kafka_row_dq_res_topic_name
+
 
 def test_set_source_query_dq_status():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
@@ -1094,39 +1229,50 @@ def test_set_final_query_dq_status():
 def test_get_source_query_dq_status_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._source_query_dq_status = None
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign '_source_query_dq_status' before 
-            accessing it"""):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign '_source_query_dq_status' before 
+            accessing it""",
+    ):
         context.get_source_query_dq_status
 
 
 def test_get_final_query_dq_status_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._final_query_dq_status = None
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign '_final_query_dq_status' before 
-            accessing it"""):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign '_final_query_dq_status' before 
+            accessing it""",
+    ):
         context.get_final_query_dq_status
 
 
 def test_set_supported_df_query_dq():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._supported_df_query_dq = context.set_supported_df_query_dq()
-    assert context.get_supported_df_query_dq.collect() == get_spark_session().createDataFrame(
+    assert (
+            context.get_supported_df_query_dq.collect()
+            == get_spark_session()
+            .createDataFrame(
         [
             {
                 "spark_expectations_query_check": "supported_place_holder_dataset_to_run_query_check"
             }
         ]
-    ).collect()
+    )
+            .collect()
+    )
 
 
 def test_get_supported_df_query_dq():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._supported_df_query_dq = None
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign '_supported_df_query_dq'  before 
-            accessing it"""):
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign '_supported_df_query_dq'  before 
+            accessing it""",
+    ):
         context.get_supported_df_query_dq
 
 
@@ -1204,17 +1350,15 @@ def test_reset_num_query_dq_rules():
     }
 
 
-
 def test_set_end_time_when_dq_job_fails():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    attributes = ['source_agg', 'source_query', 'row', 'final_agg', 'final_query']
+    attributes = ["source_agg", "source_query", "row", "final_agg", "final_query"]
     for attribute in attributes:
-        setattr(context, f'_{attribute}_dq_start_time', datetime.now())
-        setattr(context, f'_{attribute}_dq_end_time', None)
+        setattr(context, f"_{attribute}_dq_start_time", datetime.now())
+        setattr(context, f"_{attribute}_dq_end_time", None)
         context.set_end_time_when_dq_job_fails()
-        datetime_actual = getattr(context, f'_{attribute}_dq_end_time')
+        datetime_actual = getattr(context, f"_{attribute}_dq_end_time")
         datetime_actual.date == date.today()
-
 
 
 def test_reset_num_dq_rules():
@@ -1248,135 +1392,177 @@ def test_get_secret_type_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_se_streaming_stats_dict({user_config.se_enable_streaming: "a"})
 
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign 
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign 
             'UserConfig.secret_type' before 
-            accessing it"""):
+            accessing it""",
+    ):
         context.get_secret_type
 
 
 def test_get_server_url_key():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict({user_config.dbx_kafka_server_url: "b",
-                                         user_config.secret_type: "databricks"})
+    context.set_se_streaming_stats_dict(
+        {user_config.dbx_kafka_server_url: "b", user_config.secret_type: "databricks"}
+    )
 
     assert context.get_server_url_key == "b"
 
-    context.set_se_streaming_stats_dict({user_config.dbx_kafka_server_url: "b",
-                                         user_config.cbs_kafka_server_url: "c",
-                                         user_config.secret_type: "cerberus"})
+    context.set_se_streaming_stats_dict(
+        {
+            user_config.dbx_kafka_server_url: "b",
+            user_config.cbs_kafka_server_url: "c",
+            user_config.secret_type: "cerberus",
+        }
+    )
     assert context.get_server_url_key == "c"
 
 
 def test_get_server_url_key_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict({user_config.dbx_kafka_server_url: "b",
-                                         user_config.secret_type: "cerberus"})
+    context.set_se_streaming_stats_dict(
+        {user_config.dbx_kafka_server_url: "b", user_config.secret_type: "cerberus"}
+    )
 
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign
             'UserConfig.cbs_kafka_server_url' before
-            accessing it"""):
+            accessing it""",
+    ):
         context.get_server_url_key
 
 
 def test_get_token_endpoint_url():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict({user_config.dbx_secret_token_url: "d",
-                                         user_config.secret_type: "databricks"})
+    context.set_se_streaming_stats_dict(
+        {user_config.dbx_secret_token_url: "d", user_config.secret_type: "databricks"}
+    )
 
     assert context.get_token_endpoint_url == "d"
 
-    context.set_se_streaming_stats_dict({user_config.dbx_secret_token_url: "d",
-                                         user_config.cbs_secret_token_url: "f",
-                                         user_config.secret_type: "cerberus"})
+    context.set_se_streaming_stats_dict(
+        {
+            user_config.dbx_secret_token_url: "d",
+            user_config.cbs_secret_token_url: "f",
+            user_config.secret_type: "cerberus",
+        }
+    )
     assert context.get_token_endpoint_url == "f"
 
 
 def test_get_token_endpoint_url_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict({user_config.dbx_secret_token_url: "d",
-                                         user_config.secret_type: "cerberus"})
+    context.set_se_streaming_stats_dict(
+        {user_config.dbx_secret_token_url: "d", user_config.secret_type: "cerberus"}
+    )
 
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign
             'UserConfig.cbs_secret_token_url' before
-            accessing it"""):
+            accessing it""",
+    ):
         context.get_token_endpoint_url
 
 
 def test_get_token():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict({user_config.dbx_secret_token: "g",
-                                         user_config.secret_type: "databricks"})
+    context.set_se_streaming_stats_dict(
+        {user_config.dbx_secret_token: "g", user_config.secret_type: "databricks"}
+    )
 
     assert context.get_token == "g"
 
-    context.set_se_streaming_stats_dict({user_config.dbx_secret_token: "g",
-                                         user_config.cbs_secret_token: "h",
-                                         user_config.secret_type: "cerberus"})
+    context.set_se_streaming_stats_dict(
+        {
+            user_config.dbx_secret_token: "g",
+            user_config.cbs_secret_token: "h",
+            user_config.secret_type: "cerberus",
+        }
+    )
     assert context.get_token == "h"
 
 
 def test_get_token_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict({user_config.dbx_secret_token_url: "g",
-                                         user_config.secret_type: "cerberus"})
+    context.set_se_streaming_stats_dict(
+        {user_config.dbx_secret_token_url: "g", user_config.secret_type: "cerberus"}
+    )
 
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign
             'UserConfig.cbs_secret_token' before
-            accessing it"""):
+            accessing it""",
+    ):
         context.get_token
 
 
 def test_get_client_id():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict({user_config.dbx_secret_app_name: "i",
-                                         user_config.secret_type: "databricks"})
+    context.set_se_streaming_stats_dict(
+        {user_config.dbx_secret_app_name: "i", user_config.secret_type: "databricks"}
+    )
 
     assert context.get_client_id == "i"
 
-    context.set_se_streaming_stats_dict({user_config.dbx_secret_app_name: "i",
-                                         user_config.cbs_secret_app_name: "j",
-                                         user_config.secret_type: "cerberus"})
+    context.set_se_streaming_stats_dict(
+        {
+            user_config.dbx_secret_app_name: "i",
+            user_config.cbs_secret_app_name: "j",
+            user_config.secret_type: "cerberus",
+        }
+    )
     assert context.get_client_id == "j"
 
 
 def test_get_client_id_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict({user_config.dbx_secret_app_name: "g",
-                                         user_config.secret_type: "cerberus"})
+    context.set_se_streaming_stats_dict(
+        {user_config.dbx_secret_app_name: "g", user_config.secret_type: "cerberus"}
+    )
 
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign
             'UserConfig.cbs_secret_app_name' before
-            accessing it"""):
+            accessing it""",
+    ):
         context.get_client_id
 
 
 def test_get_topic_name():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict({user_config.dbx_topic_name: "k",
-                                         user_config.secret_type: "databricks"})
+    context.set_se_streaming_stats_dict(
+        {user_config.dbx_topic_name: "k", user_config.secret_type: "databricks"}
+    )
 
     assert context.get_topic_name == "k"
 
-    context.set_se_streaming_stats_dict({user_config.dbx_topic_name: "k",
-                                         user_config.cbs_topic_name: "l",
-                                         user_config.secret_type: "cerberus"})
+    context.set_se_streaming_stats_dict(
+        {
+            user_config.dbx_topic_name: "k",
+            user_config.cbs_topic_name: "l",
+            user_config.secret_type: "cerberus",
+        }
+    )
     assert context.get_topic_name == "l"
 
 
 def test_get_topic_name_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict({user_config.dbx_topic_name: "k",
-                                         user_config.secret_type: "cerberus"})
+    context.set_se_streaming_stats_dict(
+        {user_config.dbx_topic_name: "k", user_config.secret_type: "cerberus"}
+    )
 
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign 
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign 
             'UserConfig.cbs_topic_name' before 
-            accessing it"""):
+            accessing it""",
+    ):
         context.get_topic_name
 
 
@@ -1391,58 +1577,386 @@ def test_get_se_streaming_stats_topic_name():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_se_streaming_stats_topic_name("test_topic")
 
-    assert context.get_se_streaming_stats_topic_name == context.get_se_streaming_stats_topic_name
+    assert (
+            context.get_se_streaming_stats_topic_name
+            == context.get_se_streaming_stats_topic_name
+    )
 
 
 def test_get_se_streaming_stats_topic_name_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_se_streaming_stats_topic_name("")
 
-    with pytest.raises(SparkExpectationsMiscException,
-                       match="""The spark expectations context is not set completely, please assign 
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign 
             '_se_streaming_stats_topic_name' before 
-            accessing it"""):
+            accessing it""",
+    ):
         context.get_se_streaming_stats_topic_name
+
 
 def test_set_rules_exceeds_threshold():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_rules_exceeds_threshold([
+    context.set_rules_exceeds_threshold(
+        [
+            {
+                "rule_name": "rule_1",
+                "action_if_failed": "ignore",
+                "description": "description1",
+                "rule_type": "row_dq",
+                "error_drop_threshold": "10",
+                "error_drop_percentage": "10.0",
+            }
+        ]
+    )
+    assert context.get_rules_exceeds_threshold == [
         {
-            "rule_name": 'rule_1',
-            "action_if_failed": 'ignore',
-            "description": 'description1',
-            "rule_type": 'row_dq',
-            "error_drop_threshold": '10',
-            "error_drop_percentage": '10.0',
-        }
-    ])
-    assert context.get_rules_exceeds_threshold == [{
-        "rule_name": 'rule_1',
-        "action_if_failed": 'ignore',
-        "description": 'description1',
-        "rule_type": 'row_dq',
-        "error_drop_threshold": '10',
-        "error_drop_percentage": '10.0',
-    }]
-
-def test_get_rules_exceds_threshold():
-    context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context._rules_error_per=[
-        {
-            "rule_name": 'rule_1',
-            "action_if_failed": 'ignore',
-            "description": 'description1',
-            "rule_type": 'row_dq',
-            "error_drop_threshold": '10',
-            "error_drop_percentage": '10.0',
+            "rule_name": "rule_1",
+            "action_if_failed": "ignore",
+            "description": "description1",
+            "rule_type": "row_dq",
+            "error_drop_threshold": "10",
+            "error_drop_percentage": "10.0",
         }
     ]
 
-    assert context.get_rules_exceeds_threshold == [{
-        "rule_name": 'rule_1',
-        "action_if_failed": 'ignore',
-        "description": 'description1',
-        "rule_type": 'row_dq',
-        "error_drop_threshold": '10',
-        "error_drop_percentage": '10.0',
-    }]
+
+def test_get_rules_exceds_threshold():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._rules_error_per = [
+        {
+            "rule_name": "rule_1",
+            "action_if_failed": "ignore",
+            "description": "description1",
+            "rule_type": "row_dq",
+            "error_drop_threshold": "10",
+            "error_drop_percentage": "10.0",
+        }
+    ]
+
+    assert context.get_rules_exceeds_threshold == [
+        {
+            "rule_name": "rule_1",
+            "action_if_failed": "ignore",
+            "description": "description1",
+            "rule_type": "row_dq",
+            "error_drop_threshold": "10",
+            "error_drop_percentage": "10.0",
+        }
+    ]
+
+
+
+def test_set_agg_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_agg_dq_detailed_stats_status(True)
+    assert context.get_agg_dq_detailed_stats_status is True
+
+def test_get_agg_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    assert context.get_agg_dq_detailed_stats_status is True
+
+def test_set_query_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    assert context.get_query_dq_detailed_stats_status is True
+
+def test_get_query_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    assert context.get_query_dq_detailed_stats_status is False
+
+
+
+def test_set_target_agg_dq_detailed_stats():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    target_agg_dq_detailed_stats = [
+        ("column1", "rule1"),
+        ("column2", "rule2"),
+        ("column3", "rule3")
+    ]
+    context.set_target_agg_dq_detailed_stats(target_agg_dq_detailed_stats)
+    assert context.get_target_agg_dq_detailed_stats == target_agg_dq_detailed_stats
+
+def test_set_target_query_dq_detailed_stats():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    target_query_dq_detailed_stats = [
+        ("column1", "rule1"),
+        ("column2", "rule2"),
+        ("column3", "rule3")
+    ]
+    context.set_target_query_dq_detailed_stats(target_query_dq_detailed_stats)
+    assert context.get_target_query_dq_detailed_stats == target_query_dq_detailed_stats
+
+def test_set_source_agg_dq_detailed_stats():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    source_agg_dq_detailed_stats = [
+        ("column1", "rule1"),
+        ("column2", "rule2"),
+        ("column3", "rule3")
+    ]
+    context.set_source_agg_dq_detailed_stats(source_agg_dq_detailed_stats)
+    assert context.get_source_agg_dq_detailed_stats == source_agg_dq_detailed_stats
+
+def test_set_source_query_dq_detailed_stats():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    source_query_dq_detailed_stats = [
+        ("column1", "rule1"),
+        ("column2", "rule2"),
+        ("column3", "rule3")
+    ]
+    context.set_source_query_dq_detailed_stats(source_query_dq_detailed_stats)
+    assert context.get_source_query_dq_detailed_stats == source_query_dq_detailed_stats
+
+
+def test_set_detailed_stats_table_writer_config():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    config = {"key": "value"}
+    context.set_detailed_stats_table_writer_config(config)
+    assert context.get_detailed_stats_table_writer_config() == config
+
+
+# Add more test cases as needed
+def test_set_agg_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_agg_dq_detailed_stats_status(True)
+    assert context.get_agg_dq_detailed_stats_status is True
+
+def test_get_agg_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_agg_dq_detailed_stats_status(True)
+    assert context.get_agg_dq_detailed_stats_status is True
+
+def test_set_query_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    assert context.get_query_dq_detailed_stats_status is True
+
+def test_get_query_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    assert context.get_query_dq_detailed_stats_status is True
+
+
+def test_set_agg_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_agg_dq_detailed_stats_status(True)
+    assert context.get_agg_dq_detailed_stats_status is True
+
+def test_set_query_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    assert context.get_query_dq_detailed_stats_status is True
+
+
+def test_set_dq_stats_table_name():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_dq_stats_table_name("dq_stats_table_name")
+    assert context._dq_stats_table_name == "dq_stats_table_name"
+    assert context.get_dq_stats_table_name == "dq_stats_table_name"
+
+
+
+def test_set_dq_detailed_stats_table_name():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_dq_detailed_stats_table_name("dq_stats_table_name")
+
+    context._enable_agg_dq_detailed_result = True
+    context._enable_query_dq_detailed_result = True
+
+
+    assert context.get_agg_dq_detailed_stats_status is True
+    assert context.get_query_dq_detailed_stats_status is True
+       
+    assert context._dq_detailed_stats_table_name == "dq_stats_table_name"
+    assert context.get_dq_detailed_stats_table_name == "dq_stats_table_name"
+
+def test_set_detailed_stats_table_writer_config():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    config = {"setting1": "value1", "setting2": "value2"}
+    context.set_detailed_stats_table_writer_config(config)
+    assert context.get_detailed_stats_table_writer_config == config
+
+def test_set_dq_expectations():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    dq_expectations = {"column1": "expectation1", "column2": "expectation2"}
+    context.set_dq_expectations(dq_expectations)
+    assert context.get_dq_expectations == dq_expectations
+
+def test_set_rules_execution_settings_config():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    config = {"setting1": "value1", "setting2": "value2"}
+    context.set_rules_execution_settings_config(config)
+    assert context.get_rules_execution_settings_config == config
+
+
+def test_get_row_dq_start_time():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._row_dq_start_time = datetime.now()
+    assert context.get_row_dq_start_time == context._row_dq_start_time
+
+def test_get_row_dq_end_time(): 
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._row_dq_end_time = datetime.now()
+    assert context.get_row_dq_end_time == context._row_dq_end_time
+
+
+
+def test_get_row_dq_start_time_exception():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._row_dq_start_time = None
+    with pytest.raises(SparkExpectationsMiscException,
+                       match="""The spark expectations context is not set completely, 
+            please assign '_row_dq_start_time'  before 
+            accessing it"""):
+        context.get_row_dq_start_time
+
+def test_get_row_dq_end_time_exception():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._row_dq_end_time = None
+    with pytest.raises(SparkExpectationsMiscException,
+        match="""The spark expectations context is not set completely, please assign '_row_dq_end_time'  before 
+            accessing it"""):
+        context.get_row_dq_end_time
+
+
+def test_set_query_dq_detailed_stats_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    assert context._enable_query_dq_detailed_result == True
+    assert context.get_query_dq_detailed_stats_status == True
+
+
+def test_get_query_dq_output_custom_table_name():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    context.set_dq_detailed_stats_table_name("test_table")
+    context.set_query_dq_output_custom_table_name("test_table")
+    assert context.get_query_dq_output_custom_table_name == "test_table"
+
+def test_get_query_dq_output_custom_table_name_exception():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    context.set_dq_detailed_stats_table_name(None)
+    with pytest.raises(SparkExpectationsMiscException,
+        match="""The spark expectations context is not set completely, please assign 
+            '_dq_detailed_stats_table_name,query_dq_detailed_stats_status' before 
+            accessing it"""):
+        context.get_query_dq_output_custom_table_name
+
+
+def test_get_dq_detailed_stats_table_name():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    context.set_dq_detailed_stats_table_name("test_table")
+    assert context.get_dq_detailed_stats_table_name == "test_table"
+
+def test_get_dq_detailed_stats_table_name_exception():  
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    context.set_dq_detailed_stats_table_name(None)
+    with pytest.raises(SparkExpectationsMiscException,
+        match="""The spark expectations context is not set completely, please assign 
+            '_dq_detailed_stats_table_name' before 
+            accessing it"""):
+        context.get_dq_detailed_stats_table_name
+
+def test_get_dq_expectations(): 
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    dq_expectations = {"column1": "expectation1", "column2": "expectation2"}
+    context.set_dq_expectations(dq_expectations)
+    assert context.get_dq_expectations == dq_expectations
+
+def test_get_dq_expectations_exception():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._dq_expectations = None
+    with pytest.raises(SparkExpectationsMiscException,
+        match="""The spark expectations context is not set completely, please assign '_dq_expectations' before 
+            accessing it"""):
+        context.get_dq_expectations
+
+def test_set_querydq_secondary_queries():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    querydq_secondary_queries = {"query1": "query1", "query2": "query2"}
+    context.set_querydq_secondary_queries(querydq_secondary_queries)
+    assert context.get_querydq_secondary_queries == querydq_secondary_queries
+
+def test_get_querydq_secondary_queries():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    querydq_secondary_queries = {"query1": "query1", "query2": "query2"}
+    context.set_querydq_secondary_queries(querydq_secondary_queries)
+    assert context.get_querydq_secondary_queries == querydq_secondary_queries
+
+def test_get_source_query_dq_output():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    source_query_dq_output = [{"column1": "value1", "column2": "value2"}]
+    context._source_query_dq_output = source_query_dq_output
+    assert context.get_source_query_dq_output == source_query_dq_output
+
+
+def test_set_target_query_dq_output():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    target_query_dq_output = [{"column1": "value1", "column2": "value2"}]
+    context.set_target_query_dq_output(target_query_dq_output)
+    assert context._target_query_dq_output == target_query_dq_output
+
+def test_get_target_query_dq_output():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    target_query_dq_output = [{"column1": "value1", "column2": "value2"}]
+    context._target_query_dq_output = target_query_dq_output
+    assert context.get_target_query_dq_output == target_query_dq_output
+
+def test_get_source_query_dq_output():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    source_query_dq_output = [{"column1": "value1", "column2": "value2"}]
+    context._source_query_dq_output = source_query_dq_output
+    assert context.get_source_query_dq_output == source_query_dq_output
+
+def test_set_source_query_dq_output():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    source_query_dq_output = [{"column1": "value1", "column2": "value2"}]
+    context.set_source_query_dq_output(source_query_dq_output)
+    assert context._source_query_dq_output == source_query_dq_output
+
+
+def test_set_enable_error_table():
+    # default case is True for enabling error table
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    assert context.get_se_enable_error_table is True
+
+    # testing for False do not write error records in error table
+    context.set_se_enable_error_table(False)
+    assert context.get_se_enable_error_table is False
+
+
+def test_set_dq_rules_params():
+    # default case is empty dictionary for dq rules params and testing negative scenario
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    assert context.get_dq_rules_params == {}
+
+    # testing when passing parameterizied values to dq rules
+    context._dq_rules_params = {'env': 'local'}
+    assert context.get_dq_rules_params == {'env': 'local'}
+
+def test_get_dq_expectations():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_dq_expectations({"rule1": "expectation1", "rule2": "expectation2"})
+
+    # Test when _dq_expectations is set
+    assert context.get_dq_expectations == {"rule1": "expectation1", "rule2": "expectation2"}
+
+    # Test when _dq_expectations is not set
+    context._dq_expectations = None
+    with pytest.raises(SparkExpectationsMiscException):
+        context.get_dq_expectations()
+        
+
+def test_set_dq_expectations():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    dq_expectations = {
+        "rule1": "expectation1",
+        "rule2": "expectation2",
+        "rule3": "expectation3"
+    }
+    context.set_dq_expectations(dq_expectations)
+    assert context._dq_expectations == dq_expectations
