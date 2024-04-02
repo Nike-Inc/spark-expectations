@@ -4,7 +4,7 @@ from datetime import timezone
 from datetime import datetime
 from dataclasses import dataclass
 from uuid import uuid1
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Tuple
 from pyspark.sql import DataFrame, SparkSession
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
@@ -25,6 +25,7 @@ class SparkExpectationsContext:
         self._run_id: str = f"{self.product_id}_{uuid1()}"
         self._run_date: str = self.set_run_date()
         self._dq_stats_table_name: Optional[str] = None
+        self._dq_detailed_stats_table_name: Optional[str] = None
         self._final_table_name: Optional[str] = None
         self._error_table_name: Optional[str] = None
         self._row_dq_rule_type_name: str = "row_dq"
@@ -74,6 +75,12 @@ class SparkExpectationsContext:
         self._final_agg_dq_result: Optional[List[Dict[str, str]]] = None
         self._source_query_dq_result: Optional[List[Dict[str, str]]] = None
         self._final_query_dq_result: Optional[List[Dict[str, str]]] = None
+
+        self._source_agg_dq_detailed_stats: Optional[List[Tuple]] = None
+        self._source_query_dq_detailed_stats: Optional[List[Tuple]] = None
+
+        self._target_agg_dq_detailed_stats: Optional[List[Tuple]] = None
+        self._target_query_dq_detailed_stats: Optional[List[Tuple]] = None
 
         self._notification_on_start: bool = False
         self._notification_on_completion: bool = False
@@ -128,6 +135,19 @@ class SparkExpectationsContext:
 
         self._target_and_error_table_writer_config: dict = {}
         self._stats_table_writer_config: dict = {}
+
+        # The below config is user config and will be enabled if detailed result is required for agg and query dq
+        self._enable_agg_dq_detailed_result: bool = False
+        self._enable_query_dq_detailed_result: bool = False
+
+        self._rules_execution_settings_config: Dict[str, str]
+        self._querydq_secondary_queries: dict
+
+        self._source_query_dq_output: Optional[List[dict]] = None
+
+        self._target_query_dq_output: Optional[List[dict]] = None
+
+        self._query_dq_output_custom_table_name: str
 
     @property
     def get_run_id(self) -> str:
@@ -1170,6 +1190,21 @@ class SparkExpectationsContext:
         """
         self._row_dq_start_time = datetime.now()
 
+    @property
+    def get_row_dq_start_time(self) -> datetime:
+        """
+        This function sets start time row dq computation
+        Returns:
+            None
+        """
+        if self._row_dq_start_time:
+            return self._row_dq_start_time
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, 
+            please assign '_row_dq_start_time'  before 
+            accessing it"""
+        )
+
     def set_row_dq_end_time(self) -> None:
         """
         This function sets end time row dq computation
@@ -1177,6 +1212,20 @@ class SparkExpectationsContext:
             None
         """
         self._row_dq_end_time = datetime.now()
+
+    @property
+    def get_row_dq_end_time(self) -> datetime:
+        """
+        This function sets end time row dq computation
+        Returns:
+            None
+        """
+        if self._row_dq_end_time:
+            return self._row_dq_end_time
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign '_row_dq_end_time'  before 
+            accessing it"""
+        )
 
     def set_dq_start_time(self) -> None:
         """
@@ -1566,6 +1615,262 @@ class SparkExpectationsContext:
             dict: Returns stats_table_writer_config which in dict
         """
         return self._stats_table_writer_config
+
+    def set_agg_dq_detailed_stats_status(
+        self, agg_dq_detailed_result_status: bool
+    ) -> None:
+        """
+        Args:
+            _enable_agg_dq_detailed_result:
+        Returns:
+        """
+        self._enable_agg_dq_detailed_result = bool(agg_dq_detailed_result_status)
+
+    @property
+    def get_agg_dq_detailed_stats_status(self) -> bool:
+        """
+        This function returns whether to enable detailed result for Agg and Query dq is enabled or not
+        Returns: Returns _enable_agg_dq_detailed_result(bool)
+        """
+
+        return self._enable_agg_dq_detailed_result
+
+    def set_query_dq_detailed_stats_status(
+        self, query_dq_detailed_result_status: bool
+    ) -> None:
+        """
+        Args:
+            _enable_query_dq_detailed_result:
+        Returns:
+        """
+        self._enable_query_dq_detailed_result = bool(query_dq_detailed_result_status)
+
+    @property
+    def get_query_dq_detailed_stats_status(self) -> bool:
+        """
+        This function returns whether to enable detailed result for Agg and Query dq is enabled or not
+        Returns: Returns _enable_query_dq_detailed_result(bool)
+        """
+
+        return self._enable_query_dq_detailed_result
+
+    def set_source_agg_dq_detailed_stats(
+        self, source_agg_dq_detailed_stats: Optional[List[Tuple]] = None
+    ) -> None:
+        """
+        Args:
+            _source_agg_dq_detailed_stats:
+        Returns:
+        """
+        self._source_agg_dq_detailed_stats = source_agg_dq_detailed_stats
+
+    @property
+    def get_source_agg_dq_detailed_stats(self) -> Optional[List[Tuple]]:
+        """
+        This function returns the detailed result for Agg and Query dq
+        Returns: Returns _source_agg_dq_detailed_stats
+        """
+
+        return self._source_agg_dq_detailed_stats
+
+    def set_source_query_dq_detailed_stats(
+        self, source_query_dq_detailed_stats: Optional[List[Tuple]] = None
+    ) -> None:
+        """
+        Args:
+            _source_query_dq_detailed_stats:
+        Returns:
+        """
+        self._source_query_dq_detailed_stats = source_query_dq_detailed_stats
+
+    @property
+    def get_source_query_dq_detailed_stats(self) -> Optional[List[Tuple]]:
+        """
+        This function returns the detailed result for Agg and Query dq
+        Returns: Returns _source_query_dq_detailed_stats
+        """
+
+        return self._source_query_dq_detailed_stats
+
+    def set_target_agg_dq_detailed_stats(
+        self, target_agg_dq_detailed_stats: Optional[List[Tuple]] = None
+    ) -> None:
+        """
+        Args:
+            _target_agg_dq_detailed_stats:
+        Returns:
+        """
+        self._target_agg_dq_detailed_stats = target_agg_dq_detailed_stats
+
+    @property
+    def get_target_agg_dq_detailed_stats(self) -> Optional[List[Tuple]]:
+        """
+        This function returns the detailed result for Agg and Query dq
+        Returns: Returns _target_agg_dq_detailed_stats
+        """
+
+        return self._target_agg_dq_detailed_stats
+
+    def set_target_query_dq_detailed_stats(
+        self, target_query_dq_detailed_stats: Optional[List[Tuple]] = None
+    ) -> None:
+        """
+        Args:
+            _target_query_dq_detailed_stats:
+        Returns:
+        """
+        self._target_query_dq_detailed_stats = target_query_dq_detailed_stats
+
+    @property
+    def get_target_query_dq_detailed_stats(self) -> Optional[List[Tuple]]:
+        """
+        This function returns the detailed result for Agg and Query dq
+        Returns: Returns _target_query_dq_detailed_stats
+        """
+
+        return self._target_query_dq_detailed_stats
+
+    def set_dq_detailed_stats_table_name(
+        self, dq_detailed_stats_table_name: str
+    ) -> None:
+        self._dq_detailed_stats_table_name = dq_detailed_stats_table_name
+
+    @property
+    def get_dq_detailed_stats_table_name(self) -> str:
+        """
+        Get dq_stats_table_name to which the final stats of the dq job will be written into
+
+        Returns:
+            str: returns the dq_stats_table_name
+        """
+        if (
+            self.get_agg_dq_detailed_stats_status
+            or self.get_query_dq_detailed_stats_status
+        ) and self._dq_detailed_stats_table_name:
+            return self._dq_detailed_stats_table_name
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign 
+            '_dq_detailed_stats_table_name' before 
+            accessing it"""
+        )
+
+    def set_query_dq_output_custom_table_name(
+        self, query_dq_output_custom_table_name: str
+    ) -> None:
+        self._query_dq_output_custom_table_name = query_dq_output_custom_table_name
+
+    @property
+    def get_query_dq_output_custom_table_name(self) -> str:
+        """
+        Get query_dq_detailed_stats_status to which the final output of the query of the querydq  will be written into
+
+        Returns:
+            str: returns the query_dq_output_custom_table_name
+        """
+        if (
+            self.get_query_dq_detailed_stats_status
+            and self._dq_detailed_stats_table_name
+        ):
+            return self._query_dq_output_custom_table_name
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign 
+            '_dq_detailed_stats_table_name,query_dq_detailed_stats_status' before 
+            accessing it"""
+        )
+
+    def set_detailed_stats_table_writer_config(self, config: dict) -> None:
+        """
+        This function sets stats table writer config
+        Args:
+            config: dict
+        Returns: None
+        """
+        self._stats_table_writer_config = config
+
+    @property
+    def get_detailed_stats_table_writer_config(self) -> dict:
+        """
+        This function returns stats table writer config
+        Returns:
+            dict: Returns detailed_stats_table_writer_config which in dict
+        """
+        return self._stats_table_writer_config
+
+    def set_rules_execution_settings_config(self, config: dict) -> None:
+        """
+        This function sets stats table writer config
+        Args:
+            config: dict
+        Returns: None
+        """
+        self._rules_execution_settings_config = config
+
+    @property
+    def get_rules_execution_settings_config(self) -> dict:
+        """
+        This function returns stats table writer config
+        Returns:
+            dict: Returns detailed_stats_table_writer_config which in dict
+        """
+        return self._rules_execution_settings_config
+
+    def set_querydq_secondary_queries(self, querydq_secondary_queries: dict) -> None:
+        """
+        This function sets row dq secondary queries
+        Args:
+            querydq_secondary_queries: dict
+        Returns: None
+        """
+        self._querydq_secondary_queries = querydq_secondary_queries
+
+    @property
+    def get_querydq_secondary_queries(self) -> dict:
+        """
+        This function gets row dq secondary queries
+        Returns:
+            dict: Returns querydq_secondary_queries
+        """
+        return self._querydq_secondary_queries
+
+    def set_source_query_dq_output(
+        self, source_query_dq_output: Optional[List[dict]] = None
+    ) -> None:
+        """
+        This function sets row dq secondary queries
+        Args:
+            source_query_dq_output: List[dict]
+        Returns: None
+        """
+        self._source_query_dq_output = source_query_dq_output
+
+    @property
+    def get_source_query_dq_output(self) -> Optional[List[dict]]:
+        """
+        This function gets row dq secondary queries
+        Returns:
+            dict: Returns source_query_dq_output
+        """
+        return self._source_query_dq_output
+
+    def set_target_query_dq_output(
+        self, target_query_dq_output: Optional[List[dict]] = None
+    ) -> None:
+        """
+        This function sets row dq secondary queries
+        Args:
+            target_query_dq_output: List[dict]
+        Returns: None
+        """
+        self._target_query_dq_output = target_query_dq_output
+
+    @property
+    def get_target_query_dq_output(self) -> Optional[List[dict]]:
+        """
+        This function gets row dq secondary queries
+        Returns:
+            dict: Returns target_query_dq_output
+        """
+        return self._target_query_dq_output
 
     def set_se_enable_error_table(self, _enable_error_table: bool) -> None:
         """
