@@ -248,7 +248,7 @@ class SparkExpectationsWriter:
         """
         return self.spark.createDataFrame(data, schema=schema)
 
-    def _prep_secondary_query_output(self) -> List[Tuple]:
+    def _prep_secondary_query_output(self) -> DataFrame:
         """
         Prepares the secondary query output by performing various transformations and joins.
 
@@ -341,7 +341,7 @@ class SparkExpectationsWriter:
         _source_querydq_detailed_stats_result: Optional[List[Tuple]],
         _target_aggdq_detailed_stats_result: Optional[List[Tuple]],
         _target_querydq_detailed_stats_result: Optional[List[Tuple]],
-    ) -> Optional[List[Tuple]]:
+    ) -> DataFrame:
         """
         Prepares detailed statistics for the data quality checks.
 
@@ -524,7 +524,7 @@ class SparkExpectationsWriter:
 
             _log.info(
                 "Writing metrics to the querydq custom output table: %s, ended",
-                {self._context.get_query_dq_output_custom_table_name},
+                self._context.get_query_dq_output_custom_table_name,
             )
 
             _df_custom_detailed_stats_source = self._prep_secondary_query_output()
@@ -737,7 +737,7 @@ class SparkExpectationsWriter:
 
             _log.info(
                 "Writing metrics to the stats table: %s, ended",
-                {self._context.get_dq_stats_table_name},
+                self._context.get_dq_stats_table_name,
             )
 
             # TODO check if streaming_stats is set to off, if it's enabled only then this should run
