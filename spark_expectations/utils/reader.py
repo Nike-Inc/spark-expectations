@@ -3,7 +3,7 @@ from typing import Optional, Union, Dict
 from dataclasses import dataclass
 from functools import reduce
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import expr
+from pyspark.sql.functions import expr, when, max
 from spark_expectations import _log
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.config.user_config import Constants as user_config
@@ -351,9 +351,9 @@ class SparkExpectationsReader:
                         )
 
                     _expectations["target_table_name"] = target_table
-                    _rules_execution_settings = self._get_rules_execution_settings(
-                        _rules_df
-                    )
+                _rules_execution_settings = self._get_rules_execution_settings(
+                    _rules_df
+                )
 
             return _dq_queries_dict, _expectations, _rules_execution_settings
         except Exception as e:
@@ -362,21 +362,61 @@ class SparkExpectationsReader:
             )
 
     def _get_rules_execution_settings(self, rules_df: DataFrame) -> dict:
-        rules_df.createOrReplaceTempView("rules_view")
-        df = self.spark.sql(
-            """SELECT
-                MAX(CASE WHEN rule_type = 'row_dq' THEN True ELSE False END) AS row_dq,
-                MAX(CASE WHEN rule_type = 'agg_dq' AND enable_for_source_dq_validation = true  
-                   THEN True ELSE False END) AS source_agg_dq,
-                MAX(CASE WHEN rule_type = 'query_dq' AND enable_for_source_dq_validation = true 
-                    THEN True ELSE False END) AS source_query_dq,
-                MAX(CASE WHEN rule_type = 'agg_dq' AND enable_for_target_dq_validation = true 
-                    THEN True ELSE False END) AS target_agg_dq,
-                MAX(CASE WHEN rule_type = 'query_dq' AND enable_for_target_dq_validation = true 
-                    THEN True ELSE False END) AS target_query_dq
-            FROM rules_view"""
+        # rules_df.createOrReplaceTempView("rules_view")
+
+        rules_exe_df = rules_df.select(
+            "rule_type",
+            "enable_for_source_dq_validation",
+            "enable_for_target_dq_validation",
         )
+        df = rules_exe_df.select(
+            max(
+                when(rules_exe_df["rule_type"] == "row_dq", True).otherwise(False)
+            ).alias("row_dq"),
+            max(
+                when(
+                    (rules_exe_df["rule_type"] == "agg_dq")
+                    & (rules_exe_df["enable_for_source_dq_validation"]),
+                    True,
+                ).otherwise(False)
+            ).alias("source_agg_dq"),
+            max(
+                when(
+                    (rules_exe_df["rule_type"] == "query_dq")
+                    & (rules_exe_df["enable_for_source_dq_validation"]),
+                    True,
+                ).otherwise(False)
+            ).alias("source_query_dq"),
+            max(
+                when(
+                    (rules_exe_df["rule_type"] == "agg_dq")
+                    & (rules_exe_df["enable_for_target_dq_validation"]),
+                    True,
+                ).otherwise(False)
+            ).alias("target_agg_dq"),
+            max(
+                when(
+                    (rules_exe_df["rule_type"] == "query_dq")
+                    & (rules_exe_df["enable_for_target_dq_validation"]),
+                    True,
+                ).otherwise(False)
+            ).alias("target_query_dq"),
+        )
+        # df = self.spark.sql(
+        #     """SELECT
+        #         MAX(CASE WHEN rule_type = 'row_dq' THEN True ELSE False END) AS row_dq,
+        #         MAX(CASE WHEN rule_type = 'agg_dq' AND enable_for_source_dq_validation = true
+        #            THEN True ELSE False END) AS source_agg_dq,
+        #         MAX(CASE WHEN rule_type = 'query_dq' AND enable_for_source_dq_validation = true
+        #             THEN True ELSE False END) AS source_query_dq,
+        #         MAX(CASE WHEN rule_type = 'agg_dq' AND enable_for_target_dq_validation = true
+        #             THEN True ELSE False END) AS target_agg_dq,
+        #         MAX(CASE WHEN rule_type = 'query_dq' AND enable_for_target_dq_validation = true
+        #             THEN True ELSE False END) AS target_query_dq
+        #     FROM rules_view"""
+        # )
         # convert the df to python dictionary as it has only one row
         rule_execution_settings = df.collect()[0].asDict()
-        self.spark.catalog.dropTempView("rules_view")
+        # self.spark.catalog.dropTempView("rules_view")
+        print(f"rule_execution_settings in reader.py : {rule_execution_settings}")
         return rule_execution_settings
