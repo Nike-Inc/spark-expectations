@@ -362,7 +362,6 @@ class SparkExpectationsReader:
             )
 
     def _get_rules_execution_settings(self, rules_df: DataFrame) -> dict:
-        # rules_df.createOrReplaceTempView("rules_view")
 
         rules_exe_df = rules_df.select(
             "rule_type",
@@ -402,21 +401,7 @@ class SparkExpectationsReader:
                 ).otherwise(False)
             ).alias("target_query_dq"),
         )
-        # df = self.spark.sql(
-        #     """SELECT
-        #         MAX(CASE WHEN rule_type = 'row_dq' THEN True ELSE False END) AS row_dq,
-        #         MAX(CASE WHEN rule_type = 'agg_dq' AND enable_for_source_dq_validation = true
-        #            THEN True ELSE False END) AS source_agg_dq,
-        #         MAX(CASE WHEN rule_type = 'query_dq' AND enable_for_source_dq_validation = true
-        #             THEN True ELSE False END) AS source_query_dq,
-        #         MAX(CASE WHEN rule_type = 'agg_dq' AND enable_for_target_dq_validation = true
-        #             THEN True ELSE False END) AS target_agg_dq,
-        #         MAX(CASE WHEN rule_type = 'query_dq' AND enable_for_target_dq_validation = true
-        #             THEN True ELSE False END) AS target_query_dq
-        #     FROM rules_view"""
-        # )
-        # convert the df to python dictionary as it has only one row
+
         rule_execution_settings = df.collect()[0].asDict()
-        # self.spark.catalog.dropTempView("rules_view")
-        print(f"rule_execution_settings in reader.py : {rule_execution_settings}")
+
         return rule_execution_settings
