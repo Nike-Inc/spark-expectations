@@ -362,7 +362,6 @@ class SparkExpectationsReader:
             )
 
     def _get_rules_execution_settings(self, rules_df: DataFrame) -> dict:
-
         rules_exe_df = rules_df.select(
             "rule_type",
             "enable_for_source_dq_validation",
