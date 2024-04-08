@@ -148,28 +148,54 @@ This table need not be created. It gets auto created with "_detailed " to the dq
 Below is the schema
 
 
+```sql
+create table if not exists `catalog`.`schema`.`dq_stats_detailed` (
+run_id string,  # (1)!    
+product_id string,  # (1)!  
+table_name string,  # (1)!  
+rule_type string,  # (1)!  
+rule string,  # (1)!
+source_expectations string,  # (1)!
+tag string,  # (1)!
+description string,  # (1)!
+source_dq_status string,  # (1)!
+source_dq_actual_outcome string,  # (1)!
+source_dq_expected_outcome string,  # (1)!
+source_dq_actual_row_count string,  # (1)!
+source_dq_error_row_count string,  # (1)!
+source_dq_row_count string,  # (1)!
+target_expectations string,  # (1)!
+target_dq_status string,  # (1)!
+target_dq_actual_outcome string,  # (1)!
+target_dq_expected_outcome string,  # (1)!
+target_dq_actual_row_count string,  # (1)!
+target_dq_error_row_count string,  # (1)!
+target_dq_row_count string,  # (1)!
+dq_date date,  # (1)!
+dq_time string,  # (1)!
+);
 ```
-run_id string,    
-product_id string ,  
-table_name string ,  
-rule_type string ,  
-rule string ,
-source_expectations string,
-tag string ,
-description string,
-source_dq_status string ,
-source_dq_actual_outcome string ,
-source_dq_expected_outcome string ,
-source_dq_actual_row_count string ,
-source_dq_error_row_count string ,
-source_dq_row_count string ,
-target_expectations string ,
-target_dq_status string ,
-target_dq_actual_outcome string ,
-target_dq_expected_outcome string ,
-target_dq_actual_row_count string ,
-target_dq_error_row_count string ,
-target_dq_row_count string ,
-dq_date date ,
-dq_time string
-```
+
+1. `run_id` Run Id for a specific run 
+2. `product_id` Unique product identifier 
+3. `table_name` The target table where the final data gets inserted
+4. `rule_type` Either row/query/agg dq
+5. `rule`  Rule name
+6. `source_expectations` Actual Rule to be executed on the source dq
+7. `tag` completeness,uniqueness,validity,accuracy,consistency,
+8. `description` Description of the Rule
+9. `source_dq_status` Status of the rule execution in the Source dq
+10. `source_dq_actual_outcome` Actual outcome of the Source dq check
+11. `source_dq_expected_outcome` Expected outcome of the Source dq check
+12. `source_dq_actual_row_count` Number of rows of the source dq
+13. `source_dq_error_row_count` Number of rows failed in the source dq
+14. `source_dq_row_count` Number of rows of the source dq
+15. `target_expectations` Actual Rule to be executed on the target dq
+16. `target_dq_status` Status of the rule execution in the Target dq
+17. `target_dq_actual_outcome` Actual outcome of the Target dq check
+18. `target_dq_expected_outcome` Expected outcome of the Target dq check
+19. `target_dq_actual_row_count` Number of rows of the target dq
+20. `target_dq_error_row_count` Number of rows failed in the target dq
+21. `target_dq_row_count` Number of rows of the target dq
+22. `dq_date` Dq executed date
+23. `dq_time` Dq executed timestamp
