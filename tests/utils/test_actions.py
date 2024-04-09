@@ -103,6 +103,22 @@ def fixture_agg_dq_rule():
             }
 
 
+@pytest.fixture(name="_fixture_agg_dq_rule_type_range")
+def _fixture_agg_dq_rule_type_range():
+    # Define the expectations for the data quality rules
+    return  {
+                "rule_type": "agg_dq",
+                "rule": "col1_sum_gt_6_and_lt_10",
+                "expectation": "sum(col1)>6 and sum(col1)<10",
+                "action_if_failed": "ignore",
+                "table_name": "test_table",
+                "tag": "validity",
+                "enable_for_source_dq_validation": True,
+                "description": "sum of col1 is greater than 6 and sum of col1 is less than 10",
+                "product_id": "product_1"
+            }
+            
+
 @pytest.fixture(name="_fixture_query_dq_rule")
 def fixture_query_dq_rule():
     # Define the expectations for the data quality rules
@@ -183,6 +199,18 @@ def fixture_expectations():
                 "enable_for_source_dq_validation": True,
                 "enable_for_target_dq_validation": True,
                 "description": "col2 unique value grater than 3"
+            },
+            {
+                "product_id": "product_1",
+                "rule_type": "agg_dq",
+                "rule": "col1_sum_gt_6_and_lt_10",
+                "expectation": "sum(col1)>6 and sum(col1)<10",
+                "action_if_failed": "fail",
+                "table_name": "test_table",
+                "tag": "accuracy",
+                "enable_for_source_dq_validation": True,
+                "enable_for_target_dq_validation": True,
+                "description": "sum of col1 value grater than 6 and less than 10"
             }
         ],
         "query_dq_rules": [
@@ -266,8 +294,21 @@ def fixture_agg_dq_detailed_expected_result():
                 "actual_value" : None,
                 "expected_value" : None
                 
+            },
+         "result_without_context1": 
+            {
+                "product_id": "product_1",
+                "table_name": "test_table",
+                "rule_type": "agg_dq",
+                "rule":"col1_sum_gt_6_and_lt_10",
+                "expectation": "sum(col1)>6 and sum(col1)<10",
+                "tag": "validity",
+                "status": "fail",
+                "description": "sum of col1 is greater than 6 and sum of col1 is less than 10",
+                "actual_value" : 6,
+                "expected_value" : '6>6 and 6<10'
+                
             }
-
         }
 
 
@@ -327,6 +368,13 @@ def fixture_agg_dq_expected_result():
                 "action_if_failed": "fail",
                 "tag": "accuracy",
                 "description": "col2 unique value grater than 3"
+            },
+            {
+                "rule_type": "agg_dq",
+                "rule": "col1_sum_gt_6_and_lt_10",
+                "action_if_failed": "fail",
+                "tag": "accuracy",
+                "description": "sum of col1 value grater than 6 and less than 10"
             }
             ]
     }
@@ -617,7 +665,6 @@ def test_create_agg_dq_results_exception(input_df,
         SparkExpectationsActions().create_agg_dq_results(_fixture_mock_context, input_df, "<test>", )
 
 
-
 def test_agg_query_dq_detailed_result_exception(_fixture_df,
                           _fixture_query_dq_rule):
     _mock_object_context = Mock(spec=SparkExpectationsContext)
@@ -628,7 +675,6 @@ def test_agg_query_dq_detailed_result_exception(_fixture_df,
         SparkExpectationsActions().agg_query_dq_detailed_result(_mock_object_context, "_fixture_query_dq_rule","<df>",[] )
 
 
-
 def test_agg_query_dq_detailed_result(_fixture_df,
                           _fixture_agg_dq_rule,
                           _fixture_agg_dq_detailed_expected_result,
@@ -636,7 +682,6 @@ def test_agg_query_dq_detailed_result(_fixture_df,
     result_out,result_df = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context, _fixture_agg_dq_rule,_fixture_df,[]
                                                      )
     
-
     
     assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get("result").get("product_id")
     assert result_df[2] == _fixture_agg_dq_detailed_expected_result.get("result").get("table_name")
@@ -651,6 +696,26 @@ def test_agg_query_dq_detailed_result(_fixture_df,
     assert result_df[10] == _fixture_agg_dq_detailed_expected_result.get("result").get("expected_value")
 
 
+def test_agg_query_dq_detailed_result_with_range_rule_type(_fixture_df,
+                          _fixture_agg_dq_rule_type_range,
+                          _fixture_agg_dq_detailed_expected_result,
+                          _fixture_mock_context):
+    result_out,result_df = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context, _fixture_agg_dq_rule_type_range,_fixture_df,[]
+                                                     )
+    
+    assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("product_id")
+    assert result_df[2] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("table_name")
+    assert result_df[3] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("rule_type")
+    assert result_df[4] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("rule")
+    assert result_df[5] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("expectation")
+    assert result_df[6] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("tag")
+    assert result_df[7] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("description")
+    assert result_df[8] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("status")
+    
+    assert result_df[9] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("actual_value")
+    assert result_df[10] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("expected_value")
+
+
 def test_agg_query_dq_detailed_result_with_querdq(_fixture_df,
                           _fixture_query_dq_rule,
                           _fixture_agg_dq_detailed_expected_result,
@@ -660,8 +725,6 @@ def test_agg_query_dq_detailed_result_with_querdq(_fixture_df,
     _fixture_df.createOrReplaceTempView("query_test_table_target")
     result_out,result_df = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context, _fixture_query_dq_rule,_fixture_df,[]
                                                      )
-    print("result_df:",result_df)
-
     
     assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("product_id")
     assert result_df[2] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("table_name")
@@ -674,7 +737,6 @@ def test_agg_query_dq_detailed_result_with_querdq(_fixture_df,
     
     assert result_df[9] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("actual_value")
     assert result_df[10] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("expected_value")
-
 
 
 def test_agg_query_dq_detailed_result_without_detailed_context(_fixture_df,

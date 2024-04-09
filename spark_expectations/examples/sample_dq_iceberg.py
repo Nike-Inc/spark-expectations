@@ -111,6 +111,7 @@ if __name__ == "__main__":
     spark.sql("select * from dq_spark_local.dq_stats_querydq_output").show(
         truncate=False
     )
+    spark.sql("select * from dq_spark_local.dq_stats_detailed").show(truncate=False)
     spark.sql("select * from dq_spark_local.dq_stats").printSchema()
     spark.sql("select * from dq_spark_local.customer_order").show(truncate=False)
     spark.sql("select count(*) from dq_spark_local.customer_order_error ").show(

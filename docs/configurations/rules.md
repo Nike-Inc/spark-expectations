@@ -47,6 +47,7 @@ Please find the different types of possible expectations
 | Expect the maximum value in a column to fall within a specified range| expect_column_max_to_be_between |accuracy |```max([col_name]) between [lower_bound] and [upper_bound]``` |
 | Expect the minimum value in a column fall within a specified range | expect_column_sum_to_be_between |accuracy  | ```min([col_name]) between [lower_bound] and [upper_bound]``` |
 | Expect row count of the dataset fall within certain range | expect_row_count_to_be_between | accuracy | ```count(*) between [lower_bound] and [upper_bound]``` |
+| Expect row count of the dataset fall within certain range | expect_row_count_to_be_in_range | accuracy | ```count(*) >[lower_bound] and < [upper_bound]``` |
 
 
 #### Possible Query Data Quality Expectations
