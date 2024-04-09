@@ -119,8 +119,8 @@ class SparkExpectations:
                 user_config.se_notifications_on_fail: True,
                 user_config.se_notifications_on_error_drop_exceeds_threshold_breach: False,
                 user_config.se_notifications_on_error_drop_threshold: 100,
-                user_config.enable_agg_dq_detailed_result: False,
-                user_config.enable_query_dq_detailed_result: False,
+                user_config.se_enable_agg_dq_detailed_result: False,
+                user_config.se_enable_query_dq_detailed_result: False,
                 user_config.querydq_output_custom_table_name: f"{self.stats_table}_querydq_output",
             }
 
@@ -165,18 +165,18 @@ class SparkExpectations:
                 )
 
             _agg_dq_detailed_stats: bool = (
-                bool(_notification_dict[user_config.enable_agg_dq_detailed_result])
+                bool(_notification_dict[user_config.se_enable_agg_dq_detailed_result])
                 if isinstance(
-                    _notification_dict[user_config.enable_agg_dq_detailed_result],
+                    _notification_dict[user_config.se_enable_agg_dq_detailed_result],
                     bool,
                 )
                 else False
             )
 
             _query_dq_detailed_stats: bool = (
-                bool(_notification_dict[user_config.enable_query_dq_detailed_result])
+                bool(_notification_dict[user_config.se_enable_query_dq_detailed_result])
                 if isinstance(
-                    _notification_dict[user_config.enable_query_dq_detailed_result],
+                    _notification_dict[user_config.se_enable_query_dq_detailed_result],
                     bool,
                 )
                 else False
