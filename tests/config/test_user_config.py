@@ -52,5 +52,5 @@ def test_constants():
     assert user_config.dbx_secret_token == "se.streaming.dbx.secret.token"
     assert user_config.dbx_topic_name == "se.streaming.dbx.topic.name"
 
-    assert user_config.enable_agg_dq_detailed_result == "spark.expectations.agg.dq.detailed.stats"
-    assert user_config.enable_query_dq_detailed_result == "spark.expectations.query.dq.detailed.stats"
+    assert user_config.se_enable_agg_dq_detailed_result == "spark.expectations.agg.dq.detailed.stats"
+    assert user_config.se_enable_query_dq_detailed_result == "spark.expectations.query.dq.detailed.stats"
