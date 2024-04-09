@@ -20,24 +20,25 @@ your rules table for your project.
 
 ```sql
 create table if not exists `catalog`.`schema`.`{product}_rules` (
-    product_id STRING,  # (1)!
-    table_name STRING,  # (2)!
-    rule_type STRING,  # (3)!
-    rule STRING,  # (4)!
-    column_name STRING,  # (5)!
-    expectation STRING,  # (6)!
-    action_if_failed STRING,  # (7)!
-    tag STRING,  # (8)!
-    description STRING,  # (9)!
-    enable_for_source_dq_validation BOOLEAN,  # (10)! 
-    enable_for_target_dq_validation BOOLEAN,  # (11)!
-    is_active BOOLEAN,  # (12)!
-    enable_error_drop_alert BOOLEAN,  # (13)!
-    error_drop_threshold INT,  # (14)!
-    query_dq_delimiter STRING,  # (15)!
-    enable_querydq_custom_output BOOLEAN,  # (16)!
+    product_id STRING,  -- (1)!
+    table_name STRING,  -- (2)!
+    rule_type STRING,  -- (3)!
+    rule STRING,  -- (4)!
+    column_name STRING,  -- (5)!
+    expectation STRING,  -- (6)!
+    action_if_failed STRING,  -- (7)!
+    tag STRING,  -- (8)!
+    description STRING,  -- (9)!
+    enable_for_source_dq_validation BOOLEAN,  -- (10)! 
+    enable_for_target_dq_validation BOOLEAN,  -- (11)!
+    is_active BOOLEAN,  -- (12)!
+    enable_error_drop_alert BOOLEAN,  -- (13)!
+    error_drop_threshold INT,  -- (14)!
+    query_dq_delimiter STRING,  -- (15)!
+    enable_querydq_custom_output BOOLEAN,  -- (16)!
 );
 ```
+
 1. `product_id` A unique name at the level of dq rules execution
 2. `table_name` The table for which the rule is being defined for
 3. `rule_type` 3 different type of rules. They are 'row_dq', 'agg_dq' and 'query_dq'
@@ -98,28 +99,29 @@ if you want to create it manually, but it is not recommended.
 
 ```sql
 create table if not exists `catalog`.`schema`.`dq_stats` (
-    product_id STRING,  # (1)!
-    table_name STRING,  # (2)!
-    input_count LONG,  # (3)!
-    error_count LONG,  # (4)!
-    output_count LONG,  # (5)!
-    output_percentage FLOAT,  # (6)!
-    success_percentage FLOAT,  # (7)!
-    error_percentage FLOAT,  # (8)!
-    source_agg_dq_results array<map<string, string>>,  # (9)!
-    final_agg_dq_results array<map<string, string>>,  # (10)!
-    source_query_dq_results array<map<string, string>>,  # (11)!
-    final_query_dq_results array<map<string, string>>,  # (12)!
-    row_dq_res_summary array<map<string, string>>,  # (13)!
-    row_dq_error_threshold array<map<string, string>>,  # (14)!
-    dq_status map<string, string>,  # (15)!
-    dq_run_time map<string, float>,  # (16)!
-    dq_rules map<string, map<string,int>>,  # (17)!
-    meta_dq_run_id STRING,  # (18)!
-    meta_dq_run_date DATE,  # (19)!
-    meta_dq_run_datetime TIMESTAMP,  # (20)!
+    product_id STRING,  -- (1)!
+    table_name STRING,  -- (2)!
+    input_count LONG,  -- (3)!
+    error_count LONG,  -- (4)!
+    output_count LONG,  -- (5)!
+    output_percentage FLOAT,  -- (6)!
+    success_percentage FLOAT,  -- (7)!
+    error_percentage FLOAT,  -- (8)!
+    source_agg_dq_results array<map<string, string>>,  -- (9)!
+    final_agg_dq_results array<map<string, string>>,  -- (10)!
+    source_query_dq_results array<map<string, string>>,  -- (11)!
+    final_query_dq_results array<map<string, string>>,  -- (12)!
+    row_dq_res_summary array<map<string, string>>,  -- (13)!
+    row_dq_error_threshold array<map<string, string>>,  -- (14)!
+    dq_status map<string, string>,  -- (15)!
+    dq_run_time map<string, float>,  -- (16)!
+    dq_rules map<string, map<string,int>>,  -- (17)!
+    meta_dq_run_id STRING,  -- (18)!
+    meta_dq_run_date DATE,  -- (19)!
+    meta_dq_run_datetime TIMESTAMP,  -- (20)!
 );
 ```
+
 1. `product_id` A unique name at the level of dq rules execution
 2. `table_name` The table for which the rule is being defined for
 3. `input_count` total input row count of given dataframe
@@ -144,35 +146,35 @@ create table if not exists `catalog`.`schema`.`dq_stats` (
 ### DQ Detailed Stats Table
 
 This table provides detailed stats of all the expectations along with the status provided in the stats table in a relational format.
-This table need not be created. It gets auto created with "_detailed " to the dq stats table name.
+This table need not be created. It gets auto created with "_detailed " to the dq stats table name. This is optional and only get's created if the config is set to have the detailed stats table.
 Below is the schema
 
 
 ```sql
 create table if not exists `catalog`.`schema`.`dq_stats_detailed` (
-run_id string,  # (1)!    
-product_id string,  # (1)!  
-table_name string,  # (1)!  
-rule_type string,  # (1)!  
-rule string,  # (1)!
-source_expectations string,  # (1)!
-tag string,  # (1)!
-description string,  # (1)!
-source_dq_status string,  # (1)!
-source_dq_actual_outcome string,  # (1)!
-source_dq_expected_outcome string,  # (1)!
-source_dq_actual_row_count string,  # (1)!
-source_dq_error_row_count string,  # (1)!
-source_dq_row_count string,  # (1)!
-target_expectations string,  # (1)!
-target_dq_status string,  # (1)!
-target_dq_actual_outcome string,  # (1)!
-target_dq_expected_outcome string,  # (1)!
-target_dq_actual_row_count string,  # (1)!
-target_dq_error_row_count string,  # (1)!
-target_dq_row_count string,  # (1)!
-dq_date date,  # (1)!
-dq_time string,  # (1)!
+run_id string,  -- (1)!    
+product_id string,  -- (2)!  
+table_name string,  -- (3)!  
+rule_type string,  -- (4)!  
+rule string,  -- (5)!
+source_expectations string,  -- (6)!
+tag string,  -- (7)!
+description string,  -- (8)!
+source_dq_status string,  -- (9)!
+source_dq_actual_outcome string,  -- (10)!
+source_dq_expected_outcome string,  -- (11)!
+source_dq_actual_row_count string,  -- (12)!
+source_dq_error_row_count string,  -- (13)!
+source_dq_row_count string,  -- (14)!
+target_expectations string,  -- (15)!
+target_dq_status string,  -- (16)!
+target_dq_actual_outcome string,  -- (17)!
+target_dq_expected_outcome string,  -- (18)!
+target_dq_actual_row_count string,  -- (19)!
+target_dq_error_row_count string,  -- (20)!
+target_dq_row_count string,  -- (21)!
+dq_date date,  -- (22)!
+dq_time string,  -- (23)!
 );
 ```
 
