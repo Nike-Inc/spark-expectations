@@ -17,8 +17,8 @@ spark = set_up_delta()
 
 se: SparkExpectations = SparkExpectations(
     product_id="your_product",
-    rules_df=spark.table("dq_spark_local.dq_rules"),
-    stats_table="dq_spark_local.dq_stats",
+    rules_df=spark.table("dq_spark_dev.dq_rules"),
+    stats_table="dq_spark_dev.dq_stats",
     stats_table_writer=writer,
     target_and_error_table_writer=writer,
     debugger=False,
@@ -39,19 +39,19 @@ user_conf = {
     user_config.se_notifications_on_fail: True,
     user_config.se_notifications_on_error_drop_exceeds_threshold_breach: True,
     user_config.se_notifications_on_error_drop_threshold: 15,
-    user_config.enable_query_dq_detailed_result: True,
-    user_config.enable_agg_dq_detailed_result: True,
+    user_config.se_enable_query_dq_detailed_result: True,
+    user_config.se_enable_agg_dq_detailed_result: True,
     # user_config.querydq_output_custom_table_name: "dq_spark_local.dq_stats_detailed_outputt",
     user_config.se_enable_error_table: True,
     user_config.se_dq_rules_params: {
-        "env": "local",
+        "env": "dev",
         "table": "product",
     },
 }
 
 
 @se.with_expectations(
-    target_table="dq_spark_local.customer_order",
+    target_table="dq_spark_dev.customer_order",
     write_to_table=True,
     user_conf=user_conf,
     target_table_view="order",
@@ -99,15 +99,13 @@ def build_new() -> DataFrame:
 if __name__ == "__main__":
     build_new()
 
-    spark.sql("use dq_spark_local")
-    spark.sql("select * from dq_spark_local.dq_stats").show(truncate=False)
-    spark.sql("select * from dq_spark_local.dq_stats_detailed").show(truncate=False)
-    spark.sql("select * from dq_spark_local.dq_stats_querydq_output").show(
-        truncate=False
-    )
-    spark.sql("select * from dq_spark_local.dq_stats").printSchema()
-    spark.sql("select * from dq_spark_local.dq_stats_detailed").printSchema()
-    spark.sql("select * from dq_spark_local.customer_order").show(truncate=False)
+    spark.sql("use dq_spark_dev")
+    spark.sql("select * from dq_spark_dev.dq_stats").show(truncate=False)
+    spark.sql("select * from dq_spark_dev.dq_stats_detailed").show(truncate=False)
+    spark.sql("select * from dq_spark_dev.dq_stats_querydq_output").show(truncate=False)
+    spark.sql("select * from dq_spark_dev.dq_stats").printSchema()
+    spark.sql("select * from dq_spark_dev.dq_stats_detailed").printSchema()
+    spark.sql("select * from dq_spark_dev.customer_order").show(truncate=False)
     # spark.sql("select count(*) from dq_spark_local.customer_order_error ").show(
     #    truncate=False
     # )
