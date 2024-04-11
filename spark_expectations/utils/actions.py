@@ -158,6 +158,9 @@ class SparkExpectationsActions:
                     _agg_dq_expectation_expr = _agg_dq_expectation_match.group(2)
                     _agg_dq_expectation_cond_expr = expr(_agg_dq_expectation_aggstring)
 
+                    print("agg_dq_expectation_aggstring", _agg_dq_expectation_aggstring)
+                    print("agg_dq_expectation_expr", _agg_dq_expectation_expr)
+
                     _agg_dq_actual_count_value = int(
                         df.agg(_agg_dq_expectation_cond_expr).collect()[0][0]
                     )
