@@ -159,7 +159,7 @@ class SparkExpectationsReader:
             _dq_query_delimiter = _row["query_dq_delimiter"]
             column_map["enable_querydq_custom_output"] = True
         else:
-            _dq_query_delimiter = "$"
+            _dq_query_delimiter = "@"
             column_map["enable_querydq_custom_output"] = False
 
         if ("enable_querydq_custom_output" in _row.keys()) and (
