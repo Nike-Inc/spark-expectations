@@ -56,7 +56,7 @@ create table if not exists `catalog`.`schema`.`{product}_rules` (
 12. `is_active` true or false to indicate if the rule is active or not. 
 13. `enable_error_drop_alert` true or false. This determines if an alert notification should be sent out if row(s) is(are) dropped from the data set
 14. `error_drop_threshold` Threshold for the alert notification that gets triggered when row(s) is(are) dropped from the data set
-15. `query_dq_delimiter` segregate custom queries delimiter ex: $, @ etc
+15. `query_dq_delimiter` segregate custom queries delimiter ex: $, @ etc. By default it is @. Users can override it with any other delimiter based on the need. The same delimiter mentioned here has to be used in the custom query.
 16. `enable_querydq_custom_output` required custom query output in separate table
 
 rule_type, enable_for_source_dq_validation and enable_for_target_dq_validation columns define source_agg_dq, target_agg_dq,source_query_dq and target_query_dq. please see the below definitions:
