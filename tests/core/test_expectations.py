@@ -2137,6 +2137,110 @@ def fixture_spark_expectations(_fixture_rules_df):
                               "final_agg_dq_status": "Skipped", "run_status": "Passed",
                               "source_query_dq_status": "Passed", "final_query_dq_status": "Skipped"}  # status
                             ),
+                             (
+                                     # Test case 24
+                                     # In this test case, dq run set for source_agg_dq with action_if_failed fail
+                                     # with the sql syntax > lower_bound and < upper_bound
+                                     # collect stats in the test_stats_table
+                                     spark.createDataFrame(
+                                         [
+                                             # avg of col3 is greater than 18 and not more than 25
+                                             {"col1": 1, "col2": "a", "col3": 4},
+                                             {"col1": 2, "col2": "b", "col3": 5},
+                                             {"col1": 3, "col2": "c", 'col3': 6},
+                                         ]
+                                     ),
+                                     [
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "agg_dq",
+                                             "rule": "avg_col3_range",
+                                             "column_name": "col3",
+                                             "expectation": "avg(col3) > 18 and avg(col3) < 25",
+                                             "action_if_failed": "fail",
+                                             "tag": "strict",
+                                             "description": "avg col3 value must be greater than 18 and less than 25",
+                                             "enable_for_source_dq_validation": True,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
+                                         }
+                                     ],
+                                     True,  # write to table
+                                     True,  # write to temp table
+                                     SparkExpectationsMiscException,  # excepted result
+                                     3,  # input count
+                                     0,  # error count
+                                     0,  # output count
+                                     [{"description": "avg col3 value must be greater than 18 and less than 25",  # source_agg_result
+                                       "rule": "avg_col3_range",
+                                       "rule_type": "agg_dq", "action_if_failed": "fail", "tag": "strict"}],
+                                     None,  # final_agg_result
+                                     None,  # source_query_dq_res
+                                     None,  # final_query_dq_res
+                                     {"rules": {"num_dq_rules": 1, "num_row_dq_rules": 0},
+                                      "query_dq_rules": {"num_final_query_dq_rules": 0, "num_source_query_dq_rules": 0,
+                                                         "num_query_dq_rules": 0},
+                                      "agg_dq_rules": {"num_source_agg_dq_rules": 1, "num_agg_dq_rules": 1,
+                                                       "num_final_agg_dq_rules": 1}},  # dq_rules
+                                     {"row_dq_status": "Skipped", "source_agg_dq_status": "Failed",  # status
+                                      "final_agg_dq_status": "Skipped", "run_status": "Failed",
+                                      "source_query_dq_status": "Skipped", "final_query_dq_status": "Skipped"},
+                             ),
+                             (
+                                     # Test case 25
+                                     # In this test case, dq run set for source_agg_dq with action_if_failed fail
+                                     # with the sql syntax between lower_bound and upper_bound
+                                     # collect stats in the test_stats_table
+                                     spark.createDataFrame(
+                                         [
+                                             # avg of col3 is greater than 18 and not more than 25
+                                             {"col1": 1, "col2": "a", "col3": 4},
+                                             {"col1": 2, "col2": "b", "col3": 5},
+                                             {"col1": 3, "col2": "c", 'col3': 6},
+                                         ]
+                                     ),
+                                     [
+                                         {
+                                             "product_id": "product1",
+                                             "table_name": "dq_spark.test_final_table",
+                                             "rule_type": "agg_dq",
+                                             "rule": "avg_col3_range",
+                                             "column_name": "col3",
+                                             "expectation": "avg(col3) between 18 and 25",
+                                             "action_if_failed": "fail",
+                                             "tag": "strict",
+                                             "description": "avg col3 value must be greater than 18 and less than 25",
+                                             "enable_for_source_dq_validation": True,
+                                             "enable_for_target_dq_validation": False,
+                                             "is_active": True,
+                                             "enable_error_drop_alert": False,
+                                             "error_drop_threshold": "20",
+                                         }
+                                     ],
+                                     True,  # write to table
+                                     True,  # write to temp table
+                                     SparkExpectationsMiscException,  # excepted result
+                                     3,  # input count
+                                     0,  # error count
+                                     0,  # output count
+                                     [{"description": "avg col3 value must be greater than 18 and less than 25",  # source_agg_result
+                                       "rule": "avg_col3_range",
+                                       "rule_type": "agg_dq", "action_if_failed": "fail", "tag": "strict"}],
+                                     None,  # final_agg_result
+                                     None,  # source_query_dq_res
+                                     None,  # final_query_dq_res
+                                     {"rules": {"num_dq_rules": 1, "num_row_dq_rules": 0},
+                                      "query_dq_rules": {"num_final_query_dq_rules": 0, "num_source_query_dq_rules": 0,
+                                                         "num_query_dq_rules": 0},
+                                      "agg_dq_rules": {"num_source_agg_dq_rules": 1, "num_agg_dq_rules": 1,
+                                                       "num_final_agg_dq_rules": 1}},  # dq_rules
+                                     {"row_dq_status": "Skipped", "source_agg_dq_status": "Failed",  # status
+                                      "final_agg_dq_status": "Skipped", "run_status": "Failed",
+                                      "source_query_dq_status": "Skipped", "final_query_dq_status": "Skipped"},
+                             ),
                          ])
 def test_with_expectations(input_df,
                            expectations,
