@@ -147,67 +147,151 @@ class SparkExpectationsActions:
                 _dq_rule["rule_type"] == _context.get_agg_dq_rule_type_name
                 and _context.get_agg_dq_detailed_stats_status is True
             ):
-                _pattern = rf"{constant_config.se_agg_dq_expectation_regex_pattern}"
-                _re_compile = re.compile(_pattern)
-                _agg_dq_expectation_match = re.match(
-                    _re_compile, _dq_rule["expectation"]
-                )
-
-                if _agg_dq_expectation_match:
-                    _agg_dq_expectation_aggstring = _agg_dq_expectation_match.group(1)
-                    _agg_dq_expectation_expr = _agg_dq_expectation_match.group(2)
-                    _agg_dq_expectation_cond_expr = expr(_agg_dq_expectation_aggstring)
-
-                    _agg_dq_actual_count_value = int(
-                        df.agg(_agg_dq_expectation_cond_expr).collect()[0][0]
+                if not (
+                    ">" in _dq_rule["expectation"] and "<" in _dq_rule["expectation"]
+                ):
+                    _pattern = rf"{constant_config.se_agg_dq_expectation_regex_pattern}"
+                    _re_compile = re.compile(_pattern)
+                    _agg_dq_expectation_match = re.match(
+                        _re_compile, _dq_rule["expectation"]
                     )
+                    _agg_dq_expectation_expr = None
+                    if _agg_dq_expectation_match:
+                        _agg_dq_expectation_aggstring = _agg_dq_expectation_match.group(
+                            1
+                        )
+                        _agg_dq_expectation_expr = _agg_dq_expectation_match.group(2)
+                        _agg_dq_expectation_cond_expr = expr(
+                            _agg_dq_expectation_aggstring
+                        )
 
-                    _agg_dq_expression_str = (
-                        str(_agg_dq_actual_count_value) + _agg_dq_expectation_expr
+                        _agg_dq_actual_count_value = int(
+                            df.agg(_agg_dq_expectation_cond_expr).collect()[0][0]
+                        )
+
+                        _agg_dq_expression_str = (
+                            str(_agg_dq_actual_count_value) + _agg_dq_expectation_expr
+                        )
+
+                        _agg_dq_expr_condition = []
+
+                        _agg_dq_expr_condition.append(
+                            when(expr(_agg_dq_expression_str), True)
+                            .otherwise(False)
+                            .alias("agg_dq_aggregation_check")
+                        )
+
+                        _df_agg_dq_expr_result = df.select(*_agg_dq_expr_condition)
+
+                        # status = "pass" if eval(_agg_dq_expression_str) else "fail"
+
+                        status = (
+                            "pass"
+                            if _df_agg_dq_expr_result.filter(
+                                _df_agg_dq_expr_result["agg_dq_aggregation_check"]
+                            ).count()
+                            > 0
+                            else "fail"
+                        )
+
+                        if _source_dq_status:
+                            row_count = _context.get_input_count
+                        elif _target_dq_status:
+                            row_count = _context.get_output_count
+                        else:
+                            row_count = None
+
+                        actual_row_count = row_count if status == "pass" else None
+                        error_row_count = 0 if status == "pass" else row_count
+
+                        actual_outcome = (
+                            _agg_dq_actual_count_value
+                            if (_agg_dq_actual_count_value is not None)
+                            else None
+                        )
+                        expected_outcome = (
+                            str(_agg_dq_expectation_expr)
+                            if (_agg_dq_expectation_expr is not None)
+                            else None
+                        )
+                else:
+                    pattern = (
+                        rf"{constant_config.se_agg_dq_expectation_range_regex_pattern}"
                     )
+                    matches = re.match(pattern, _dq_rule["expectation"])
+                    result = None
+                    if matches:
+                        result = matches.groups()
+                        _agg_dq_expectation_aggstring = result[0]
+                        _agg_dq_expectation_expr_lowerbound = result[1]
+                        _agg_dq_expectation_expr_upperbound = result[4]
 
-                    _agg_dq_expr_condition = []
+                        _agg_dq_expectation_cond_expr = expr(
+                            _agg_dq_expectation_aggstring
+                        )
 
-                    _agg_dq_expr_condition.append(
-                        when(expr(_agg_dq_expression_str), True)
-                        .otherwise(False)
-                        .alias("agg_dq_aggregation_check")
-                    )
+                        _agg_dq_actual_count_value = int(
+                            df.agg(_agg_dq_expectation_cond_expr).collect()[0][0]
+                        )
 
-                    _df_agg_dq_expr_result = df.select(*_agg_dq_expr_condition)
+                        _agg_dq_expression_str_lower = (
+                            str(_agg_dq_actual_count_value)
+                            + _agg_dq_expectation_expr_lowerbound
+                        )
 
-                    # status = "pass" if eval(_agg_dq_expression_str) else "fail"
+                        _agg_dq_expression_str_upper = (
+                            str(_agg_dq_actual_count_value)
+                            + _agg_dq_expectation_expr_upperbound
+                        )
 
-                    status = (
-                        "pass"
-                        if _df_agg_dq_expr_result.filter(
-                            _df_agg_dq_expr_result["agg_dq_aggregation_check"]
-                        ).count()
-                        > 0
-                        else "fail"
-                    )
+                        _agg_dq_expr_condition = []
 
-                    if _source_dq_status:
-                        row_count = _context.get_input_count
-                    elif _target_dq_status:
-                        row_count = _context.get_output_count
-                    else:
-                        row_count = None
+                        _agg_dq_expression_str = (
+                            f"{str(_agg_dq_expression_str_lower)}"
+                            " and "
+                            f"{str(_agg_dq_expression_str_upper)}"
+                        )
 
-                    actual_row_count = row_count if status == "pass" else None
-                    error_row_count = 0 if status == "pass" else row_count
+                        _agg_dq_expr_condition.append(
+                            when(expr(_agg_dq_expression_str), True)
+                            .otherwise(False)
+                            .alias("agg_dq_aggregation_check")
+                        )
 
-                    actual_outcome = (
-                        _agg_dq_actual_count_value
-                        if (_agg_dq_actual_count_value is not None)
-                        else None
-                    )
-                    expected_outcome = (
-                        str(_agg_dq_expectation_expr)
-                        if (_agg_dq_expectation_expr is not None)
-                        else None
-                    )
+                        _df_agg_dq_expr_result = df.select(*_agg_dq_expr_condition)
 
+                        status = (
+                            "pass"
+                            if _df_agg_dq_expr_result.filter(
+                                _df_agg_dq_expr_result["agg_dq_aggregation_check"]
+                            ).count()
+                            > 0
+                            else "fail"
+                        )
+
+                        if _source_dq_status:
+                            row_count = _context.get_input_count
+                        elif _target_dq_status:
+                            row_count = _context.get_output_count
+                        else:
+                            row_count = None
+                        actual_row_count = row_count if status == "pass" else None
+                        error_row_count = 0 if status == "pass" else row_count
+
+                        actual_outcome = (
+                            _agg_dq_actual_count_value
+                            if (_agg_dq_actual_count_value is not None)
+                            else None
+                        )
+
+                        expected_outcome = (
+                            _agg_dq_expression_str
+                            if (
+                                _agg_dq_expression_str_lower is not None
+                                and _agg_dq_expression_str_upper is not None
+                            )
+                            else None
+                        )
             elif (
                 _dq_rule["rule_type"] == _context.get_query_dq_rule_type_name
                 and _context.get_query_dq_detailed_stats_status is True

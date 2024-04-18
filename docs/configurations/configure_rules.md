@@ -56,6 +56,15 @@ action_if_failed, tag, description,  enable_for_source_dq_validation,  enable_fo
 --statistics table when the sum of the sales values falls below 10000
 ,('apla_nd', '`catalog`.`schema`.customer_order', 'agg_dq', 'sum_of_sales', 'sales', 'sum(sales)>10000', 'ignore', 
 'validity', 'sum of sales must be greater than 10000',  true, true, true,false, 0,null, null)
+
+--The aggregation rule is established on the 'sales' column and the metadata of the rule will be captured in the 
+--statistics table when the sum of the sales values falls between 1000 and 10000
+,('apla_nd', '`catalog`.`schema`.customer_order', 'agg_dq', 'sum_of_sales_range_type1', 'sales', 'sum(sales) between 1000 and 10000', 'ignore', 
+'validity', 'sum of sales must be between 1000 and 1000',  true, true, true)
+
+--The aggregation rule is established on the 'sales' column and the metadata of the rule will be captured in the 
+--statistics table when the sum of the sales value is greater than 1000 and less than 10000
+,('apla_nd', '`catalog`.`schema`.customer_order', 'agg_dq', 'sum_of_sales_range_type2', 'sales', 'sum(sales)>1000 and sum(sales)<10000', 'ignore', 'validity', 'sum of sales must be greater than 1000 and less than 10000',  true, true, true)
  
 --The aggregation rule is established on the 'ship_mode' column and the metadata of the rule will be captured in 
 --the statistics table when distinct ship_mode greater than 3 and enabled for only source data set
