@@ -5,6 +5,6 @@ product1|table1|row_dq|rule3|column3|expectation3|ignore|tag3|description3|true|
 product1|table1|agg_dq|rule6|column3|expectation6|fail|tag6|description6|true|true|true|false|0|null|false
 product1|table1|agg_dq|rule10|column7|expectation10|ignore|tag10|description10|false|true|true|false|0|null|false
 product1|table1|query_dq|rule13|column10|expectation13{source_f1}@source_f1@expectation13a|fail|tag13|description13|true|false|true|false|0|@|fase
-product1|table1|query_dq|rule13|column10|expectation13{source_f1}$source_f1$expectation13a|fail|tag13|description13|true|false|true|false|0|null|true
+product1|table1|query_dq|rule13|column10|expectation13{source_f1}@source_f1@expectation13a|fail|tag13|description13|true|false|true|false|0|null|true
 product1|table1|query_dq|rule13|column10|expectation13{source_f1}@source_f1@expectation13a|fail|tag13|description13|true|false|true|false|0|@|false
 product1|table1|query_dq|rule13|column10|expectation13{source_f1}@source_f1@expectation13a|fail|tag13|description13|true|false|true|false|0|@|false

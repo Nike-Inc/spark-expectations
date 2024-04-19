@@ -175,7 +175,7 @@ class SparkExpectationsWriter:
                             _rule_expectations,
                             _rule_tag,
                             _rule_desc,
-                            "fail",
+                            "pass" if int(_dq_res["failed_row_count"]) == 0 else "fail",
                             None,
                             None,
                             (_input_count - int(_dq_res["failed_row_count"])),

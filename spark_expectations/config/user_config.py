@@ -68,6 +68,7 @@ class Constants:
     querydq_output_custom_table_name = "spark.expectations.query.dq.custom.table_name"
 
     # declare const variable for agg query dq detailed stats
+
     se_agg_dq_expectation_regex_pattern = (
         r"(\(.+?\)|\w+\(.+?\))(\s*[<>!=]+\s*.+|\s*between\s*.+)$"
     )
