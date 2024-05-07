@@ -1,46 +1,71 @@
-# Getting Started with Create React App
-
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Spark-Expectations UI - Temporary Readme.md
 
 ## Available Scripts
 
 In the project directory, you can run:
 
-### `npm start`
+### `npm run dev`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
-
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
-
-### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Starts the development server using Vite on port 3000. This allows for live reloading of changes during development.
 
 ### `npm run build`
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+Compiles the TypeScript code using the TypeScript compiler (`tsc`) and then builds the production version of the application using Vite.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### `npm run preview`
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+Provides a local preview of the production build. This is useful for testing the built version before deployment.
 
-### `npm run eject`
+### `npm run typecheck`
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+Runs the TypeScript compiler to check for type errors in the codebase without emitting any output files.
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### `npm run code:fix`
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+A composite command that first fixes linting issues, formats the code using Prettier, and then performs a type check.
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+### `npm run lint`
 
-## Learn More
+Runs both ESLint and Stylelint to check for any linting errors in TypeScript/JavaScript files and CSS files, respectively.
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### `npm run lint:fix`
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+Fixes linting issues automatically in both TypeScript/JavaScript and CSS files.
+
+### `npm run lint:eslint`
+
+Runs ESLint on all TypeScript and JSX files in the project, caching the results for faster subsequent linting.
+
+### `npm run lint:eslint:fix`
+
+Automatically fixes fixable linting issues in TypeScript and JSX files.
+
+### `npm run lint:stylelint`
+
+Runs Stylelint on all CSS files in the project, caching the results to speed up future linting.
+
+### `npm run lint:stylelint:fix`
+
+Automatically fixes fixable linting issues in CSS files.
+
+### `npm run prettier`
+
+Checks if TypeScript and JSX files are formatted according to Prettier's rules.
+
+### `npm run prettier:write`
+
+Formats TypeScript and JSX files according to Prettier's rules.
+
+### `npm run vitest`
+
+Runs the Vitest test runner to execute tests.
+
+### `npm run vitest:watch`
+
+Starts the Vitest test runner in watch mode, re-running tests as files change.
+
+### `npm run test`
+
+A comprehensive script that runs type checks, checks formatting, lints files, runs tests, and builds the project. This is typically used to ensure that all checks pass before committing or deploying code.
+
+These scripts are essential for maintaining code quality and ensuring that the application functions as expected before deployment.

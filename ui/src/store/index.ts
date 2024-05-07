@@ -1,1 +1,1 @@
-export {useGitDetails} from "./git-details";
+export { useGitDetails } from './git-details';
