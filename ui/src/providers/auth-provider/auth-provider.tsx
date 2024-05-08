@@ -36,7 +36,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   return (
     <>
-      <Modal opened={isModalOpen} onClose={closeModal} title="Enter Your Token">
+      <Modal
+        opened={isModalOpen}
+        onClose={closeModal}
+        title="Enter Your Token"
+        closeOnClickOutside={false}
+      >
         <form onSubmit={form.onSubmit((values) => handleLogin(values))}>
           <TextInput {...form.getInputProps('token')} label="Token" placeholder="Token" required />
           <Group mt="md">
