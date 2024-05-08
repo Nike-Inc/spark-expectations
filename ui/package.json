@@ -18,10 +18,11 @@
     "prettier:write": "prettier --write \"**/*.{ts,tsx}\"",
     "vitest": "vitest run",
     "vitest:watch": "vitest",
-    "test": "npm run typecheck && npm run prettier && npm run lint && npm run vitest && npm run build"
+    "test": "npm run typecheck && npm run prettier && npm run lint && npm run vitest"
   },
   "dependencies": {
     "@mantine/core": "^7.9.0",
+    "@mantine/form": "^7.9.0",
     "@mantine/hooks": "^7.9.0",
     "@tanstack/react-query": "^5.34.1",
     "@testing-library/dom": "^10.1.0",

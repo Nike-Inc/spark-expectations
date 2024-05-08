@@ -1,1 +1,0 @@
-export { gitApi } from './git';

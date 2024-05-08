@@ -1,19 +1,23 @@
-import { AppShell, Burger, Group, Skeleton } from '@mantine/core';
-import { useDisclosure } from '@mantine/hooks';
+import { AppShell, Button, Group, Skeleton } from '@mantine/core';
+import React from 'react';
+import { useAuthStore } from '@/store';
 
 export const AppLayout = () => {
-  const [opened, { toggle }] = useDisclosure();
+  const { openModal, token } = useAuthStore((state) => ({
+    token: state.token,
+    openModal: state.openModal,
+  }));
+
+  const tokenExists = !!token;
 
   return (
-    <AppShell
-      header={{ height: 60 }}
-      navbar={{ width: 300, breakpoint: 'sm', collapsed: { mobile: !opened } }}
-      padding="md"
-    >
+    <AppShell header={{ height: 60 }} navbar={{ width: 300, breakpoint: 'sm' }} padding="md">
       <AppShell.Header>
         <Group h="100%" px="md">
-          <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" />
           <div>Logo</div>
+          <Button name="open-token-button" data-testid="open-token-button" onClick={openModal}>
+            {tokenExists ? 'Update Token' : 'Enter Token'}
+          </Button>
         </Group>
       </AppShell.Header>
       <AppShell.Navbar p="md" data-testid="navbar">
