@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     needs:
       - unittesting
-    if: github.event_name == 'release'
+    if: user.event_name == 'release'
     steps:
       - uses: actions/checkout@v3 # use latest version of the checkout action
       - name: Set up JDK

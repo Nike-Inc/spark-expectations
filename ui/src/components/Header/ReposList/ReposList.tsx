@@ -1,68 +1,56 @@
 import {
+  Alert,
   Combobox,
-  ComboboxChevron,
   ComboboxDropdown,
   ComboboxEmpty,
   ComboboxOption,
   ComboboxOptions,
   ComboboxTarget,
-  InputBase,
-  InputPlaceholder,
-  ScrollArea,
   ScrollAreaAutosize,
+  Skeleton,
   TextInput,
   useCombobox,
 } from '@mantine/core';
 import { useState } from 'react';
-
-const groceries = [
-  '🍎 Apples',
-  '🍌 Bananas',
-  '🥦 Broccoli',
-  '🥕 Carrots',
-  '🍫 Chocolate',
-  '🍇 Grapes',
-  '🍋 Lemon',
-  '🥬 Lettuce',
-  '🍄 Mushrooms',
-  '🍊 Oranges',
-  '🥔 Potatoes',
-  '🍅 Tomatoes',
-  '🥚 Eggs',
-  '🥛 Milk',
-  '🍞 Bread',
-  '🍗 Chicken',
-  '🍔 Hamburger',
-  '🧀 Cheese',
-  '🥩 Steak',
-  '🍟 French Fries',
-  '🍕 Pizza',
-  '🥦 Cauliflower',
-  '🥜 Peanuts',
-  '🍦 Ice Cream',
-  '🍯 Honey',
-  '🥖 Baguette',
-  '🍣 Sushi',
-  '🥝 Kiwi',
-  '🍓 Strawberries',
-];
+import { useAuthStore } from '@/store';
+import { useRepos } from '@/api';
 
 export const ReposList = () => {
+  const { username } = useAuthStore();
+
+  if (!username) {
+    return <LoadingSkeleton />;
+  }
+
+  return <ReposListWithUserName />;
+};
+
+const ReposListWithUserName = () => {
   const combobox = useCombobox({
     scrollBehavior: 'smooth',
     onDropdownClose: () => combobox.resetSelectedOption(),
   });
 
+  const { data, error, isLoading } = useRepos();
+
   const [value, setValue] = useState<string>('');
 
-  const shouldFilterOptions = !groceries.some((item) => item === value);
-  const filteredOptions = shouldFilterOptions
-    ? groceries.filter((item) => item.toLowerCase().includes(value.toLowerCase().trim()))
-    : groceries;
+  if (error || !data) {
+    return <ErrorComponent />;
+  }
 
-  const options = filteredOptions.map((item) => (
-    <ComboboxOption value={item} key={item}>
-      {item}
+  if (isLoading) {
+    return <LoadingSkeleton />;
+  }
+
+  const shouldFilterOptions = !data.some((item) => item.name === value);
+  const filteredOptions = shouldFilterOptions
+    ? data.filter((item) => item.name.toLowerCase().includes(value.toLowerCase().trim()))
+    : data;
+
+  const options = filteredOptions.map((item: any) => (
+    <ComboboxOption value={item.name} key={item.name}>
+      {item.name}
     </ComboboxOption>
   ));
 
@@ -101,3 +89,17 @@ export const ReposList = () => {
     </Combobox>
   );
 };
+
+const LoadingSkeleton = () => (
+  <div style={{ padding: '10px' }}>
+    <Skeleton height={20} radius="xl" animate />
+    <Skeleton height={20} radius="xl" animate style={{ marginTop: '10px' }} />
+    <Skeleton height={20} radius="xl" animate style={{ marginTop: '10px' }} />
+  </div>
+);
+
+const ErrorComponent = () => (
+  <Alert title="Error" color="red">
+    Error!
+  </Alert>
+);

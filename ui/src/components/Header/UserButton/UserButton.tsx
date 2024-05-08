@@ -1,27 +1,43 @@
-import { Avatar, Group, Text, UnstyledButton, rem } from '@mantine/core';
-import { IconChevronRight } from '@tabler/icons-react';
+import { Avatar, Group, Text, UnstyledButton, rem, Skeleton, Alert } from '@mantine/core';
+import { IconAlertCircle, IconChevronRight } from '@tabler/icons-react';
 import './UserButton.css';
+import { useUser } from '@/api';
+import { useAuthStore } from '@/store';
 
-// TODO: Integrate this with API, implement a loading state, error handling, and hover state
+// TODO: Handle Token Check in a different place
 export const UserButton = () => {
-  console.log('tbd');
+  const { token } = useAuthStore();
 
-  // @ts-ignore
+  if (!token) {
+    return <LoadingUserButton />;
+  }
+
+  return <UserButtonWithToken />;
+};
+
+const UserButtonWithToken = () => {
+  const { data, error, isLoading } = useUser();
+
+  if (isLoading) {
+    return <LoadingUserButton />;
+  }
+
+  if (error) {
+    return <ErrorUserButton />;
+  }
+
   return (
     <UnstyledButton>
       <Group>
-        <Avatar
-          src="https://raw.githubusercontent.com/mantinedev/mantine/master/.demo/avatars/avatar-8.png"
-          radius="xl"
-        />
+        <Avatar src={data?.avatar_url} radius="xl" />
 
         <div style={{ flex: 1 }}>
           <Text size="sm" fw={500}>
-            CSK
+            {data?.login}
           </Text>
 
           <Text c="dimmed" size="xs">
-            cskcvarma13@gmail.com
+            {data?.email}
           </Text>
         </div>
         <IconChevronRight className="IconChevronRight" />
@@ -29,3 +45,28 @@ export const UserButton = () => {
     </UnstyledButton>
   );
 };
+
+const ErrorUserButton = () => (
+  <UnstyledButton>
+    <Group>
+      <div style={{ flex: 1 }}>
+        <Alert icon={<IconAlertCircle size={16} />} color="red">
+          Failed to load user data
+        </Alert>
+      </div>
+    </Group>
+  </UnstyledButton>
+);
+
+const LoadingUserButton = () => (
+  <UnstyledButton>
+    <Group>
+      <Skeleton circle width={40} height={40} />
+      <div style={{ flex: 1 }}>
+        <Skeleton height={8} width="50%" mb="xs" />
+        <Skeleton height={8} width="30%" />
+      </div>
+      <Skeleton width={20} height={20} />
+    </Group>
+  </UnstyledButton>
+);
