@@ -1,5 +1,16 @@
 # Spark-Expectations UI - Temporary Readme.md
 
+If the Token Modal popup opens up, generate a token from 'https://github.com/settings/personal-access-tokens/3226985' and
+paste it here. 
+
+If the modal doesn't open up, click on "Enter Token" Button in the header.
+
+
+
+
+
+
+
 ## Available Scripts
 
 In the project directory, you can run:
