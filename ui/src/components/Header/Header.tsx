@@ -2,6 +2,7 @@ import React, { FC } from 'react';
 import { AppShellHeader, Button, Group } from '@mantine/core';
 import { useAuthStore } from '@/store';
 import { ReposList } from './ReposList';
+import { UserButton } from './UserButton';
 
 export const Header: FC = () => {
   const { openModal, token } = useAuthStore((state) => ({
@@ -25,6 +26,8 @@ export const Header: FC = () => {
         <Button name="open-token-button" data-testid="open-token-button" onClick={openModal}>
           {tokenExists ? 'Update Token' : 'Enter Token'}
         </Button>
+
+        <UserButton />
       </Group>
     </AppShellHeader>
   );
