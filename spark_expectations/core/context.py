@@ -75,6 +75,7 @@ class SparkExpectationsContext:
         self._final_agg_dq_result: Optional[List[Dict[str, str]]] = None
         self._source_query_dq_result: Optional[List[Dict[str, str]]] = None
         self._final_query_dq_result: Optional[List[Dict[str, str]]] = None
+        self._job_metadata: Optional[str] = None
 
         self._source_agg_dq_detailed_stats: Optional[List[Tuple]] = None
         self._source_query_dq_detailed_stats: Optional[List[Tuple]] = None
@@ -1911,3 +1912,25 @@ class SparkExpectationsContext:
 
         """
         return self._dq_rules_params
+
+    def set_job_metadata(self, job_metadata=None):
+        """
+        This function is used to generate the current datatime in UTC
+
+        Returns:
+            str: Returns the current utc datatime in the format - "%Y-%m-%d %H:%M:%S"
+
+        """
+        self._job_metadata = job_metadata
+
+    @property
+    def get_job_metadata(self) -> str:
+        """
+        This function is used to get row data quality rule type name
+
+        Returns:
+             str: Returns _row_dq_rule_type_name"
+
+        """
+        if self._job_metadata is not None:
+            return str(self._job_metadata)

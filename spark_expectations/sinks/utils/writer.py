@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple, List
-from datetime import datetime
+from datetime import datetime, timezone
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import (
     lit,
@@ -15,6 +15,8 @@ from pyspark.sql.functions import (
     col,
     split,
     current_date,
+    monotonically_increasing_id,
+    coalesce,
 )
 from pyspark.sql.types import StructType
 from spark_expectations import _log
@@ -125,7 +127,7 @@ class SparkExpectationsWriter:
     def get_row_dq_detailed_stats(
         self,
     ) -> List[
-        Tuple[str, str, str, str, str, str, str, str, str, None, None, int, str, int]
+        Tuple[str, str, str, str, str, str, str, str, str, None, None, int, str, int, str, str]
     ]:
         """
         This function writes the detailed stats for row dq into the detailed stats table
@@ -181,6 +183,10 @@ class SparkExpectationsWriter:
                             (_input_count - int(_dq_res["failed_row_count"])),
                             _dq_res["failed_row_count"],
                             _input_count,
+                            self._context.get_row_dq_start_time.replace(tzinfo=timezone.utc).strftime(
+                                "%Y-%m-%d %H:%M:%S") if self._context.get_row_dq_start_time else '1900-01-01',
+                            self._context.get_row_dq_end_time.replace(tzinfo=timezone.utc).strftime(
+                                "%Y-%m-%d %H:%M:%S") if self._context.get_row_dq_end_time else '1900-01-01'
                         )
                     )
 
@@ -266,6 +272,8 @@ class SparkExpectationsWriter:
             - alias_comp
             - target_output
             - dq_time
+            - dq_start_time
+            - dq_end_time
         """
         _querydq_secondary_query_source_output = (
             self._context.get_source_query_dq_output
@@ -374,6 +382,8 @@ class SparkExpectationsWriter:
                 "source_dq_actual_row_count",
                 "source_dq_error_row_count",
                 "source_dq_row_count",
+                "source_dq_start_time",
+                "source_dq_end_time",
             ]
         )
         _detailed_stats_target_dq_schema = self._create_schema(
@@ -392,6 +402,8 @@ class SparkExpectationsWriter:
                 "target_dq_actual_row_count",
                 "target_dq_error_row_count",
                 "target_dq_row_count",
+                "target_dq_start_time",
+                "target_dq_end_time",
             ]
         )
         rules_execution_settings = self._context.get_rules_execution_settings_config
@@ -460,6 +472,10 @@ class SparkExpectationsWriter:
         _df_detailed_stats = _df_detailed_stats.withColumn(
             "dq_date", current_date()
         ).withColumn("dq_time", lit(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+
+        _df_detailed_stats = _df_detailed_stats.withColumn(
+            "dq_job_metadata_info", lit(self._context.get_job_metadata).cast("string")
+        )
 
         return _df_detailed_stats
 
@@ -729,16 +745,16 @@ class SparkExpectationsWriter:
                 stats_table=True,
             )
 
+            _log.info(
+                "Writing metrics to the stats table: %s, ended",
+                self._context.get_dq_stats_table_name,
+            )
+
             if (
                 self._context.get_agg_dq_detailed_stats_status is True
                 or self._context.get_query_dq_detailed_stats_status is True
             ):
                 self.write_detailed_stats()
-
-            _log.info(
-                "Writing metrics to the stats table: %s, ended",
-                self._context.get_dq_stats_table_name,
-            )
 
             # TODO check if streaming_stats is set to off, if it's enabled only then this should run
 
@@ -804,6 +820,19 @@ class SparkExpectationsWriter:
     ) -> Tuple[int, DataFrame]:
         try:
             _log.info("_write_error_records_final started")
+            df = df.withColumn("sequence_number", monotonically_increasing_id())
+
+            df_seq = df
+
+            df = df.select(
+                "sequence_number",
+                *[
+                    dq_column
+                    for dq_column in df.columns
+                    if dq_column.startswith(f"{rule_type}")
+                ],
+            )
+            df.cache()
 
             failed_records = [
                 f"size({dq_column}) != 0"
@@ -841,7 +870,26 @@ class SparkExpectationsWriter:
                     lit(self._context.get_run_date),
                 )
             )
-            error_df = df.filter(f"size(meta_{rule_type}_results) != 0")
+            error_df_seq = df.filter(f"size(meta_{rule_type}_results) != 0")
+
+            error_df = df_seq.join(
+                error_df_seq,
+                df_seq.sequence_number == error_df_seq.sequence_number,
+                "inner",
+            )
+
+            # sequence number column removing from the data frame
+            error_df_columns = [
+                dq_column
+                for dq_column in error_df.columns
+                if (
+                    dq_column.startswith("sequence_number")
+                    or dq_column.startswith(f"{rule_type}")
+                )
+                == False
+            ]
+
+            error_df = error_df.select(error_df_columns)
             self._context.print_dataframe_with_debugger(error_df)
 
             print(
@@ -857,6 +905,27 @@ class SparkExpectationsWriter:
             _error_count = error_df.count()
             if _error_count > 0:
                 self.generate_summarized_row_dq_res(error_df, rule_type)
+
+            # sequence number adding to dataframe for passing to action function
+            df = df_seq.join(
+                error_df_seq,
+                df_seq.sequence_number == error_df_seq.sequence_number,
+                "left",
+            ).withColumn(
+                f"meta_{rule_type}_results",
+                coalesce(col(f"meta_{rule_type}_results"), array()),
+            )
+
+            df = (
+                df.select(error_df_columns)
+                .withColumn(
+                    self._context.get_run_id_name, lit(self._context.get_run_id)
+                )
+                .withColumn(
+                    self._context.get_run_date_time_name,
+                    lit(self._context.get_run_date),
+                )
+            )
 
             _log.info("_write_error_records_final ended")
             return _error_count, df

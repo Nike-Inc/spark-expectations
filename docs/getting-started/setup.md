@@ -48,7 +48,7 @@ create table if not exists `catalog`.`schema`.`{product}_rules` (
 7. `action_if_failed` There are 3 different types of actions. These are 'ignore', 'drop', and 'fail'. 
     Ignore: The rule is run and the output is logged. No action is performed regardless of whether the rule has succeeded or failed. Applies for all 3 rule types. 
     Drop: The rows that fail the rule get dropped from the dataset. Applies for only row_dq rule type.
-    Fail: DAG fails if the rule fails. Applies for all 3 rule types.
+    Fail: job fails if the rule fails. Applies for all 3 rule types.
 8. `tag` provide some tag name to dq rule example:  completeness, validity, uniqueness etc. 
 9. `description`  Long description for the rule
 10. `enable_for_source_dq_validation` flag to run the agg rule

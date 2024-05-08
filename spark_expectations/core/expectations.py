@@ -121,6 +121,7 @@ class SparkExpectations:
                 user_config.se_notifications_on_error_drop_threshold: 100,
                 user_config.se_enable_agg_dq_detailed_result: False,
                 user_config.se_enable_query_dq_detailed_result: False,
+                user_config.se_job_metadata: None,
                 user_config.querydq_output_custom_table_name: f"{self.stats_table}_querydq_output",
             }
 
@@ -262,6 +263,12 @@ class SparkExpectations:
                 else False
             )
 
+            _job_metadata: str = (
+                str(_notification_dict[user_config.se_job_metadata])
+                if isinstance(_notification_dict[user_config.se_job_metadata], str)
+                else None
+            )
+
             notifications_on_error_drop_threshold = _notification_dict.get(
                 user_config.se_notifications_on_error_drop_threshold, 100
             )
@@ -280,6 +287,7 @@ class SparkExpectations:
             self._context.set_dq_expectations(expectations)
             self._context.set_rules_execution_settings_config(rules_execution_settings)
             self._context.set_querydq_secondary_queries(dq_queries_dict)
+            self._context.set_job_metadata(_job_metadata)
 
             @self._notification.send_notification_decorator
             @self._statistics_decorator.collect_stats_decorator
@@ -292,6 +300,7 @@ class SparkExpectations:
                     table_name: str = self._context.get_table_name
 
                     _input_count = _df.count()
+                    _log.info(f"data frame input record count: {_input_count}")
                     _output_count: int = 0
                     _error_count: int = 0
                     _source_dq_df: Optional[DataFrame] = None
@@ -544,7 +553,7 @@ class SparkExpectations:
                             "error occurred while processing spark "
                             "expectations due to given dataframe is not type of dataframe"
                         )
-                    self.spark.catalog.clearCache()
+                    # self.spark.catalog.clearCache()
 
                     return _row_dq_df
 

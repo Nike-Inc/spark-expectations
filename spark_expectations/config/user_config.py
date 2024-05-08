@@ -64,6 +64,7 @@ class Constants:
     # declare const user config variables for agg query dq detailed stats
     se_enable_agg_dq_detailed_result = "spark.expectations.agg.dq.detailed.stats"
     se_enable_query_dq_detailed_result = "spark.expectations.query.dq.detailed.stats"
+    se_job_metadata = "spark.expectations.job.metadata"
 
     querydq_output_custom_table_name = "spark.expectations.query.dq.custom.table_name"
 
