@@ -855,8 +855,8 @@ class SparkExpectationsWriter:
                 )
 
             _error_count = error_df.count()
-            if _error_count > 0:
-                self.generate_summarized_row_dq_res(error_df, rule_type)
+            # if _error_count > 0:
+            self.generate_summarized_row_dq_res(error_df, rule_type)
 
             _log.info("_write_error_records_final ended")
             return _error_count, df
