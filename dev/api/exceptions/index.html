@@ -248,8 +248,8 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../configurations/adoption_versions_comparsion/" class="md-tabs__link">
-        Adoption_Guide
+      <a href="../../configurations/migration_versions_comparison/" class="md-tabs__link">
+        Migration_Guide
       </a>
     </li>
   
@@ -400,14 +400,14 @@
       
       
         <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
-          Adoption_Guide
+          Migration_Guide
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
-          Adoption_Guide
+          Migration_Guide
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -417,8 +417,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../configurations/adoption_versions_comparsion/" class="md-nav__link">
-        comparision
+      <a href="../../configurations/migration_versions_comparison/" class="md-nav__link">
+        comparison
       </a>
     </li>
   
@@ -753,6 +753,13 @@
         <li class="md-nav__item">
   <a href="#spark_expectations.core.exceptions.SparkExpectationsSlackNotificationException" class="md-nav__link">
     SparkExpectationsSlackNotificationException
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#spark_expectations.core.exceptions.SparkExpectationsTeamsNotificationException" class="md-nav__link">
+    SparkExpectationsTeamsNotificationException
   </a>
   
 </li>
@@ -1373,6 +1380,13 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#spark_expectations.core.exceptions.SparkExpectationsTeamsNotificationException" class="md-nav__link">
+    SparkExpectationsTeamsNotificationException
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#spark_expectations.core.exceptions.SparkExpectationsUserInputOrConfigInvalidException" class="md-nav__link">
     SparkExpectationsUserInputOrConfigInvalidException
   </a>
@@ -1480,7 +1494,7 @@
             Bases: <code>Exception</code></p>
 
   
-      <p>Throw this exception when spark expectations encounters miscellaneous exceptions</p>
+      <p>Throw this exception when spark expectations encounters exceptions while sending email notifications</p>
 
 
   </div>
@@ -1552,7 +1566,31 @@
             Bases: <code>Exception</code></p>
 
   
-      <p>Throw this exception when spark expectations encounters miscellaneous exceptions</p>
+      <p>Throw this exception when spark expectations encounters exceptions while sending Slack notifications</p>
+
+
+  </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+
+<h2 id="spark_expectations.core.exceptions.SparkExpectationsTeamsNotificationException" class="doc doc-heading">
+          <code>spark_expectations.core.exceptions.SparkExpectationsTeamsNotificationException</code>
+
+
+<a href="#spark_expectations.core.exceptions.SparkExpectationsTeamsNotificationException" class="headerlink" title="Permanent link">&para;</a></h2>
+
+
+  <div class="doc doc-contents ">
+          <p class="doc doc-class-bases">
+            Bases: <code>Exception</code></p>
+
+  
+      <p>Throw this exception when spark expectations encounters exceptions while sending Teams notifications</p>
 
 
   </div>

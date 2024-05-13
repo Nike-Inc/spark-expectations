@@ -12,7 +12,7 @@
         <meta name="author" content="Ashok Singamaneni">
       
       
-        <link rel="canonical" href="https://engineering.nike.com/spark-expectations/dev/api/sample_dq_iceberg/">
+        <link rel="canonical" href="https://engineering.nike.com/spark-expectations/dev/api/teams_plugin/">
       
       
       
@@ -21,7 +21,7 @@
     
     
       
-        <title>Sample dq iceberg - Spark-Expectations</title>
+        <title>Teams plugin - Spark-Expectations</title>
       
     
     
@@ -77,7 +77,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#spark_expectations.examples.sample_dq_iceberg-attributes" class="md-skip">
+        <a href="#spark_expectations.notifications.plugins.teams-attributes" class="md-skip">
           Skip to content
         </a>
       
@@ -116,7 +116,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Sample dq iceberg
+              Teams plugin
             
           </span>
         </div>
@@ -1235,49 +1235,6 @@
     
   
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#spark_expectations.examples.sample_dq_iceberg.current_dir" class="md-nav__link">
-    current_dir
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#spark_expectations.examples.sample_dq_iceberg.se" class="md-nav__link">
-    se
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#spark_expectations.examples.sample_dq_iceberg.spark" class="md-nav__link">
-    spark
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#spark_expectations.examples.sample_dq_iceberg.user_conf" class="md-nav__link">
-    user_conf
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#spark_expectations.examples.sample_dq_iceberg.writer" class="md-nav__link">
-    writer
-  </a>
-  
-</li>
-      
-    </ul>
-  
 </nav>
                   </div>
                 </div>
@@ -1309,109 +1266,40 @@
 
 
 
-<h1 id="spark_expectations.examples.sample_dq_iceberg-attributes">Attributes<a href="#spark_expectations.examples.sample_dq_iceberg-attributes" class="headerlink" title="Permanent link">&para;</a></h1>
+<h1 id="spark_expectations.notifications.plugins.teams-attributes">Attributes<a href="#spark_expectations.notifications.plugins.teams-attributes" class="headerlink" title="Permanent link">&para;</a></h1>
+<h1 id="spark_expectations.notifications.plugins.teams-classes">Classes<a href="#spark_expectations.notifications.plugins.teams-classes" class="headerlink" title="Permanent link">&para;</a></h1>
 
-<div class="doc doc-object doc-attribute">
+<div class="doc doc-object doc-class">
 
 
 
 
-<h2 id="spark_expectations.examples.sample_dq_iceberg.current_dir" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">spark_expectations</span><span class="o">.</span><span class="n">examples</span><span class="o">.</span><span class="n">sample_dq_iceberg</span><span class="o">.</span><span class="n">current_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
-  </span>
+<h2 id="spark_expectations.notifications.plugins.teams.SparkExpectationsTeamsPluginImpl" class="doc doc-heading">
+          <code>spark_expectations.notifications.plugins.teams.SparkExpectationsTeamsPluginImpl</code>
 
-<a href="#spark_expectations.examples.sample_dq_iceberg.current_dir" class="headerlink" title="Permanent link">&para;</a></h2>
+
+<a href="#spark_expectations.notifications.plugins.teams.SparkExpectationsTeamsPluginImpl" class="headerlink" title="Permanent link">&para;</a></h2>
 
 
   <div class="doc doc-contents ">
-  </div>
+          <p class="doc doc-class-bases">
+            Bases: <code><a class="autorefs autorefs-internal" title="spark_expectations.notifications.plugins.base_notification.SparkExpectationsNotification" href="../base_notification_plugin/#spark_expectations.notifications.plugins.base_notification.SparkExpectationsNotification">SparkExpectationsNotification</a></code></p>
 
-</div>
-
-<div class="doc doc-object doc-attribute">
-
-
-
-
-<h2 id="spark_expectations.examples.sample_dq_iceberg.se" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">spark_expectations</span><span class="o">.</span><span class="n">examples</span><span class="o">.</span><span class="n">sample_dq_iceberg</span><span class="o">.</span><span class="n">se</span><span class="p">:</span> <span class="n">SparkExpectations</span> <span class="o">=</span> <span class="n">SparkExpectations</span><span class="p">(</span><span class="n">product_id</span><span class="o">=</span><span class="s1">&#39;your_product&#39;</span><span class="p">,</span> <span class="n">rules_df</span><span class="o">=</span><span class="n">spark</span><span class="o">.</span><span class="n">sql</span><span class="p">(</span><span class="s1">&#39;select * from dq_spark_local.dq_rules&#39;</span><span class="p">),</span> <span class="n">stats_table</span><span class="o">=</span><span class="s1">&#39;dq_spark_local.dq_stats&#39;</span><span class="p">,</span> <span class="n">stats_table_writer</span><span class="o">=</span><span class="n">writer</span><span class="p">,</span> <span class="n">target_and_error_table_writer</span><span class="o">=</span><span class="n">writer</span><span class="p">,</span> <span class="n">debugger</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">stats_streaming_options</span><span class="o">=</span><span class="p">{</span><span class="n">user_config</span><span class="o">.</span><span class="n">se_enable_streaming</span><span class="p">:</span> <span class="kc">False</span><span class="p">})</span></code>
   
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
-  </span>
-
-<a href="#spark_expectations.examples.sample_dq_iceberg.se" class="headerlink" title="Permanent link">&para;</a></h2>
+      <p>This class implements/supports functionality to send teams notification</p>
 
 
-  <div class="doc doc-contents ">
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-attribute">
-
-
-
-
-<h2 id="spark_expectations.examples.sample_dq_iceberg.spark" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">spark_expectations</span><span class="o">.</span><span class="n">examples</span><span class="o">.</span><span class="n">sample_dq_iceberg</span><span class="o">.</span><span class="n">spark</span> <span class="o">=</span> <span class="n">set_up_iceberg</span><span class="p">()</span></code>
   
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
-  </span>
 
-<a href="#spark_expectations.examples.sample_dq_iceberg.spark" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-  <div class="doc doc-contents ">
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-attribute">
+  <div class="doc doc-children">
 
 
 
 
-<h2 id="spark_expectations.examples.sample_dq_iceberg.user_conf" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">spark_expectations</span><span class="o">.</span><span class="n">examples</span><span class="o">.</span><span class="n">sample_dq_iceberg</span><span class="o">.</span><span class="n">user_conf</span> <span class="o">=</span> <span class="p">{</span><span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_enable_email</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_email_smtp_host</span><span class="p">:</span> <span class="s1">&#39;mailhost.com&#39;</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_email_smtp_port</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_email_from</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_email_to_other_mail_id</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_email_subject</span><span class="p">:</span> <span class="s1">&#39;spark expectations - data quality - notifications&#39;</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_enable_slack</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_slack_webhook_url</span><span class="p">:</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_on_start</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_on_completion</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_on_fail</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_on_error_drop_exceeds_threshold_breach</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_on_error_drop_threshold</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_enable_query_dq_detailed_result</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_enable_agg_dq_detailed_result</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_enable_error_table</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">enable_query_dq_detailed_result</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">enable_agg_dq_detailed_result</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="n">user_config</span><span class="o">.</span><span class="n">se_dq_rules_params</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;env&#39;</span><span class="p">:</span> <span class="s1">&#39;local&#39;</span><span class="p">,</span> <span class="s1">&#39;table&#39;</span><span class="p">:</span> <span class="s1">&#39;product&#39;</span><span class="p">}}</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
-  </span>
-
-<a href="#spark_expectations.examples.sample_dq_iceberg.user_conf" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-  <div class="doc doc-contents ">
-  </div>
-
-</div>
-
-<div class="doc doc-object doc-attribute">
 
 
 
-
-<h2 id="spark_expectations.examples.sample_dq_iceberg.writer" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">spark_expectations</span><span class="o">.</span><span class="n">examples</span><span class="o">.</span><span class="n">sample_dq_iceberg</span><span class="o">.</span><span class="n">writer</span> <span class="o">=</span> <span class="n">WrappedDataFrameWriter</span><span class="p">()</span><span class="o">.</span><span class="n">mode</span><span class="p">(</span><span class="s1">&#39;append&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;iceberg&#39;</span><span class="p">)</span></code>
-  
-  <span class="doc doc-labels">
-      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
-  </span>
-
-<a href="#spark_expectations.examples.sample_dq_iceberg.writer" class="headerlink" title="Permanent link">&para;</a></h2>
-
-
-  <div class="doc doc-contents ">
-  </div>
-
-</div>
-<h1 id="spark_expectations.examples.sample_dq_iceberg-classes">Classes<a href="#spark_expectations.examples.sample_dq_iceberg-classes" class="headerlink" title="Permanent link">&para;</a></h1>
-<h1 id="spark_expectations.examples.sample_dq_iceberg-functions">Functions<a href="#spark_expectations.examples.sample_dq_iceberg-functions" class="headerlink" title="Permanent link">&para;</a></h1>
+<h3 id="spark_expectations.notifications.plugins.teams.SparkExpectationsTeamsPluginImpl-functions">Functions<a href="#spark_expectations.notifications.plugins.teams.SparkExpectationsTeamsPluginImpl-functions" class="headerlink" title="Permanent link">&para;</a></h3>
 
 
 <div class="doc doc-object doc-function">
@@ -1419,17 +1307,58 @@
 
 
 
-<h2 id="spark_expectations.examples.sample_dq_iceberg.build_new" class="doc doc-heading">
-          <code class="highlight language-python"><span class="n">spark_expectations</span><span class="o">.</span><span class="n">examples</span><span class="o">.</span><span class="n">sample_dq_iceberg</span><span class="o">.</span><span class="n">build_new</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span></code>
+<h4 id="spark_expectations.notifications.plugins.teams.SparkExpectationsTeamsPluginImpl.send_notification" class="doc doc-heading">
+          <code class="highlight language-python"><span class="n">send_notification</span><span class="p">(</span><span class="n">_context</span><span class="p">:</span> <span class="n">SparkExpectationsContext</span><span class="p">,</span> <span class="n">_config_args</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]])</span> <span class="o">-&gt;</span> <span class="kc">None</span></code>
 
-<a href="#spark_expectations.examples.sample_dq_iceberg.build_new" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#spark_expectations.notifications.plugins.teams.SparkExpectationsTeamsPluginImpl.send_notification" class="headerlink" title="Permanent link">&para;</a></h4>
 
 
   <div class="doc doc-contents ">
+  
+      <p>function to send the teams notification for assigned channel
+Args:
+    _context: SparkExpectationsContext class object
+    _config_args: dict</p>
+<p>Returns: None</p>
 
           <details class="quote">
-            <summary>Source code in <code>spark_expectations/examples/sample_dq_iceberg.py</code></summary>
-            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-54">54</a></span>
+            <summary>Source code in <code>spark_expectations/notifications/plugins/teams.py</code></summary>
+            <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"><a href="#__codelineno-0-19">19</a></span>
+<span class="normal"><a href="#__codelineno-0-20">20</a></span>
+<span class="normal"><a href="#__codelineno-0-21">21</a></span>
+<span class="normal"><a href="#__codelineno-0-22">22</a></span>
+<span class="normal"><a href="#__codelineno-0-23">23</a></span>
+<span class="normal"><a href="#__codelineno-0-24">24</a></span>
+<span class="normal"><a href="#__codelineno-0-25">25</a></span>
+<span class="normal"><a href="#__codelineno-0-26">26</a></span>
+<span class="normal"><a href="#__codelineno-0-27">27</a></span>
+<span class="normal"><a href="#__codelineno-0-28">28</a></span>
+<span class="normal"><a href="#__codelineno-0-29">29</a></span>
+<span class="normal"><a href="#__codelineno-0-30">30</a></span>
+<span class="normal"><a href="#__codelineno-0-31">31</a></span>
+<span class="normal"><a href="#__codelineno-0-32">32</a></span>
+<span class="normal"><a href="#__codelineno-0-33">33</a></span>
+<span class="normal"><a href="#__codelineno-0-34">34</a></span>
+<span class="normal"><a href="#__codelineno-0-35">35</a></span>
+<span class="normal"><a href="#__codelineno-0-36">36</a></span>
+<span class="normal"><a href="#__codelineno-0-37">37</a></span>
+<span class="normal"><a href="#__codelineno-0-38">38</a></span>
+<span class="normal"><a href="#__codelineno-0-39">39</a></span>
+<span class="normal"><a href="#__codelineno-0-40">40</a></span>
+<span class="normal"><a href="#__codelineno-0-41">41</a></span>
+<span class="normal"><a href="#__codelineno-0-42">42</a></span>
+<span class="normal"><a href="#__codelineno-0-43">43</a></span>
+<span class="normal"><a href="#__codelineno-0-44">44</a></span>
+<span class="normal"><a href="#__codelineno-0-45">45</a></span>
+<span class="normal"><a href="#__codelineno-0-46">46</a></span>
+<span class="normal"><a href="#__codelineno-0-47">47</a></span>
+<span class="normal"><a href="#__codelineno-0-48">48</a></span>
+<span class="normal"><a href="#__codelineno-0-49">49</a></span>
+<span class="normal"><a href="#__codelineno-0-50">50</a></span>
+<span class="normal"><a href="#__codelineno-0-51">51</a></span>
+<span class="normal"><a href="#__codelineno-0-52">52</a></span>
+<span class="normal"><a href="#__codelineno-0-53">53</a></span>
+<span class="normal"><a href="#__codelineno-0-54">54</a></span>
 <span class="normal"><a href="#__codelineno-0-55">55</a></span>
 <span class="normal"><a href="#__codelineno-0-56">56</a></span>
 <span class="normal"><a href="#__codelineno-0-57">57</a></span>
@@ -1439,88 +1368,66 @@
 <span class="normal"><a href="#__codelineno-0-61">61</a></span>
 <span class="normal"><a href="#__codelineno-0-62">62</a></span>
 <span class="normal"><a href="#__codelineno-0-63">63</a></span>
-<span class="normal"><a href="#__codelineno-0-64">64</a></span>
-<span class="normal"><a href="#__codelineno-0-65">65</a></span>
-<span class="normal"><a href="#__codelineno-0-66">66</a></span>
-<span class="normal"><a href="#__codelineno-0-67">67</a></span>
-<span class="normal"><a href="#__codelineno-0-68">68</a></span>
-<span class="normal"><a href="#__codelineno-0-69">69</a></span>
-<span class="normal"><a href="#__codelineno-0-70">70</a></span>
-<span class="normal"><a href="#__codelineno-0-71">71</a></span>
-<span class="normal"><a href="#__codelineno-0-72">72</a></span>
-<span class="normal"><a href="#__codelineno-0-73">73</a></span>
-<span class="normal"><a href="#__codelineno-0-74">74</a></span>
-<span class="normal"><a href="#__codelineno-0-75">75</a></span>
-<span class="normal"><a href="#__codelineno-0-76">76</a></span>
-<span class="normal"><a href="#__codelineno-0-77">77</a></span>
-<span class="normal"><a href="#__codelineno-0-78">78</a></span>
-<span class="normal"><a href="#__codelineno-0-79">79</a></span>
-<span class="normal"><a href="#__codelineno-0-80">80</a></span>
-<span class="normal"><a href="#__codelineno-0-81">81</a></span>
-<span class="normal"><a href="#__codelineno-0-82">82</a></span>
-<span class="normal"><a href="#__codelineno-0-83">83</a></span>
-<span class="normal"><a href="#__codelineno-0-84">84</a></span>
-<span class="normal"><a href="#__codelineno-0-85">85</a></span>
-<span class="normal"><a href="#__codelineno-0-86">86</a></span>
-<span class="normal"><a href="#__codelineno-0-87">87</a></span>
-<span class="normal"><a href="#__codelineno-0-88">88</a></span>
-<span class="normal"><a href="#__codelineno-0-89">89</a></span>
-<span class="normal"><a href="#__codelineno-0-90">90</a></span>
-<span class="normal"><a href="#__codelineno-0-91">91</a></span>
-<span class="normal"><a href="#__codelineno-0-92">92</a></span>
-<span class="normal"><a href="#__codelineno-0-93">93</a></span>
-<span class="normal"><a href="#__codelineno-0-94">94</a></span>
-<span class="normal"><a href="#__codelineno-0-95">95</a></span>
-<span class="normal"><a href="#__codelineno-0-96">96</a></span>
-<span class="normal"><a href="#__codelineno-0-97">97</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-54" name="__codelineno-0-54"></a><span class="nd">@se</span><span class="o">.</span><span class="n">with_expectations</span><span class="p">(</span>
-<a id="__codelineno-0-55" name="__codelineno-0-55"></a>    <span class="n">target_table</span><span class="o">=</span><span class="s2">&quot;dq_spark_local.customer_order&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-56" name="__codelineno-0-56"></a>    <span class="n">write_to_table</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-<a id="__codelineno-0-57" name="__codelineno-0-57"></a>    <span class="n">user_conf</span><span class="o">=</span><span class="n">user_conf</span><span class="p">,</span>
-<a id="__codelineno-0-58" name="__codelineno-0-58"></a>    <span class="n">target_table_view</span><span class="o">=</span><span class="s2">&quot;order&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-59" name="__codelineno-0-59"></a><span class="p">)</span>
-<a id="__codelineno-0-60" name="__codelineno-0-60"></a><span class="k">def</span> <span class="nf">build_new</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">DataFrame</span><span class="p">:</span>
-<a id="__codelineno-0-61" name="__codelineno-0-61"></a>    <span class="n">_df_order_source</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="p">(</span>
-<a id="__codelineno-0-62" name="__codelineno-0-62"></a>        <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;header&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-63" name="__codelineno-0-63"></a>        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;inferSchema&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-64" name="__codelineno-0-64"></a>        <span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;resources/order_s.csv&quot;</span><span class="p">))</span>
-<a id="__codelineno-0-65" name="__codelineno-0-65"></a>    <span class="p">)</span>
-<a id="__codelineno-0-66" name="__codelineno-0-66"></a>    <span class="n">_df_order_source</span><span class="o">.</span><span class="n">createOrReplaceTempView</span><span class="p">(</span><span class="s2">&quot;order_source&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-67" name="__codelineno-0-67"></a>
-<a id="__codelineno-0-68" name="__codelineno-0-68"></a>    <span class="n">_df_order_target</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="p">(</span>
-<a id="__codelineno-0-69" name="__codelineno-0-69"></a>        <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;header&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-70" name="__codelineno-0-70"></a>        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;inferSchema&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-71" name="__codelineno-0-71"></a>        <span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;resources/order_t.csv&quot;</span><span class="p">))</span>
-<a id="__codelineno-0-72" name="__codelineno-0-72"></a>    <span class="p">)</span>
-<a id="__codelineno-0-73" name="__codelineno-0-73"></a>    <span class="n">_df_order_target</span><span class="o">.</span><span class="n">createOrReplaceTempView</span><span class="p">(</span><span class="s2">&quot;order_target&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-74" name="__codelineno-0-74"></a>
-<a id="__codelineno-0-75" name="__codelineno-0-75"></a>    <span class="n">_df_product</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="p">(</span>
-<a id="__codelineno-0-76" name="__codelineno-0-76"></a>        <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;header&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-77" name="__codelineno-0-77"></a>        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;inferSchema&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-78" name="__codelineno-0-78"></a>        <span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;resources/product.csv&quot;</span><span class="p">))</span>
-<a id="__codelineno-0-79" name="__codelineno-0-79"></a>    <span class="p">)</span>
-<a id="__codelineno-0-80" name="__codelineno-0-80"></a>    <span class="n">_df_product</span><span class="o">.</span><span class="n">createOrReplaceTempView</span><span class="p">(</span><span class="s2">&quot;product&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-81" name="__codelineno-0-81"></a>
-<a id="__codelineno-0-82" name="__codelineno-0-82"></a>    <span class="n">_df_customer_source</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="p">(</span>
-<a id="__codelineno-0-83" name="__codelineno-0-83"></a>        <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;header&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-84" name="__codelineno-0-84"></a>        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;inferSchema&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-85" name="__codelineno-0-85"></a>        <span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;resources/customer_source.csv&quot;</span><span class="p">))</span>
-<a id="__codelineno-0-86" name="__codelineno-0-86"></a>    <span class="p">)</span>
-<a id="__codelineno-0-87" name="__codelineno-0-87"></a>
-<a id="__codelineno-0-88" name="__codelineno-0-88"></a>    <span class="n">_df_customer_source</span><span class="o">.</span><span class="n">createOrReplaceTempView</span><span class="p">(</span><span class="s2">&quot;customer_source&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-89" name="__codelineno-0-89"></a>
-<a id="__codelineno-0-90" name="__codelineno-0-90"></a>    <span class="n">_df_customer_target</span><span class="p">:</span> <span class="n">DataFrame</span> <span class="o">=</span> <span class="p">(</span>
-<a id="__codelineno-0-91" name="__codelineno-0-91"></a>        <span class="n">spark</span><span class="o">.</span><span class="n">read</span><span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;header&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-92" name="__codelineno-0-92"></a>        <span class="o">.</span><span class="n">option</span><span class="p">(</span><span class="s2">&quot;inferSchema&quot;</span><span class="p">,</span> <span class="s2">&quot;true&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-93" name="__codelineno-0-93"></a>        <span class="o">.</span><span class="n">csv</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span> <span class="s2">&quot;resources/customer_source.csv&quot;</span><span class="p">))</span>
-<a id="__codelineno-0-94" name="__codelineno-0-94"></a>    <span class="p">)</span>
-<a id="__codelineno-0-95" name="__codelineno-0-95"></a>    <span class="n">_df_customer_target</span><span class="o">.</span><span class="n">createOrReplaceTempView</span><span class="p">(</span><span class="s2">&quot;customer_target&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-96" name="__codelineno-0-96"></a>
-<a id="__codelineno-0-97" name="__codelineno-0-97"></a>    <span class="k">return</span> <span class="n">_df_order_source</span>
+<span class="normal"><a href="#__codelineno-0-64">64</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-19" name="__codelineno-0-19"></a><span class="nd">@spark_expectations_notification_impl</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20"></a><span class="k">def</span> <span class="nf">send_notification</span><span class="p">(</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21"></a>    <span class="bp">self</span><span class="p">,</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22"></a>    <span class="n">_context</span><span class="p">:</span> <span class="n">SparkExpectationsContext</span><span class="p">,</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23"></a>    <span class="n">_config_args</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">],</span> <span class="n">Union</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]],</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24"></a><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25"></a><span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26"></a><span class="sd">    function to send the teams notification for assigned channel</span>
+<a id="__codelineno-0-27" name="__codelineno-0-27"></a><span class="sd">    Args:</span>
+<a id="__codelineno-0-28" name="__codelineno-0-28"></a><span class="sd">        _context: SparkExpectationsContext class object</span>
+<a id="__codelineno-0-29" name="__codelineno-0-29"></a><span class="sd">        _config_args: dict</span>
+<a id="__codelineno-0-30" name="__codelineno-0-30"></a>
+<a id="__codelineno-0-31" name="__codelineno-0-31"></a><span class="sd">    Returns: None</span>
+<a id="__codelineno-0-32" name="__codelineno-0-32"></a>
+<a id="__codelineno-0-33" name="__codelineno-0-33"></a><span class="sd">    &quot;&quot;&quot;</span>
+<a id="__codelineno-0-34" name="__codelineno-0-34"></a>    <span class="k">try</span><span class="p">:</span>
+<a id="__codelineno-0-35" name="__codelineno-0-35"></a>        <span class="k">if</span> <span class="n">_context</span><span class="o">.</span><span class="n">get_enable_teams</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+<a id="__codelineno-0-36" name="__codelineno-0-36"></a>            <span class="c1"># payload = {&quot;token&quot;: &quot;{token}&quot;, &quot;channel&quot;: kwargs[&#39;channel&#39;], &quot;text&quot;: kwargs[&#39;message&#39;]}</span>
+<a id="__codelineno-0-37" name="__codelineno-0-37"></a>
+<a id="__codelineno-0-38" name="__codelineno-0-38"></a>            <span class="n">message</span> <span class="o">=</span> <span class="n">_config_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;message&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-39" name="__codelineno-0-39"></a>
+<a id="__codelineno-0-40" name="__codelineno-0-40"></a>            <span class="c1"># Format Message for Teams</span>
+<a id="__codelineno-0-41" name="__codelineno-0-41"></a>            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+<a id="__codelineno-0-42" name="__codelineno-0-42"></a>                <span class="n">message</span> <span class="o">=</span> <span class="n">message</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n\n</span><span class="s2">&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;            &quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-43" name="__codelineno-0-43"></a>
+<a id="__codelineno-0-44" name="__codelineno-0-44"></a>            <span class="n">payload</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-0-45" name="__codelineno-0-45"></a>                <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;SE Notification&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-46" name="__codelineno-0-46"></a>                <span class="s2">&quot;themeColor&quot;</span><span class="p">:</span> <span class="s2">&quot;008000&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-47" name="__codelineno-0-47"></a>                <span class="s2">&quot;text&quot;</span><span class="p">:</span> <span class="n">message</span><span class="p">,</span>
+<a id="__codelineno-0-48" name="__codelineno-0-48"></a>            <span class="p">}</span>
+<a id="__codelineno-0-49" name="__codelineno-0-49"></a>
+<a id="__codelineno-0-50" name="__codelineno-0-50"></a>            <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+<a id="__codelineno-0-51" name="__codelineno-0-51"></a>                <span class="n">_context</span><span class="o">.</span><span class="n">get_teams_webhook_url</span><span class="p">,</span> <span class="n">json</span><span class="o">=</span><span class="n">payload</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">10</span>
+<a id="__codelineno-0-52" name="__codelineno-0-52"></a>            <span class="p">)</span>
+<a id="__codelineno-0-53" name="__codelineno-0-53"></a>
+<a id="__codelineno-0-54" name="__codelineno-0-54"></a>            <span class="c1"># Check the response for success or failure</span>
+<a id="__codelineno-0-55" name="__codelineno-0-55"></a>            <span class="k">if</span> <span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">200</span><span class="p">:</span>
+<a id="__codelineno-0-56" name="__codelineno-0-56"></a>                <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Message posted successfully!&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-57" name="__codelineno-0-57"></a>            <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-58" name="__codelineno-0-58"></a>                <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Failed to post message&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-59" name="__codelineno-0-59"></a>                <span class="k">raise</span> <span class="n">SparkExpectationsTeamsNotificationException</span><span class="p">(</span>
+<a id="__codelineno-0-60" name="__codelineno-0-60"></a>                    <span class="s2">&quot;error occurred while sending teams notification from spark expectations project&quot;</span>
+<a id="__codelineno-0-61" name="__codelineno-0-61"></a>                <span class="p">)</span>
+<a id="__codelineno-0-62" name="__codelineno-0-62"></a>
+<a id="__codelineno-0-63" name="__codelineno-0-63"></a>    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<a id="__codelineno-0-64" name="__codelineno-0-64"></a>        <span class="k">raise</span> <span class="n">SparkExpectationsTeamsNotificationException</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
 </code></pre></div></td></tr></table></div>
           </details>
   </div>
 
 </div>
+
+
+
+  </div>
+
+  </div>
+
+</div>
+
 
 
 

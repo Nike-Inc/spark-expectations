@@ -12,7 +12,7 @@
         <meta name="author" content="Ashok Singamaneni">
       
       
-        <link rel="canonical" href="https://engineering.nike.com/spark-expectations/dev/configurations/adoption_versions_comparsion/">
+        <link rel="canonical" href="https://engineering.nike.com/spark-expectations/dev/configurations/migration_versions_comparison/">
       
       
         <link rel="prev" href="../../getting-started/setup/">
@@ -25,7 +25,7 @@
     
     
       
-        <title>comparision - Spark-Expectations</title>
+        <title>comparison - Spark-Expectations</title>
       
     
     
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              comparision
+              comparison
             
           </span>
         </div>
@@ -251,7 +251,7 @@
   
     <li class="md-tabs__item">
       <a href="./" class="md-tabs__link md-tabs__link--active">
-        Adoption_Guide
+        Migration_Guide
       </a>
     </li>
   
@@ -400,14 +400,14 @@
       
       
         <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
-          Adoption_Guide
+          Migration_Guide
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
         <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
-          Adoption_Guide
+          Migration_Guide
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -425,12 +425,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          comparision
+          comparison
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        comparision
+        comparison
       </a>
       
         
@@ -1307,7 +1307,7 @@
   
 
 
-  <h1>comparision</h1>
+  <h1>comparison</h1>
 
 <p>Please find the difference in the changes with different version, latest three versions changes are documented</p>
 <h4 id="modifications-made-to-the-version-during-implementation-or-integration">Modifications made to the version during implementation or integration<a class="headerlink" href="#modifications-made-to-the-version-during-implementation-or-integration" title="Permanent link">&para;</a></h4>
@@ -1317,53 +1317,63 @@
 <th align="left">stage</th>
 <th>0.8.0</th>
 <th>1.0.0</th>
+<th>1.2.0</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td align="left">rules table schema changes</td>
-<td>added additional two column <br> 1.<code>enable_error_drop_alert(boolean)</code> <br> 2.<code>error_drop_thresholdt(int)</code> <br><br> documentation found <a href="https://engineering.nike.com/spark-expectations/0.8.1/getting-started/setup/">here</a></td>
+<td>added additional two column <br> 1.<code>enable_error_drop_alert(boolean)</code> <br> 2.<code>error_drop_threshold(int)</code> <br><br> documentation found <a href="https://engineering.nike.com/spark-expectations/0.8.1/getting-started/setup/">here</a></td>
+<td>Remains same</td>
 <td>Remains same</td>
 </tr>
 <tr>
 <td align="left">rule table creation required</td>
 <td>yes - creation not required if you're upgrading from old version but schema changes required</td>
 <td>yes - creation not required if you're upgrading from old version but schema changes required</td>
+<td>Remains same. Additionally dq rules dynamically updates based on the parameter passed from externally</td>
 </tr>
 <tr>
 <td align="left">stats table schema changes</td>
 <td>remains same</td>
 <td>Remains Same</td>
+<td>Remains same. Additionally all row dq rules stats get in row dq rules summary</td>
 </tr>
 <tr>
 <td align="left">stats table creation required</td>
 <td>automated</td>
 <td>Remains Same</td>
+<td>Remains same</td>
 </tr>
 <tr>
 <td align="left">notification config setting</td>
 <td>remains same</td>
 <td>Remains Same</td>
+<td>Remains same</td>
 </tr>
 <tr>
-<td align="left">secret store and kafka authentication details</td>
+<td align="left">secret store and Kafka authentication details</td>
 <td>Create a dictionary that contains your secret configuration values and register in <code>__init__.py</code> for multiple usage, <a href="https://engineering.nike.com/spark-expectations/0.8.1/examples/">example</a></td>
 <td>Remains Same. You can disable streaming if needed, in SparkExpectations class</td>
+<td>Remains same</td>
 </tr>
 <tr>
-<td align="left">spark expectations initialisation</td>
-<td>create spark expectations class object using <code>SpakrExpectations</code> by passing <code>product_id</code> and additional optional parameter <code>debugger</code>, <code>stats_streaming_options</code>  <a href="https://engineering.nike.com/spark-expectations/0.8.1/examples/">example</a></td>
+<td align="left">spark expectations initialization</td>
+<td>create spark expectations class object using <code>SparkExpectations</code> by passing <code>product_id</code> and additional optional parameter <code>debugger</code>, <code>stats_streaming_options</code>  <a href="https://engineering.nike.com/spark-expectations/0.8.1/examples/">example</a></td>
 <td>New arguments are added. Please follow this - <a href="https://engineering.nike.com/spark-expectations/1.0.0/examples/">example</a></td>
+<td>Remains same</td>
 </tr>
 <tr>
 <td align="left">with_expectations decorator</td>
 <td>remains same</td>
 <td>New arguments are added. Please follow this - <a href="https://engineering.nike.com/spark-expectations/1.0.0/examples/">example</a></td>
+<td>Remains same</td>
 </tr>
 <tr>
 <td align="left">WrappedDataFrameWriter</td>
 <td>Doesn't exist</td>
 <td>This is new and users need to provider the writer object to record the spark conf that need to be used while writing - <a href="https://engineering.nike.com/spark-expectations/1.0.0/examples/">example</a></td>
+<td>Remains same</td>
 </tr>
 </tbody>
 </table>

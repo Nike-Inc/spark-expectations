@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://engineering.nike.com/spark-expectations/dev/examples/">
       
       
-        <link rel="prev" href="../configurations/adoption_versions_comparsion/">
+        <link rel="prev" href="../configurations/migration_versions_comparison/">
       
       
         <link rel="next" href="../delta/">
@@ -248,8 +248,8 @@
   
   
     <li class="md-tabs__item">
-      <a href="../configurations/adoption_versions_comparsion/" class="md-tabs__link">
-        Adoption_Guide
+      <a href="../configurations/migration_versions_comparison/" class="md-tabs__link">
+        Migration_Guide
       </a>
     </li>
   
@@ -400,14 +400,14 @@
       
       
         <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
-          Adoption_Guide
+          Migration_Guide
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
-          Adoption_Guide
+          Migration_Guide
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -417,8 +417,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../configurations/adoption_versions_comparsion/" class="md-nav__link">
-        comparision
+      <a href="../configurations/migration_versions_comparison/" class="md-nav__link">
+        comparison
       </a>
     </li>
   
@@ -1367,26 +1367,40 @@
 <a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>    <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_on_fail</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>  <span class="c1"># (11)!</span>
 <a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a>    <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_on_error_drop_exceeds_threshold_breach</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>  <span class="c1"># (12)!</span>
 <a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a>    <span class="n">user_config</span><span class="o">.</span><span class="n">se_notifications_on_error_drop_threshold</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>  <span class="c1"># (13)!</span>
-<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="p">}</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>    <span class="n">user_config</span><span class="o">.</span><span class="n">se_enable_error_table</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>  <span class="c1"># (14)!</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a>    <span class="n">user_config</span><span class="o">.</span><span class="n">enable_query_dq_detailed_result</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="c1"># (15)!</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a>    <span class="n">user_config</span><span class="o">.</span><span class="n">enable_agg_dq_detailed_result</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="c1"># (16)!</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a>    <span class="n">user_config</span><span class="o">.</span><span class="n">querydq_output_custom_table_name</span><span class="p">:</span> <span class="s2">&quot;&lt;catalog.schema.table-name&gt;&quot;</span><span class="p">,</span> <span class="c1">#17</span>
+<a id="__codelineno-0-21" name="__codelineno-0-21" href="#__codelineno-0-21"></a>    <span class="n">user_config</span><span class="o">.</span><span class="n">se_dq_rules_params</span><span class="p">:</span> <span class="p">{</span>
+<a id="__codelineno-0-22" name="__codelineno-0-22" href="#__codelineno-0-22"></a>        <span class="s2">&quot;env&quot;</span><span class="p">:</span> <span class="s2">&quot;local&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-23" name="__codelineno-0-23" href="#__codelineno-0-23"></a>        <span class="s2">&quot;table&quot;</span><span class="p">:</span> <span class="s2">&quot;product&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-24" name="__codelineno-0-24" href="#__codelineno-0-24"></a>     <span class="p">},</span> <span class="c1"># (18)!</span>
+<a id="__codelineno-0-25" name="__codelineno-0-25" href="#__codelineno-0-25"></a><span class="p">}</span>
+<a id="__codelineno-0-26" name="__codelineno-0-26" href="#__codelineno-0-26"></a><span class="p">}</span>
 </code></pre></div>
 <ol>
 <li>The <code>user_config.se_notifications_enable_email</code> parameter, which controls whether notifications are sent via email, is set to false by default</li>
 <li>The <code>user_config.se_notifications_email_smtp_host</code> parameter is set to "mailhost.com" by default and is used to specify the email SMTP domain host</li>
 <li>The <code>user_config.se_notifications_email_smtp_port</code> parameter, which accepts a port number, is set to "25" by default</li>
 <li>The <code>user_config.se_notifications_email_from</code> parameter is used to specify the email ID that will trigger the email notification</li>
-<li>The <code>user_configse_notifications_email_to_other_mail_id</code> parameter accepts a list of recipient email IDs</li>
+<li>The <code>user_config.se_notifications_email_to_other_mail_id</code> parameter accepts a list of recipient email IDs</li>
 <li>The <code>user_config.se_notifications_email_subject</code> parameter captures the subject line of the email</li>
 <li>The <code>user_config.se_notifications_enable_slack</code> parameter, which controls whether notifications are sent via slack, is set to false by default</li>
 <li>The <code>user_config/se_notifications_slack_webhook_url</code> parameter accepts the webhook URL of a Slack channel for sending notifications</li>
 <li>When <code>user_config.se_notifications_on_start</code> parameter set to <code>True</code> enables notification on start of the spark-expectations, variable by default set to <code>False</code></li>
 <li>When <code>user_config.se_notifications_on_completion</code> parameter set to <code>True</code> enables notification on completion of spark-expectations framework, variable by default set to <code>False</code></li>
-<li>When <code>user_config.se_notifications_on_fail</code> parameter set to <code>True</code> enables notification on failure of spark-expectations data qulaity framework, variable by default set to <code>True</code></li>
+<li>When <code>user_config.se_notifications_on_fail</code> parameter set to <code>True</code> enables notification on failure of spark-expectations data quality framework, variable by default set to <code>True</code></li>
 <li>When <code>user_config.se_notifications_on_error_drop_exceeds_threshold_breach</code> parameter set to <code>True</code> enables notification when error threshold reaches above the configured value</li>
 <li>The <code>user_config.se_notifications_on_error_drop_threshold</code> parameter captures error drop threshold value</li>
+<li>The <code>user_config.se_enable_error_table</code> parameter, which controls whether error data to load into error table, is set to true by default</li>
+<li>When <code>user_config.enable_query_dq_detailed_result</code> parameter set to <code>True</code>, enables the option to cature the query_dq detailed stats to detailed_stats table. By default set to <code>False</code></li>
+<li>When <code>user_config.enable_agg_dq_detailed_result</code> parameter set to <code>True</code>, enables the option to cature the agg_dq detailed stats to detailed_stats table. By default set to <code>False</code></li>
+<li>The <code>user_config.querydq_output_custom_table_name</code> parameter is used to specify the name of the custom query_dq output table which captures the output of the alias queries passed in the query dq expectation. Default is <stats_table>_custom_output</li>
+<li>The <code>user_config.se_dq_rules_params</code> parameter, which are required to dynamically update dq rules</li>
 </ol>
 <h3 id="spark-expectations-initialization">Spark Expectations Initialization<a class="headerlink" href="#spark-expectations-initialization" title="Permanent link">&para;</a></h3>
 <p>For all the below examples the below import and SparkExpectations class instantiation is mandatory</p>
-<p>When store for sensitive details is Databricks secret scope,construct config dictionary for authentication of kafka and 
+<p>When store for sensitive details is Databricks secret scope,construct config dictionary for authentication of Kafka and 
 avoid duplicate construction every time your project is initialized, you can create a dictionary with the following keys and their appropriate values. 
 This dictionary can be placed in the <strong>init</strong>.py file of your project or declared as a global variable.
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span>
@@ -1406,16 +1420,16 @@ This dictionary can be placed in the <strong>init</strong>.py file of your proje
 </code></pre></div></p>
 <ol>
 <li>The <code>user_config.se_enable_streaming</code> parameter is used to control the enabling or disabling of Spark Expectations (SE) streaming functionality. When enabled, SE streaming stores the statistics of every batch run into Kafka.</li>
-<li>The <code>user_config.secret_type</code> used to define type of secret store and takes two values (<code>databricks</code>, <code>cererus</code>) by default will be <code>databricks</code></li>
-<li>The <code>user_config.dbx_workspace_url</code> used to pass databricks workspace in the format <code>https://&lt;workspace_name&gt;.cloud.databricks.com</code></li>
+<li>The <code>user_config.secret_type</code> used to define type of secret store and takes two values (<code>databricks</code>, <code>cerberus</code>) by default will be <code>databricks</code></li>
+<li>The <code>user_config.dbx_workspace_url</code> used to pass Databricks workspace in the format <code>https://&lt;workspace_name&gt;.cloud.databricks.com</code></li>
 <li>The <code>user_config.dbx_secret_scope</code> captures name of the secret scope</li>
-<li>The <code>user_config.dbx_kafka_server_url</code> captures secret key for the kafka url</li>
-<li>The <code>user_config.dbx_secret_token_url</code> captures secret key for the kafka authentication app url</li>
-<li>The <code>user_config.dbx_secret_app_name</code> captures secret key for the kafka authentication app name</li>
-<li>The <code>user_config.dbx_secret_token</code> captures secret key for the kafka authentication app secret token</li>
-<li>The <code>user_config.dbx_topic_name</code> captures secret key for the kafka topic name</li>
+<li>The <code>user_config.dbx_kafka_server_url</code> captures secret key for the Kafka URL</li>
+<li>The <code>user_config.dbx_secret_token_url</code> captures secret key for the Kafka authentication app URL</li>
+<li>The <code>user_config.dbx_secret_app_name</code> captures secret key for the Kafka authentication app name</li>
+<li>The <code>user_config.dbx_secret_token</code> captures secret key for the Kafka authentication app secret token</li>
+<li>The <code>user_config.dbx_topic_name</code> captures secret key for the Kafka topic name</li>
 </ol>
-<p>Similarly when sensitive store is cerberus: </p>
+<p>Similarly when sensitive store is Cerberus: </p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kn">from</span> <span class="nn">spark_expectations.config.user_config</span> <span class="kn">import</span> <span class="n">Constants</span> <span class="k">as</span> <span class="n">user_config</span>
 <a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
@@ -1425,7 +1439,7 @@ This dictionary can be placed in the <strong>init</strong>.py file of your proje
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>    <span class="n">user_config</span><span class="o">.</span><span class="n">cbs_url</span>  <span class="p">:</span> <span class="s2">&quot;https://&lt;url&gt;.cerberus.com&quot;</span><span class="p">,</span> <span class="c1"># (3)!</span>
 <a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>    <span class="n">user_config</span><span class="o">.</span><span class="n">cbs_sdb_path</span><span class="p">:</span> <span class="s2">&quot;cerberus_sdb_path&quot;</span><span class="p">,</span> <span class="c1"># (4)!</span>
 <a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>    <span class="n">user_config</span><span class="o">.</span><span class="n">cbs_kafka_server_url</span><span class="p">:</span> <span class="s2">&quot;se_streaming_server_url_secret_sdb_path&quot;</span><span class="p">,</span> <span class="c1"># (5)!</span>
-<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="n">user_config</span><span class="o">.</span><span class="n">cbs_secret_token_url</span><span class="p">:</span> <span class="s2">&quot;se_streaming_auth_secret_token_url_sdb_apth&quot;</span><span class="p">,</span> <span class="c1"># (6)!</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>    <span class="n">user_config</span><span class="o">.</span><span class="n">cbs_secret_token_url</span><span class="p">:</span> <span class="s2">&quot;se_streaming_auth_secret_token_url_sdb_path&quot;</span><span class="p">,</span> <span class="c1"># (6)!</span>
 <a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a>    <span class="n">user_config</span><span class="o">.</span><span class="n">cbs_secret_app_name</span><span class="p">:</span> <span class="s2">&quot;se_streaming_auth_secret_appid_sdb_path&quot;</span><span class="p">,</span> <span class="c1"># (7)!</span>
 <a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a>    <span class="n">user_config</span><span class="o">.</span><span class="n">cbs_secret_token</span><span class="p">:</span> <span class="s2">&quot;se_streaming_auth_secret_token_sdb_path&quot;</span><span class="p">,</span> <span class="c1"># (8)!</span>
 <a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a>    <span class="n">user_config</span><span class="o">.</span><span class="n">cbs_topic_name</span><span class="p">:</span> <span class="s2">&quot;se_streaming_topic_name_sdb_path&quot;</span><span class="p">,</span> <span class="c1"># (9)!</span>
@@ -1433,14 +1447,14 @@ This dictionary can be placed in the <strong>init</strong>.py file of your proje
 </code></pre></div>
 <ol>
 <li>The <code>user_config.se_enable_streaming</code> parameter is used to control the enabling or disabling of Spark Expectations (SE) streaming functionality. When enabled, SE streaming stores the statistics of every batch run into Kafka.</li>
-<li>The <code>user_config.secret_type</code> used to define type of secret store and takes two values (<code>databricks</code>, <code>cererus</code>) by default will be <code>databricks</code></li>
-<li>The <code>user_config.cbs_url</code> used to pass cerberus url</li>
-<li>The <code>user_config.cbs_sdb_path</code> captures cerberus secure data store path</li>
-<li>The <code>user_config.cbs_kafka_server_url</code> captures path where kafka url stored in the cerberus sdb</li>
-<li>The <code>user_config.cbs_secret_token_url</code> captures path where kafka authentication app stored in the cerberus sdb</li>
-<li>The <code>user_config.cbs_secret_app_name</code> captures path where kafka authentication app name stored in the cerberus sdb</li>
-<li>The <code>user_config.cbs_secret_token</code> captures path where kafka authentication app name secret token stored in the cerberus sdb</li>
-<li>The <code>user_config.cbs_topic_name</code>  captures path where kafka topic name stored in the cerberus sdb</li>
+<li>The <code>user_config.secret_type</code> used to define type of secret store and takes two values (<code>databricks</code>, <code>cerberus</code>) by default will be <code>databricks</code></li>
+<li>The <code>user_config.cbs_url</code> used to pass Cerberus URL</li>
+<li>The <code>user_config.cbs_sdb_path</code> captures Cerberus secure data store path</li>
+<li>The <code>user_config.cbs_kafka_server_url</code> captures path where Kafka URL stored in the Cerberus sdb</li>
+<li>The <code>user_config.cbs_secret_token_url</code> captures path where Kafka authentication app stored in the Cerberus sdb</li>
+<li>The <code>user_config.cbs_secret_app_name</code> captures path where Kafka authentication app name stored in the Cerberus sdb</li>
+<li>The <code>user_config.cbs_secret_token</code> captures path where Kafka authentication app name secret token stored in the Cerberus sdb</li>
+<li>The <code>user_config.cbs_topic_name</code>  captures path where Kafka topic name stored in the Cerberus sdb</li>
 </ol>
 <p>You can disable the streaming functionality by setting the <code>user_config.se_enable_streaming</code> parameter to <code>False</code> </p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Union</span>
@@ -1518,7 +1532,7 @@ This dictionary can be placed in the <strong>init</strong>.py file of your proje
 <li>The <code>target_table_view</code> parameter is used to provide the name of a view that represents the target validated dataset for implementation of <code>query_dq</code> on the clean dataset from <code>row_dq</code></li>
 <li>The <code>target_and_error_table_writer</code> parameter is used to write the final data into the table. By default, it is False. This is optional, if you just want to run the data quality checks. A good example will be a staging table or temporary view.</li>
 <li>View registration can be utilized when implementing <code>query_dq</code> expectations.</li>
-<li>Returning a dataframe is mandatory for the <code>spark_expectations</code> to work, if we do not return a dataframe - then an exceptionm will be raised</li>
+<li>Returning a dataframe is mandatory for the <code>spark_expectations</code> to work, if we do not return a dataframe - then an exception will be raised</li>
 <li>Instantiate <code>SparkExpectations</code> class which has all the required functions for running data quality rules</li>
 <li>The <code>product_id</code> parameter is used to specify the product ID of the data quality rules. This has to be a unique value</li>
 <li>The <code>rules_df</code> parameter is used to specify the dataframe that contains the data quality rules</li>
@@ -1526,7 +1540,7 @@ This dictionary can be placed in the <strong>init</strong>.py file of your proje
 <li>The <code>stats_table_writer</code> takes in the configuration that need to be used to write the stats table using pyspark</li>
 <li>The <code>target_and_error_table_writer</code> takes in the configuration that need to be used to write the target and error table using pyspark</li>
 <li>The <code>debugger</code> parameter is used to enable the debugger mode</li>
-<li>The <code>stats_streaming_options</code> parameter is used to specify the configurations for streaming statistics into Kafka. To not use kafka, uncomment this.</li>
+<li>The <code>stats_streaming_options</code> parameter is used to specify the configurations for streaming statistics into Kafka. To not use Kafka, uncomment this.</li>
 </ol>
 
 

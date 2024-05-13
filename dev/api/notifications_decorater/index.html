@@ -244,8 +244,8 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../configurations/adoption_versions_comparsion/" class="md-tabs__link">
-        Adoption_Guide
+      <a href="../../configurations/migration_versions_comparison/" class="md-tabs__link">
+        Migration_Guide
       </a>
     </li>
   
@@ -394,14 +394,14 @@
       
       
         <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
-          Adoption_Guide
+          Migration_Guide
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
-          Adoption_Guide
+          Migration_Guide
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -411,8 +411,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../configurations/adoption_versions_comparsion/" class="md-nav__link">
-        comparision
+      <a href="../../configurations/migration_versions_comparison/" class="md-nav__link">
+        comparison
       </a>
     </li>
   
@@ -2064,12 +2064,12 @@ Returns:
 <a id="__codelineno-0-238" name="__codelineno-0-238"></a>    <span class="k">try</span><span class="p">:</span>
 <a id="__codelineno-0-239" name="__codelineno-0-239"></a>        <span class="n">rules_failed_row_count</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
 <a id="__codelineno-0-240" name="__codelineno-0-240"></a>        <span class="n">notification_body</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
-<a id="__codelineno-0-241" name="__codelineno-0-241"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">get_summarised_row_dq_res</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+<a id="__codelineno-0-241" name="__codelineno-0-241"></a>        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">get_summarized_row_dq_res</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
 <a id="__codelineno-0-242" name="__codelineno-0-242"></a>            <span class="k">return</span> <span class="kc">None</span>
 <a id="__codelineno-0-243" name="__codelineno-0-243"></a>
 <a id="__codelineno-0-244" name="__codelineno-0-244"></a>        <span class="n">rules_failed_row_count</span> <span class="o">=</span> <span class="p">{</span>
 <a id="__codelineno-0-245" name="__codelineno-0-245"></a>            <span class="n">itr</span><span class="p">[</span><span class="s2">&quot;rule&quot;</span><span class="p">]:</span> <span class="nb">int</span><span class="p">(</span><span class="n">itr</span><span class="p">[</span><span class="s2">&quot;failed_row_count&quot;</span><span class="p">])</span>
-<a id="__codelineno-0-246" name="__codelineno-0-246"></a>            <span class="k">for</span> <span class="n">itr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">get_summarised_row_dq_res</span>
+<a id="__codelineno-0-246" name="__codelineno-0-246"></a>            <span class="k">for</span> <span class="n">itr</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">get_summarized_row_dq_res</span>
 <a id="__codelineno-0-247" name="__codelineno-0-247"></a>        <span class="p">}</span>
 <a id="__codelineno-0-248" name="__codelineno-0-248"></a>
 <a id="__codelineno-0-249" name="__codelineno-0-249"></a>        <span class="k">for</span> <span class="n">rule</span> <span class="ow">in</span> <span class="n">rules</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">get_row_dq_rule_type_name</span><span class="si">}</span><span class="s2">_rules&quot;</span><span class="p">]:</span>

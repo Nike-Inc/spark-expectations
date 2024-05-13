@@ -248,8 +248,8 @@
   
   
     <li class="md-tabs__item">
-      <a href="configurations/adoption_versions_comparsion/" class="md-tabs__link">
-        Adoption_Guide
+      <a href="configurations/migration_versions_comparison/" class="md-tabs__link">
+        Migration_Guide
       </a>
     </li>
   
@@ -446,14 +446,14 @@
       
       
         <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
-          Adoption_Guide
+          Migration_Guide
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
-          Adoption_Guide
+          Migration_Guide
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -463,8 +463,8 @@
   
   
     <li class="md-nav__item">
-      <a href="configurations/adoption_versions_comparsion/" class="md-nav__link">
-        comparision
+      <a href="configurations/migration_versions_comparison/" class="md-nav__link">
+        comparison
       </a>
     </li>
   
@@ -1350,7 +1350,7 @@ the data quality standards</li>
 <li>Downstream users have to consume the same data with error, or they have to do additional computation to remove the 
 records that doesn't meet the standards</li>
 <li>Another process is required as a corrective action to rectify the errors in the data and lot of planning is usually 
-required for this acitivity</li>
+required for this activity</li>
 </ul>
 <p><code>Spark-Expectations solves all of the above problems by following the below principles</code></p>
 <ul>
@@ -1373,10 +1373,10 @@ what needs to be done if a rule fails</p>
 <li>Let's consider a hypothetical scenario, where we have 100 columns and with 200
 row level data quality rules, 10 aggregation data quality rules and 5 query data quality rules  computed against. When the dq job is run, there are
 10 rules that failed on a particular row and 4 aggregation rules fails- what determines if that row should end up in 
-final table or not? Below are the heirarchy of checks that happens?</li>
-<li>Among the row level 10 rules failed, if there is atleast one rule which has an <em>action_if_failed</em> as <em>fail</em> - 
+final table or not? Below are the hierarchy of checks that happens?</li>
+<li>Among the row level 10 rules failed, if there is at least one rule which has an <em>action_if_failed</em> as <em>fail</em> - 
   then the job will be failed </li>
-<li>Among the 10 row level rules failed, if there is no rule that has an <em>action_if_failed</em> as <em>fail</em>, but atleast 
+<li>Among the 10 row level rules failed, if there is no rule that has an <em>action_if_failed</em> as <em>fail</em>, but at least 
   has one rule with <em>action_if_failed</em> as <em>drop</em> - then the record/row will be dropped</li>
 <li>Among the 10 row level rules failed, if no rule neither has <em>fail</em> nor <em>drop</em> as an <em>action_if_failed</em> - then 
   the record will be end up in the final table. Note that, this record would also exist in the <code>_error</code> table</li>

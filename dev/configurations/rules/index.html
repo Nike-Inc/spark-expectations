@@ -248,8 +248,8 @@
   
   
     <li class="md-tabs__item">
-      <a href="../adoption_versions_comparsion/" class="md-tabs__link">
-        Adoption_Guide
+      <a href="../migration_versions_comparison/" class="md-tabs__link">
+        Migration_Guide
       </a>
     </li>
   
@@ -400,14 +400,14 @@
       
       
         <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
-          Adoption_Guide
+          Migration_Guide
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
         <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
-          Adoption_Guide
+          Migration_Guide
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -417,8 +417,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../adoption_versions_comparsion/" class="md-nav__link">
-        comparision
+      <a href="../migration_versions_comparison/" class="md-nav__link">
+        comparison
       </a>
     </li>
   
@@ -1370,7 +1370,7 @@
 <thead>
 <tr>
 <th align="left">rule_description</th>
-<th align="center">rule_type</th>
+<th align="center">category</th>
 <th align="center">tag</th>
 <th align="right">rule_expectation</th>
 </tr>
@@ -1593,6 +1593,12 @@
 <td>accuracy</td>
 <td><code>count(*) between [lower_bound] and [upper_bound]</code></td>
 </tr>
+<tr>
+<td>Expect row count of the dataset fall within certain range</td>
+<td>expect_row_count_to_be_in_range</td>
+<td>accuracy</td>
+<td><code>count(*) &gt;[lower_bound] and count(*) &lt; [upper_bound]</code></td>
+</tr>
 </tbody>
 </table>
 <h4 id="possible-query-data-quality-expectations">Possible Query Data Quality Expectations<a class="headerlink" href="#possible-query-data-quality-expectations" title="Permanent link">&para;</a></h4>
@@ -1652,7 +1658,13 @@
 <td>Expect referential integrity</td>
 <td>expect_referential_integrity_between_two_table_should_be_less_than_100</td>
 <td>accuracy</td>
-<td><code>with refrentail_check as ( select * from [table_a] left join [table_b] on [condition] where [table_b.column] is null) select count(*) from refrentail_check) &lt; 100</code></td>
+<td><code>( select * from [table_a] left join [table_b] on [condition] where [table_b.column] is null) select count(*) from refrentail_check) &lt; 100</code></td>
+</tr>
+<tr>
+<td>Compare the source table and target table output (by default @ is the delimiter. can be overriden by query_dq_delimiter atttribute in rules table)</td>
+<td>customer_missing_count_threshold</td>
+<td>validity</td>
+<td>The_alias_within_the_curly_bracket_is_added_to_the_expectation_which_gets_resolved_at_compile_time_with_alias_values<code>((select count(*) from ({source_f1}) a join ({source_f2}) b on a.customer_id = b.customer_id) - (select count(*) from ({target_f1}) a join ({target_f2}) b on source_column = target_column)) &gt; ({target_f3})@source_f1@select column, count(*) from source_tbl group by column@source_f2@select column2, count(*) from table2 group by column2@target_f1@select column, count(*) from target_tbl  group by column@target_f2@select column2, count(*) from target_tbl2 group by column2@target_f3@select count(*) from source_tbl</code></td>
 </tr>
 </tbody>
 </table>
