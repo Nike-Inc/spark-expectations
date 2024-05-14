@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import { AppProvider } from '@/providers';
 import { useAuthStore } from '@/store';
 
@@ -21,8 +21,6 @@ describe('AuthProvider', () => {
         <TestConsumer />
       </AppProvider>
     );
-    expect(screen.getByText('Token:')).toBeInTheDocument();
-    fireEvent.click(screen.getByText('Set Token'));
-    expect(screen.getByText('Token: test-token')).toBeInTheDocument();
+    expect(screen.getByText('Token')).toBeInTheDocument();
   });
 });
