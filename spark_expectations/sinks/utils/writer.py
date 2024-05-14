@@ -125,7 +125,7 @@ class SparkExpectationsWriter:
             )
 
     def get_row_dq_detailed_stats(
-        self,
+            self,
     ) -> List[
         Tuple[str, str, str, str, str, str, str, str, str, None, None, int, str, int, str, str]
     ]:
@@ -147,48 +147,73 @@ class SparkExpectationsWriter:
             _input_count = self._context.get_input_count
 
             _row_dq_result = []
-            _rowdq_rule_dict = {}
-            if (
-                self._context.get_summarized_row_dq_res is not None
-                and len(self._context.get_summarized_row_dq_res) > 0
-            ):
-                _rowdq_expectations = self._context.get_dq_expectations
-                for _rowdq_rule in _rowdq_expectations["row_dq_rules"]:
-                    _rowdq_rule_dict[_rowdq_rule["rule"]] = (
-                        _rowdq_rule["expectation"]
-                        + "|"
-                        + _rowdq_rule["tag"]
-                        + "|"
-                        + _rowdq_rule["description"]
-                    )
 
-                for _dq_res in self._context.get_summarized_row_dq_res:
-                    _rowdq_rules = str(_rowdq_rule_dict[_dq_res["rule"]]).split("|")
-                    _rule_expectations = _rowdq_rules[0]
-                    _rule_tag = _rowdq_rules[1]
-                    _rule_desc = _rowdq_rules[2]
-                    _row_dq_result.append(
-                        (
-                            _run_id,
-                            _product_id,
-                            _table_name,
-                            _dq_res["rule_type"],
-                            _dq_res["rule"],
-                            _rule_expectations,
-                            _rule_tag,
-                            _rule_desc,
-                            "pass" if int(_dq_res["failed_row_count"]) == 0 else "fail",
-                            None,
-                            None,
-                            (_input_count - int(_dq_res["failed_row_count"])),
-                            _dq_res["failed_row_count"],
-                            _input_count,
-                            self._context.get_row_dq_start_time.replace(tzinfo=timezone.utc).strftime(
-                                "%Y-%m-%d %H:%M:%S") if self._context.get_row_dq_start_time else '1900-01-01',
-                            self._context.get_row_dq_end_time.replace(tzinfo=timezone.utc).strftime(
-                                "%Y-%m-%d %H:%M:%S") if self._context.get_row_dq_end_time else '1900-01-01'
+            rules_execution_settings = self._context.get_rules_execution_settings_config
+            _row_dq: bool = rules_execution_settings.get("row_dq", False)
+
+            _rowdq_expectations = self._context.get_dq_expectations
+            _row_dq_expectations = _rowdq_expectations["row_dq_rules"]
+
+            if (
+                    self._context.get_summarized_row_dq_res is not None
+                    and len(self._context.get_summarized_row_dq_res) > 0
+            ):
+
+                _row_dq_res = self._context.get_summarized_row_dq_res
+                _dq_res = {d['rule']: d['failed_row_count'] for d in _row_dq_res}
+
+                for _rowdq_rule in _row_dq_expectations:
+                    if _rowdq_rule['rule'] in _dq_res:
+                        failed_row_count = _dq_res[_rowdq_rule['rule']]
+                        _row_dq_result.append(
+                            (
+                                _run_id,
+                                _product_id,
+                                _table_name,
+                                _rowdq_rule["rule_type"],
+                                _rowdq_rule["rule"],
+                                _rowdq_rule["expectation"],
+                                _rowdq_rule["tag"],
+                                _rowdq_rule["description"],
+                                "pass" if int(failed_row_count) == 0 else "fail",
+                                None,
+                                None,
+                                (_input_count - int(failed_row_count)),
+                                failed_row_count,
+                                _input_count,
+                                self._context.get_row_dq_start_time.replace(tzinfo=timezone.utc).strftime(
+                                    "%Y-%m-%d %H:%M:%S") if self._context.get_row_dq_start_time else '1900-01-01 00:00:00',
+                                self._context.get_row_dq_end_time.replace(tzinfo=timezone.utc).strftime(
+                                    "%Y-%m-%d %H:%M:%S") if self._context.get_row_dq_end_time else '1900-01-01 00:00:00'
+                            )
                         )
+                        _row_dq_expectations.remove(_rowdq_rule)
+
+            for _rowdq_rule in _row_dq_expectations:
+                _row_dq_result.append(
+                    (
+                        _run_id,
+                        _product_id,
+                        _table_name,
+                        _rowdq_rule["rule_type"],
+                        _rowdq_rule["rule"],
+                        _rowdq_rule["expectation"],
+                        _rowdq_rule["tag"],
+                        _rowdq_rule["description"],
+                        "pass",
+                        None,
+                        None,
+                        _input_count,
+                        '0',
+                        _input_count,
+                        self._context.get_row_dq_start_time.replace(tzinfo=timezone.utc).strftime(
+                            "%Y-%m-%d %H:%M:%S") if self._context.get_row_dq_start_time else '1900-01-01 00:00:00',
+                        self._context.get_row_dq_end_time.replace(tzinfo=timezone.utc).strftime(
+                            "%Y-%m-%d %H:%M:%S") if self._context.get_row_dq_end_time else '1900-01-01 00:00:00'
                     )
+                )
+
+            _log.info(f'_row_dq_result : {_row_dq_result}')
 
             return _row_dq_result
 
