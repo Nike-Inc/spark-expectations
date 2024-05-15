@@ -443,8 +443,7 @@ class SparkExpectationsWriter:
 
         if (
             self._context.get_row_dq_status != "Skipped"
-            and self._context.get_summarized_row_dq_res is not None
-            and len(self._context.get_summarized_row_dq_res) > 0
+            and _row_dq
         ):
             _rowdq_detailed_stats_result = self.get_row_dq_detailed_stats()
 
