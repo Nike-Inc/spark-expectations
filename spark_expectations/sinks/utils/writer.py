@@ -148,9 +148,6 @@ class SparkExpectationsWriter:
 
             _row_dq_result = []
 
-            rules_execution_settings = self._context.get_rules_execution_settings_config
-            _row_dq: bool = rules_execution_settings.get("row_dq", False)
-
             _rowdq_expectations = self._context.get_dq_expectations
             _row_dq_expectations = _rowdq_expectations["row_dq_rules"]
 
@@ -213,7 +210,6 @@ class SparkExpectationsWriter:
                     )
                 )
 
-            _log.info(f'_row_dq_result : {_row_dq_result}')
 
             return _row_dq_result
 
