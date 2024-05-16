@@ -1,0 +1,41 @@
+.header {
+    padding-top: var(--mantine-spacing-sm);
+    background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+    border-bottom: rem(1px) solid light-dark(var(--mantine-color-gray-2), transparent);
+    margin-bottom: rem(120px);
+}
+
+.mainSection {
+    padding-bottom: var(--mantine-spacing-sm);
+}
+
+
+
+.tabsList {
+    &::before {
+        display: none;
+    }
+}
+
+.tab {
+    font-weight: 500;
+    background-color: transparent;
+    position: relative;
+    bottom: -1px;
+
+    &::before,
+    &::after {
+        background-color:
+                var(--mantine-color-gray-2) !important;
+    }
+
+    &:hover {
+        background-color: var(--mantine-color-gray-1);
+    }
+
+    &[data-active] {
+        background-color: var(--mantine-color-white);
+        border-color: var(--mantine-color-gray-2), var(--mantine-color-dark-7);
+        border-bottom-color: transparent;
+    }
+}

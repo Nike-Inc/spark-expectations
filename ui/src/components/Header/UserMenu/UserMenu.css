@@ -1,0 +1,22 @@
+.IconChevronRight {
+    width: 14px;
+    height: 14px;
+    stroke-width: 1.5;
+}
+
+
+.user {
+    color: var(--mantine-color-black);
+    padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
+    border-radius: var(--mantine-radius-sm);
+    transition: background-color 100ms ease;
+
+    &:hover {
+        background-color: var(--mantine-color-white);
+    }
+
+}
+
+.userActive {
+    background-color: var(--mantine-color-white);
+}
