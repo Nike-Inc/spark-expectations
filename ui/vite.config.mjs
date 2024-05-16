@@ -9,4 +9,13 @@ export default defineConfig({
         environment: 'jsdom',
         setupFiles: './vitest.setup.mjs',
     },
+    coverage: {
+        provider: 'c8',
+        reporter: ['text', 'html'],
+        exclude: [
+            '**/index.ts',
+            '**/node_modules/**',
+            '**/tests/**'
+        ]
+    }
 });

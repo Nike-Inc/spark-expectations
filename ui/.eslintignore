@@ -3,4 +3,4 @@
 *.mjs
 *.d.ts
 *.d.mts
-vite.config.ts
+vite.config.ts!/coverage/

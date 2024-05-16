@@ -24,5 +24,9 @@
         "ignorePseudoClasses": ["global"]
       }
     ]
-  }
+  },
+  "ignoreFiles": [
+    "coverage/**",
+    "node_modules/**"
+  ]
 }
