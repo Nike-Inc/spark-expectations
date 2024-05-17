@@ -12,10 +12,13 @@ export default defineConfig({
     coverage: {
         provider: 'c8',
         reporter: ['text', 'html'],
+        // TODO: Exclude test files from coverage is not working
         exclude: [
             '**/index.ts',
             '**/node_modules/**',
-            '**/tests/**'
+            '**/tests/**',
+            'ui/test-utils/**',
+            '**/__mocks__/**',
         ]
     }
 });

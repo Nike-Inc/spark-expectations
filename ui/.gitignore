@@ -97,3 +97,9 @@ yarn-error.log*
 /coverage/ui/src/api/user/user-query-keys.ts.html
 /coverage/ui/src/components/Header/UserMenu/UserMenu.tsx.html
 /coverage/ui/src/utils/yaml_to_json.ts.html
+/coverage/ui/test-utils/__mocks__/dynamic-store.mock.ts.html
+/coverage/ui/test-utils/__mocks__/index.html
+/coverage/ui/test-utils/__mocks__/index.ts.html
+/coverage/ui/test-utils/__mocks__/repo.mock.ts.html
+/coverage/ui/test-utils/__mocks__/repos.mock.ts.html
+/coverage/ui/test-utils/__mocks__/user.mock.ts.html
