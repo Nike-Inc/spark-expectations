@@ -1,12 +1,7 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@test-utils';
 import { ReposList } from './ReposList';
 import { useRepos } from '@/api';
-
-// Mock the API hook
-vi.mock('@/api', () => ({
-  useRepos: vi.fn(),
-}));
 
 describe('ReposList', () => {
   it('renders loading state correctly', () => {

@@ -4,11 +4,6 @@ import { render, screen } from '@test-utils';
 import { UserMenu } from './UserMenu';
 import { useUser } from '@/api';
 
-// Mock the API hook and store
-vi.mock('@/api', () => ({
-  useUser: vi.fn(),
-}));
-
 describe('UserMenu', () => {
   it('renders loading state correctly', () => {
     // @ts-ignore

@@ -7,6 +7,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "clean": "rm -rf node_modules && rm -rf coverage && yarn cache clean",
+    "ci": "npm run clean && yarn install",
     "code:fix": "npm run lint:fix && npm run prettier:write && npm run typecheck",
     "lint": "npm run lint:eslint && npm run lint:stylelint",
     "lint:fix": "npm run lint:eslint:fix && npm run lint:stylelint:fix",
@@ -38,6 +40,7 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
     "@tanstack/react-query-devtools": "^5.34.1",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",

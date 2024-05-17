@@ -1,5 +1,5 @@
 // tests for src/store/auth-store.ts
-import { act } from 'react-dom/test-utils';
+import { act } from 'react';
 import { renderHook } from '@testing-library/react';
 import { useAuthStore } from '@/store/auth-store';
 

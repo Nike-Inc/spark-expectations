@@ -63,7 +63,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           </Group>
         </form>
       </Modal>
-      {/*TODO: Handle Error State*/}
       {token && username ? children : <Loading />}
     </>
   );

@@ -8,7 +8,6 @@ export const getUserFn = async () => {
   return response.data as User;
 };
 
-// TODO: How to convert Github User to generic User type?
 export const useUser = () =>
   useQuery({
     queryKey: userQueryKeys.detail('me'),
