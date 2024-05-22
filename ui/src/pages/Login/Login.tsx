@@ -2,6 +2,7 @@ import React, { FC } from 'react';
 import { useForm } from '@mantine/form';
 import { TextInput, Button, Group, Container, Title } from '@mantine/core';
 import { useNavigate } from 'react-router-dom';
+import { showNotification } from '@mantine/notifications';
 import { useAuthStore } from '@/store';
 import { getUserFn } from '@/api';
 import './Login.css';
@@ -28,10 +29,13 @@ export const LoginPage: FC<LoginPageProps> = () => {
         setUserName(res.login);
         navigate('/');
       })
-      .catch((err) => {
-        // TODO: handle error.
-        // eslint-disable-next-line no-console
-        console.log(err);
+      .catch(() => {
+        showNotification({
+          title: 'Error while logging in',
+          message: 'Please check your token and try again',
+          color: 'red',
+          withCloseButton: true,
+        });
       });
   };
 
