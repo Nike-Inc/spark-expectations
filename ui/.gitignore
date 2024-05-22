@@ -103,3 +103,11 @@ yarn-error.log*
 /coverage/ui/test-utils/__mocks__/repo.mock.ts.html
 /coverage/ui/test-utils/__mocks__/repos.mock.ts.html
 /coverage/ui/test-utils/__mocks__/user.mock.ts.html
+/coverage/.tmp/coverage-0.json
+/coverage/.tmp/coverage-1.json
+/coverage/.tmp/coverage-2.json
+/coverage/.tmp/coverage-3.json
+/coverage/.tmp/coverage-4.json
+/coverage/.tmp/coverage-5.json
+/coverage/.tmp/coverage-6.json
+/coverage/.tmp/coverage-7.json

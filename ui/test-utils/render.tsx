@@ -1,21 +1,24 @@
 import { render as testingLibraryRender } from '@testing-library/react';
 import React from 'react';
 import { vi } from 'vitest';
-import { AppProvider } from '@/providers';
-import { createDynamicMockStore } from './__mocks__/dynamic-store.mock';
 import { createUserMock, useReposMock, useUserMock } from './__mocks__';
+import { CustomMantineProvider, ReactQueryProvider } from '@/providers';
 
 export function render(ui: React.ReactNode) {
   /*
    * Any updates to the store should be replicated here.
    * */
   vi.mock('@/store', () => {
-    const useAuthStore = () =>
-      createDynamicMockStore({
-        token: 'test-token',
-        isModalOpen: false,
-        username: 'test-username',
-      });
+    const useAuthStore = vi.fn(() => ({
+      token: null,
+      isModalOpen: false,
+      username: null,
+      setToken: vi.fn(),
+      setUserName: vi.fn(),
+      openModal: vi.fn(),
+      closeModal: vi.fn(),
+    }));
+
     return { useAuthStore };
   });
 
@@ -23,8 +26,14 @@ export function render(ui: React.ReactNode) {
    * As api-client is an abstraction of the underlying GitHub client, extending the app to other git managers
    * will be easy. And this wrapper doesn't have to be updated.
    *  */
-  vi.mock('@/api/api-client', () => {
-    const mockAxiosInstance = {
+
+  vi.mock('@/api', () => {
+    const getUserFn = vi.fn(() => Promise.resolve(createUserMock()));
+    const useUser = vi.fn(() => useUserMock());
+    // const getReposFn = vi.fn(() => Promise.resolve(Array.from({ length: 10 }, createRepoMock)));
+    const useRepos = vi.fn(() => useReposMock());
+
+    const apiClient = {
       get: vi.fn(() => Promise.resolve({ data: 'mocked get' })),
       post: vi.fn(() => Promise.resolve({ data: 'mocked post' })),
       put: vi.fn(() => Promise.resolve({ data: 'mocked put' })),
@@ -39,23 +48,15 @@ export function render(ui: React.ReactNode) {
       },
       defaults: { headers: { common: {} } },
     };
-    return {
-      apiClient: mockAxiosInstance,
-    };
-  });
 
-  vi.mock('@/api/user', () => {
-    const getUserFn = vi.fn(() => Promise.resolve(createUserMock()));
-    const useUser = vi.fn(() => useUserMock());
-    return { getUserFn, useUser };
-  });
-
-  vi.mock('@/api/repo', () => {
-    const useRepos = vi.fn(() => useReposMock());
-    return { useRepos };
+    return { getUserFn, useUser, useRepos, apiClient };
   });
 
   return testingLibraryRender(<>{ui}</>, {
-    wrapper: ({ children }: { children: React.ReactNode }) => <AppProvider>{children}</AppProvider>,
+    wrapper: ({ children }: { children: React.ReactNode }) => (
+      <CustomMantineProvider>
+        <ReactQueryProvider>{children}</ReactQueryProvider>
+      </CustomMantineProvider>
+    ),
   });
 }
