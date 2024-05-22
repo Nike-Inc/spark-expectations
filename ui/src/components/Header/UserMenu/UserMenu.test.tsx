@@ -1,5 +1,5 @@
 //
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 import { render, screen } from '@test-utils';
 import { UserMenu } from './UserMenu';
 import { useUser } from '@/api';

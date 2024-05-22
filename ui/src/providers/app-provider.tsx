@@ -1,12 +1,12 @@
 import React from 'react';
 import { ReactQueryProvider } from './react-query-provider';
 import { CustomMantineProvider } from './mantine-provider';
-import { AuthProvider } from './auth-provider';
+import { RouterProvider } from './router-provider';
 
-export const AppProvider = ({ children }: { children: React.ReactNode }) => (
+export const AppProvider = () => (
   <CustomMantineProvider>
     <ReactQueryProvider>
-      <AuthProvider>{children}</AuthProvider>
+      <RouterProvider />
     </ReactQueryProvider>
   </CustomMantineProvider>
 );

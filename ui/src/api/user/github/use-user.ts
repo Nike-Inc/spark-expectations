@@ -1,9 +1,14 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '@/api';
 import { userQueryKeys } from '../user-query-keys';
+import { useAuthStore } from '@/store';
 
 export const getUserFn = async () => {
-  const response = await apiClient.get('/user');
+  const response = await apiClient.get('/user', {
+    headers: {
+      Authorization: `Bearer ${useAuthStore.getState().token}`,
+    },
+  });
 
   return response.data as User;
 };

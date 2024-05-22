@@ -35,12 +35,12 @@ export const useAuthStore = create(
     }
   )
 );
-
+//
 // export const useAuthStore = create<AuthState>((set) => ({
 //   token: null,
 //   isModalOpen: false,
 //   username: null,
-//   setToken: (token: string) => set(() => ({ token })),
+//   setToken: (token: string | null) => set(() => ({ token })),
 //   setUserName: (username: string) => set(() => ({ username })),
 //   openModal: () => set(() => ({ isModalOpen: true })),
 //   closeModal: () => set(() => ({ isModalOpen: false })),
