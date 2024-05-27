@@ -117,6 +117,7 @@ class SparkExpectations:
                 user_config.se_notifications_on_start: False,
                 user_config.se_notifications_on_completion: False,
                 user_config.se_notifications_on_fail: True,
+                user_config.se_notifications_on_fail: True,
                 user_config.se_notifications_on_error_drop_exceeds_threshold_breach: False,
                 user_config.se_notifications_on_error_drop_threshold: 100,
                 user_config.se_enable_agg_dq_detailed_result: False,
@@ -341,6 +342,10 @@ class SparkExpectations:
 
                     self._context.set_input_count(_input_count)
                     self._context.set_error_drop_threshold(_error_drop_threshold)
+
+                    _log.info(
+                        f"Spark Expectations run id for this run: {self._context.get_run_id}"
+                    )
 
                     if isinstance(_df, DataFrame):
                         _log.info("The function dataframe is created")

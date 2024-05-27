@@ -541,7 +541,9 @@ class SparkExpectationsActions:
                         or _context.get_query_dq_detailed_stats_status is True
                     ):
                         current_date = datetime.now()
-                        dq_start_time = datetime.strftime(current_date, "%Y-%m-%d %H:%M:%S")
+                        dq_start_time = datetime.strftime(
+                            current_date, "%Y-%m-%d %H:%M:%S"
+                        )
 
                         (
                             _querydq_output_list,
@@ -555,7 +557,9 @@ class SparkExpectationsActions:
                             _target_dq_status=_target_dq_enabled,
                         )
                         current_date = datetime.now()
-                        dq_end_time = datetime.strftime(current_date, "%Y-%m-%d %H:%M:%S")
+                        dq_end_time = datetime.strftime(
+                            current_date, "%Y-%m-%d %H:%M:%S"
+                        )
                         _agg_query_dq_output_list = list(_agg_query_dq_output_tuple)
                         _agg_query_dq_output_list.extend([dq_start_time, dq_end_time])
                         _agg_query_dq_output_tuple = tuple(_agg_query_dq_output_list)

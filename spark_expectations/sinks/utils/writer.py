@@ -125,9 +125,26 @@ class SparkExpectationsWriter:
             )
 
     def get_row_dq_detailed_stats(
-            self,
+        self,
     ) -> List[
-        Tuple[str, str, str, str, str, str, str, str, str, None, None, int, str, int, str, str]
+        Tuple[
+            str,
+            str,
+            str,
+            str,
+            str,
+            str,
+            str,
+            str,
+            str,
+            None,
+            None,
+            int,
+            str,
+            int,
+            str,
+            str,
+        ]
     ]:
         """
         This function writes the detailed stats for row dq into the detailed stats table
@@ -559,17 +576,28 @@ class SparkExpectationsWriter:
             )
 
             _log.info(
-                "Writing metrics to the querydq custom output table: %s, ended",
-                self._context.get_query_dq_output_custom_table_name,
+                "Writing metrics to the detailed stats table: %s, ended",
+                self._context.get_dq_detailed_stats_table_name,
             )
 
+            # TODO Create a separate function for writing the custom query dq stats
             _df_custom_detailed_stats_source = self._prep_secondary_query_output()
+
+            _log.info(
+                "Writing metrics to the output custom table: %s, started",
+                self._context.get_query_dq_output_custom_table_name,
+            )
 
             self.save_df_as_table(
                 _df_custom_detailed_stats_source,
                 self._context.get_query_dq_output_custom_table_name,
                 config=self._context.get_detailed_stats_table_writer_config,
                 stats_table=True,
+            )
+
+            _log.info(
+                "Writing metrics to the output custom table: %s, ended",
+                self._context.get_query_dq_output_custom_table_name,
             )
 
         except Exception as e:
@@ -775,6 +803,10 @@ class SparkExpectationsWriter:
                 or self._context.get_query_dq_detailed_stats_status is True
             ):
                 self.write_detailed_stats()
+
+                # TODO Implement the below function for writing the custom query dq stats
+                # if self._context.get_query_dq_detailed_stats_status is True:
+                #     self.write_query_dq_custom_output()
 
             # TODO check if streaming_stats is set to off, if it's enabled only then this should run
 
