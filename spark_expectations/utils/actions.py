@@ -680,7 +680,7 @@ class SparkExpectationsActions:
             _df_dq_columns = [
                 dq_column
                 for dq_column in _df_dq.columns
-                if (dq_column.startswith(f"meta_{_rule_type}_results")) == False
+                if (dq_column.startswith(f"meta_{_rule_type}_results")) is False
             ]
             _df_dq_columns.append("action_if_failed")
             _df_dq = _df_dq.withColumn(

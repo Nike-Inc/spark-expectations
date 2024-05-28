@@ -1913,18 +1913,18 @@ class SparkExpectationsContext:
         """
         return self._dq_rules_params
 
-    def set_job_metadata(self, job_metadata=None):
+    def set_job_metadata(self, job_metadata: Optional[str] = None) -> None:
         """
-        This function is used to generate the current datatime in UTC
+        This function is used to set the job_metadata
 
         Returns:
-            str: Returns the current utc datatime in the format - "%Y-%m-%d %H:%M:%S"
+            None
 
         """
         self._job_metadata = job_metadata
 
     @property
-    def get_job_metadata(self) -> str:
+    def get_job_metadata(self) -> Optional[str]:
         """
         This function is used to get row data quality rule type name
 
@@ -1934,3 +1934,4 @@ class SparkExpectationsContext:
         """
         if self._job_metadata is not None:
             return str(self._job_metadata)
+        return None

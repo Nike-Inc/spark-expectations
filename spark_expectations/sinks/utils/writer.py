@@ -943,9 +943,9 @@ class SparkExpectationsWriter:
                 for dq_column in error_df.columns
                 if (
                     dq_column.startswith("sequence_number")
-                    or dq_column.startswith(f"{rule_type}")
+                    or dq_column.startswith(rule_type)
                 )
-                == False
+                is False
             ]
 
             error_df = error_df.select(error_df_columns)
