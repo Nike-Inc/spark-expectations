@@ -2329,6 +2329,8 @@ def test_write_error_stats(
                         4,
                         0,
                         4,
+                        "2024-03-14 00:00:00",
+                        "2024-03-14 00:10:00",
                     ),
                 ],
                 "source_agg_dq_detailed_stats": [
@@ -2347,6 +2349,8 @@ def test_write_error_stats(
                         5,
                         0,
                         5,
+                        "2024-03-14 00:00:00",
+                        "2024-03-14 00:10:00",
                     ),
                 ],
                 "target_agg_dq_detailed_stats": [
@@ -2365,6 +2369,8 @@ def test_write_error_stats(
                         4,
                         0,
                         4,
+                        "2024-03-14 01:00:00",
+                        "2024-03-14 01:10:00",
                     ),
                 ],
                 "source_query_dq_detailed_stats": [
@@ -2383,6 +2389,8 @@ def test_write_error_stats(
                         5,
                         0,
                         5,
+                        "2024-03-14 02:00:00",
+                        "2024-03-14 02:10:00",
                     )
                 ],
                 "target_query_dq_detailed_stats": [
@@ -2401,6 +2409,8 @@ def test_write_error_stats(
                         5,
                         0,
                         5,
+                        "2024-03-14 03:00:00",
+                        "2024-03-14 03:10:00",
                     )
                 ],
                 "source_query_dq_output": [
@@ -2573,6 +2583,8 @@ def test_write_error_stats(
                         4,
                         0,
                         4,
+                        "2024-03-14 00:00:00",
+                        "2024-03-14 00:10:00",
                     ),
                 ],
                 "source_agg_dq_detailed_stats": [
@@ -2591,6 +2603,8 @@ def test_write_error_stats(
                         5,
                         0,
                         5,
+                        "2024-03-14 00:00:00",
+                        "2024-03-14 00:10:00",
                     ),
                 ],
                 "target_agg_dq_detailed_stats": [
@@ -2609,6 +2623,8 @@ def test_write_error_stats(
                         4,
                         0,
                         4,
+                        "2024-03-14 01:00:00",
+                        "2024-03-14 01:10:00",
                     ),
                 ],
                 "source_query_dq_detailed_stats": [
@@ -2627,6 +2643,8 @@ def test_write_error_stats(
                         5,
                         0,
                         5,
+                        "2024-03-14 02:00:00",
+                        "2024-03-14 02:10:00",
                     )
                 ],
                 "target_query_dq_detailed_stats": [
@@ -2645,6 +2663,8 @@ def test_write_error_stats(
                         5,
                         0,
                         5,
+                        "2024-03-14 03:00:00",
+                        "2024-03-14 03:10:00",
                     )
                 ],
                 "source_query_dq_output": [
@@ -2793,6 +2813,8 @@ def test_write_error_stats(
                         5,
                         0,
                         5,
+                        "2024-03-14 00:00:00",
+                        "2024-03-14 00:10:00",
                     )
                 ],
                 "target_query_dq_detailed_stats": [],
@@ -2927,6 +2949,8 @@ def test_write_error_stats(
                         None,
                         None,
                         4,
+                        "2024-03-14 00:00:00",
+                        "2024-03-14 00:10:00",
                     ),
                 ],
                 "source_agg_dq_detailed_stats": [
@@ -2943,6 +2967,8 @@ def test_write_error_stats(
                         [1988],
                         [">10000"],
                         5,
+                        "2024-03-14 00:00:00",
+                        "2024-03-14 00:10:00",
                     ),
                 ],
                 "target_agg_dq_detailed_stats": [
@@ -2959,6 +2985,8 @@ def test_write_error_stats(
                         [1030],
                         [">10000"],
                         4,
+                        "2024-03-14 01:00:00",
+                        "2024-03-14 01:10:00",
                     ),
                 ],
                 "source_query_dq_detailed_stats": [
@@ -2977,6 +3005,8 @@ def test_write_error_stats(
                         5,
                         0,
                         5,
+                        "2024-03-14 02:00:00",
+                        "2024-03-14 02:10:00",
                     )
                 ],
                 "target_query_dq_detailed_stats": [
@@ -2995,6 +3025,8 @@ def test_write_error_stats(
                         4,
                         0,
                         4,
+                        "2024-03-14 03:00:00",
+                        "2024-03-14 03:10:00",
                     )
                 ],
                 "source_query_dq_output": [
@@ -3208,6 +3240,21 @@ def test_write_detailed_stats(
     setattr(_mock_context, "get_table_name", "dq_spark_local.customer_order")
     setattr(_mock_context, "get_input_count", input_record.get("input_count"))
     setattr(_mock_context, "get_dq_expectations", input_record.get("dq_expectations"))
+    setattr(
+        _mock_context,
+        "get_row_dq_start_time",
+        datetime.strptime("2024-03-14 00:00:00", "%Y-%m-%d %H:%M:%S"),
+    )
+    setattr(
+        _mock_context,
+        "get_row_dq_end_time",
+        datetime.strptime("2024-03-14 00:10:00", "%Y-%m-%d %H:%M:%S"),
+    )
+    setattr(
+        _mock_context,
+        "get_job_metadata",
+        '{"dag": "dag1", "task": "task1", "team": "my_squad"}',
+    )
 
     if writer_config is None:
         setattr(
