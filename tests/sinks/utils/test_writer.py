@@ -1,5 +1,6 @@
 import os
 import unittest.mock
+from datetime import datetime
 from unittest.mock import MagicMock, patch, Mock
 
 import pytest
@@ -430,6 +431,8 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         5,
                         0,
                         5,
+                        "2024-03-14 00:00:00",
+                        "2024-03-14 00:10:00",
                     ),
                 ],
                 "target_agg_dq_detailed_stats": [
@@ -448,6 +451,8 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         4,
                         0,
                         4,
+                        "2024-03-14 01:00:00",
+                        "2024-03-14 01:10:00",
                     ),
                 ],
                 "source_query_dq_detailed_stats": [
@@ -466,6 +471,8 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         5,
                         0,
                         5,
+                        "2024-03-14 02:00:00",
+                        "2024-03-14 02:10:00",
                     )
                 ],
                 "target_query_dq_detailed_stats": [
@@ -484,6 +491,8 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         5,
                         0,
                         5,
+                        "2024-03-14 03:00:00",
+                        "2024-03-14 03:10:00",
                     )
                 ],
                 "source_query_dq_output": [
@@ -731,6 +740,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                     "source_query_dq": "Passed",
                     "final_query_dq": "Passed",
                 },
+                "job_metadata": {"dag": "dag1", "task": "task1", "team": "my_squad"},
             },
             {
                 "output_percentage": 90.0,
@@ -771,6 +781,8 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         4,
                         0,
                         4,
+                        "2024-03-14 01:00:00",
+                        "2024-03-14 01:10:00",
                     ),
                 ],
                 "source_query_dq_detailed_stats": [],
@@ -965,6 +977,8 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         5,
                         0,
                         5,
+                        "2024-03-14 00:00:00",
+                        "2024-03-14 00:10:00",
                     ),
                 ],
                 "target_agg_dq_detailed_stats": [],
@@ -985,6 +999,8 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         5,
                         0,
                         5,
+                        "2024-03-14 03:00:00",
+                        "2024-03-14 03:10:00",
                     )
                 ],
                 "source_query_dq_output": [],
@@ -1221,6 +1237,8 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         5,
                         0,
                         5,
+                        "2024-03-14 00:00:00",
+                        "2024-03-14 00:10:00",
                     ),
                 ],
                 "target_agg_dq_detailed_stats": [],
@@ -1417,6 +1435,8 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         5,
                         0,
                         5,
+                        "2024-03-14 00:00:00",
+                        "2024-03-14 00:10:00",
                     ),
                 ],
                 "target_agg_dq_detailed_stats": [],
@@ -1436,6 +1456,8 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         5,
                         0,
                         5,
+                        "2024-03-14 02:00:00",
+                        "2024-03-14 02:10:00",
                     )
                 ],
                 "target_query_dq_detailed_stats": [
@@ -1454,6 +1476,8 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         5,
                         0,
                         5,
+                        "2024-03-14 03:00:00",
+                        "2024-03-14 03:10:00",
                     )
                 ],
                 "source_query_dq_output": [
@@ -2136,6 +2160,21 @@ def test_write_error_stats(
     )
     setattr(_mock_context, "product_id", "product_1")
     setattr(_mock_context, "get_dq_expectations", input_record.get("dq_expectations"))
+    setattr(
+        _mock_context,
+        "get_row_dq_start_time",
+        datetime.strptime("2024-03-14 00:00:00", "%Y-%m-%d %H:%M:%S"),
+    )
+    setattr(
+        _mock_context,
+        "get_row_dq_end_time",
+        datetime.strptime("2024-03-14 00:10:00", "%Y-%m-%d %H:%M:%S"),
+    )
+    setattr(
+        _mock_context,
+        "get_job_metadata",
+        '{"dag": "dag1", "task": "task1", "team": "my_squad"}',
+    )
 
     if writer_config is None:
         setattr(

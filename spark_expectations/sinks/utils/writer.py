@@ -169,16 +169,15 @@ class SparkExpectationsWriter:
             _row_dq_expectations = _rowdq_expectations["row_dq_rules"]
 
             if (
-                    self._context.get_summarized_row_dq_res is not None
-                    and len(self._context.get_summarized_row_dq_res) > 0
+                self._context.get_summarized_row_dq_res is not None
+                and len(self._context.get_summarized_row_dq_res) > 0
             ):
-
                 _row_dq_res = self._context.get_summarized_row_dq_res
-                _dq_res = {d['rule']: d['failed_row_count'] for d in _row_dq_res}
+                _dq_res = {d["rule"]: d["failed_row_count"] for d in _row_dq_res}
 
                 for _rowdq_rule in _row_dq_expectations:
-                    if _rowdq_rule['rule'] in _dq_res:
-                        failed_row_count = _dq_res[_rowdq_rule['rule']]
+                    if _rowdq_rule["rule"] in _dq_res:
+                        failed_row_count = _dq_res[_rowdq_rule["rule"]]
                         _row_dq_result.append(
                             (
                                 _run_id,
@@ -195,10 +194,16 @@ class SparkExpectationsWriter:
                                 (_input_count - int(failed_row_count)),
                                 failed_row_count,
                                 _input_count,
-                                self._context.get_row_dq_start_time.replace(tzinfo=timezone.utc).strftime(
-                                    "%Y-%m-%d %H:%M:%S") if self._context.get_row_dq_start_time else '1900-01-01 00:00:00',
-                                self._context.get_row_dq_end_time.replace(tzinfo=timezone.utc).strftime(
-                                    "%Y-%m-%d %H:%M:%S") if self._context.get_row_dq_end_time else '1900-01-01 00:00:00'
+                                self._context.get_row_dq_start_time.replace(
+                                    tzinfo=timezone.utc
+                                ).strftime("%Y-%m-%d %H:%M:%S")
+                                if self._context.get_row_dq_start_time
+                                else "1900-01-01 00:00:00",
+                                self._context.get_row_dq_end_time.replace(
+                                    tzinfo=timezone.utc
+                                ).strftime("%Y-%m-%d %H:%M:%S")
+                                if self._context.get_row_dq_end_time
+                                else "1900-01-01 00:00:00",
                             )
                         )
                         _row_dq_expectations.remove(_rowdq_rule)
@@ -218,15 +223,20 @@ class SparkExpectationsWriter:
                         None,
                         None,
                         _input_count,
-                        '0',
+                        "0",
                         _input_count,
-                        self._context.get_row_dq_start_time.replace(tzinfo=timezone.utc).strftime(
-                            "%Y-%m-%d %H:%M:%S") if self._context.get_row_dq_start_time else '1900-01-01 00:00:00',
-                        self._context.get_row_dq_end_time.replace(tzinfo=timezone.utc).strftime(
-                            "%Y-%m-%d %H:%M:%S") if self._context.get_row_dq_end_time else '1900-01-01 00:00:00'
+                        self._context.get_row_dq_start_time.replace(
+                            tzinfo=timezone.utc
+                        ).strftime("%Y-%m-%d %H:%M:%S")
+                        if self._context.get_row_dq_start_time
+                        else "1900-01-01 00:00:00",
+                        self._context.get_row_dq_end_time.replace(
+                            tzinfo=timezone.utc
+                        ).strftime("%Y-%m-%d %H:%M:%S")
+                        if self._context.get_row_dq_end_time
+                        else "1900-01-01 00:00:00",
                     )
                 )
-
 
             return _row_dq_result
 
@@ -458,10 +468,7 @@ class SparkExpectationsWriter:
                 _source_querydq_detailed_stats_result
             )
 
-        if (
-            self._context.get_row_dq_status != "Skipped"
-            and _row_dq
-        ):
+        if self._context.get_row_dq_status != "Skipped" and _row_dq:
             _rowdq_detailed_stats_result = self.get_row_dq_detailed_stats()
 
         else:

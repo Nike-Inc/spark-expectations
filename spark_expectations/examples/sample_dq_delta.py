@@ -15,10 +15,10 @@ writer = WrappedDataFrameWriter().mode("append").format("delta")
 
 spark = set_up_delta()
 dic_job_info = {
-        "job": "job_name",
-        "Region": "NA",
-        "Snapshot": "2024-04-15",
-    }
+    "job": "job_name",
+    "Region": "NA",
+    "Snapshot": "2024-04-15",
+}
 job_info = str(dic_job_info)
 
 se: SparkExpectations = SparkExpectations(

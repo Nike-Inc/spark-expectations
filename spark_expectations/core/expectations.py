@@ -46,7 +46,15 @@ class SparkExpectations:
 
     def __post_init__(self) -> None:
         if isinstance(self.rules_df, DataFrame):
-            self.spark: SparkSession = self.rules_df.sparkSession
+            try:
+                self.spark: Optional[SparkSession] = self.rules_df.sparkSession
+            except AttributeError:
+                self.spark = SparkSession.getActiveSession()
+
+            if self.spark is None:
+                raise SparkExpectationsMiscException(
+                    "Spark session is not available, please initialize a spark session before calling SE"
+                )
         else:
             raise SparkExpectationsMiscException(
                 "Input rules_df is not of dataframe type"
