@@ -111,3 +111,14 @@ yarn-error.log*
 /coverage/.tmp/coverage-5.json
 /coverage/.tmp/coverage-6.json
 /coverage/.tmp/coverage-7.json
+/coverage/ui/src/pages/Login/index.html
+/coverage/ui/src/pages/index.html
+/coverage/ui/src/routes/index.html
+/coverage/ui/src/pages/Login/index.ts.html
+/coverage/ui/src/pages/index.ts.html
+/coverage/ui/src/routes/index.ts.html
+/coverage/ui/src/utils/isAuthenticated.ts.html
+/coverage/ui/src/pages/Login/Login.tsx.html
+/coverage/ui/src/routes/protected.tsx.html
+/coverage/ui/src/routes/router.tsx.html
+/coverage/ui/src/providers/router-provider.tsx.html

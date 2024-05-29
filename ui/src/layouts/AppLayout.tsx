@@ -11,15 +11,6 @@ export const AppLayout = () => (
     <AppShell.Navbar p="md" aria-label="navbar">
       <NavBar />
     </AppShell.Navbar>
-
-    {/*<AppShell.Navbar p="md" data-testid="navbar">*/}
-    {/*  Navbar*/}
-    {/*  {Array(15)*/}
-    {/*    .fill(0)*/}
-    {/*    .map((_, index) => (*/}
-    {/*      <Skeleton key={index} h={28} mt="sm" animate={false} />*/}
-    {/*    ))}*/}
-    {/*</AppShell.Navbar>*/}
     <AppShell.Main aria-label="main-content">Main</AppShell.Main>
   </AppShell>
 );

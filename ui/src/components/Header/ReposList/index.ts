@@ -1,1 +1,0 @@
-export { ReposList } from './ReposList';

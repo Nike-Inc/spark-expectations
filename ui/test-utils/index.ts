@@ -1,5 +1,5 @@
 import userEvent from '@testing-library/user-event';
+import { screen, waitFor } from '@testing-library/react';
 
-export * from '@testing-library/react';
 export { render } from './render';
-export { userEvent };
+export { userEvent, screen, waitFor };

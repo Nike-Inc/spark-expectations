@@ -3,14 +3,10 @@ import { IconAlertCircle, IconChevronDown, IconSettings } from '@tabler/icons-re
 import './UserMenu.css';
 import { useState } from 'react';
 import { useUser } from '@/api';
-import { useAuthStore } from '@/store';
 
 export const UserMenu = () => {
   const { data, error, isLoading } = useUser();
   const [userMenuOpened, setUserMenuOpened] = useState(false);
-  const { openModal } = useAuthStore((state) => ({
-    openModal: state.openModal,
-  }));
 
   if (isLoading) {
     return <LoadingUserButton />;
@@ -44,7 +40,6 @@ export const UserMenu = () => {
         <Menu.Label>Settings</Menu.Label>
         <Menu.Item
           leftSection={<IconSettings style={{ width: rem(16), height: rem(16) }} stroke={1.5} />}
-          onClick={openModal}
         >
           Change Token
         </Menu.Item>
