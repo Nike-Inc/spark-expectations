@@ -7,6 +7,8 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
+    "clean": "rm -rf node_modules && rm -rf coverage && yarn cache clean",
+    "ci": "npm run clean && yarn install",
     "code:fix": "npm run lint:fix && npm run prettier:write && npm run typecheck",
     "lint": "npm run lint:eslint && npm run lint:stylelint",
     "lint:fix": "npm run lint:eslint:fix && npm run lint:stylelint:fix",
@@ -17,13 +19,15 @@
     "prettier": "prettier --check \"**/*.{ts,tsx}\"",
     "prettier:write": "prettier --write \"**/*.{ts,tsx}\"",
     "vitest": "vitest run",
+    "vitest:cover": "vitest run --coverage",
     "vitest:watch": "vitest",
-    "test": "npm run typecheck && npm run prettier && npm run lint && npm run vitest"
+    "test": "npm run typecheck && npm run prettier && npm run lint && npm run vitest:cover"
   },
   "dependencies": {
     "@mantine/core": "^7.9.0",
     "@mantine/form": "^7.9.0",
     "@mantine/hooks": "^7.9.0",
+    "@mantine/notifications": "^7.9.2",
     "@tabler/icons-react": "^3.3.0",
     "@tanstack/react-query": "^5.34.1",
     "@testing-library/dom": "^10.1.0",
@@ -37,6 +41,7 @@
     "zustand": "^4.5.2"
   },
   "devDependencies": {
+    "@faker-js/faker": "^8.4.1",
     "@tanstack/react-query-devtools": "^5.34.1",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
@@ -50,6 +55,7 @@
     "@typescript-eslint/eslint-plugin": "^7.2.0",
     "@typescript-eslint/parser": "^7.2.0",
     "@vitejs/plugin-react": "^4.2.1",
+    "@vitest/coverage-v8": "^1.6.0",
     "eslint": "^8.57.0",
     "eslint-config-airbnb": "19.0.4",
     "eslint-config-airbnb-typescript": "^18.0.0",
@@ -69,6 +75,7 @@
     "stylelint-config-standard-scss": "^13.0.0",
     "typescript": "^5.4.5",
     "vite": "^5.2.10",
+    "vite-plugin-istanbul": "^6.0.2",
     "vite-tsconfig-paths": "^4.3.1",
     "vitest": "^1.5.2"
   }

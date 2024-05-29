@@ -1,7 +1,7 @@
 import React, { FC } from 'react';
 import { Container, Group } from '@mantine/core';
 
-import { UserMenu } from './UserMenu';
+import { UserMenu } from '@/components';
 import './Header.css';
 
 export const Header: FC = () => (

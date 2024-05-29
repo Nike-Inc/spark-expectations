@@ -1,4 +1,5 @@
-interface User {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface GitHubUser {
   login: string;
   id: number;
   node_id: string;
