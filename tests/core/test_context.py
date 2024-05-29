@@ -2005,3 +2005,7 @@ def test_get_job_metadata():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
     context._job_metadata = "{'job_name': 'test_job_metadata'}"
     assert context.get_job_metadata == "{'job_name': 'test_job_metadata'}"
+
+    # testing for None condition
+    context._job_metadata = None
+    assert context.get_job_metadata is None
