@@ -17,5 +17,4 @@ export const useUser = () =>
   useQuery({
     queryKey: userQueryKeys.detail('me'),
     queryFn: getUserFn,
-    retry: 4,
   });

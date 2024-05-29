@@ -15,7 +15,6 @@ export const getReposFn = async () => {
   return response.data as Repos[];
 };
 
-// TODO: How to convert Github User to generic Repo type?
 export const useRepos = () =>
   useQuery({
     queryKey: repoQueryKeys.details(),

@@ -5,7 +5,6 @@ interface LoadingProps {
   message?: string; // Optional prop to display a message below the spinner
 }
 
-// TODO: Look into handling loaders via state.
 export const Loading: FC<LoadingProps> = ({ message = 'Loading...' }) => (
   <div className="loading">
     <div className="spinner"></div>
