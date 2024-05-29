@@ -14,6 +14,12 @@ from spark_expectations.config.user_config import Constants as user_config
 writer = WrappedDataFrameWriter().mode("append").format("delta")
 
 spark = set_up_delta()
+dic_job_info = {
+    "job": "job_name",
+    "Region": "NA",
+    "Snapshot": "2024-04-15",
+}
+job_info = str(dic_job_info)
 
 se: SparkExpectations = SparkExpectations(
     product_id="your_product",
@@ -47,6 +53,7 @@ user_conf = {
         "env": "dev",
         "table": "product",
     },
+    user_config.se_job_metadata: job_info,
 }
 
 

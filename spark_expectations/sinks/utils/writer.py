@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple, List
-from datetime import datetime
+from datetime import datetime, timezone
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import (
     lit,
@@ -15,6 +15,8 @@ from pyspark.sql.functions import (
     col,
     split,
     current_date,
+    monotonically_increasing_id,
+    coalesce,
 )
 from pyspark.sql.types import StructType
 from spark_expectations import _log
@@ -125,7 +127,24 @@ class SparkExpectationsWriter:
     def get_row_dq_detailed_stats(
         self,
     ) -> List[
-        Tuple[str, str, str, str, str, str, str, str, str, None, None, int, str, int]
+        Tuple[
+            str,
+            str,
+            str,
+            str,
+            str,
+            str,
+            str,
+            str,
+            str,
+            None,
+            None,
+            int,
+            str,
+            int,
+            str,
+            str,
+        ]
     ]:
         """
         This function writes the detailed stats for row dq into the detailed stats table
@@ -145,44 +164,79 @@ class SparkExpectationsWriter:
             _input_count = self._context.get_input_count
 
             _row_dq_result = []
-            _rowdq_rule_dict = {}
+
+            _rowdq_expectations = self._context.get_dq_expectations
+            _row_dq_expectations = _rowdq_expectations["row_dq_rules"]
+
             if (
                 self._context.get_summarized_row_dq_res is not None
                 and len(self._context.get_summarized_row_dq_res) > 0
             ):
-                _rowdq_expectations = self._context.get_dq_expectations
-                for _rowdq_rule in _rowdq_expectations["row_dq_rules"]:
-                    _rowdq_rule_dict[_rowdq_rule["rule"]] = (
-                        _rowdq_rule["expectation"]
-                        + "|"
-                        + _rowdq_rule["tag"]
-                        + "|"
-                        + _rowdq_rule["description"]
-                    )
+                _row_dq_res = self._context.get_summarized_row_dq_res
+                _dq_res = {d["rule"]: d["failed_row_count"] for d in _row_dq_res}
 
-                for _dq_res in self._context.get_summarized_row_dq_res:
-                    _rowdq_rules = str(_rowdq_rule_dict[_dq_res["rule"]]).split("|")
-                    _rule_expectations = _rowdq_rules[0]
-                    _rule_tag = _rowdq_rules[1]
-                    _rule_desc = _rowdq_rules[2]
-                    _row_dq_result.append(
-                        (
-                            _run_id,
-                            _product_id,
-                            _table_name,
-                            _dq_res["rule_type"],
-                            _dq_res["rule"],
-                            _rule_expectations,
-                            _rule_tag,
-                            _rule_desc,
-                            "pass" if int(_dq_res["failed_row_count"]) == 0 else "fail",
-                            None,
-                            None,
-                            (_input_count - int(_dq_res["failed_row_count"])),
-                            _dq_res["failed_row_count"],
-                            _input_count,
+                for _rowdq_rule in _row_dq_expectations:
+                    if _rowdq_rule["rule"] in _dq_res:
+                        failed_row_count = _dq_res[_rowdq_rule["rule"]]
+                        _row_dq_result.append(
+                            (
+                                _run_id,
+                                _product_id,
+                                _table_name,
+                                _rowdq_rule["rule_type"],
+                                _rowdq_rule["rule"],
+                                _rowdq_rule["expectation"],
+                                _rowdq_rule["tag"],
+                                _rowdq_rule["description"],
+                                "pass" if int(failed_row_count) == 0 else "fail",
+                                None,
+                                None,
+                                (_input_count - int(failed_row_count)),
+                                failed_row_count,
+                                _input_count,
+                                self._context.get_row_dq_start_time.replace(
+                                    tzinfo=timezone.utc
+                                ).strftime("%Y-%m-%d %H:%M:%S")
+                                if self._context.get_row_dq_start_time
+                                else "1900-01-01 00:00:00",
+                                self._context.get_row_dq_end_time.replace(
+                                    tzinfo=timezone.utc
+                                ).strftime("%Y-%m-%d %H:%M:%S")
+                                if self._context.get_row_dq_end_time
+                                else "1900-01-01 00:00:00",
+                            )
                         )
+                        _row_dq_expectations.remove(_rowdq_rule)
+
+            for _rowdq_rule in _row_dq_expectations:
+                _row_dq_result.append(
+                    (
+                        _run_id,
+                        _product_id,
+                        _table_name,
+                        _rowdq_rule["rule_type"],
+                        _rowdq_rule["rule"],
+                        _rowdq_rule["expectation"],
+                        _rowdq_rule["tag"],
+                        _rowdq_rule["description"],
+                        "pass",
+                        None,
+                        None,
+                        _input_count,
+                        "0",
+                        _input_count,
+                        self._context.get_row_dq_start_time.replace(
+                            tzinfo=timezone.utc
+                        ).strftime("%Y-%m-%d %H:%M:%S")
+                        if self._context.get_row_dq_start_time
+                        else "1900-01-01 00:00:00",
+                        self._context.get_row_dq_end_time.replace(
+                            tzinfo=timezone.utc
+                        ).strftime("%Y-%m-%d %H:%M:%S")
+                        if self._context.get_row_dq_end_time
+                        else "1900-01-01 00:00:00",
                     )
+                )
 
             return _row_dq_result
 
@@ -266,6 +320,8 @@ class SparkExpectationsWriter:
             - alias_comp
             - target_output
             - dq_time
+            - dq_start_time
+            - dq_end_time
         """
         _querydq_secondary_query_source_output = (
             self._context.get_source_query_dq_output
@@ -374,6 +430,8 @@ class SparkExpectationsWriter:
                 "source_dq_actual_row_count",
                 "source_dq_error_row_count",
                 "source_dq_row_count",
+                "source_dq_start_time",
+                "source_dq_end_time",
             ]
         )
         _detailed_stats_target_dq_schema = self._create_schema(
@@ -392,6 +450,8 @@ class SparkExpectationsWriter:
                 "target_dq_actual_row_count",
                 "target_dq_error_row_count",
                 "target_dq_row_count",
+                "target_dq_start_time",
+                "target_dq_end_time",
             ]
         )
         rules_execution_settings = self._context.get_rules_execution_settings_config
@@ -408,11 +468,7 @@ class SparkExpectationsWriter:
                 _source_querydq_detailed_stats_result
             )
 
-        if (
-            self._context.get_row_dq_status != "Skipped"
-            and self._context.get_summarized_row_dq_res is not None
-            and len(self._context.get_summarized_row_dq_res) > 0
-        ):
+        if self._context.get_row_dq_status != "Skipped" and _row_dq:
             _rowdq_detailed_stats_result = self.get_row_dq_detailed_stats()
 
         else:
@@ -460,6 +516,10 @@ class SparkExpectationsWriter:
         _df_detailed_stats = _df_detailed_stats.withColumn(
             "dq_date", current_date()
         ).withColumn("dq_time", lit(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+
+        _df_detailed_stats = _df_detailed_stats.withColumn(
+            "dq_job_metadata_info", lit(self._context.get_job_metadata).cast("string")
+        )
 
         return _df_detailed_stats
 
@@ -523,17 +583,28 @@ class SparkExpectationsWriter:
             )
 
             _log.info(
-                "Writing metrics to the querydq custom output table: %s, ended",
-                self._context.get_query_dq_output_custom_table_name,
+                "Writing metrics to the detailed stats table: %s, ended",
+                self._context.get_dq_detailed_stats_table_name,
             )
 
+            # TODO Create a separate function for writing the custom query dq stats
             _df_custom_detailed_stats_source = self._prep_secondary_query_output()
+
+            _log.info(
+                "Writing metrics to the output custom table: %s, started",
+                self._context.get_query_dq_output_custom_table_name,
+            )
 
             self.save_df_as_table(
                 _df_custom_detailed_stats_source,
                 self._context.get_query_dq_output_custom_table_name,
                 config=self._context.get_detailed_stats_table_writer_config,
                 stats_table=True,
+            )
+
+            _log.info(
+                "Writing metrics to the output custom table: %s, ended",
+                self._context.get_query_dq_output_custom_table_name,
             )
 
         except Exception as e:
@@ -729,16 +800,20 @@ class SparkExpectationsWriter:
                 stats_table=True,
             )
 
+            _log.info(
+                "Writing metrics to the stats table: %s, ended",
+                self._context.get_dq_stats_table_name,
+            )
+
             if (
                 self._context.get_agg_dq_detailed_stats_status is True
                 or self._context.get_query_dq_detailed_stats_status is True
             ):
                 self.write_detailed_stats()
 
-            _log.info(
-                "Writing metrics to the stats table: %s, ended",
-                self._context.get_dq_stats_table_name,
-            )
+                # TODO Implement the below function for writing the custom query dq stats
+                # if self._context.get_query_dq_detailed_stats_status is True:
+                #     self.write_query_dq_custom_output()
 
             # TODO check if streaming_stats is set to off, if it's enabled only then this should run
 
@@ -804,6 +879,19 @@ class SparkExpectationsWriter:
     ) -> Tuple[int, DataFrame]:
         try:
             _log.info("_write_error_records_final started")
+            df = df.withColumn("sequence_number", monotonically_increasing_id())
+
+            df_seq = df
+
+            df = df.select(
+                "sequence_number",
+                *[
+                    dq_column
+                    for dq_column in df.columns
+                    if dq_column.startswith(f"{rule_type}")
+                ],
+            )
+            df.cache()
 
             failed_records = [
                 f"size({dq_column}) != 0"
@@ -841,7 +929,26 @@ class SparkExpectationsWriter:
                     lit(self._context.get_run_date),
                 )
             )
-            error_df = df.filter(f"size(meta_{rule_type}_results) != 0")
+            error_df_seq = df.filter(f"size(meta_{rule_type}_results) != 0")
+
+            error_df = df_seq.join(
+                error_df_seq,
+                df_seq.sequence_number == error_df_seq.sequence_number,
+                "inner",
+            )
+
+            # sequence number column removing from the data frame
+            error_df_columns = [
+                dq_column
+                for dq_column in error_df.columns
+                if (
+                    dq_column.startswith("sequence_number")
+                    or dq_column.startswith(rule_type)
+                )
+                is False
+            ]
+
+            error_df = error_df.select(error_df_columns)
             self._context.print_dataframe_with_debugger(error_df)
 
             print(
@@ -857,6 +964,27 @@ class SparkExpectationsWriter:
             _error_count = error_df.count()
             # if _error_count > 0:
             self.generate_summarized_row_dq_res(error_df, rule_type)
+
+            # sequence number adding to dataframe for passing to action function
+            df = df_seq.join(
+                error_df_seq,
+                df_seq.sequence_number == error_df_seq.sequence_number,
+                "left",
+            ).withColumn(
+                f"meta_{rule_type}_results",
+                coalesce(col(f"meta_{rule_type}_results"), array()),
+            )
+
+            df = (
+                df.select(error_df_columns)
+                .withColumn(
+                    self._context.get_run_id_name, lit(self._context.get_run_id)
+                )
+                .withColumn(
+                    self._context.get_run_date_time_name,
+                    lit(self._context.get_run_date),
+                )
+            )
 
             _log.info("_write_error_records_final ended")
             return _error_count, df

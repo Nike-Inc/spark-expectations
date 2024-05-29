@@ -11,6 +11,12 @@ from spark_expectations.core.expectations import (
 from spark_expectations.config.user_config import Constants as user_config
 
 writer = WrappedDataFrameWriter().mode("append").format("iceberg")
+dic_job_info = {
+    "job": "job_name",
+    "Region": "NA",
+    "Snapshot": "2024-04-15",
+}
+job_info = str(dic_job_info)
 
 spark = set_up_iceberg()
 
@@ -48,6 +54,7 @@ user_conf = {
         "env": "local",
         "table": "product",
     },
+    user_config.se_job_metadata: job_info,
 }
 
 

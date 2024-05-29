@@ -48,7 +48,7 @@ create table if not exists `catalog`.`schema`.`{product}_rules` (
 7. `action_if_failed` There are 3 different types of actions. These are 'ignore', 'drop', and 'fail'. 
     Ignore: The rule is run and the output is logged. No action is performed regardless of whether the rule has succeeded or failed. Applies for all 3 rule types. 
     Drop: The rows that fail the rule get dropped from the dataset. Applies for only row_dq rule type.
-    Fail: DAG fails if the rule fails. Applies for all 3 rule types.
+    Fail: job fails if the rule fails. Applies for all 3 rule types.
 8. `tag` provide some tag name to dq rule example:  completeness, validity, uniqueness etc. 
 9. `description`  Long description for the rule
 10. `enable_for_source_dq_validation` flag to run the agg rule
@@ -59,12 +59,11 @@ create table if not exists `catalog`.`schema`.`{product}_rules` (
 15. `query_dq_delimiter` segregate custom queries delimiter ex: $, @ etc. By default it is @. Users can override it with any other delimiter based on the need. The same delimiter mentioned here has to be used in the custom query.
 16. `enable_querydq_custom_output` required custom query output in separate table
 
-rule_type, enable_for_source_dq_validation and enable_for_target_dq_validation columns define source_agg_dq, target_agg_dq,source_query_dq and target_query_dq. please see the below definitions:
-If rule_type is row_dq then row_dq is TRUE
-If rule_type is agg_dq and enable_for_source_dq_validation is TRUE then source_agg_dq is TRUE
-If rule_type is agg_dq and enable_for_target_dq_validation is TRUE then target_agg_dq is TRUE
-If rule_type is query_dq and enable_for_source_dq_validation is TRUE then source_query_dq is TRUE
-If rule_type is query_dq and enable_for_target_dq_validation is TRUE then target_query_dq is TRUE
+
+The Spark Expectation process consists of three phases:
+1. When enable_for_source_dq_validation is true, execute agg_dq and query_dq on the source Dataframe
+2. If the first step is successful, proceed to run row_dq
+3. When enable_for_target_dq_validation is true, exeucte agg_dq and query_dq on the Dataframe resulting from row_dq
 
 ### Rule Type For Rules
 
@@ -166,15 +165,20 @@ source_dq_expected_outcome string,  -- (11)!
 source_dq_actual_row_count string,  -- (12)!
 source_dq_error_row_count string,  -- (13)!
 source_dq_row_count string,  -- (14)!
-target_expectations string,  -- (15)!
-target_dq_status string,  -- (16)!
-target_dq_actual_outcome string,  -- (17)!
-target_dq_expected_outcome string,  -- (18)!
-target_dq_actual_row_count string,  -- (19)!
-target_dq_error_row_count string,  -- (20)!
-target_dq_row_count string,  -- (21)!
-dq_date date,  -- (22)!
-dq_time string,  -- (23)!
+source_dq_start_time string,  -- (15)!
+source_dq_end_time string,  -- (16)!
+target_expectations string,  -- (17)!
+target_dq_status string,  -- (18)!
+target_dq_actual_outcome string,  -- (19)!
+target_dq_expected_outcome string,  -- (20)!
+target_dq_actual_row_count string,  -- (21)!
+target_dq_error_row_count string,  -- (22)!
+target_dq_row_count string,  -- (23)!
+target_dq_start_time string,  -- (24)!
+target_dq_end_time string,  -- (25)!
+dq_date date,  -- (26)!
+dq_time string,  -- (27)!
+dq_job_metadata_info string,  -- (28)!
 );
 ```
 
@@ -192,12 +196,17 @@ dq_time string,  -- (23)!
 12. `source_dq_actual_row_count` Number of rows of the source dq
 13. `source_dq_error_row_count` Number of rows failed in the source dq
 14. `source_dq_row_count` Number of rows of the source dq
-15. `target_expectations` Actual Rule to be executed on the target dq
-16. `target_dq_status` Status of the rule execution in the Target dq
-17. `target_dq_actual_outcome` Actual outcome of the Target dq check
-18. `target_dq_expected_outcome` Expected outcome of the Target dq check
-19. `target_dq_actual_row_count` Number of rows of the target dq
-20. `target_dq_error_row_count` Number of rows failed in the target dq
-21. `target_dq_row_count` Number of rows of the target dq
-22. `dq_date` Dq executed date
-23. `dq_time` Dq executed timestamp
+15. `source_dq_start_time` source dq start timestamp
+16. `source_dq_end_time` source dq end timestamp
+17. `target_expectations` Actual Rule to be executed on the target dq
+18. `target_dq_status` Status of the rule execution in the Target dq
+19. `target_dq_actual_outcome` Actual outcome of the Target dq check
+20. `target_dq_expected_outcome` Expected outcome of the Target dq check
+21. `target_dq_actual_row_count` Number of rows of the target dq
+22. `target_dq_error_row_count` Number of rows failed in the target dq
+23. `target_dq_row_count` Number of rows of the target dq
+24. `target_dq_start_time` target dq start timestamp
+25. `target_dq_end_time` target dq end timestamp
+26. `dq_date` Dq executed date
+27. `dq_time` Dq executed timestamp
+28. `dq_job_metadata_info` dq job metadata
