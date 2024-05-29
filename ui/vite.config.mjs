@@ -20,5 +20,15 @@ export default defineConfig({
             'ui/test-utils/**',
             '**/__mocks__/**',
         ]
+    },
+    server: {
+        proxy: {
+            '/login/oauth/access_token': {
+                target: 'https://github.com',
+                changeOrigin: true,
+                rewrite: path => path.replace(/^\/login\/oauth\/access_token/, '/login/oauth/access_token')
+
+            }
+        }
     }
 });

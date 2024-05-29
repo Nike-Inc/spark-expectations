@@ -13,7 +13,7 @@ export const exchangeGithubCodeForToken = async (code: string | null) => {
       Accept: 'application/json',
     },
   });
-  return response.data as OAuth;
+  return response.data;
 };
 
 export const useOAuth = ({ code }: { code: string | null }) =>

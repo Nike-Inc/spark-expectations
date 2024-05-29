@@ -1,13 +1,12 @@
 import { FC, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { notifications } from '@mantine/notifications';
 import { useOAuth } from '@/api';
 import { useAuthStore } from '@/store';
 import { Loading } from '@/components';
 
 export const OAuthCallback: FC = () => {
   const code = new URLSearchParams(window.location.search).get('code');
-  const { data, isLoading, isError, error } = useOAuth({ code });
+  const { data, isLoading, isError } = useOAuth({ code });
   const navigate = useNavigate();
   const { setToken } = useAuthStore();
 
@@ -23,11 +22,8 @@ export const OAuthCallback: FC = () => {
   }
 
   if (isError) {
-    notifications.show({
-      title: 'Error while authenticating, redirecting to login page',
-      message: error.message,
-    });
-    navigate('/login');
+    // TODO: Handle error state
+    return <div>Error</div>;
   }
 
   return null;
