@@ -1,5 +1,6 @@
 from typing import Dict, List, Any, Optional, Tuple
 import re
+from datetime import datetime
 from pyspark.sql import DataFrame
 
 
@@ -120,7 +121,18 @@ class SparkExpectationsActions:
         _context: SparkExpectationsContext,
         _dq_rule: Dict[str, str],
         df: DataFrame,
-        querydq_output: List[Tuple[str, str, str, str, Any, str, dict, str]],
+        querydq_output: List[
+            Tuple[
+                str,
+                str,
+                str,
+                str,
+                Any,
+                str,
+                dict,
+                str,
+            ]
+        ],
         _source_dq_status: bool = False,
         _target_dq_status: bool = False,
     ) -> Any:
@@ -528,6 +540,11 @@ class SparkExpectationsActions:
                         _context.get_agg_dq_detailed_stats_status is True
                         or _context.get_query_dq_detailed_stats_status is True
                     ):
+                        current_date = datetime.now()
+                        dq_start_time = datetime.strftime(
+                            current_date, "%Y-%m-%d %H:%M:%S"
+                        )
+
                         (
                             _querydq_output_list,
                             _agg_query_dq_output_tuple,
@@ -539,7 +556,13 @@ class SparkExpectationsActions:
                             _source_dq_status=_source_dq_enabled,
                             _target_dq_status=_target_dq_enabled,
                         )
-
+                        current_date = datetime.now()
+                        dq_end_time = datetime.strftime(
+                            current_date, "%Y-%m-%d %H:%M:%S"
+                        )
+                        _agg_query_dq_output_list = list(_agg_query_dq_output_tuple)
+                        _agg_query_dq_output_list.extend([dq_start_time, dq_end_time])
+                        _agg_query_dq_output_tuple = tuple(_agg_query_dq_output_list)
                         _agg_query_dq_results.append(_agg_query_dq_output_tuple)
 
             if (
@@ -654,9 +677,15 @@ class SparkExpectationsActions:
 
         """
         try:
+            _df_dq_columns = [
+                dq_column
+                for dq_column in _df_dq.columns
+                if (dq_column.startswith(f"meta_{_rule_type}_results")) is False
+            ]
+            _df_dq_columns.append("action_if_failed")
             _df_dq = _df_dq.withColumn(
                 "action_if_failed", get_actions_list(col(f"meta_{_rule_type}_results"))
-            ).drop(f"meta_{_rule_type}_results")
+            ).select(_df_dq_columns)
 
             if (
                 not _df_dq.filter(
@@ -682,8 +711,7 @@ class SparkExpectationsActions:
                     f"expectations and the action_if_failed "
                     "suggested to fail"
                 )
-
-            return _df_dq.drop(_df_dq.action_if_failed)
+            return _df_dq.select(_df_dq_columns[:-1])
 
         except Exception as e:
             raise SparkExpectationsMiscException(

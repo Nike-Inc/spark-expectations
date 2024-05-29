@@ -1,5 +1,5 @@
 import os
-from typing import Optional, Union, Dict
+from typing import Optional, Union, Dict, Tuple
 from dataclasses import dataclass
 from functools import reduce
 from pyspark.sql import DataFrame
@@ -246,7 +246,7 @@ class SparkExpectationsReader:
         is_dlt: bool = False,
         tag: Optional[str] = None,
         params: Optional[dict] = None,
-    ) -> tuple[dict, dict, dict]:
+    ) -> Tuple[Dict, Dict, Dict]:
         """
         This function fetches the data quality rules from the table and return it as a dictionary
 

@@ -46,7 +46,15 @@ class SparkExpectations:
 
     def __post_init__(self) -> None:
         if isinstance(self.rules_df, DataFrame):
-            self.spark: SparkSession = self.rules_df.sparkSession
+            try:
+                self.spark: Optional[SparkSession] = self.rules_df.sparkSession
+            except AttributeError:
+                self.spark = SparkSession.getActiveSession()
+
+            if self.spark is None:
+                raise SparkExpectationsMiscException(
+                    "Spark session is not available, please initialize a spark session before calling SE"
+                )
         else:
             raise SparkExpectationsMiscException(
                 "Input rules_df is not of dataframe type"
@@ -112,7 +120,7 @@ class SparkExpectations:
             # variable used for enabling notification at different level
 
             _default_notification_dict: Dict[
-                str, Union[str, int, bool, Dict[str, str]]
+                str, Union[str, int, bool, Dict[str, str], None]
             ] = {
                 user_config.se_notifications_on_start: False,
                 user_config.se_notifications_on_completion: False,
@@ -121,10 +129,13 @@ class SparkExpectations:
                 user_config.se_notifications_on_error_drop_threshold: 100,
                 user_config.se_enable_agg_dq_detailed_result: False,
                 user_config.se_enable_query_dq_detailed_result: False,
+                user_config.se_job_metadata: None,
                 user_config.querydq_output_custom_table_name: f"{self.stats_table}_querydq_output",
             }
 
-            _notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = (
+            _notification_dict: Dict[
+                str, Union[str, int, bool, Dict[str, str], None]
+            ] = (
                 {**_default_notification_dict, **user_conf}
                 if user_conf
                 else _default_notification_dict
@@ -262,6 +273,8 @@ class SparkExpectations:
                 else False
             )
 
+            _job_metadata: str = user_config.se_job_metadata
+
             notifications_on_error_drop_threshold = _notification_dict.get(
                 user_config.se_notifications_on_error_drop_threshold, 100
             )
@@ -280,6 +293,7 @@ class SparkExpectations:
             self._context.set_dq_expectations(expectations)
             self._context.set_rules_execution_settings_config(rules_execution_settings)
             self._context.set_querydq_secondary_queries(dq_queries_dict)
+            self._context.set_job_metadata(_job_metadata)
 
             @self._notification.send_notification_decorator
             @self._statistics_decorator.collect_stats_decorator
@@ -292,6 +306,7 @@ class SparkExpectations:
                     table_name: str = self._context.get_table_name
 
                     _input_count = _df.count()
+                    _log.info("data frame input record count: %s", _input_count)
                     _output_count: int = 0
                     _error_count: int = 0
                     _source_dq_df: Optional[DataFrame] = None
@@ -333,21 +348,28 @@ class SparkExpectations:
                     self._context.set_input_count(_input_count)
                     self._context.set_error_drop_threshold(_error_drop_threshold)
 
+                    _log.info(
+                        "Spark Expectations run id for this run: %s",
+                        self._context.get_run_id,
+                    )
+
                     if isinstance(_df, DataFrame):
                         _log.info("The function dataframe is created")
                         self._context.set_table_name(table_name)
                         if write_to_temp_table:
                             _log.info("Dropping to temp table started")
-                            self.spark.sql(f"drop table if exists {table_name}_temp")
+                            self.spark.sql(f"drop table if exists {table_name}_temp")  # type: ignore
                             _log.info("Dropping to temp table completed")
                             _log.info("Writing to temp table started")
+                            source_columns = _df.columns
                             self._writer.save_df_as_table(
                                 _df,
                                 f"{table_name}_temp",
                                 self._context.get_target_and_error_table_writer_config,
                             )
                             _log.info("Read from temp table started")
-                            _df = self.spark.sql(f"select * from {table_name}_temp")
+                            _df = self.spark.sql(f"select * from {table_name}_temp")  # type: ignore
+                            _df = _df.select(source_columns)
                             _log.info("Read from temp table completed")
 
                         func_process = self._process.execute_dq_process(
@@ -544,7 +566,7 @@ class SparkExpectations:
                             "error occurred while processing spark "
                             "expectations due to given dataframe is not type of dataframe"
                         )
-                    self.spark.catalog.clearCache()
+                    # self.spark.catalog.clearCache()
 
                     return _row_dq_df
 
