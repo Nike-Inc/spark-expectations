@@ -13,6 +13,7 @@ Thanks to the contributors who helped on this project apart from the authors
 * [Jagadapi Sivanaga Krishnam Raja Reddy](www.linkedin.com/in/jskrajareddy/)
 * [Vigneshwarr Venkatesan](https://www.linkedin.com/in/vignesh15)
 * [Nishant Singh](https://www.linkedin.com/in/singh-nishant/)
+* [Amaldev Kunnel](https://www.linkedin.com/in/amaldev-k-40222680)
 
 # Honorary Mentions
 Thanks to the team below for invaluable insights and support throughout the initial release of this project
