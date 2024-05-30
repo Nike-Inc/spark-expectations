@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor, userEvent } from '@test-utils';
 import { vi } from 'vitest';
-import { Login } from '@/pages';
+import { Login } from '@/components';
 import { githubLogin } from '@/api';
 
 describe('Login Component', () => {
