@@ -1,0 +1,226 @@
+rules_data:
+  - product: "your_product"
+    table: "dq_spark_dev.customer_order"
+    type: "row_dq"
+    name: "sales_greater_than_zero"
+    column: "sales"
+    condition: "sales > 2"
+    action: "ignore"
+    category: "accuracy"
+    description: "sales value should be greater than zero"
+    enabled: false
+    mandatory: true
+    severity: true
+    notification: false
+    threshold: 0
+    additional_info: null
+  - product: "your_product"
+    table: "dq_spark_{env}.customer_order"
+    type: "row_dq"
+    name: "discount_threshold"
+    column: "discount"
+    condition: "discount*100 < 60"
+    action: "drop"
+    category: "validity"
+    description: "discount should be less than 40"
+    enabled: true
+    mandatory: true
+    severity: true
+    notification: false
+    threshold: 0
+    additional_info: null
+  - product: "your_product"
+    table: "dq_spark_{env}.customer_order"
+    type: "row_dq"
+    name: "ship_mode_in_set"
+    column: "ship_mode"
+    condition: "lower(trim(ship_mode)) in('second class', 'standard class', 'standard class')"
+    action: "drop"
+    category: "validity"
+    description: "ship_mode mode belongs in the sets"
+    enabled: true
+    mandatory: true
+    severity: true
+    notification: false
+    threshold: 0
+    additional_info: null
+  - product: "your_product"
+    table: "dq_spark_{env}.customer_order"
+    type: "row_dq"
+    name: "profit_threshold"
+    column: "profit"
+    condition: "profit>0"
+    action: "ignore"
+    category: "validity"
+    description: "profit threshold should be greater than 0"
+    enabled: false
+    mandatory: true
+    severity: false
+    notification: true
+    threshold: 0
+    additional_info: null
+  - product: "your_product"
+    table: "dq_spark_dev.customer_order"
+    type: "agg_dq"
+    name: "sum_of_sales_range type 1"
+    column: "sales"
+    condition: "sum(sales)>99 and sum(sales)<99999"
+    action: "ignore"
+    category: "validity"
+    description: "regex format validation for quantity"
+    enabled: true
+    mandatory: true
+    severity: true
+    notification: false
+    threshold: 0
+    additional_info: null
+    active: true
+  - product: "your_product"
+    table: "dq_spark_dev.customer_order"
+    type: "agg_dq"
+    name: "sum_of_sales_range type 2"
+    column: "sales"
+    condition: "sum(sales) between 100 and 10000"
+    action: "ignore"
+    category: "validity"
+    description: "regex format validation for quantity"
+    enabled: true
+    mandatory: true
+    severity: true
+    notification: false
+    threshold: 0
+    additional_info: null
+    active: true
+  - product: "your_product"
+    table: "dq_spark_dev.customer_order"
+    type: "agg_dq"
+    name: "sum_of_sales"
+    column: "sales"
+    condition: "sum(sales)>10000"
+    action: "ignore"
+    category: "validity"
+    description: "regex format validation for quantity"
+    enabled: true
+    mandatory: true
+    severity: true
+    notification: false
+    threshold: 0
+    additional_info: null
+  - product: "your_product"
+    table: "dq_spark_dev.customer_order"
+    type: "agg_dq"
+    name: "sum_of_quantity"
+    column: "quantity"
+    condition: "sum(quantity)>10000"
+    action: "ignore"
+    category: "validity"
+    description: "regex format validation for quantity"
+    enabled: true
+    mandatory: true
+    severity: true
+    notification: false
+    threshold: 0
+    additional_info: null
+  - product: "your_product"
+    table: "dq_spark_dev.customer_order"
+    type: "query_dq"
+    name: "product_missing_count_threshold"
+    column: "*"
+    condition: "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b) ) < 3"
+    source_f1: "select distinct product_id,order_id from order_source"
+    target_f1: "select distinct product_id,order_id from order_target"
+    action: "ignore"
+    category: "validity"
+    description: "row count threshold"
+    enabled: true
+    mandatory: true
+    severity: true
+    notification: false
+    threshold: 0
+    additional_info: null
+    active: true
+  - product: "your_product"
+    table: "dq_spark_dev.customer_order"
+    type: "query_dq"
+    name: "customer_missing_count_threshold"
+    column: "*"
+    condition: "((select count(*) from ({source_f1}) a join ({source_f2}) b on a.customer_id = b.customer_id) - (select count(*) from ({target_f1}) a join ({target_f2}) b on a.customer_id = b.customer_id)) > ({target_f3})"
+    source_f1: "select customer_id, count(*) from customer_source group by customer_id"
+    source_f2: "select customer_id, count(*) from order_source group by customer_id"
+    target_f1: "select customer_id, count(*) from customer_target group by customer_id"
+    target_f2: "select customer_id, count(*) from order_target group by customer_id"
+    target_f3: "select count(*) from order_source"
+    action: "ignore"
+    category: "validity"
+    description: "customer count threshold"
+    enabled: true
+    mandatory: true
+    severity: true
+    notification: false
+    threshold: 0
+    additional_info: null
+    active: true
+  - product: "your_product"
+    table: "dq_spark_dev.customer_order"
+    type: "query_dq"
+    name: "order_count_validity"
+    column: "*"
+    condition: "({source_f1}) > 10"
+    source_f1: "select count(*) from order_source"
+    action: "ignore"
+    category: "validity"
+    description: "row count threshold"
+    enabled: true
+    mandatory: true
+    severity: true
+    notification: false
+    threshold: 0
+    additional_info: "@"
+    active: true
+  - product: "your_product"
+    table: "dq_spark_dev.customer_order"
+    type: "query_dq"
+    name: "order_count_validity_check"
+    column: "*"
+    condition: "(select count(*) from order_source) > 10"
+    action: "ignore"
+    category: "validity"
+    description: "row count threshold"
+    enabled: true
+    mandatory: true
+    severity: true
+    notification: false
+    threshold: 0
+    additional_info: null
+    active: true
+  - product: "your_product"
+    table: "dq_spark_{env}.customer_order"
+    type: "query_dq"
+    name: "product_category"
+    column: "*"
+    condition: "(select count(distinct category) from {table}) < 5"
+    action: "ignore"
+    category: "validity"
+    description: "distinct product category"
+    enabled: true
+    mandatory: true
+    severity: true
+    notification: false
+    threshold: 0
+    additional_info: null
+    active: true
+  - product: "your_product"
+    table: "dq_spark_{env}.customer_order"
+    type: "agg_dq"
+    name: "distinct_of_ship_mode"
+    column: "ship_mode"
+    condition: "count(distinct ship_mode) <= 3"
+    action: "ignore"
+    category: "validity"
+    description: "regex format validation for quantity"
+    enabled: true
+    mandatory: true
+    severity: true
+    notification: false
+    threshold: 0
+    additional_info: null
