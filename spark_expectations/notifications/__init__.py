@@ -15,12 +15,15 @@ from spark_expectations.notifications.plugins.slack import (
 from spark_expectations.notifications.plugins.teams import (
     SparkExpectationsTeamsPluginImpl,
 )
+from spark_expectations.notifications.plugins.zoom import (
+    SparkExpectationsZoomPluginImpl,  # Import Zoom plugin
+)
 
 
 @functools.lru_cache
 def get_notifications_hook() -> pluggy.PluginManager:
     """
-    function provides pluggy hook manger to send email and slack notification
+    function provides pluggy hook manger to send email, slack and zoom notification
     Returns:
         PluginManager: pluggy Manager object
 
@@ -35,6 +38,10 @@ def get_notifications_hook() -> pluggy.PluginManager:
     )
     pm.register(
         SparkExpectationsTeamsPluginImpl(), "spark_expectations_teams_notification"
+    )
+    pm.register(
+        SparkExpectationsZoomPluginImpl(),
+        "spark_expectations_zoom_notification",  # Register Zoom plugin
     )
     for name, plugin_instance in pm.list_name_plugin():
         _log.info(

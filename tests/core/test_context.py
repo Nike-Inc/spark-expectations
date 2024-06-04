@@ -59,6 +59,9 @@ def test_context_properties():
     context._slack_webhook_url = "abcedfghi"
     context._enable_teams = True
     context._teams_webhook_url = "abcedfghi"
+    context._enable_zoom = True
+    context._zoom_webhook_url = "abcedfghi"
+    context._zoom_token = "abcedfghi"
     context._table_name = "test_table"
     context._input_count = 100
     context._error_count = 10
@@ -173,6 +176,9 @@ def test_context_properties():
     assert context._slack_webhook_url == "abcedfghi"
     assert context._enable_teams is True
     assert context._teams_webhook_url == "abcedfghi"
+    assert context._enable_zoom is True
+    assert context._zoom_webhook_url == "abcedfghi"
+    assert context._zoom_token == "abcedfghi"
     assert context._table_name == "test_table"
     assert context._input_count == 100
     assert context._error_count == 10
@@ -535,6 +541,27 @@ def test_set_teams_webhook_url():
     assert context.get_teams_webhook_url == "abcdefghi"
 
 
+def test_set_enable_zoom():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_enable_zoom(True)
+    assert context._enable_zoom is True
+    assert context.get_enable_zoom is True
+
+
+def test_set_zoom_webhook_url():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_zoom_webhook_url("abcdefghi")
+    assert context._zoom_webhook_url == "abcdefghi"
+    assert context.get_zoom_webhook_url == "abcdefghi"
+
+
+def test_set_zoom_token():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_zoom_token("abcdefghi")
+    assert context._zoom_token == "abcdefghi"
+    assert context.get_zoom_token == "abcdefghi"
+
+
 def test_table_name():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_table_name("test_table")
@@ -707,6 +734,28 @@ def test_get_teams_webhook_url_exception():
         "'_teams_webhook_url' before \n            accessing it",
     ):
         context.get_teams_webhook_url
+
+
+def test_get_zoom_webhook_url_exception():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._zoom_webhook_url = False
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_zoom_webhook_url' before \n            accessing it",
+    ):
+        context.get_zoom_webhook_url
+
+
+def test_get_zoom_token():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._zoom_token = False
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="The spark expectations context is not set completely, please assign "
+                  "'_zoom_token' before \n            accessing it",
+    ):
+        context.get_zoom_token
 
 
 def test_get_table_name_expection():
