@@ -9,8 +9,6 @@ rules_data:
     category: "accuracy"
     description: "sales value should be greater than zero"
     enabled: false
-    mandatory: true
-    severity: true
     notification: false
     threshold: 0
     additional_info: null
@@ -24,8 +22,6 @@ rules_data:
     category: "validity"
     description: "discount should be less than 40"
     enabled: true
-    mandatory: true
-    severity: true
     notification: false
     threshold: 0
     additional_info: null
@@ -39,8 +35,6 @@ rules_data:
     category: "validity"
     description: "ship_mode mode belongs in the sets"
     enabled: true
-    mandatory: true
-    severity: true
     notification: false
     threshold: 0
     additional_info: null
@@ -54,8 +48,6 @@ rules_data:
     category: "validity"
     description: "profit threshold should be greater than 0"
     enabled: false
-    mandatory: true
-    severity: false
     notification: true
     threshold: 0
     additional_info: null
@@ -69,8 +61,6 @@ rules_data:
     category: "validity"
     description: "regex format validation for quantity"
     enabled: true
-    mandatory: true
-    severity: true
     notification: false
     threshold: 0
     additional_info: null
@@ -85,8 +75,6 @@ rules_data:
     category: "validity"
     description: "regex format validation for quantity"
     enabled: true
-    mandatory: true
-    severity: true
     notification: false
     threshold: 0
     additional_info: null
@@ -101,8 +89,6 @@ rules_data:
     category: "validity"
     description: "regex format validation for quantity"
     enabled: true
-    mandatory: true
-    severity: true
     notification: false
     threshold: 0
     additional_info: null
@@ -116,8 +102,6 @@ rules_data:
     category: "validity"
     description: "regex format validation for quantity"
     enabled: true
-    mandatory: true
-    severity: true
     notification: false
     threshold: 0
     additional_info: null
@@ -133,8 +117,6 @@ rules_data:
     category: "validity"
     description: "row count threshold"
     enabled: true
-    mandatory: true
-    severity: true
     notification: false
     threshold: 0
     additional_info: null
@@ -154,8 +136,6 @@ rules_data:
     category: "validity"
     description: "customer count threshold"
     enabled: true
-    mandatory: true
-    severity: true
     notification: false
     threshold: 0
     additional_info: null
@@ -171,8 +151,6 @@ rules_data:
     category: "validity"
     description: "row count threshold"
     enabled: true
-    mandatory: true
-    severity: true
     notification: false
     threshold: 0
     additional_info: "@"
@@ -187,8 +165,6 @@ rules_data:
     category: "validity"
     description: "row count threshold"
     enabled: true
-    mandatory: true
-    severity: true
     notification: false
     threshold: 0
     additional_info: null
@@ -203,8 +179,6 @@ rules_data:
     category: "validity"
     description: "distinct product category"
     enabled: true
-    mandatory: true
-    severity: true
     notification: false
     threshold: 0
     additional_info: null
@@ -218,8 +192,6 @@ rules_data:
     action: "ignore"
     category: "validity"
     description: "regex format validation for quantity"
-    enabled: true
-    mandatory: true
     severity: true
     notification: false
     threshold: 0
