@@ -4,20 +4,17 @@ import { apiClient } from '@/api';
 import { repoQueryKeys } from '../repo-query-keys';
 
 export const getReposFn = async () => {
-  const { username } = useAuthStore.getState();
-
-  const response = await apiClient.get(`/users/${username || ''}/repos`, {
+  const response = await apiClient.get('/user/repos', {
     headers: {
       Authorization: `Bearer ${useAuthStore.getState().token}`,
     },
   });
 
-  return response.data as Repos[];
+  return response.data as Repo[];
 };
 
 export const useRepos = () =>
   useQuery({
-    queryKey: repoQueryKeys.details(),
+    queryKey: repoQueryKeys.all,
     queryFn: getReposFn,
-    retry: 4,
   });

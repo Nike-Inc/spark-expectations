@@ -1,1 +1,1 @@
-export { useRepos } from './github';
+export * from './github';
