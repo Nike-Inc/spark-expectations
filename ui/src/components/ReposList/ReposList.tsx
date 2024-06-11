@@ -1,11 +1,34 @@
-import { Avatar, NavLink } from '@mantine/core';
+import { Accordion, Avatar, Group, Text } from '@mantine/core';
+import React, { lazy, Suspense } from 'react';
 import { useRepos } from '@/api';
 import { Loading } from '@/components';
 import { useRepoStore } from '@/store';
 
+const FilesList = lazy(() => import('@/components/FilesList/FilesList'));
+
+interface AccordionLabelProps {
+  label: string;
+  image: string;
+  description: string;
+}
+
+const AccordionLabel = ({ label, image, description }: AccordionLabelProps) => (
+  <Group wrap="nowrap">
+    <Avatar src={image} radius="sm" size="md" />
+    <div>
+      <Text>{label}</Text>
+      <Text size="sm" c="dimmed" fw={400}>
+        {description}
+      </Text>
+    </div>
+  </Group>
+);
+
 export const ReposList = () => {
   const { data, isLoading, isError } = useRepos();
-  const { selectedRepo, selectRepo } = useRepoStore();
+  const { selectRepo } = useRepoStore((state) => ({
+    selectRepo: state.selectRepo,
+  }));
 
   if (isLoading) {
     return <Loading />;
@@ -15,17 +38,26 @@ export const ReposList = () => {
     return <div>Error</div>;
   }
 
-  return (
-    <>
-      {data?.map((repo: Repo) => (
-        <NavLink
+  const items = data?.map((repo: Repo) => (
+    <Accordion.Item value={repo.name} key={repo.name}>
+      <Accordion.Control onClick={() => selectRepo(repo)}>
+        <AccordionLabel
           label={repo.name}
-          leftSection={<Avatar src={repo.owner.avatar_url} size="xs" radius="xl" />}
-          key={repo.name}
-          onClick={() => selectRepo(repo)}
-          active={selectedRepo?.name === repo.name}
+          image={repo.owner.avatar_url}
+          description={repo.description}
         />
-      ))}
-    </>
+      </Accordion.Control>
+      <Accordion.Panel>
+        <Suspense fallback={<Loading />}>
+          <FilesList selectedRepo={repo} />
+        </Suspense>
+      </Accordion.Panel>
+    </Accordion.Item>
+  ));
+
+  return (
+    <Accordion chevronPosition="right" variant="contained">
+      {items}
+    </Accordion>
   );
 };

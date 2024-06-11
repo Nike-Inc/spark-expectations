@@ -9,6 +9,9 @@ export const readYamlFile = async (owner: any, repoName: any, path: any) => {
     headers: {
       Authorization: `Bearer ${useAuthStore.getState().token}`,
     },
+    // params: {
+    //   ref: 'rule_changer',
+    // },
   });
   const { content, encoding } = response.data;
 
@@ -17,7 +20,7 @@ export const readYamlFile = async (owner: any, repoName: any, path: any) => {
   }
 
   const decodedContent = atob(content);
-  return yaml.load(decodedContent);
+  return yaml.load(decodedContent) as unknown as Record<string, any>;
 };
 
 export const useRepoFile = (

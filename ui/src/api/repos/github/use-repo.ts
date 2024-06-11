@@ -23,17 +23,12 @@ export const getAllYamlFilesFn = async (
   initialPath = ''
 ) => {
   async function fetchDirectory(path: any) {
-    try {
-      const response = await apiClient.get(`repos/${owner}/${repoName}/contents/${path}`, {
-        headers: {
-          Authorization: `Bearer ${useAuthStore.getState().token}`,
-        },
-      });
-      return response.data;
-    } catch (error) {
-      console.log(error);
-      throw error;
-    }
+    const response = await apiClient.get(`repos/${owner}/${repoName}/contents/${path}`, {
+      headers: {
+        Authorization: `Bearer ${useAuthStore.getState().token}`,
+      },
+    });
+    return response.data;
   }
 
   const fetchRecursive = async (path: string) => {

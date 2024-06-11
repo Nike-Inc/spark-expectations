@@ -38,8 +38,8 @@ const createOwnerMock = (): Owner => ({
   site_admin: faker.datatype.boolean(),
 });
 
-export const createRepoMock = (): Repos =>
-  <Repos>{
+export const createRepoMock = (): Repo =>
+  <Repo>{
     id: faker.number.int(),
     node_id: faker.string.uuid(),
     name: faker.company.name(),
