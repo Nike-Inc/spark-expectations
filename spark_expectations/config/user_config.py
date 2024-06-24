@@ -29,6 +29,13 @@ class Constants:
         "spark.expectations.notifications.teams.webhook_url"
     )
 
+    # declare const user config variables for zoom notification
+    se_notifications_enable_zoom = "spark.expectations.notifications.zoom.enabled"
+    se_notifications_zoom_webhook_url = (
+        "spark.expectations.notifications.zoom.webhook_url"
+    )
+    se_notifications_zoom_token = "spark.expectations.notifications.zoom.token"
+
     se_notifications_on_start = "spark.expectations.notifications.on_start"
     se_notifications_on_completion = "spark.expectations.notifications.on.completion"
     se_notifications_on_fail = "spark.expectations.notifications.on.fail"

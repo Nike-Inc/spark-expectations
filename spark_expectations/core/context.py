@@ -59,6 +59,10 @@ class SparkExpectationsContext:
         self._enable_teams: bool = False
         self._teams_webhook_url: Optional[str] = None
 
+        self._enable_zoom: bool = False
+        self._zoom_webhook_url: Optional[str] = None
+        self._zoom_token: Optional[str] = None
+
         self._table_name: Optional[str] = None
         self._input_count: int = 0
         self._error_count: int = 0
@@ -619,6 +623,74 @@ class SparkExpectationsContext:
             return self._teams_webhook_url
         raise SparkExpectationsMiscException(
             """The spark expectations context is not set completely, please assign '_teams_webhook_url' before 
+            accessing it"""
+        )
+
+    # def set_enable_zoom(self, enable_zoom: bool, zoom_token: str) -> None:
+    def set_enable_zoom(self, enable_zoom: bool) -> None:
+        """
+        Set whether to enable Zoom notification and its token.
+
+        Args:
+            enable_zoom (bool): Whether to enable Zoom notification or not.
+        """
+        self._enable_zoom = enable_zoom
+
+    @property
+    def get_enable_zoom(self) -> bool:
+        """
+        Get whether Zoom notification is enabled.
+
+        Returns:
+            bool: Whether Zoom notification is enabled or not.
+        """
+        return self._enable_zoom
+
+    def set_zoom_webhook_url(self, zoom_webhook_url: str) -> None:
+        """
+        Set the Zoom webhook URL.
+
+        Args:
+            zoom_webhook_url (str): The webhook URL for Zoom notification.
+        """
+        self._zoom_webhook_url = zoom_webhook_url
+
+    @property
+    def get_zoom_webhook_url(self) -> str:
+        """
+        Get the Zoom webhook URL.
+
+        Returns:
+            str: The Zoom webhook URL.
+        """
+        if self._zoom_webhook_url:
+            return self._zoom_webhook_url
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign '_zoom_webhook_url' before 
+            accessing it"""
+        )
+
+    def set_zoom_token(self, zoom_token: str) -> None:
+        """
+        Set the Zoom webhook token.
+
+        Args:
+            zoom_token (str): The token for Zoom notification.
+        """
+        self._zoom_token = zoom_token
+
+    @property
+    def get_zoom_token(self) -> str:
+        """
+        Get the Zoom token.
+
+        Returns:
+            str: The Zoom token.
+        """
+        if self._zoom_token:
+            return self._zoom_token
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign '_zoom_token' before 
             accessing it"""
         )
 
