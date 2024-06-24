@@ -15,6 +15,12 @@ def test_constants():
 
     assert user_config.se_notifications_slack_webhook_url == "spark.expectations.notifications.slack.webhook_url"
 
+    assert user_config.se_notifications_enable_zoom == "spark.expectations.notifications.zoom.enabled"
+
+    assert user_config.se_notifications_zoom_webhook_url == "spark.expectations.notifications.zoom.webhook_url"
+
+    assert user_config.se_notifications_zoom_token == "spark.expectations.notifications.zoom.token"
+
     assert user_config.se_notifications_on_start == "spark.expectations.notifications.on_start"
 
     assert user_config.se_notifications_on_completion == "spark.expectations.notifications.on.completion"
