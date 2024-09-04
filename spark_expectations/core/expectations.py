@@ -53,7 +53,7 @@ class SparkExpectations:
     def __post_init__(self) -> None:
         # Databricks runtime 14 and above could pass either instance of a Dataframe depending on how data was read
         if isinstance(self.rules_df, DataFrame) or isinstance(
-                self.rules_df, connect.dataframe.DataFrame
+            self.rules_df, connect.dataframe.DataFrame
         ):
             try:
                 self.spark: Optional[SparkSession] = self.rules_df.sparkSession
@@ -363,7 +363,7 @@ class SparkExpectations:
                     )
 
                     if isinstance(_df, DataFrame) or isinstance(
-                            _df, connect.dataframe.DataFrame
+                        _df, connect.dataframe.DataFrame
                     ):
                         _log.info("The function dataframe is created")
                         self._context.set_table_name(table_name)
