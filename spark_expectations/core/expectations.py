@@ -3,6 +3,12 @@ from dataclasses import dataclass
 from typing import Dict, Optional, Any, Union
 from pyspark import StorageLevel
 from pyspark.sql import DataFrame, SparkSession
+
+try:
+    from pyspark.sql import connect
+except ImportError:
+    # Spark/Databricks connect is available only in Databricks runtime 14 and above
+    pass
 from spark_expectations import _log
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.context import SparkExpectationsContext
@@ -45,7 +51,10 @@ class SparkExpectations:
     stats_streaming_options: Optional[Dict[str, Union[str, bool]]] = None
 
     def __post_init__(self) -> None:
-        if isinstance(self.rules_df, DataFrame):
+        # Databricks runtime 14 and above could pass either instance of a Dataframe depending on how data was read
+        if isinstance(self.rules_df, DataFrame) or isinstance(
+                self.rules_df, connect.dataframe.DataFrame
+        ):
             try:
                 self.spark: Optional[SparkSession] = self.rules_df.sparkSession
             except AttributeError:
@@ -353,7 +362,9 @@ class SparkExpectations:
                         self._context.get_run_id,
                     )
 
-                    if isinstance(_df, DataFrame):
+                    if isinstance(_df, DataFrame) or isinstance(
+                            _df, connect.dataframe.DataFrame
+                    ):
                         _log.info("The function dataframe is created")
                         self._context.set_table_name(table_name)
                         if write_to_temp_table:
