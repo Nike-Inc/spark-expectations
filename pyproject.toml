@@ -42,7 +42,7 @@ botocore = "1.29.133"                                      # This is just for fi
 ipykernel = "^6.29.2"
 
 [tool.poetry-dynamic-versioning]
-enable = false
+enable = true
 vcs = "git"
 bump = true
 style = "semver"
