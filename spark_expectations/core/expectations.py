@@ -5,6 +5,11 @@ import packaging.version as package_version
 from pyspark import version as spark_version
 from pyspark import StorageLevel
 from pyspark.sql import DataFrame, SparkSession
+
+try:
+    from pyspark.sql.connect.dataframe import DataFrame as connectDataFrame
+except ImportError:
+    pass
 from spark_expectations import _log
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.context import SparkExpectationsContext
@@ -26,13 +31,10 @@ from spark_expectations.utils.regulate_flow import SparkExpectationsRegulateFlow
 
 min_spark_version_for_connect = "3.4.0"
 installed_spark_version = spark_version.__version__
-is_spark_connect_supported = False
-if package_version.parse(installed_spark_version) >= package_version.parse(
-    min_spark_version_for_connect
-):
-    from pyspark.sql import connect
-
-    is_spark_connect_supported = True
+is_spark_connect_supported = bool(
+    package_version.parse(installed_spark_version)
+    >= package_version.parse(min_spark_version_for_connect)
+)
 
 
 @dataclass
@@ -61,7 +63,7 @@ class SparkExpectations:
         # Databricks runtime 14 and above could pass either instance of a Dataframe depending on how data was read
         if (
             is_spark_connect_supported is True
-            and isinstance(self.rules_df, (DataFrame, connect.dataframe.DataFrame))
+            and isinstance(self.rules_df, (DataFrame, connectDataFrame))
         ) or (
             is_spark_connect_supported is False and isinstance(self.rules_df, DataFrame)
         ):
@@ -74,10 +76,12 @@ class SparkExpectations:
                 raise SparkExpectationsMiscException(
                     "Spark session is not available, please initialize a spark session before calling SE"
                 )
+
         else:
             raise SparkExpectationsMiscException(
                 "Input rules_df is not of dataframe type"
             )
+
         self.actions: SparkExpectationsActions = SparkExpectationsActions()
         self._context: SparkExpectationsContext = SparkExpectationsContext(
             product_id=self.product_id, spark=self.spark
@@ -374,7 +378,7 @@ class SparkExpectations:
 
                     if (
                         is_spark_connect_supported is True
-                        and isinstance(_df, (DataFrame, connect.dataframe.DataFrame))
+                        and isinstance(_df, (DataFrame, connectDataFrame))
                     ) or (
                         is_spark_connect_supported is False
                         and isinstance(_df, DataFrame)
