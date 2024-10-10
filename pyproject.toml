@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "spark-expectations"
-version = "0.0.1-pre.40+79b04d6"
+version = "0.0.0"
 description = "This project helps us to run Data Quality Rules in flight while spark job is being run"
 authors = ["Ashok Singamaneni <ashok.singamaneni@nike.com>"]
 readme = "README.md"
