@@ -5,6 +5,13 @@ from unittest.mock import Mock, PropertyMock
 from unittest.mock import patch
 import pytest
 from pyspark.sql import DataFrame, SparkSession
+
+
+try:
+    from pyspark.sql.connect.dataframe import DataFrame as connectDataFrame
+except ImportError:
+    pass
+
 from pyspark.sql.functions import lit, to_timestamp, col
 from pyspark.sql.types import StringType, IntegerType, StructField, StructType
 

@@ -1,8 +1,15 @@
 import functools
 from dataclasses import dataclass
 from typing import Dict, Optional, Any, Union
+import packaging.version as package_version
+from pyspark import version as spark_version
 from pyspark import StorageLevel
 from pyspark.sql import DataFrame, SparkSession
+
+try:
+    from pyspark.sql.connect.dataframe import DataFrame as connectDataFrame
+except ImportError:
+    pass
 from spark_expectations import _log
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.context import SparkExpectationsContext
@@ -20,6 +27,14 @@ from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
 from spark_expectations.utils.actions import SparkExpectationsActions
 from spark_expectations.utils.reader import SparkExpectationsReader
 from spark_expectations.utils.regulate_flow import SparkExpectationsRegulateFlow
+
+
+min_spark_version_for_connect = "3.4.0"
+installed_spark_version = spark_version.__version__
+is_spark_connect_supported = bool(
+    package_version.parse(installed_spark_version)
+    >= package_version.parse(min_spark_version_for_connect)
+)
 
 
 @dataclass
@@ -45,7 +60,13 @@ class SparkExpectations:
     stats_streaming_options: Optional[Dict[str, Union[str, bool]]] = None
 
     def __post_init__(self) -> None:
-        if isinstance(self.rules_df, DataFrame):
+        # Databricks runtime 14 and above could pass either instance of a Dataframe depending on how data was read
+        if (
+            is_spark_connect_supported is True
+            and isinstance(self.rules_df, (DataFrame, connectDataFrame))
+        ) or (
+            is_spark_connect_supported is False and isinstance(self.rules_df, DataFrame)
+        ):
             try:
                 self.spark: Optional[SparkSession] = self.rules_df.sparkSession
             except AttributeError:
@@ -55,10 +76,12 @@ class SparkExpectations:
                 raise SparkExpectationsMiscException(
                     "Spark session is not available, please initialize a spark session before calling SE"
                 )
+
         else:
             raise SparkExpectationsMiscException(
                 "Input rules_df is not of dataframe type"
             )
+
         self.actions: SparkExpectationsActions = SparkExpectationsActions()
         self._context: SparkExpectationsContext = SparkExpectationsContext(
             product_id=self.product_id, spark=self.spark
@@ -353,7 +376,13 @@ class SparkExpectations:
                         self._context.get_run_id,
                     )
 
-                    if isinstance(_df, DataFrame):
+                    if (
+                        is_spark_connect_supported is True
+                        and isinstance(_df, (DataFrame, connectDataFrame))
+                    ) or (
+                        is_spark_connect_supported is False
+                        and isinstance(_df, DataFrame)
+                    ):
                         _log.info("The function dataframe is created")
                         self._context.set_table_name(table_name)
                         if write_to_temp_table:
