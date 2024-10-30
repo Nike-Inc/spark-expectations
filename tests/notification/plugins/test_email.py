@@ -27,7 +27,7 @@ def test_send_notification_success(_mock_context):
         # assert
         mock_smtp.assert_called_with(_mock_context.get_mail_smtp_server, _mock_context.get_mail_smtp_port)
         mock_smtp().starttls.assert_called()
-        mock_smtp().sendmail.assert_called_with(_mock_context.get_mail_from, _mock_context.get_to_mail,
+        mock_smtp().sendmail.assert_called_with(_mock_context.get_mail_from, _mock_context.get_to_mail.split(","),
                                                 _mock_mltp().as_string())
         mock_smtp().quit.assert_called()
 

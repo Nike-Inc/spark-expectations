@@ -50,7 +50,9 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
                 )
                 server.starttls()
                 text = msg.as_string()
-                server.sendmail(_context.get_mail_from, _context.get_to_mail, text)
+                server.sendmail(
+                    _context.get_mail_from, _context.get_to_mail.split(","), text
+                )
                 server.quit()
 
                 _log.info("email send successfully")
