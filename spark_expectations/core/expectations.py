@@ -57,7 +57,6 @@ def check_if_pyspark_connect_is_supported() -> bool:
 
 # pylint: disable=ungrouped-imports
 if check_if_pyspark_connect_is_supported():
-    print("PySpark connect is supported")
     # Import the connect module if the current version of PySpark supports it
     from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
     from pyspark.sql.connect.session import SparkSession as ConnectSparkSession
@@ -65,7 +64,6 @@ if check_if_pyspark_connect_is_supported():
     DataFrame = Union[sql.DataFrame, ConnectDataFrame]  # type: ignore
     SparkSession = Union[sql.SparkSession, ConnectSparkSession]  # type: ignore
 else:
-    print("PySpark connect is not supported")
     # Otherwise, use the default PySpark classes
     from pyspark.sql.dataframe import DataFrame  # type: ignore
     from pyspark.sql.session import SparkSession  # type: ignore
