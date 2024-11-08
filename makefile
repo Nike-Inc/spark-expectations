@@ -25,7 +25,8 @@ kafka-cluster-stop:
 	                   rm -rf /tmp/kafka-logs
                    endif
 
-cov: check kafka-cluster-start
+cov: kafka-cluster-start
+	-make check
 	@poetry run coverage run --source=spark_expectations --omit "spark_expectations/examples/*" -m pytest -v -x && \
 	poetry run coverage report -m && \
 	poetry run coverage xml

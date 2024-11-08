@@ -55,6 +55,7 @@ def check_if_pyspark_connect_is_supported() -> bool:
     return result
 
 
+# pylint: disable=ungrouped-imports
 if check_if_pyspark_connect_is_supported():
     print("PySpark connect is supported")
     # Import the connect module if the current version of PySpark supports it
