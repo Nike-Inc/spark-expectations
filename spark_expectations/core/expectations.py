@@ -1,15 +1,13 @@
 import functools
+import importlib
 from dataclasses import dataclass
 from typing import Dict, Optional, Any, Union
-import packaging.version as package_version
-from pyspark import version as spark_version
-from pyspark import StorageLevel
-from pyspark.sql import DataFrame, SparkSession
 
-try:
-    from pyspark.sql.connect.dataframe import DataFrame as connectDataFrame
-except ImportError:
-    pass
+from pyspark.version import __version__ as spark_version
+from pyspark import StorageLevel
+from pyspark import sql
+
+
 from spark_expectations import _log
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.context import SparkExpectationsContext
@@ -29,12 +27,53 @@ from spark_expectations.utils.reader import SparkExpectationsReader
 from spark_expectations.utils.regulate_flow import SparkExpectationsRegulateFlow
 
 
-min_spark_version_for_connect = "3.4.0"
-installed_spark_version = spark_version.__version__
-is_spark_connect_supported = bool(
-    package_version.parse(installed_spark_version)
-    >= package_version.parse(min_spark_version_for_connect)
-)
+def get_spark_minor_version() -> float:
+    """Returns the minor version of the spark instance.
+
+    For example, if the spark version is 3.3.2, this function would return 3.3
+    """
+    return float(".".join(spark_version.split(".")[:2]))
+
+
+MIN_SPARK_VERSION_FOR_CONNECT: float = 3.4
+SPARK_MINOR_VERSION: float = get_spark_minor_version()
+
+
+def check_if_pyspark_connect_is_supported() -> bool:
+    """Check if the current version of PySpark supports the connect module"""
+    result = False
+    module_name: str = "pyspark"
+    if SPARK_MINOR_VERSION >= MIN_SPARK_VERSION_FOR_CONNECT:
+        try:
+            importlib.import_module(f"{module_name}.sql.connect")
+            from pyspark.sql.connect.column import Column
+
+            _col: Column
+            result = True
+        except (ModuleNotFoundError, ImportError):
+            result = False
+    return result
+
+
+if check_if_pyspark_connect_is_supported():
+    print("PySpark connect is supported")
+    # Import the connect module if the current version of PySpark supports it
+    from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
+    from pyspark.sql.connect.session import SparkSession as ConnectSparkSession
+
+    DataFrame = Union[sql.DataFrame, ConnectDataFrame]  # type: ignore
+    SparkSession = Union[sql.SparkSession, ConnectSparkSession]  # type: ignore
+else:
+    print("PySpark connect is not supported")
+    # Otherwise, use the default PySpark classes
+    from pyspark.sql.dataframe import DataFrame  # type: ignore
+    from pyspark.sql.session import SparkSession  # type: ignore
+
+
+__all__ = [
+    "SparkExpectations",
+    "WrappedDataFrameWriter",
+]
 
 
 @dataclass
@@ -58,19 +97,28 @@ class SparkExpectations:
     stats_table_writer: "WrappedDataFrameWriter"
     debugger: bool = False
     stats_streaming_options: Optional[Dict[str, Union[str, bool]]] = None
+    spark: Optional[SparkSession] = None
 
     def __post_init__(self) -> None:
-        # Databricks runtime 14 and above could pass either instance of a Dataframe depending on how data was read
-        if (
-            is_spark_connect_supported is True
-            and isinstance(self.rules_df, (DataFrame, connectDataFrame))
-        ) or (
-            is_spark_connect_supported is False and isinstance(self.rules_df, DataFrame)
-        ):
+        if isinstance(self.rules_df, DataFrame):  # type: ignore
             try:
-                self.spark: Optional[SparkSession] = self.rules_df.sparkSession
+                self.spark = self.rules_df.sparkSession
             except AttributeError:
-                self.spark = SparkSession.getActiveSession()
+                # we need to ensure to use the correct SparkSession type based
+                # on if pyspark[connect] is supported or not
+                if check_if_pyspark_connect_is_supported():
+                    from pyspark.sql.connect.session import (
+                        SparkSession as _ConnectSparkSession,
+                    )
+
+                    session = (
+                        _ConnectSparkSession.getActiveSession()
+                        or sql.SparkSession.getActiveSession()
+                    )  # type: ignore
+                else:
+                    session = sql.SparkSession.getActiveSession()  # type: ignore
+
+                self.spark = session
 
             if self.spark is None:
                 raise SparkExpectationsMiscException(
@@ -376,13 +424,7 @@ class SparkExpectations:
                         self._context.get_run_id,
                     )
 
-                    if (
-                        is_spark_connect_supported is True
-                        and isinstance(_df, (DataFrame, connectDataFrame))
-                    ) or (
-                        is_spark_connect_supported is False
-                        and isinstance(_df, DataFrame)
-                    ):
+                    if isinstance(_df, DataFrame):  # type: ignore
                         _log.info("The function dataframe is created")
                         self._context.set_table_name(table_name)
                         if write_to_temp_table:
