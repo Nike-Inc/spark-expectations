@@ -129,6 +129,7 @@ class SparkExpectationsActions:
                 str,
                 Any,
                 str,
+                str,
                 dict,
                 str,
             ]
@@ -334,6 +335,7 @@ class SparkExpectationsActions:
                                 _dq_rule["product_id"],
                                 _dq_rule["table_name"],
                                 _dq_rule["rule"],
+                                _dq_rule["column_name"],
                                 _key,
                                 _query_prefix,
                                 dict(
@@ -365,7 +367,7 @@ class SparkExpectationsActions:
                                     f"SELECT ({query}) AS OUTPUT"
                                 ).collect()[0][0]
                                 if query
-                                else None
+                                else 0
                             )
 
                         # function to get the query outputs
@@ -424,6 +426,7 @@ class SparkExpectationsActions:
                 _dq_rule["table_name"],
                 _dq_rule["rule_type"],
                 _dq_rule["rule"],
+                _dq_rule["column_name"],
                 _dq_rule["expectation"],
                 _dq_rule["tag"],
                 _dq_rule["description"],
