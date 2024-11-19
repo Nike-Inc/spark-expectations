@@ -60,6 +60,18 @@ Please find the spark-expectations flow and feature diagrams below
 <img src=https://github.com/Nike-Inc/spark-expectations/blob/main/docs/se_diagrams/features.png?raw=true width=1000></p>
 
 
+# Observability Enhancement: Additional Column for Data Quality Metrics
+
+To improve observability and facilitate better monitoring of data quality, an additional column has been introduced in the stats_detailed and query_dq_output table. This column provides critical insights into the state of data processing and helps stakeholders quickly identify and address issues.
+
+### Purpose
+The additional column enriches the error metadata with key information relevant to system monitoring and debugging. It ensures seamless integration with observability tools and enhances traceability in the data pipeline.
+
+### Key Features
+- *Enhanced Visibility*: Offers detailed insights into rule violations, processing anomalies, or environmental factors influencing data quality.
+- *Quick Debugging*: Helps pinpoint errors by associating records with specific metrics.
+
+
 # Spark - Expectations Setup
 
 ### Configurations
