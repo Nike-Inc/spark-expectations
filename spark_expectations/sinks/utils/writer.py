@@ -135,7 +135,6 @@ class SparkExpectationsWriter:
             str,
             str,
             str,
-            str,
             None,
             None,
             int,
@@ -177,7 +176,6 @@ class SparkExpectationsWriter:
                 for _rowdq_rule in _row_dq_expectations:
                     # if _rowdq_rule["rule"] in _dq_res:
 
-
                     failed_row_count = _dq_res[_rowdq_rule["rule"]]
                     _row_dq_result.append(
                         (
@@ -186,7 +184,6 @@ class SparkExpectationsWriter:
                             _table_name,
                             _rowdq_rule["rule_type"],
                             _rowdq_rule["rule"],
-                            _rowdq_rule["column_name"],
                             _rowdq_rule["expectation"],
                             _rowdq_rule["tag"],
                             _rowdq_rule["description"],
@@ -325,7 +322,6 @@ class SparkExpectationsWriter:
                 "product_id",
                 "table_name",
                 "rule",
-                "column_name",
                 "alias",
                 "dq_type",
                 "source_dq",
@@ -358,8 +354,7 @@ class SparkExpectationsWriter:
             + "target.source_dq as target_output from _df_custom_detailed_stats_source as source "
             + "left outer join _df_custom_detailed_stats_source as target "
             + "on source.run_id=target.run_id and source.product_id=target.product_id and "
-            + "source.table_name=target.table_name and source.rule=target.rule and  "
-            + "source.column_name = target.column_name and source.dq_type = target.dq_type "
+            + "source.table_name=target.table_name and source.rule=target.rule  "
             + "and source.alias_comp=target.alias_comp "
             + "and source.compare = 'source' and target.compare = 'target' "
         )
@@ -400,7 +395,6 @@ class SparkExpectationsWriter:
                 "table_name",
                 "rule_type",
                 "rule",
-                "column_name",
                 "source_expectations",
                 "tag",
                 "description",
@@ -421,7 +415,6 @@ class SparkExpectationsWriter:
                 "table_name",
                 "rule_type",
                 "rule",
-                "column_name",
                 "target_expectations",
                 "tag",
                 "description",
@@ -490,7 +483,7 @@ class SparkExpectationsWriter:
 
         _df_detailed_stats = _df_source_aggquery_detailed_stats.join(
             _df_target_aggquery_detailed_stats,
-            ["run_id", "product_id", "table_name", "rule_type", "rule", "column_name"],
+            ["run_id", "product_id", "table_name", "rule_type", "rule"],
             "full_outer",
         )
 
