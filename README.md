@@ -59,7 +59,6 @@ Please find the spark-expectations flow and feature diagrams below
 <p align="center">
 <img src=https://github.com/Nike-Inc/spark-expectations/blob/main/docs/se_diagrams/features.png?raw=true width=1000></p>
 
-
 # Spark - Expectations Setup
 
 ### Configurations

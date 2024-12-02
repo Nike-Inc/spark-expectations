@@ -174,68 +174,45 @@ class SparkExpectationsWriter:
                 _dq_res = {d["rule"]: d["failed_row_count"] for d in _row_dq_res}
 
                 for _rowdq_rule in _row_dq_expectations:
-                    if _rowdq_rule["rule"] in _dq_res:
-                        failed_row_count = _dq_res[_rowdq_rule["rule"]]
-                        _row_dq_result.append(
+                    # if _rowdq_rule["rule"] in _dq_res:
+
+                    failed_row_count = _dq_res[_rowdq_rule["rule"]]
+                    _row_dq_result.append(
+                        (
+                            _run_id,
+                            _product_id,
+                            _table_name,
+                            _rowdq_rule["rule_type"],
+                            _rowdq_rule["rule"],
+                            _rowdq_rule["expectation"],
+                            _rowdq_rule["tag"],
+                            _rowdq_rule["description"],
+                            "pass" if int(failed_row_count) == 0 else "fail",
+                            None,
+                            None,
                             (
-                                _run_id,
-                                _product_id,
-                                _table_name,
-                                _rowdq_rule["rule_type"],
-                                _rowdq_rule["rule"],
-                                _rowdq_rule["expectation"],
-                                _rowdq_rule["tag"],
-                                _rowdq_rule["description"],
-                                "pass" if int(failed_row_count) == 0 else "fail",
-                                None,
-                                None,
-                                (_input_count - int(failed_row_count)),
-                                failed_row_count,
-                                _input_count,
+                                (_input_count - int(failed_row_count))
+                                if int(failed_row_count) != 0
+                                else _input_count
+                            ),
+                            failed_row_count,
+                            _input_count,
+                            (
                                 self._context.get_row_dq_start_time.replace(
                                     tzinfo=timezone.utc
                                 ).strftime("%Y-%m-%d %H:%M:%S")
                                 if self._context.get_row_dq_start_time
-                                else "1900-01-01 00:00:00",
+                                else "1900-01-01 00:00:00"
+                            ),
+                            (
                                 self._context.get_row_dq_end_time.replace(
                                     tzinfo=timezone.utc
                                 ).strftime("%Y-%m-%d %H:%M:%S")
                                 if self._context.get_row_dq_end_time
-                                else "1900-01-01 00:00:00",
-                            )
+                                else "1900-01-01 00:00:00"
+                            ),
                         )
-                        _row_dq_expectations.remove(_rowdq_rule)
-
-            for _rowdq_rule in _row_dq_expectations:
-                _row_dq_result.append(
-                    (
-                        _run_id,
-                        _product_id,
-                        _table_name,
-                        _rowdq_rule["rule_type"],
-                        _rowdq_rule["rule"],
-                        _rowdq_rule["expectation"],
-                        _rowdq_rule["tag"],
-                        _rowdq_rule["description"],
-                        "pass",
-                        None,
-                        None,
-                        _input_count,
-                        "0",
-                        _input_count,
-                        self._context.get_row_dq_start_time.replace(
-                            tzinfo=timezone.utc
-                        ).strftime("%Y-%m-%d %H:%M:%S")
-                        if self._context.get_row_dq_start_time
-                        else "1900-01-01 00:00:00",
-                        self._context.get_row_dq_end_time.replace(
-                            tzinfo=timezone.utc
-                        ).strftime("%Y-%m-%d %H:%M:%S")
-                        if self._context.get_row_dq_end_time
-                        else "1900-01-01 00:00:00",
                     )
-                )
-
             return _row_dq_result
 
         except Exception as e:
@@ -377,8 +354,7 @@ class SparkExpectationsWriter:
             + "target.source_dq as target_output from _df_custom_detailed_stats_source as source "
             + "left outer join _df_custom_detailed_stats_source as target "
             + "on source.run_id=target.run_id and source.product_id=target.product_id and "
-            + "source.table_name=target.table_name and source.rule=target.rule "
-            + "and source.dq_type = target.dq_type "
+            + "source.table_name=target.table_name and source.rule=target.rule  "
             + "and source.alias_comp=target.alias_comp "
             + "and source.compare = 'source' and target.compare = 'target' "
         )
@@ -629,18 +605,18 @@ class SparkExpectationsWriter:
             input_count: int = self._context.get_input_count
             error_count: int = self._context.get_error_count
             output_count: int = self._context.get_output_count
-            source_agg_dq_result: Optional[
-                List[Dict[str, str]]
-            ] = self._context.get_source_agg_dq_result
-            final_agg_dq_result: Optional[
-                List[Dict[str, str]]
-            ] = self._context.get_final_agg_dq_result
-            source_query_dq_result: Optional[
-                List[Dict[str, str]]
-            ] = self._context.get_source_query_dq_result
-            final_query_dq_result: Optional[
-                List[Dict[str, str]]
-            ] = self._context.get_final_query_dq_result
+            source_agg_dq_result: Optional[List[Dict[str, str]]] = (
+                self._context.get_source_agg_dq_result
+            )
+            final_agg_dq_result: Optional[List[Dict[str, str]]] = (
+                self._context.get_final_agg_dq_result
+            )
+            source_query_dq_result: Optional[List[Dict[str, str]]] = (
+                self._context.get_source_query_dq_result
+            )
+            final_query_dq_result: Optional[List[Dict[str, str]]] = (
+                self._context.get_final_query_dq_result
+            )
 
             error_stats_data = [
                 (

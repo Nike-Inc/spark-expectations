@@ -365,7 +365,7 @@ class SparkExpectationsActions:
                                     f"SELECT ({query}) AS OUTPUT"
                                 ).collect()[0][0]
                                 if query
-                                else None
+                                else 0
                             )
 
                         # function to get the query outputs
