@@ -3,14 +3,17 @@ test-warnings: True
 doc-warnings: false
 
 ignore-paths:
-  - build
-  - venv
   - .eggs
   - .mypy_cache
+  - .venv
+  - .venvs
+  - build
+  - docs
   - htmlcov
-  - spark_expectations/examples/
-  - tests  #commented until test scripts corrected
-
+  - jars
+  - src/spark_expectations/examples/
+  - tests  # commented until test scripts corrected
+  - venv
 
 max-line-length: 120
 
@@ -41,7 +44,7 @@ pylint:
 pycodestyle:
   # W293: disabled because we have newlines in docstrings
   # E203: disabled because pep8 and black disagree on whitespace before colon in some cases
-  disable: W293,E203, E203  # conflicts with black formatting
+  disable: W293,E203  # conflicts with black formatting
 
 mccabe:
   disable:
