@@ -17,8 +17,10 @@ def test_logger_handler_type(_fixture_logger_handler):
 def test_logger_handler_formatter(_fixture_logger_handler):
     formatter = _fixture_logger_handler.formatter
     assert isinstance(formatter, logging.Formatter)
-    assert formatter._fmt == "[%(asctime)s] [%(levelname)s] [spark_expectations]" \
-                             " {%(module)s.py:%(funcName)s:%(lineno)d} - %(message)s"
+    assert (
+        formatter._fmt == "[%(asctime)s] [%(levelname)s] [spark_expectations]"
+        " {%(module)s.py:%(funcName)s:%(lineno)d} - %(message)s"
+    )
 
 
 @pytest.mark.parametrize("pkg_name", ["foo", "bar"])

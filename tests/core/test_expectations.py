@@ -57,7 +57,10 @@ def fixture_setup_local_kafka_topic():
         )
 
     else:
-        yield "A Kafka server has been launched within a Docker container for the purpose of conducting tests in " "a Jenkins environment"
+        yield (
+            "A Kafka server has been launched within a Docker container for the purpose of conducting tests in "
+            "a Jenkins environment"
+        )
 
 
 @pytest.fixture(name="_fixture_df")
@@ -233,7 +236,7 @@ def test_spark_session_initialization():
             target_and_error_table_writer=writer,
             debugger=False,
         )
-        assert type(se.spark) == SparkSession
+        assert type(se.spark) is SparkSession
 
     # Test if exception is raised if sparkSession.getActiveSession() returns None
     with patch.object(

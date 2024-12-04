@@ -11,9 +11,9 @@ from spark_expectations.core.expectations import (
 )
 from spark_expectations.examples.base_setup import set_up_bigquery
 
-os.environ[
-    "GOOGLE_APPLICATION_CREDENTIALS"
-] = "path_to_your_json_credential_file"  # This is needed for spark write to bigquery
+os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
+    "path_to_your_json_credential_file"  # This is needed for spark write to bigquery
+)
 writer = (
     WrappedDataFrameWriter()
     .mode("overwrite")

@@ -1,4 +1,3 @@
-
 from datetime import datetime
 import os
 import unittest.mock
@@ -62,7 +61,10 @@ def fixture_setup_local_kafka_topic():
         )
 
     else:
-        yield "A Kafka server has been launched within a Docker container for the purpose of conducting tests " "in a Jenkins environment"
+        yield (
+            "A Kafka server has been launched within a Docker container for the purpose of conducting tests "
+            "in a Jenkins environment"
+        )
 
 
 @pytest.fixture(name="_fixture_employee")
@@ -2284,7 +2286,6 @@ def test_write_error_stats(
                     }
                 ],
                 "run_id": "product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109",
-                "input_count": 5,
                 "dq_expectations": {
                     "row_dq_rules": [
                         {
@@ -2503,7 +2504,6 @@ def test_write_error_stats(
                 "target_dq_status": "fail",
                 "target_dq_actual_result": "1030",
                 "target_dq_row_count": "4",
-                "source_expectations": "sum(sales)>10000",
             },
             "agg_dq",
             None,
@@ -2538,7 +2538,6 @@ def test_write_error_stats(
                     }
                 ],
                 "run_id": "product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109",
-                "input_count": 5,
                 "dq_expectations": {
                     "row_dq_rules": [
                         {
@@ -2782,7 +2781,6 @@ def test_write_error_stats(
                 "row_dq_status": "Passed",
                 "summarised_row_dq_res": [],
                 "run_id": "product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109",
-                "input_count": 5,
                 "dq_expectations": {
                     "row_dq_rules": [],
                 },
@@ -2906,7 +2904,6 @@ def test_write_error_stats(
                     }
                 ],
                 "run_id": "product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109",
-                "input_count": 5,
                 "dq_expectations": {
                     "row_dq_rules": [
                         {
@@ -3432,7 +3429,7 @@ def test_write_error_records_final(
     autospec=True,
     spec_set=True,
 )
-def test_write_error_records_final_dependent(
+def test_write_error_records_final_dependent_2(
     save_df_as_table,
     table_name,
     rule_type,

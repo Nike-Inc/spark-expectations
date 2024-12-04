@@ -18,33 +18,45 @@ spark = get_spark_session()
 def fixture_setup_local_kafka_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    if os.getenv('UNIT_TESTING_ENV') != "spark_expectations_unit_testing_on_github_actions":
-
+    if (
+        os.getenv("UNIT_TESTING_ENV")
+        != "spark_expectations_unit_testing_on_github_actions"
+    ):
         # remove if docker conatiner is running
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
+        os.system(
+            f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh"
+        )
 
         # start docker container and create the topic
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
+        os.system(
+            f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh"
+        )
 
         yield "docker container started"
 
         # remove docker container
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
+        os.system(
+            f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh"
+        )
 
     else:
-        yield "A Kafka server has been launched within a Docker container for the purpose of conducting tests in " \
-              "a Jenkins environment"
+        yield (
+            "A Kafka server has been launched within a Docker container for the purpose of conducting tests in "
+            "a Jenkins environment"
+        )
 
 
 @pytest.fixture(name="_fixture_dataset")
 def fixture_dataset():
     # Create a mock dataframe
     data = [(1, "John", 25)]
-    schema = StructType([
-        StructField("id", IntegerType(), True),
-        StructField("name", StringType(), True),
-        StructField("age", IntegerType(), True)
-    ])
+    schema = StructType(
+        [
+            StructField("id", IntegerType(), True),
+            StructField("name", StringType(), True),
+            StructField("age", IntegerType(), True),
+        ]
+    )
     return spark.createDataFrame(data, schema)
 
 
@@ -63,17 +75,24 @@ def test_kafka_writer(_fixture_local_kafka_topic, _fixture_dataset):
 
     kafka_writer_handler.writer(_write_args=write_args)
 
-    expected_df = spark.read.format("kafka").option(
-        "kafka.bootstrap.servers", "localhost:9092"
-    ).option("subscribe", "dq-sparkexpectations-stats").option(
-        "startingOffsets", "earliest"
-    ).option(
-        "endingOffsets", "latest"
-    ).load().orderBy(col('timestamp').desc()).limit(1).selectExpr(
-        "cast(value as string) as stats_records")
+    expected_df = (
+        spark.read.format("kafka")
+        .option("kafka.bootstrap.servers", "localhost:9092")
+        .option("subscribe", "dq-sparkexpectations-stats")
+        .option("startingOffsets", "earliest")
+        .option("endingOffsets", "latest")
+        .load()
+        .orderBy(col("timestamp").desc())
+        .limit(1)
+        .selectExpr("cast(value as string) as stats_records")
+    )
 
-    assert expected_df.collect() == _fixture_dataset.selectExpr("cast(to_json(struct(*)) as string) AS stats_records") \
-        .collect()
+    assert (
+        expected_df.collect()
+        == _fixture_dataset.selectExpr(
+            "cast(to_json(struct(*)) as string) AS stats_records"
+        ).collect()
+    )
 
 
 def test_kafka_writer_exception(_fixture_local_kafka_topic, _fixture_dataset):
@@ -87,5 +106,8 @@ def test_kafka_writer_exception(_fixture_local_kafka_topic, _fixture_dataset):
         }
     }
 
-    with pytest.raises(SparkExpectationsMiscException, match=r"error occurred while saving data into kafka .*"):
+    with pytest.raises(
+        SparkExpectationsMiscException,
+        match=r"error occurred while saving data into kafka .*",
+    ):
         delta_writer_handler.writer(_write_args=write_args)

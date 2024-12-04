@@ -11,7 +11,11 @@ from spark_expectations.notifications.plugins.slack import (
 )
 
 
-@patch('spark_expectations.notifications.plugins.slack.SparkExpectationsContext', autospec=True, spec_set=True)
+@patch(
+    "spark_expectations.notifications.plugins.slack.SparkExpectationsContext",
+    autospec=True,
+    spec_set=True,
+)
 def test_send_notification_success(_mock_context):
     # Arrange
     slack_handler = SparkExpectationsSlackPluginImpl()
@@ -27,14 +31,23 @@ def test_send_notification_success(_mock_context):
         mock_post.return_value = mock_response
 
         # Act
-        slack_handler.send_notification(_context=_mock_context, _config_args=_config_args)
+        slack_handler.send_notification(
+            _context=_mock_context, _config_args=_config_args
+        )
 
         # Assert
-        mock_post.assert_called_once_with(_mock_context.get_slack_webhook_url, json={"text": "test message"},
-                                          timeout=10)
+        mock_post.assert_called_once_with(
+            _mock_context.get_slack_webhook_url,
+            json={"text": "test message"},
+            timeout=10,
+        )
 
 
-@patch('spark_expectations.notifications.plugins.slack.SparkExpectationsContext', autospec=True, spec_set=True)
+@patch(
+    "spark_expectations.notifications.plugins.slack.SparkExpectationsContext",
+    autospec=True,
+    spec_set=True,
+)
 def test_send_notification_exception(_mock_context):
     # Arrange
     slack_handler = SparkExpectationsSlackPluginImpl()
@@ -50,10 +63,16 @@ def test_send_notification_exception(_mock_context):
 
         # Act and Assert
         with pytest.raises(SparkExpectationsSlackNotificationException):
-            slack_handler.send_notification(_context=_mock_context, _config_args=_config_args)
+            slack_handler.send_notification(
+                _context=_mock_context, _config_args=_config_args
+            )
 
 
-@patch('spark_expectations.notifications.plugins.slack.SparkExpectationsContext', autospec=True, spec_set=True)
+@patch(
+    "spark_expectations.notifications.plugins.slack.SparkExpectationsContext",
+    autospec=True,
+    spec_set=True,
+)
 def test_send_notification_slack_disabled(_mock_context):
     # Arrange
     slack_handler = SparkExpectationsSlackPluginImpl()
@@ -63,6 +82,8 @@ def test_send_notification_slack_disabled(_mock_context):
 
     with patch.object(requests, "post") as mock_post:
         # Act
-        slack_handler.send_notification(_context=_mock_context, _config_args=_config_args)
+        slack_handler.send_notification(
+            _context=_mock_context, _config_args=_config_args
+        )
 
         mock_post.post.assert_not_called()

@@ -133,13 +133,9 @@ if __name__ == "__main__":
         "kafka.bootstrap.servers", "localhost:9092"
     ).option("subscribe", "dq-sparkexpectations-stats").option(
         "startingOffsets", "earliest"
-    ).option(
-        "endingOffsets", "latest"
-    ).load().selectExpr(
+    ).option("endingOffsets", "latest").load().selectExpr(
         "cast(value as string) as stats_records"
-    ).show(
-        truncate=False
-    )
+    ).show(truncate=False)
 
     # remove docker container
     current_dir = os.path.dirname(os.path.abspath(__file__))

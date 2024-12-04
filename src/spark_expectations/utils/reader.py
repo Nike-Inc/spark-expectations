@@ -246,9 +246,9 @@ class SparkExpectationsReader:
                         + column_map["rule"]
                     ][_dq_queries_list[0]] = _dq_queries_list[1]
 
-                    column_map[
-                        "expectation" + "_" + str(_dq_queries_list[0])
-                    ] = _dq_queries_list[1]
+                    column_map["expectation" + "_" + str(_dq_queries_list[0])] = (
+                        _dq_queries_list[1]
+                    )
 
             column_map["expectation"] = column_map["expectation"].format(
                 **{

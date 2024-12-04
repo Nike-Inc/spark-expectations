@@ -43,7 +43,10 @@ def fixture_setup_local_kafka_topic():
         )
 
     else:
-        yield "A Kafka server has been launched within a Docker container for the purpose of conducting tests in" " a Jenkins environment"
+        yield (
+            "A Kafka server has been launched within a Docker container for the purpose of conducting tests in"
+            " a Jenkins environment"
+        )
 
 
 @pytest.fixture(name="_fixture_create_stats_table")

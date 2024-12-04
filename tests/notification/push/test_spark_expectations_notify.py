@@ -134,7 +134,6 @@ def test_notify_on_start(
     _fixture_mock_context,
     _fixture_notify_start_expected_result,
 ):
-
     notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Call the function to be tested
@@ -157,7 +156,6 @@ def test_notify_on_completion(
     _fixture_mock_context,
     _fixture_notify_completion_expected_result,
 ):
-
     notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Call the function to be tested
@@ -180,7 +178,6 @@ def test_notify_on_exceeds_of_error_threshold(
     _fixture_mock_context,
     _fixture_notify_error_threshold_expected_result,
 ):
-
     notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Call the function to be tested
@@ -201,7 +198,6 @@ def test_notify_on_exceeds_of_error_threshold(
 def test_notify_on_failure(
     _mock_notification_hook, _fixture_mock_context, _fixture_notify_fail_expected_result
 ):
-
     notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Call the function to be tested
@@ -479,7 +475,7 @@ def test_notify_rules_exceeds_threshold_return_none(
     notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Call the function to test
-    assert notify_handler.notify_rules_exceeds_threshold({}) == None
+    assert notify_handler.notify_rules_exceeds_threshold({}) is None
 
 
 def test_notify_rules_exceeds_threshold_exception(_fixture_mock_context):
