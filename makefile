@@ -14,7 +14,6 @@ mypy:
 check: ruff-check mypy
 	@hatch run check
 
-
 kafka-cluster-start:
                    ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_github_actions)
 	                   . ./spark_expectations/examples/docker_scripts/kafka_cluster_start.sh
@@ -71,7 +70,7 @@ docs:
 deploy-docs:
 	@poetry run mike deploy --push --update-aliases $(version) latest
 
-#TODO
+#TODO - switch to hatch install, create alias called setup
 poetry-install:
 	@pip install --upgrade setuptools && pip install poetry && poetry self add "poetry-dynamic-versioning[plugin]"
 
