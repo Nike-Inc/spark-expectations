@@ -1,32 +1,36 @@
+from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple, List
 from datetime import datetime, timezone
+
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import (
-    lit,
-    expr,
-    when,
     array,
-    to_timestamp,
-    round as sql_round,
-    create_map,
-    explode,
-    to_json,
     col,
-    split,
+    create_map,
     current_date,
+    explode,
+    expr,
+    lit,
+    split,
+    to_json,
+    to_timestamp,
+    when,
+)
+from pyspark.sql.functions import (
+    round as sql_round,
 )
 from pyspark.sql.types import StructType
+
 from spark_expectations import _log
+from spark_expectations.config.user_config import Constants as user_config
+from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.exceptions import (
-    SparkExpectationsUserInputOrConfigInvalidException,
     SparkExpectationsMiscException,
+    SparkExpectationsUserInputOrConfigInvalidException,
 )
 from spark_expectations.secrets import SparkExpectationsSecretsBackend
-from spark_expectations.utils.udf import remove_empty_maps
-from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.sinks import _sink_hook
-from spark_expectations.config.user_config import Constants as user_config
+from spark_expectations.utils.udf import remove_empty_maps
 
 
 @dataclass
@@ -254,8 +258,8 @@ class SparkExpectationsWriter:
             StructType: The created schema.
         """
         from pyspark.sql.types import (
-            StructField,
             StringType,
+            StructField,
         )
 
         return StructType(
@@ -684,14 +688,14 @@ class SparkExpectationsWriter:
             ]
 
             from pyspark.sql.types import (
-                StructField,
-                StringType,
+                ArrayType,
+                DateType,
+                FloatType,
                 IntegerType,
                 LongType,
-                FloatType,
-                DateType,
-                ArrayType,
                 MapType,
+                StringType,
+                StructField,
                 TimestampType,
             )
 

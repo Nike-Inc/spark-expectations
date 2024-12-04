@@ -1,8 +1,14 @@
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
 import pytest
 import requests
-from spark_expectations.core.exceptions import SparkExpectationsZoomNotificationException
-from spark_expectations.notifications.plugins.zoom import SparkExpectationsZoomPluginImpl
+
+from spark_expectations.core.exceptions import (
+    SparkExpectationsZoomNotificationException,
+)
+from spark_expectations.notifications.plugins.zoom import (
+    SparkExpectationsZoomPluginImpl,
+)
 
 
 @patch('spark_expectations.notifications.plugins.zoom.SparkExpectationsContext', autospec=True, spec_set=True)

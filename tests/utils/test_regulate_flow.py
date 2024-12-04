@@ -1,16 +1,17 @@
 # pylint: disable=too-many-lines
 import os
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import MagicMock, Mock, patch
+
 import pytest
+
 from pyspark.sql.functions import lit
+
 from spark_expectations.core import get_spark_session
 from spark_expectations.core.context import SparkExpectationsContext
+from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from spark_expectations.core.expectations import WrappedDataFrameWriter
-from spark_expectations.core.exceptions import (
-    SparkExpectationsMiscException
-)
-from spark_expectations.utils.actions import SparkExpectationsActions
 from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
+from spark_expectations.utils.actions import SparkExpectationsActions
 from spark_expectations.utils.regulate_flow import SparkExpectationsRegulateFlow
 
 spark = get_spark_session()

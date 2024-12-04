@@ -1,6 +1,6 @@
-import sys
-import logging
 from typing import Optional
+import logging
+import sys
 
 
 def get_default_log_handler(pkg_name: str = "spark_expectations") -> logging.Handler:

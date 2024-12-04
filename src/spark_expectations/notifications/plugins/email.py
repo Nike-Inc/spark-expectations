@@ -1,14 +1,15 @@
 from typing import Dict, Union
-import smtplib
-from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import smtplib
+
 from spark_expectations import _log
+from spark_expectations.core.context import SparkExpectationsContext
+from spark_expectations.core.exceptions import SparkExpectationsEmailException
 from spark_expectations.notifications.plugins.base_notification import (
     SparkExpectationsNotification,
     spark_expectations_notification_impl,
 )
-from spark_expectations.core.exceptions import SparkExpectationsEmailException
-from spark_expectations.core.context import SparkExpectationsContext
 
 
 # Create the email plugin

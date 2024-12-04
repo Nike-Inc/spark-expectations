@@ -1,4 +1,5 @@
 import os
+
 from pyspark.sql.session import SparkSession
 
 os.environ["SPARKEXPECTATIONS_ENV"] = "local"

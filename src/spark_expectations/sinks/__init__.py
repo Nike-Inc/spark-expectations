@@ -1,11 +1,12 @@
 import functools
+
 import pluggy
+
 from spark_expectations import _log
 from spark_expectations.sinks.plugins.base_writer import (
-    SparkExpectationsSinkWriter,
     SPARK_EXPECTATIONS_WRITER_PLUGIN,
+    SparkExpectationsSinkWriter,
 )
-
 from spark_expectations.sinks.plugins.kafka_writer import (
     SparkExpectationsKafkaWritePluginImpl,
 )

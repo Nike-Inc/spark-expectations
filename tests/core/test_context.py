@@ -1,12 +1,13 @@
 # pylint: disable=pointless-statement
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from unittest.mock import patch
+
 import pytest
-from spark_expectations.core import get_spark_session
+
 from spark_expectations.config.user_config import Constants as user_config
+from spark_expectations.core import get_spark_session
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
-from datetime import datetime, date
 
 spark = get_spark_session()
 

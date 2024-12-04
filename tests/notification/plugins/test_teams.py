@@ -1,8 +1,14 @@
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
 import pytest
 import requests
-from spark_expectations.core.exceptions import SparkExpectationsTeamsNotificationException
-from spark_expectations.notifications.plugins.teams import SparkExpectationsTeamsPluginImpl
+
+from spark_expectations.core.exceptions import (
+    SparkExpectationsTeamsNotificationException,
+)
+from spark_expectations.notifications.plugins.teams import (
+    SparkExpectationsTeamsPluginImpl,
+)
 
 
 @patch('spark_expectations.notifications.plugins.teams.SparkExpectationsContext', autospec=True, spec_set=True)

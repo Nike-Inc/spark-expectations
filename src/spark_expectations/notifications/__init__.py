@@ -1,11 +1,12 @@
 import functools
+
 import pluggy
+
 from spark_expectations import _log
 from spark_expectations.notifications.plugins.base_notification import (
-    SparkExpectationsNotification,
     SPARK_EXPECTATIONS_NOTIFICATION_PLUGIN,
+    SparkExpectationsNotification,
 )
-
 from spark_expectations.notifications.plugins.email import (
     SparkExpectationsEmailPluginImpl,
 )

@@ -1,4 +1,5 @@
 import pluggy
+
 from spark_expectations.notifications import get_notifications_hook
 from spark_expectations.notifications.plugins.email import (
     SparkExpectationsEmailPluginImpl,

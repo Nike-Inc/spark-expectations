@@ -1,11 +1,12 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+
 import pytest
+
+from spark_expectations.core.context import SparkExpectationsContext
+from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from spark_expectations.notifications.push.spark_expectations_notify import (
     SparkExpectationsNotify,
 )
-from spark_expectations.core.exceptions import SparkExpectationsMiscException
-from spark_expectations.core.context import SparkExpectationsContext
-from unittest.mock import Mock
 
 
 @pytest.fixture(name="_fixture_mock_context")

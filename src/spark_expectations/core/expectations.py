@@ -1,19 +1,17 @@
+from typing import Any, Dict, Optional, Union
+from dataclasses import dataclass
 import functools
 import importlib
-from dataclasses import dataclass
-from typing import Dict, Optional, Any, Union
 
+from pyspark import StorageLevel, sql
 from pyspark.version import __version__ as spark_version
-from pyspark import StorageLevel
-from pyspark import sql
-
 
 from spark_expectations import _log
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.exceptions import (
-    SparkExpectationsMiscException,
     SparkExpectationsDataframeNotReturnedException,
+    SparkExpectationsMiscException,
 )
 from spark_expectations.notifications.push.spark_expectations_notify import (
     SparkExpectationsNotify,

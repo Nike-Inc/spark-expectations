@@ -1,4 +1,6 @@
-from spark_expectations.notifications.plugins.base_notification import SparkExpectationsNotification
+from spark_expectations.notifications.plugins.base_notification import (
+    SparkExpectationsNotification,
+)
 
 
 def test_send_notification(mocker):

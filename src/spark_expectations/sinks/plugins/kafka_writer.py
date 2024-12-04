@@ -1,11 +1,13 @@
 from typing import Dict, Union
+
 from pyspark.sql import DataFrame
+
+from spark_expectations import _log
+from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from spark_expectations.sinks.plugins.base_writer import (
     SparkExpectationsSinkWriter,
     spark_expectations_writer_impl,
 )
-from spark_expectations.core.exceptions import SparkExpectationsMiscException
-from spark_expectations import _log
 
 
 class SparkExpectationsKafkaWritePluginImpl(SparkExpectationsSinkWriter):

@@ -1,5 +1,7 @@
 import logging
+
 import pytest
+
 from spark_expectations import get_default_log_handler, setup_logger
 
 

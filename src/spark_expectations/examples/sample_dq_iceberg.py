@@ -2,13 +2,14 @@
 import os
 
 from pyspark.sql import DataFrame
+
 from spark_expectations import _log
-from spark_expectations.examples.base_setup import set_up_iceberg
+from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.expectations import (
     SparkExpectations,
     WrappedDataFrameWriter,
 )
-from spark_expectations.config.user_config import Constants as user_config
+from spark_expectations.examples.base_setup import set_up_iceberg
 
 writer = WrappedDataFrameWriter().mode("append").format("iceberg")
 dic_job_info = {

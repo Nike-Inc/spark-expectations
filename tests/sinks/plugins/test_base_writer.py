@@ -1,7 +1,6 @@
 from spark_expectations.core import get_spark_session
 from spark_expectations.sinks.plugins.base_writer import SparkExpectationsSinkWriter
 
-
 spark = get_spark_session()
 def test_base_writer():
     # Create an instance of the class that implements the writer method

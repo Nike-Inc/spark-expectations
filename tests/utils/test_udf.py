@@ -1,5 +1,5 @@
 from spark_expectations.core import get_spark_session
-from spark_expectations.utils.udf import remove_empty_maps, get_actions_list
+from spark_expectations.utils.udf import get_actions_list, remove_empty_maps
 
 spark = get_spark_session()
 

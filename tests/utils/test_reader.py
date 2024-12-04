@@ -1,18 +1,24 @@
 import os
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
 import pytest
+
+from pyspark.sql.types import (
+    BooleanType,
+    IntegerType,
+    StringType,
+    StructField,
+    StructType,
+)
 
 # from pytest_mock import mocker // this will be automatically used while running using py-test
 from spark_expectations.core import get_spark_session
-from spark_expectations.utils.reader import SparkExpectationsReader
 from spark_expectations.core.context import SparkExpectationsContext
-from pyspark.sql.types import StructType, StructField, IntegerType
-from pyspark.sql.types import StringType
-from pyspark.sql.types import BooleanType
-from spark_expectations.core.exceptions \
-    import (
+from spark_expectations.core.exceptions import (
+    SparkExpectationsMiscException,
     SparkExpectationsUserInputOrConfigInvalidException,
-    SparkExpectationsMiscException)
+)
+from spark_expectations.utils.reader import SparkExpectationsReader
 
 spark = get_spark_session()
 

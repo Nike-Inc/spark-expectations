@@ -1,14 +1,19 @@
+ruff-check:
+	@hatch run ruff-check
+
 black-check:
-	@poetry run black --check spark_expectations
+	@echo "We've switched to ruff, please use ruff instead of black"
+	@make ruff-check
 
 fmt:
-	@poetry run black spark_expectations/
-
-check: black-check mypy
-	@poetry run prospector --no-autodetect --profile prospector.yaml
+	@hatch fmt
 
 mypy:
-	@poetry run mypy -p spark_expectations --exclude venv --exclude dist --exclude .idea
+	@hatch run mypy-check
+
+check: ruff-check mypy
+	@hatch run check
+
 
 kafka-cluster-start:
                    ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_github_actions)
@@ -25,22 +30,24 @@ kafka-cluster-stop:
 	                   rm -rf /tmp/kafka-logs
                    endif
 
+#TODO
 cov: kafka-cluster-start
 	-make check
-	@poetry run coverage run --source=spark_expectations --omit "spark_expectations/examples/*" -m pytest -v -x && \
+	@poetry run coverage run --source=src --omit "spark_expectations/examples/*" -m pytest -v -x && \
 	poetry run coverage report -m && \
 	poetry run coverage xml
 
 	make kafka-cluster-stop
 
 dev:
-	@poetry install --all-extras --with dev
-	@poetry run pre-commit install
-	@poetry run pre-commit install --hook-type pre-push
+	@hatch shell dev
+	@hatch run dev:pre-commit install
+	@hatch run dev:pre-commit install --hook-type pre-push
 
 deploy_env_setup:
-	@poetry install --all-extras --with dev
+	@hatch shell dev
 
+#TODO
 test: kafka-cluster-start
 	@poetry run coverage run --source=spark_expectations --omit "spark_expectations/examples/*" -m pytest && \
 	poetry run coverage report -m && \
@@ -49,31 +56,22 @@ test: kafka-cluster-start
 	make kafka-cluster-stop
 
 build:
-	@poetry build
-
-poetry-lock-no-update:
-	@poetry lock --no-update
-
-poetry-lock:
-	@poetry lock
-
-poetry:
-	@poetry install --with dev
-
-#poetry:
-#	@poetry lock
-#	@poetry install --with dev
+	@hatch build
 
 coverage: check test
 
+#TODO
+.PHONY: docs
 docs:
 	@poetry run mike deploy -u dev latest
 	@poetry run mike set-default latest
 	@poetry run mike serve
 
+#TODO
 deploy-docs:
 	@poetry run mike deploy --push --update-aliases $(version) latest
 
+#TODO
 poetry-install:
 	@pip install --upgrade setuptools && pip install poetry && poetry self add "poetry-dynamic-versioning[plugin]"
 
@@ -81,6 +79,5 @@ get-version:
 	@poetry version
 
 requirements:
-	@poetry export -f requirements.txt --output requirements.txt --with dev --without-hashes
+	@hatch run dev:uv pip freeze > requirements.txt
 
-.PHONY: docs

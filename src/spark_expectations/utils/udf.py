@@ -1,5 +1,5 @@
 from pyspark.sql import Column
-from pyspark.sql.functions import filter, size, transform, when, lit, array
+from pyspark.sql.functions import array, filter, lit, size, transform, when
 
 
 def remove_empty_maps(column: Column) -> Column:

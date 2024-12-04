@@ -1,30 +1,30 @@
 # pylint: disable=too-many-lines
-import os
 import datetime
-from unittest.mock import MagicMock, Mock, PropertyMock
-from unittest.mock import patch
-import pytest
-from pyspark.sql import DataFrame, SparkSession
+import os
+from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
+import pytest
+
+from pyspark.sql import DataFrame, SparkSession
 
 try:
     from pyspark.sql.connect.dataframe import DataFrame as connectDataFrame
 except ImportError:
     pass
 
-from pyspark.sql.functions import lit, to_timestamp, col
-from pyspark.sql.types import StringType, IntegerType, StructField, StructType
+from pyspark.sql.functions import col, lit, to_timestamp
+from pyspark.sql.types import IntegerType, StringType, StructField, StructType
 
+from spark_expectations.config.user_config import Constants as user_config
+from spark_expectations.core import get_spark_session
 from spark_expectations.core.context import SparkExpectationsContext
+from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from spark_expectations.core.expectations import (
     SparkExpectations,
     WrappedDataFrameWriter,
     check_if_pyspark_connect_is_supported,
     get_spark_minor_version,
 )
-from spark_expectations.config.user_config import Constants as user_config
-from spark_expectations.core import get_spark_session
-from spark_expectations.core.exceptions import SparkExpectationsMiscException
 
 # os.environ["UNIT_TESTING_ENV"] = "local"
 
@@ -2863,7 +2863,7 @@ def test_with_expectations(
             try:
                 spark.table("dq_spark.test_final_table")
                 assert False
-            except Exception as e:
+            except Exception:
                 assert True
 
     else:

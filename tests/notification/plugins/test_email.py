@@ -1,7 +1,11 @@
 from unittest.mock import patch
+
 import pytest
+
 from spark_expectations.core.exceptions import SparkExpectationsEmailException
-from spark_expectations.notifications.plugins.email import SparkExpectationsEmailPluginImpl
+from spark_expectations.notifications.plugins.email import (
+    SparkExpectationsEmailPluginImpl,
+)
 
 
 @patch('spark_expectations.notifications.plugins.email.SparkExpectationsContext', autospec=True, spec_set=True)

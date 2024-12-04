@@ -1,15 +1,13 @@
 
-from unittest.mock import Mock
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
-from pyspark.sql.functions import lit, struct, array, udf
+
+from pyspark.sql.functions import array, lit, struct, udf
 
 from spark_expectations.core import get_spark_session
 from spark_expectations.core.context import SparkExpectationsContext
-from spark_expectations.core.exceptions import (
-    SparkExpectationsMiscException
-)
+from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from spark_expectations.utils.actions import SparkExpectationsActions
 
 spark = get_spark_session()

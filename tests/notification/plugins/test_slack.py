@@ -1,8 +1,14 @@
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
+
 import pytest
 import requests
-from spark_expectations.core.exceptions import SparkExpectationsSlackNotificationException
-from spark_expectations.notifications.plugins.slack import SparkExpectationsSlackPluginImpl
+
+from spark_expectations.core.exceptions import (
+    SparkExpectationsSlackNotificationException,
+)
+from spark_expectations.notifications.plugins.slack import (
+    SparkExpectationsSlackPluginImpl,
+)
 
 
 @patch('spark_expectations.notifications.plugins.slack.SparkExpectationsContext', autospec=True, spec_set=True)

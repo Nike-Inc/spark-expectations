@@ -1,13 +1,16 @@
-import pluggy
 from unittest import mock
-import pytest
 from unittest.mock import patch
-from spark_expectations.secrets import (
-    get_spark_expectations_tasks_hook,
-    SparkExpectationsSecretPluginSpec,
-    CerberusSparkExpectationsSecretPluginImpl,
-    SparkExpectationsSecretsBackend)
+
+import pluggy
+import pytest
+
 from spark_expectations.config.user_config import Constants as UserConfig
+from spark_expectations.secrets import (
+    CerberusSparkExpectationsSecretPluginImpl,
+    SparkExpectationsSecretPluginSpec,
+    SparkExpectationsSecretsBackend,
+    get_spark_expectations_tasks_hook,
+)
 
 
 def test_get_secret_value(mocker):

@@ -1,10 +1,15 @@
 import os
+
 import pytest
+
 from pyspark.sql.functions import col
-from pyspark.sql.types import StructType, StructField, IntegerType, StringType
+from pyspark.sql.types import IntegerType, StringType, StructField, StructType
+
 from spark_expectations.core import get_spark_session
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
-from spark_expectations.sinks.plugins.kafka_writer import SparkExpectationsKafkaWritePluginImpl
+from spark_expectations.sinks.plugins.kafka_writer import (
+    SparkExpectationsKafkaWritePluginImpl,
+)
 
 spark = get_spark_session()
 

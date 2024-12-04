@@ -1,7 +1,9 @@
 import os
 from unittest import mock
 from unittest.mock import patch
+
 from pyspark.sql.session import SparkSession
+
 from spark_expectations.core import get_spark_session
 from spark_expectations.core.__init__ import current_dir
 
