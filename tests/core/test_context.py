@@ -162,7 +162,7 @@ def test_context_properties():
     assert context.get_row_dq_status == "test_skipped"
     assert context.get_final_agg_dq_status == "test_skipped"
     assert context.get_dq_run_status == "test_failed"
-    assert context.get_se_enable_error_table == True
+    assert context.get_se_enable_error_table is True
 
     assert context._dq_project_env_name == "APLAD-5063"
     assert context._dq_config_file_name == "dq_spark_expectations_config.ini"
@@ -257,7 +257,7 @@ def test_context_properties():
         {"rule": "rule_2", "action_if_failed": "fail", "failed_row_count": 4},
     ]
 
-    assert context._debugger_mode == False
+    assert context._debugger_mode is False
 
     assert context._source_query_dq_status == "Passed"
     assert context._final_query_dq_status == "Skipped"
@@ -741,9 +741,9 @@ def test_get_zoom_webhook_url_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._zoom_webhook_url = False
     with pytest.raises(
-            SparkExpectationsMiscException,
-            match="The spark expectations context is not set completely, please assign "
-                  "'_zoom_webhook_url' before \n            accessing it",
+        SparkExpectationsMiscException,
+        match="The spark expectations context is not set completely, please assign "
+        "'_zoom_webhook_url' before \n            accessing it",
     ):
         context.get_zoom_webhook_url
 
@@ -752,9 +752,9 @@ def test_get_zoom_token():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._zoom_token = False
     with pytest.raises(
-            SparkExpectationsMiscException,
-            match="The spark expectations context is not set completely, please assign "
-                  "'_zoom_token' before \n            accessing it",
+        SparkExpectationsMiscException,
+        match="The spark expectations context is not set completely, please assign "
+        "'_zoom_token' before \n            accessing it",
     ):
         context.get_zoom_token
 
@@ -1328,25 +1328,19 @@ def test_get_supported_df_query_dq():
 def test_set_debugger_mode():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_debugger_mode(True)
-    assert context._debugger_mode == True
+    assert context._debugger_mode is True
 
 
 def test_get_debugger_mode():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_debugger_mode(True)
-    assert context.get_debugger_mode == True
+    assert context.get_debugger_mode is True
 
 
 def test_print_dataframe_with_debugger():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_debugger_mode(True)
     context.print_dataframe_with_debugger(context.set_supported_df_query_dq())
-
-
-def test_get_error_percentage_negative():
-    context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context._input_count = 0
-    assert context.get_error_percentage == 0.0
 
 
 def test_get_error_percentage_negative():
@@ -1379,7 +1373,7 @@ def test_reset_num_row_dq_rules():
     assert context._num_row_dq_rules == 0
 
 
-def test_reset_num_row_dq_rules():
+def test_reset_num_agg_dq_rules():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.reset_num_agg_dq_rules()
     assert context._num_agg_dq_rules == {
@@ -1707,15 +1701,34 @@ def test_get_agg_dq_detailed_stats_status():
     assert context.get_agg_dq_detailed_stats_status is True
 
 
+def test_get_agg_dq_detailed_stats_status_2():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_agg_dq_detailed_stats_status(True)
+    assert context.get_agg_dq_detailed_stats_status is True
+
+
 def test_set_query_dq_detailed_stats_status():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_query_dq_detailed_stats_status(True)
     assert context.get_query_dq_detailed_stats_status is True
 
 
+def test_set_query_dq_detailed_stats_status_and_enable_result():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    assert context.get_query_dq_detailed_stats_status is True
+    assert context._enable_query_dq_detailed_result is True
+
+
 def test_get_query_dq_detailed_stats_status():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     assert context.get_query_dq_detailed_stats_status is False
+
+
+def test_get_query_dq_detailed_stats_status_2():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_query_dq_detailed_stats_status(True)
+    assert context.get_query_dq_detailed_stats_status is True
 
 
 def test_set_target_agg_dq_detailed_stats():
@@ -1769,48 +1782,11 @@ def test_set_detailed_stats_table_writer_config():
     assert context.get_detailed_stats_table_writer_config() == config
 
 
-# Add more test cases as needed
-def test_set_agg_dq_detailed_stats_status():
+def test_set_detailed_stats_table_writer_config_2():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_agg_dq_detailed_stats_status(True)
-    assert context.get_agg_dq_detailed_stats_status is True
-
-
-def test_get_agg_dq_detailed_stats_status():
-    context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_agg_dq_detailed_stats_status(True)
-    assert context.get_agg_dq_detailed_stats_status is True
-
-
-def test_set_query_dq_detailed_stats_status():
-    context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_query_dq_detailed_stats_status(True)
-    assert context.get_query_dq_detailed_stats_status is True
-
-
-def test_get_query_dq_detailed_stats_status():
-    context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_query_dq_detailed_stats_status(True)
-    assert context.get_query_dq_detailed_stats_status is True
-
-
-def test_set_agg_dq_detailed_stats_status():
-    context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_agg_dq_detailed_stats_status(True)
-    assert context.get_agg_dq_detailed_stats_status is True
-
-
-def test_set_query_dq_detailed_stats_status():
-    context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_query_dq_detailed_stats_status(True)
-    assert context.get_query_dq_detailed_stats_status is True
-
-
-def test_set_dq_stats_table_name():
-    context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_dq_stats_table_name("dq_stats_table_name")
-    assert context._dq_stats_table_name == "dq_stats_table_name"
-    assert context.get_dq_stats_table_name == "dq_stats_table_name"
+    config = {"setting1": "value1", "setting2": "value2"}
+    context.set_detailed_stats_table_writer_config(config)
+    assert context.get_detailed_stats_table_writer_config == config
 
 
 def test_set_dq_detailed_stats_table_name():
@@ -1825,13 +1801,6 @@ def test_set_dq_detailed_stats_table_name():
 
     assert context._dq_detailed_stats_table_name == "dq_stats_table_name"
     assert context.get_dq_detailed_stats_table_name == "dq_stats_table_name"
-
-
-def test_set_detailed_stats_table_writer_config():
-    context = SparkExpectationsContext(product_id="product1", spark=spark)
-    config = {"setting1": "value1", "setting2": "value2"}
-    context.set_detailed_stats_table_writer_config(config)
-    assert context.get_detailed_stats_table_writer_config == config
 
 
 def test_set_dq_expectations():
@@ -1883,13 +1852,6 @@ def test_get_row_dq_end_time_exception():
         context.get_row_dq_end_time
 
 
-def test_set_query_dq_detailed_stats_status():
-    context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_query_dq_detailed_stats_status(True)
-    assert context._enable_query_dq_detailed_result == True
-    assert context.get_query_dq_detailed_stats_status == True
-
-
 def test_get_query_dq_output_custom_table_name():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_query_dq_detailed_stats_status(True)
@@ -1931,13 +1893,6 @@ def test_get_dq_detailed_stats_table_name_exception():
         context.get_dq_detailed_stats_table_name
 
 
-def test_get_dq_expectations():
-    context = SparkExpectationsContext(product_id="product1", spark=spark)
-    dq_expectations = {"column1": "expectation1", "column2": "expectation2"}
-    context.set_dq_expectations(dq_expectations)
-    assert context.get_dq_expectations == dq_expectations
-
-
 def test_get_dq_expectations_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._dq_expectations = None
@@ -1977,27 +1932,6 @@ def test_set_target_query_dq_output():
     assert context._target_query_dq_output == target_query_dq_output
 
 
-def test_get_target_query_dq_output():
-    context = SparkExpectationsContext(product_id="product1", spark=spark)
-    target_query_dq_output = [{"column1": "value1", "column2": "value2"}]
-    context._target_query_dq_output = target_query_dq_output
-    assert context.get_target_query_dq_output == target_query_dq_output
-
-
-def test_get_source_query_dq_output():
-    context = SparkExpectationsContext(product_id="product1", spark=spark)
-    source_query_dq_output = [{"column1": "value1", "column2": "value2"}]
-    context._source_query_dq_output = source_query_dq_output
-    assert context.get_source_query_dq_output == source_query_dq_output
-
-
-def test_set_source_query_dq_output():
-    context = SparkExpectationsContext(product_id="product1", spark=spark)
-    source_query_dq_output = [{"column1": "value1", "column2": "value2"}]
-    context.set_source_query_dq_output(source_query_dq_output)
-    assert context._source_query_dq_output == source_query_dq_output
-
-
 def test_set_enable_error_table():
     # default case is True for enabling error table
     context = SparkExpectationsContext(product_id="product1", spark=spark)
@@ -2034,7 +1968,7 @@ def test_get_dq_expectations():
         context.get_dq_expectations()
 
 
-def test_set_dq_expectations():
+def test_set_dq_expectations_2():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
     dq_expectations = {
         "rule1": "expectation1",
@@ -2043,6 +1977,13 @@ def test_set_dq_expectations():
     }
     context.set_dq_expectations(dq_expectations)
     assert context._dq_expectations == dq_expectations
+
+
+def test_get_dq_expectations_3():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    dq_expectations = {"column1": "expectation1", "column2": "expectation2"}
+    context.set_dq_expectations(dq_expectations)
+    assert context.get_dq_expectations == dq_expectations
 
 
 def test_set_job_metadata():
