@@ -1872,13 +1872,11 @@ def test_execute_dq_process(
         )
 
         if rule_type == "row_dq":
-            expected_df = expected_df.withColumn(
-                "meta_dq_run_id", lit("product1_run_test")
-            ).withColumn("meta_dq_run_date", lit("2022-12-27 10:39:44"))
-            assert df.orderBy("col2").collect() == expected_df.orderBy("col2").collect()
-            assert (
-                _error_count == spark.table("dq_spark.test_final_table_error").count()
+            expected_df = expected_df.withColumn("meta_dq_run_id", lit("product1_run_test")).withColumn(
+                "meta_dq_run_date", lit("2022-12-27 10:39:44")
             )
+            assert df.orderBy("col2").collect() == expected_df.orderBy("col2").collect()
+            assert _error_count == spark.table("dq_spark.test_final_table_error").count()
             assert _status == status.get("row_dq_status")
             assert _agg_dq_res == agg_or_query_dq_res
             assert output_count == expected_df.count()
@@ -1889,9 +1887,7 @@ def test_execute_dq_process(
             # assert dq result for source_agg & final_agg
             assert _agg_dq_res == agg_or_query_dq_res
             assert _status == (
-                status.get("source_agg_dq_status")
-                if source_agg_dq_flag is True
-                else status.get("final_agg_dq_status")
+                status.get("source_agg_dq_status") if source_agg_dq_flag is True else status.get("final_agg_dq_status")
             )
         elif rule_type == "agg_dq":
             assert _agg_dq_res == agg_or_query_dq_res

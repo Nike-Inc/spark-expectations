@@ -21,9 +21,7 @@ class SparkExpectationsNotify:
             self.notify_on_start, self.notify_on_completion, self.notify_on_failure
         )
 
-    def notify_on_start_completion_failure(
-        self, _on_start: Any, _on_completion: Any, _on_failure: Any
-    ) -> Any:
+    def notify_on_start_completion_failure(self, _on_start: Any, _on_completion: Any, _on_failure: Any) -> Any:
         """
         This function orchestrate notification
         Args:
@@ -107,9 +105,7 @@ class SparkExpectationsNotify:
             # f"            run_status = {self._context.get_dq_run_status}"
         )
 
-        _notification_hook.send_notification(
-            _context=self._context, _config_args={"message": _notification_message}
-        )
+        _notification_hook.send_notification(_context=self._context, _config_args={"message": _notification_message})
 
     def notify_on_completion(self) -> None:
         """
@@ -136,9 +132,7 @@ class SparkExpectationsNotify:
             f"            run_status = {self._context.get_dq_run_status}"
         )
 
-        _notification_hook.send_notification(
-            _context=self._context, _config_args={"message": _notification_message}
-        )
+        _notification_hook.send_notification(_context=self._context, _config_args={"message": _notification_message})
 
     def notify_on_failure(self, _error: str) -> None:
         """
@@ -174,7 +168,7 @@ class SparkExpectationsNotify:
             },
         )
 
-    def construct_message_for_each_rules(
+    def construct_message_for_each_rules(  # pylint: disable=too-many-positional-arguments
         self,
         rule_name: str,
         failed_row_count: int,
@@ -224,9 +218,7 @@ class SparkExpectationsNotify:
             f"the specified threshold \n\n\n{message}"
         )
 
-        _notification_hook.send_notification(
-            _context=self._context, _config_args={"message": _notification_message}
-        )
+        _notification_hook.send_notification(_context=self._context, _config_args={"message": _notification_message})
 
     def notify_rules_exceeds_threshold(self, rules: dict) -> None:
         """
@@ -244,8 +236,7 @@ class SparkExpectationsNotify:
                 return None
 
             rules_failed_row_count = {
-                itr["rule"]: int(itr["failed_row_count"])
-                for itr in self._context.get_summarized_row_dq_res
+                itr["rule"]: int(itr["failed_row_count"]) for itr in self._context.get_summarized_row_dq_res
             }
 
             for rule in rules[f"{self._context.get_row_dq_rule_type_name}_rules"]:
@@ -254,33 +245,22 @@ class SparkExpectationsNotify:
 
                 rule_name = rule["rule"]
                 rule_action = rule["action_if_failed"]
-                failed_row_count = int(
-                    rules_failed_row_count[rule_name]
-                    if rule_name in rules_failed_row_count
-                    else 0
-                )
+                failed_row_count = int(rules_failed_row_count[rule_name] if rule_name in rules_failed_row_count else 0)
 
                 if failed_row_count is not None and failed_row_count > 0:
                     set_error_drop_threshold = int(rule["error_drop_threshold"])
-                    error_drop_percentage = round(
-                        (failed_row_count / self._context.get_input_count) * 100, 2
-                    )
+                    error_drop_percentage = round((failed_row_count / self._context.get_input_count) * 100, 2)
 
                     if error_drop_percentage >= set_error_drop_threshold:
-                        notification_body = (
-                            notification_body
-                            + self.construct_message_for_each_rules(
-                                rule_name=rule_name,
-                                failed_row_count=failed_row_count,
-                                error_drop_percentage=error_drop_percentage,
-                                set_error_drop_threshold=set_error_drop_threshold,
-                                action=rule_action,
-                            )
+                        notification_body = notification_body + self.construct_message_for_each_rules(
+                            rule_name=rule_name,
+                            failed_row_count=failed_row_count,
+                            error_drop_percentage=error_drop_percentage,
+                            set_error_drop_threshold=set_error_drop_threshold,
+                            action=rule_action,
                         )
                 if notification_body != "":
-                    self.notify_on_exceeds_of_error_threshold_each_rules(
-                        notification_body
-                    )
+                    self.notify_on_exceeds_of_error_threshold_each_rules(notification_body)
 
         except Exception as e:
             raise SparkExpectationsMiscException(

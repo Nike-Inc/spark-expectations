@@ -2,77 +2,41 @@ from spark_expectations.config.user_config import Constants as user_config
 
 
 def test_constants():
-    assert (
-        user_config.se_notifications_email_smtp_port
-        == "spark.expectations.notifications.email.smtp_port"
-    )
+    assert user_config.se_notifications_email_smtp_port == "spark.expectations.notifications.email.smtp_port"
+
+    assert user_config.se_notifications_email_from == "spark.expectations.notifications.email.from"
 
     assert (
-        user_config.se_notifications_email_from
-        == "spark.expectations.notifications.email.from"
-    )
-
-    assert (
-        user_config.se_notifications_email_to_other_mail_id
-        == "spark.expectations.notifications.email."
+        user_config.se_notifications_email_to_other_mail_id == "spark.expectations.notifications.email."
         "to.other.mail.com"
     )
 
-    assert (
-        user_config.se_notifications_email_subject
-        == "spark.expectations.notifications.email.subject"
-    )
+    assert user_config.se_notifications_email_subject == "spark.expectations.notifications.email.subject"
+
+    assert user_config.se_notifications_enable_slack == "spark.expectations.notifications.slack.enabled"
+
+    assert user_config.se_notifications_slack_webhook_url == "spark.expectations.notifications.slack.webhook_url"
+
+    assert user_config.se_notifications_enable_zoom == "spark.expectations.notifications.zoom.enabled"
+
+    assert user_config.se_notifications_zoom_webhook_url == "spark.expectations.notifications.zoom.webhook_url"
+
+    assert user_config.se_notifications_zoom_token == "spark.expectations.notifications.zoom.token"
+
+    assert user_config.se_notifications_on_start == "spark.expectations.notifications.on_start"
+
+    assert user_config.se_notifications_on_completion == "spark.expectations.notifications.on.completion"
+
+    assert user_config.se_notifications_on_fail == "spark.expectations.notifications.on.fail"
 
     assert (
-        user_config.se_notifications_enable_slack
-        == "spark.expectations.notifications.slack.enabled"
-    )
-
-    assert (
-        user_config.se_notifications_slack_webhook_url
-        == "spark.expectations.notifications.slack.webhook_url"
-    )
-
-    assert (
-        user_config.se_notifications_enable_zoom
-        == "spark.expectations.notifications.zoom.enabled"
-    )
-
-    assert (
-        user_config.se_notifications_zoom_webhook_url
-        == "spark.expectations.notifications.zoom.webhook_url"
-    )
-
-    assert (
-        user_config.se_notifications_zoom_token
-        == "spark.expectations.notifications.zoom.token"
-    )
-
-    assert (
-        user_config.se_notifications_on_start
-        == "spark.expectations.notifications.on_start"
-    )
-
-    assert (
-        user_config.se_notifications_on_completion
-        == "spark.expectations.notifications.on.completion"
-    )
-
-    assert (
-        user_config.se_notifications_on_fail
-        == "spark.expectations.notifications.on.fail"
-    )
-
-    assert (
-        user_config.se_notifications_on_error_drop_exceeds_threshold_breach
-        == "spark.expectations."
+        user_config.se_notifications_on_error_drop_exceeds_threshold_breach == "spark.expectations."
         "notifications.on.error.drop."
         "exceeds.threshold.breach"
     )
 
     assert (
-        user_config.se_notifications_on_error_drop_threshold
-        == "spark.expectations.notifications."
+        user_config.se_notifications_on_error_drop_threshold == "spark.expectations.notifications."
         "error.drop.threshold"
     )
 
@@ -100,11 +64,5 @@ def test_constants():
     assert user_config.dbx_secret_token == "se.streaming.dbx.secret.token"
     assert user_config.dbx_topic_name == "se.streaming.dbx.topic.name"
 
-    assert (
-        user_config.se_enable_agg_dq_detailed_result
-        == "spark.expectations.agg.dq.detailed.stats"
-    )
-    assert (
-        user_config.se_enable_query_dq_detailed_result
-        == "spark.expectations.query.dq.detailed.stats"
-    )
+    assert user_config.se_enable_agg_dq_detailed_result == "spark.expectations.agg.dq.detailed.stats"
+    assert user_config.se_enable_query_dq_detailed_result == "spark.expectations.query.dq.detailed.stats"

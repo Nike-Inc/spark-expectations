@@ -48,9 +48,7 @@ def fixture_mock_context():
         },
     }
 
-    mock_object.get_supported_df_query_dq = spark.createDataFrame(
-        [{"spark_expectations_test": "se_query_dq"}]
-    )
+    mock_object.get_supported_df_query_dq = spark.createDataFrame([{"spark_expectations_test": "se_query_dq"}])
     return mock_object
 
 
@@ -65,9 +63,7 @@ def fixture_mock_context_without_detailed_stats():
     mock_object.get_query_dq_rule_type_name = "query_dq"
     mock_object.get_agg_dq_detailed_stats_status = False
     mock_object.get_query_dq_detailed_stats_status = False
-    mock_object.get_supported_df_query_dq = spark.createDataFrame(
-        [{"spark_expectations_test": "se_query_dq"}]
-    )
+    mock_object.get_supported_df_query_dq = spark.createDataFrame([{"spark_expectations_test": "se_query_dq"}])
     return mock_object
 
 
@@ -620,9 +616,7 @@ def test_agg_query_dq_detailed_result_with_querdq_v2(
         ),
     ],
 )
-def test_agg_query_dq_detailed_result_exception_v2(
-    _fixture_df, _query_dq_rule_exception, _fixture_mock_context
-):
+def test_agg_query_dq_detailed_result_exception_v2(_fixture_df, _query_dq_rule_exception, _fixture_mock_context):
     # faulty user input is given to test the exception functionality of the agg_query_dq_detailed_result
     _fixture_df.createOrReplaceTempView("query_test_table")
     _fixture_df.createOrReplaceTempView("query_test_table_target")
@@ -690,9 +684,7 @@ def test_agg_query_dq_detailed_result_exception_v2(
         ),
     ],
 )
-def test_create_agg_dq_results(
-    input_df, rule_type_name, expected_output, _fixture_mock_context
-):
+def test_create_agg_dq_results(input_df, rule_type_name, expected_output, _fixture_mock_context):
     # unit test case on create_agg_dq_results
     assert (
         SparkExpectationsActions().create_agg_dq_results(
@@ -752,37 +744,17 @@ def test_agg_query_dq_detailed_result(
         _fixture_mock_context, _fixture_agg_dq_rule, _fixture_df, []
     )
 
-    assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get("result").get(
-        "product_id"
-    )
-    assert result_df[2] == _fixture_agg_dq_detailed_expected_result.get("result").get(
-        "table_name"
-    )
-    assert result_df[3] == _fixture_agg_dq_detailed_expected_result.get("result").get(
-        "rule_type"
-    )
-    assert result_df[4] == _fixture_agg_dq_detailed_expected_result.get("result").get(
-        "rule"
-    )
-    assert result_df[5] == _fixture_agg_dq_detailed_expected_result.get("result").get(
-        "expectation"
-    )
-    assert result_df[6] == _fixture_agg_dq_detailed_expected_result.get("result").get(
-        "tag"
-    )
-    assert result_df[7] == _fixture_agg_dq_detailed_expected_result.get("result").get(
-        "description"
-    )
-    assert result_df[8] == _fixture_agg_dq_detailed_expected_result.get("result").get(
-        "status"
-    )
+    assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get("result").get("product_id")
+    assert result_df[2] == _fixture_agg_dq_detailed_expected_result.get("result").get("table_name")
+    assert result_df[3] == _fixture_agg_dq_detailed_expected_result.get("result").get("rule_type")
+    assert result_df[4] == _fixture_agg_dq_detailed_expected_result.get("result").get("rule")
+    assert result_df[5] == _fixture_agg_dq_detailed_expected_result.get("result").get("expectation")
+    assert result_df[6] == _fixture_agg_dq_detailed_expected_result.get("result").get("tag")
+    assert result_df[7] == _fixture_agg_dq_detailed_expected_result.get("result").get("description")
+    assert result_df[8] == _fixture_agg_dq_detailed_expected_result.get("result").get("status")
 
-    assert result_df[9] == _fixture_agg_dq_detailed_expected_result.get("result").get(
-        "actual_value"
-    )
-    assert result_df[10] == _fixture_agg_dq_detailed_expected_result.get("result").get(
-        "expected_value"
-    )
+    assert result_df[9] == _fixture_agg_dq_detailed_expected_result.get("result").get("actual_value")
+    assert result_df[10] == _fixture_agg_dq_detailed_expected_result.get("result").get("expected_value")
 
 
 def test_agg_query_dq_detailed_result_with_range_rule_type(
@@ -795,37 +767,19 @@ def test_agg_query_dq_detailed_result_with_range_rule_type(
         _fixture_mock_context, _fixture_agg_dq_rule_type_range, _fixture_df, []
     )
 
-    assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context1"
-    ).get("product_id")
-    assert result_df[2] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context1"
-    ).get("table_name")
-    assert result_df[3] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context1"
-    ).get("rule_type")
-    assert result_df[4] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context1"
-    ).get("rule")
-    assert result_df[5] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context1"
-    ).get("expectation")
-    assert result_df[6] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context1"
-    ).get("tag")
-    assert result_df[7] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context1"
-    ).get("description")
-    assert result_df[8] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context1"
-    ).get("status")
+    assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("product_id")
+    assert result_df[2] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("table_name")
+    assert result_df[3] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("rule_type")
+    assert result_df[4] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("rule")
+    assert result_df[5] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("expectation")
+    assert result_df[6] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("tag")
+    assert result_df[7] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("description")
+    assert result_df[8] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("status")
 
-    assert result_df[9] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context1"
-    ).get("actual_value")
-    assert result_df[10] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context1"
-    ).get("expected_value")
+    assert result_df[9] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("actual_value")
+    assert result_df[10] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get(
+        "expected_value"
+    )
 
 
 def test_agg_query_dq_detailed_result_with_querdq(
@@ -840,37 +794,17 @@ def test_agg_query_dq_detailed_result_with_querdq(
         _fixture_mock_context, _fixture_query_dq_rule, _fixture_df, []
     )
 
-    assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_query_dq"
-    ).get("product_id")
-    assert result_df[2] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_query_dq"
-    ).get("table_name")
-    assert result_df[3] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_query_dq"
-    ).get("rule_type")
-    assert result_df[4] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_query_dq"
-    ).get("rule")
-    assert result_df[5] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_query_dq"
-    ).get("expectation")
-    assert result_df[6] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_query_dq"
-    ).get("tag")
-    assert result_df[7] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_query_dq"
-    ).get("description")
-    assert result_df[8] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_query_dq"
-    ).get("status")
+    assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("product_id")
+    assert result_df[2] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("table_name")
+    assert result_df[3] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("rule_type")
+    assert result_df[4] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("rule")
+    assert result_df[5] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("expectation")
+    assert result_df[6] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("tag")
+    assert result_df[7] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("description")
+    assert result_df[8] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("status")
 
-    assert result_df[9] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_query_dq"
-    ).get("actual_value")
-    assert result_df[10] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_query_dq"
-    ).get("expected_value")
+    assert result_df[9] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("actual_value")
+    assert result_df[10] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("expected_value")
 
 
 def test_agg_query_dq_detailed_result_without_detailed_context(
@@ -886,37 +820,17 @@ def test_agg_query_dq_detailed_result_without_detailed_context(
         [],
     )
 
-    assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context"
-    ).get("product_id")
-    assert result_df[2] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context"
-    ).get("table_name")
-    assert result_df[3] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context"
-    ).get("rule_type")
-    assert result_df[4] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context"
-    ).get("rule")
-    assert result_df[5] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context"
-    ).get("expectation")
-    assert result_df[6] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context"
-    ).get("tag")
-    assert result_df[7] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context"
-    ).get("description")
-    assert result_df[8] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context"
-    ).get("status")
+    assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("product_id")
+    assert result_df[2] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("table_name")
+    assert result_df[3] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("rule_type")
+    assert result_df[4] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("rule")
+    assert result_df[5] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("expectation")
+    assert result_df[6] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("tag")
+    assert result_df[7] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("description")
+    assert result_df[8] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("status")
 
-    assert result_df[9] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context"
-    ).get("actual_value")
-    assert result_df[10] == _fixture_agg_dq_detailed_expected_result.get(
-        "result_without_context"
-    ).get("expected_value")
+    assert result_df[9] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("actual_value")
+    assert result_df[10] == _fixture_agg_dq_detailed_expected_result.get("result_without_context").get("expected_value")
 
 
 def test_run_dq_rules_row(
@@ -938,15 +852,15 @@ def test_run_dq_rules_row(
     # Assert that the result dataframe has the expected values for each rule
     for row in result_df.collect():
         row_id = row["row_id"]
-        assert row.row_dq_col1_gt_eq_1 == _fixture_row_dq_expected_result.get("result")[
-            row_id
-        ].get("row_dq_col1_gt_eq_1")
-        assert row.row_dq_col1_gt_eq_2 == _fixture_row_dq_expected_result.get("result")[
-            row_id
-        ].get("row_dq_col1_gt_eq_2")
-        assert row.row_dq_col1_gt_eq_3 == _fixture_row_dq_expected_result.get("result")[
-            row_id
-        ].get("row_dq_col1_gt_eq_3")
+        assert row.row_dq_col1_gt_eq_1 == _fixture_row_dq_expected_result.get("result")[row_id].get(
+            "row_dq_col1_gt_eq_1"
+        )
+        assert row.row_dq_col1_gt_eq_2 == _fixture_row_dq_expected_result.get("result")[row_id].get(
+            "row_dq_col1_gt_eq_2"
+        )
+        assert row.row_dq_col1_gt_eq_3 == _fixture_row_dq_expected_result.get("result")[row_id].get(
+            "row_dq_col1_gt_eq_3"
+        )
 
 
 @pytest.mark.parametrize(
@@ -1030,9 +944,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
         SparkExpectationsMiscException,
         match=r"error occurred while running expectations .*",
     ):
-        SparkExpectationsActions.run_dq_rules(
-            _fixture_mock_context, _fixture_df, expectations, "row_dq"
-        )
+        SparkExpectationsActions.run_dq_rules(_fixture_mock_context, _fixture_df, expectations, "row_dq")
 
 
 @pytest.mark.parametrize(
@@ -1350,9 +1262,9 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
             False,  # source_query_dq_flag
             False,  # final_query_dq_flag
             # expected df
-            spark.createDataFrame(
-                [{"meta_agg_dq_results": [{"action_if_failed": "ignore"}]}]
-            ).drop("meta_agg_dq_results"),
+            spark.createDataFrame([{"meta_agg_dq_results": [{"action_if_failed": "ignore"}]}]).drop(
+                "meta_agg_dq_results"
+            ),
         ),
         (
             # test case 10
@@ -1750,10 +1662,7 @@ def test_action_on_dq_rules(
         )
         if row_dq_flag is True:
             # assert for row dq expectations
-            assert (
-                df.orderBy("col2").collect()
-                == expected_output.orderBy("col2").collect()
-            )
+            assert df.orderBy("col2").collect() == expected_output.orderBy("col2").collect()
         else:
             # assert for agg dq expectations
             assert df.collect() == expected_output.collect()
@@ -1780,16 +1689,10 @@ def test_action_on_dq_rules(
         ({"row_dq_rules": [{}]}, SparkExpectationsMiscException),
     ],
 )
-def test_run_dq_rules_exception(
-    _fixture_df, _fixture_mock_context, expectations, expected_exception
-):
+def test_run_dq_rules_exception(_fixture_df, _fixture_mock_context, expectations, expected_exception):
     # test the exception functionality in run_dq_rules with faulty user input
-    with pytest.raises(
-        expected_exception, match=r"error occurred while running expectations .*"
-    ):
-        SparkExpectationsActions.run_dq_rules(
-            _fixture_mock_context, _fixture_df, expectations, "row_dq"
-        )
+    with pytest.raises(expected_exception, match=r"error occurred while running expectations .*"):
+        SparkExpectationsActions.run_dq_rules(_fixture_mock_context, _fixture_df, expectations, "row_dq")
 
 
 @pytest.mark.parametrize(

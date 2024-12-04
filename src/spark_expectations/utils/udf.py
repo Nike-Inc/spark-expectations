@@ -26,6 +26,4 @@ def get_actions_list(column: Column) -> Column:
     """
 
     action_if_failed = transform(column, lambda x: x["action_if_failed"])
-    return when(size(action_if_failed) == 0, array(lit("ignore"))).otherwise(
-        action_if_failed
-    )  # pragma: no cover
+    return when(size(action_if_failed) == 0, array(lit("ignore"))).otherwise(action_if_failed)  # pragma: no cover

@@ -18,26 +18,17 @@ spark = get_spark_session()
 def fixture_setup_local_kafka_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    if (
-        os.getenv("UNIT_TESTING_ENV")
-        != "spark_expectations_unit_testing_on_github_actions"
-    ):
+    if os.getenv("UNIT_TESTING_ENV") != "spark_expectations_unit_testing_on_github_actions":
         # remove if docker conatiner is running
-        os.system(
-            f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh"
-        )
+        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
         # start docker container and create the topic
-        os.system(
-            f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh"
-        )
+        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
 
         yield "docker container started"
 
         # remove docker container
-        os.system(
-            f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh"
-        )
+        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
     else:
         yield (
@@ -89,9 +80,7 @@ def test_kafka_writer(_fixture_local_kafka_topic, _fixture_dataset):
 
     assert (
         expected_df.collect()
-        == _fixture_dataset.selectExpr(
-            "cast(to_json(struct(*)) as string) AS stats_records"
-        ).collect()
+        == _fixture_dataset.selectExpr("cast(to_json(struct(*)) as string) AS stats_records").collect()
     )
 
 

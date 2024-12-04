@@ -25,9 +25,7 @@ class SparkExpectationsReader:
     def __post_init__(self) -> None:
         self.spark = self._context.spark
 
-    def set_notification_param(
-        self, notification: Optional[Dict[str, Union[int, str, bool]]] = None
-    ) -> None:
+    def set_notification_param(self, notification: Optional[Dict[str, Union[int, str, bool]]] = None) -> None:
         """
         This function supports to read notifications configurations
         Returns: None
@@ -51,56 +49,29 @@ class SparkExpectationsReader:
             }
 
             _notification_dict: Dict[str, Union[str, int, bool]] = (
-                {**_default_spark_conf, **notification}
-                if notification
-                else _default_spark_conf
+                {**_default_spark_conf, **notification} if notification else _default_spark_conf
             )
 
-            if (
-                _notification_dict.get(user_config.se_notifications_enable_email)
-                is True
-            ):
+            if _notification_dict.get(user_config.se_notifications_enable_email) is True:
                 if (
                     _notification_dict[user_config.se_notifications_email_smtp_host]
                     and _notification_dict[user_config.se_notifications_email_from]
-                    and _notification_dict[
-                        user_config.se_notifications_email_to_other_mail_id
-                    ]
+                    and _notification_dict[user_config.se_notifications_email_to_other_mail_id]
                     and _notification_dict[user_config.se_notifications_email_subject]
                 ):
                     self._context.set_enable_mail(True)
                     self._context.set_to_mail(
-                        str(
-                            _notification_dict[
-                                user_config.se_notifications_email_to_other_mail_id
-                            ]
-                        )
+                        str(_notification_dict[user_config.se_notifications_email_to_other_mail_id])
                     )
-                    self._context.set_mail_subject(
-                        str(
-                            _notification_dict[
-                                user_config.se_notifications_email_subject
-                            ]
-                        )
-                    )
+                    self._context.set_mail_subject(str(_notification_dict[user_config.se_notifications_email_subject]))
                     self._context.set_mail_smtp_server(
-                        str(
-                            _notification_dict[
-                                user_config.se_notifications_email_smtp_host
-                            ]
-                        )
+                        str(_notification_dict[user_config.se_notifications_email_smtp_host])
                     )
                     self._context.set_mail_smtp_port(
-                        int(
-                            _notification_dict[
-                                user_config.se_notifications_email_smtp_port
-                            ]
-                        )
+                        int(_notification_dict[user_config.se_notifications_email_smtp_port])
                     )
 
-                    self._context.set_mail_from(
-                        str(_notification_dict[user_config.se_notifications_email_from])
-                    )
+                    self._context.set_mail_from(str(_notification_dict[user_config.se_notifications_email_from]))
                 else:
                     raise SparkExpectationsMiscException(
                         "All params/variables required for email notification is not configured or supplied"
@@ -110,11 +81,7 @@ class SparkExpectationsReader:
                 if _notification_dict[user_config.se_notifications_slack_webhook_url]:
                     self._context.set_enable_slack(True)
                     self._context.set_slack_webhook_url(
-                        str(
-                            _notification_dict[
-                                user_config.se_notifications_slack_webhook_url
-                            ]
-                        )
+                        str(_notification_dict[user_config.se_notifications_slack_webhook_url])
                     )
                 else:
                     raise SparkExpectationsMiscException(
@@ -125,11 +92,7 @@ class SparkExpectationsReader:
                 if _notification_dict[user_config.se_notifications_teams_webhook_url]:
                     self._context.set_enable_teams(True)
                     self._context.set_teams_webhook_url(
-                        str(
-                            _notification_dict[
-                                user_config.se_notifications_teams_webhook_url
-                            ]
-                        )
+                        str(_notification_dict[user_config.se_notifications_teams_webhook_url])
                     )
                 else:
                     raise SparkExpectationsMiscException(
@@ -137,37 +100,21 @@ class SparkExpectationsReader:
                     )
 
                 if _notification_dict[user_config.se_notifications_enable_zoom] is True:
-                    if _notification_dict[
-                        user_config.se_notifications_zoom_webhook_url
-                    ]:
+                    if _notification_dict[user_config.se_notifications_zoom_webhook_url]:
                         self._context.set_enable_zoom(True)
                         self._context.set_zoom_webhook_url(
-                            str(
-                                _notification_dict[
-                                    user_config.se_notifications_zoom_webhook_url
-                                ]
-                            )
+                            str(_notification_dict[user_config.se_notifications_zoom_webhook_url])
                         )
-                        self._context.set_zoom_token(
-                            str(
-                                _notification_dict[
-                                    user_config.se_notifications_zoom_token
-                                ]
-                            )
-                        )
+                        self._context.set_zoom_token(str(_notification_dict[user_config.se_notifications_zoom_token]))
                     else:
                         raise SparkExpectationsMiscException(
                             "All params/variables required for zoom notification is not configured or supplied"
                         )
 
         except Exception as e:
-            raise SparkExpectationsMiscException(
-                f"error occurred while reading notification configurations {e}"
-            )
+            raise SparkExpectationsMiscException(f"error occurred while reading notification configurations {e}")
 
-    def _process_rules_df(
-        self, _dq_queries_dict: dict, column_map: dict, _row: dict, params: dict
-    ) -> DataFrame:
+    def _process_rules_df(self, _dq_queries_dict: dict, column_map: dict, _row: dict, params: dict) -> DataFrame:
         """
         Process the rules DataFrame and generate the query dictionary and column map.
 
@@ -181,8 +128,7 @@ class SparkExpectationsReader:
         """
 
         if ("query_dq_delimiter" in _row.keys()) and (
-            _row["query_dq_delimiter"] is not None
-            and _row["query_dq_delimiter"] != "null"
+            _row["query_dq_delimiter"] is not None and _row["query_dq_delimiter"] != "null"
         ):
             _dq_query_delimiter = _row["query_dq_delimiter"]
             column_map["enable_querydq_custom_output"] = True
@@ -191,13 +137,10 @@ class SparkExpectationsReader:
             column_map["enable_querydq_custom_output"] = False
 
         if ("enable_querydq_custom_output" in _row.keys()) and (
-            _row["enable_querydq_custom_output"] is not None
-            and _row["enable_querydq_custom_output"] != "null"
+            _row["enable_querydq_custom_output"] is not None and _row["enable_querydq_custom_output"] != "null"
         ):
             if isinstance(_row["enable_querydq_custom_output"], bool):
-                column_map["enable_querydq_custom_output"] = _row[
-                    "enable_querydq_custom_output"
-                ]
+                column_map["enable_querydq_custom_output"] = _row["enable_querydq_custom_output"]
             elif isinstance(_row["enable_querydq_custom_output"], str) and _row[
                 "enable_querydq_custom_output"
             ].lower() in ["true"]:
@@ -213,9 +156,7 @@ class SparkExpectationsReader:
 
         else:
             column_map["enable_querydq_custom_output"] = False
-            _log.info(
-                "enable_querydq_custom_output is a boolean column and is not set, defaulting to False"
-            )
+            _log.info("enable_querydq_custom_output is a boolean column and is not set, defaulting to False")
 
         _querydq_secondary_queries = _row["expectation"].split(_dq_query_delimiter)
 
@@ -225,13 +166,7 @@ class SparkExpectationsReader:
         ]
 
         if len(_querydq_secondary_queries) > 1:
-            _dq_queries_dict[
-                column_map["product_id"]
-                + "|"
-                + column_map["table_name"]
-                + "|"
-                + column_map["rule"]
-            ] = {}
+            _dq_queries_dict[column_map["product_id"] + "|" + column_map["table_name"] + "|" + column_map["rule"]] = {}
             for _index, _dq_queries in enumerate(_querydq_secondary_queries):
                 if _index == 0:
                     column_map["expectation"] = _dq_queries
@@ -239,25 +174,15 @@ class SparkExpectationsReader:
                     _dq_queries_list = _dq_queries.split(":")
 
                     _dq_queries_dict[
-                        column_map["product_id"]
-                        + "|"
-                        + column_map["table_name"]
-                        + "|"
-                        + column_map["rule"]
+                        column_map["product_id"] + "|" + column_map["table_name"] + "|" + column_map["rule"]
                     ][_dq_queries_list[0]] = _dq_queries_list[1]
 
-                    column_map["expectation" + "_" + str(_dq_queries_list[0])] = (
-                        _dq_queries_list[1]
-                    )
+                    column_map["expectation" + "_" + str(_dq_queries_list[0])] = _dq_queries_list[1]
 
             column_map["expectation"] = column_map["expectation"].format(
                 **{
                     **_dq_queries_dict[
-                        column_map["product_id"]
-                        + "|"
-                        + column_map["table_name"]
-                        + "|"
-                        + column_map["rule"]
+                        column_map["product_id"] + "|" + column_map["table_name"] + "|" + column_map["rule"]
                     ],
                     **params,
                 }
@@ -267,7 +192,7 @@ class SparkExpectationsReader:
 
         return _dq_queries_dict, column_map
 
-    def get_rules_from_df(
+    def get_rules_from_df(  # pylint: disable=too-many-positional-arguments
         self,
         rules_df: DataFrame,
         target_table: str,
@@ -342,12 +267,8 @@ class SparkExpectationsReader:
                         "column_name": row["column_name"],
                         "expectation": row["expectation"],
                         "action_if_failed": row["action_if_failed"],
-                        "enable_for_source_dq_validation": row[
-                            "enable_for_source_dq_validation"
-                        ],
-                        "enable_for_target_dq_validation": row[
-                            "enable_for_target_dq_validation"
-                        ],
+                        "enable_for_source_dq_validation": row["enable_for_source_dq_validation"],
+                        "enable_for_target_dq_validation": row["enable_for_target_dq_validation"],
                         "tag": row["tag"],
                         "description": row["description"],
                         "enable_error_drop_alert": row["enable_error_drop_alert"],
@@ -379,15 +300,11 @@ class SparkExpectationsReader:
                         )
 
                     _expectations["target_table_name"] = target_table
-                _rules_execution_settings = self._get_rules_execution_settings(
-                    _rules_df
-                )
+                _rules_execution_settings = self._get_rules_execution_settings(_rules_df)
 
             return _dq_queries_dict, _expectations, _rules_execution_settings
         except Exception as e:
-            raise SparkExpectationsMiscException(
-                f"error occurred while retrieving rules list from the table {e}"
-            )
+            raise SparkExpectationsMiscException(f"error occurred while retrieving rules list from the table {e}")
 
     def _get_rules_execution_settings(self, rules_df: DataFrame) -> dict:
         rules_exe_df = rules_df.select(
@@ -396,34 +313,28 @@ class SparkExpectationsReader:
             "enable_for_target_dq_validation",
         )
         df = rules_exe_df.select(
-            max(
-                when(rules_exe_df["rule_type"] == "row_dq", True).otherwise(False)
-            ).alias("row_dq"),
+            max(when(rules_exe_df["rule_type"] == "row_dq", True).otherwise(False)).alias("row_dq"),
             max(
                 when(
-                    (rules_exe_df["rule_type"] == "agg_dq")
-                    & (rules_exe_df["enable_for_source_dq_validation"]),
+                    (rules_exe_df["rule_type"] == "agg_dq") & (rules_exe_df["enable_for_source_dq_validation"]),
                     True,
                 ).otherwise(False)
             ).alias("source_agg_dq"),
             max(
                 when(
-                    (rules_exe_df["rule_type"] == "query_dq")
-                    & (rules_exe_df["enable_for_source_dq_validation"]),
+                    (rules_exe_df["rule_type"] == "query_dq") & (rules_exe_df["enable_for_source_dq_validation"]),
                     True,
                 ).otherwise(False)
             ).alias("source_query_dq"),
             max(
                 when(
-                    (rules_exe_df["rule_type"] == "agg_dq")
-                    & (rules_exe_df["enable_for_target_dq_validation"]),
+                    (rules_exe_df["rule_type"] == "agg_dq") & (rules_exe_df["enable_for_target_dq_validation"]),
                     True,
                 ).otherwise(False)
             ).alias("target_agg_dq"),
             max(
                 when(
-                    (rules_exe_df["rule_type"] == "query_dq")
-                    & (rules_exe_df["enable_for_target_dq_validation"]),
+                    (rules_exe_df["rule_type"] == "query_dq") & (rules_exe_df["enable_for_target_dq_validation"]),
                     True,
                 ).otherwise(False)
             ).alias("target_query_dq"),

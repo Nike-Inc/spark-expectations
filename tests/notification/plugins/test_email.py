@@ -26,22 +26,14 @@ def test_send_notification_success(_mock_context):
     mock_config_args = {"message": "Test Email Body"}
 
     with (
-        patch(
-            "spark_expectations.notifications.plugins.email.smtplib.SMTP"
-        ) as mock_smtp,
-        patch(
-            "spark_expectations.notifications.plugins.email.MIMEMultipart"
-        ) as _mock_mltp,
+        patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp,
+        patch("spark_expectations.notifications.plugins.email.MIMEMultipart") as _mock_mltp,
     ):
         # act
-        email_handler.send_notification(
-            _context=_mock_context, _config_args=mock_config_args
-        )
+        email_handler.send_notification(_context=_mock_context, _config_args=mock_config_args)
 
         # assert
-        mock_smtp.assert_called_with(
-            _mock_context.get_mail_smtp_server, _mock_context.get_mail_smtp_port
-        )
+        mock_smtp.assert_called_with(_mock_context.get_mail_smtp_server, _mock_context.get_mail_smtp_port)
         mock_smtp().starttls.assert_called()
         mock_smtp().sendmail.assert_called_with(
             _mock_context.get_mail_from,
@@ -63,9 +55,7 @@ def test_send_notification_disable_mail(_mock_context):
 
     mock_config_args = {"message": "Test Email Body"}
 
-    with patch(
-        "spark_expectations.notifications.plugins.email.smtplib.SMTP"
-    ) as mock_smtp:
+    with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp:
         # act
         email_handler.send_notification(_mock_context, mock_config_args)
 
@@ -91,9 +81,7 @@ def test_send_notification_exception(_mock_context):
     mock_config_args = {"message": "Test Email Body"}
 
     with (
-        patch(
-            "spark_expectations.notifications.plugins.email.smtplib.SMTP"
-        ) as mock_smtp,
+        patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp,
         pytest.raises(SparkExpectationsEmailException),
     ):
         mock_smtp.side_effect = Exception("Test Exception")
@@ -101,6 +89,4 @@ def test_send_notification_exception(_mock_context):
         email_handler.send_notification(_mock_context, mock_config_args)
 
         # assert
-        mock_smtp.assert_called_with(
-            _mock_context.get_mail_smtp_server, _mock_context.get_mail_smtp_port
-        )
+        mock_smtp.assert_called_with(_mock_context.get_mail_smtp_server, _mock_context.get_mail_smtp_port)

@@ -112,11 +112,7 @@ def test_context_properties():
     context._debugger_mode = False
 
     context._supported_df_query_dq = spark.createDataFrame(
-        [
-            {
-                "spark_expectations_query_check": "supported_place_holder_dataset_to_run_query_check"
-            }
-        ]
+        [{"spark_expectations_query_check": "supported_place_holder_dataset_to_run_query_check"}]
     ).collect()
 
     datetime_now = datetime.now()
@@ -226,11 +222,7 @@ def test_context_properties():
     assert (
         context._supported_df_query_dq
         == spark.createDataFrame(
-            [
-                {
-                    "spark_expectations_query_check": "supported_place_holder_dataset_to_run_query_check"
-                }
-            ]
+            [{"spark_expectations_query_check": "supported_place_holder_dataset_to_run_query_check"}]
         ).collect()
     )
 
@@ -1303,13 +1295,7 @@ def test_set_supported_df_query_dq():
     assert (
         context.get_supported_df_query_dq.collect()
         == get_spark_session()
-        .createDataFrame(
-            [
-                {
-                    "spark_expectations_query_check": "supported_place_holder_dataset_to_run_query_check"
-                }
-            ]
-        )
+        .createDataFrame([{"spark_expectations_query_check": "supported_place_holder_dataset_to_run_query_check"}])
         .collect()
     )
 
@@ -1446,9 +1432,7 @@ def test_get_secret_type_exception():
 
 def test_get_server_url_key():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_kafka_server_url: "b", user_config.secret_type: "databricks"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_kafka_server_url: "b", user_config.secret_type: "databricks"})
 
     assert context.get_server_url_key == "b"
 
@@ -1464,9 +1448,7 @@ def test_get_server_url_key():
 
 def test_get_server_url_key_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_kafka_server_url: "b", user_config.secret_type: "cerberus"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_kafka_server_url: "b", user_config.secret_type: "cerberus"})
 
     with pytest.raises(
         SparkExpectationsMiscException,
@@ -1479,9 +1461,7 @@ def test_get_server_url_key_exception():
 
 def test_get_token_endpoint_url():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_secret_token_url: "d", user_config.secret_type: "databricks"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_secret_token_url: "d", user_config.secret_type: "databricks"})
 
     assert context.get_token_endpoint_url == "d"
 
@@ -1497,9 +1477,7 @@ def test_get_token_endpoint_url():
 
 def test_get_token_endpoint_url_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_secret_token_url: "d", user_config.secret_type: "cerberus"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_secret_token_url: "d", user_config.secret_type: "cerberus"})
 
     with pytest.raises(
         SparkExpectationsMiscException,
@@ -1512,9 +1490,7 @@ def test_get_token_endpoint_url_exception():
 
 def test_get_token():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_secret_token: "g", user_config.secret_type: "databricks"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_secret_token: "g", user_config.secret_type: "databricks"})
 
     assert context.get_token == "g"
 
@@ -1530,9 +1506,7 @@ def test_get_token():
 
 def test_get_token_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_secret_token_url: "g", user_config.secret_type: "cerberus"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_secret_token_url: "g", user_config.secret_type: "cerberus"})
 
     with pytest.raises(
         SparkExpectationsMiscException,
@@ -1545,9 +1519,7 @@ def test_get_token_exception():
 
 def test_get_client_id():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_secret_app_name: "i", user_config.secret_type: "databricks"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_secret_app_name: "i", user_config.secret_type: "databricks"})
 
     assert context.get_client_id == "i"
 
@@ -1563,9 +1535,7 @@ def test_get_client_id():
 
 def test_get_client_id_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_secret_app_name: "g", user_config.secret_type: "cerberus"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_secret_app_name: "g", user_config.secret_type: "cerberus"})
 
     with pytest.raises(
         SparkExpectationsMiscException,
@@ -1578,9 +1548,7 @@ def test_get_client_id_exception():
 
 def test_get_topic_name():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_topic_name: "k", user_config.secret_type: "databricks"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_topic_name: "k", user_config.secret_type: "databricks"})
 
     assert context.get_topic_name == "k"
 
@@ -1596,9 +1564,7 @@ def test_get_topic_name():
 
 def test_get_topic_name_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_topic_name: "k", user_config.secret_type: "cerberus"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_topic_name: "k", user_config.secret_type: "cerberus"})
 
     with pytest.raises(
         SparkExpectationsMiscException,
@@ -1620,10 +1586,7 @@ def test_get_se_streaming_stats_topic_name():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_se_streaming_stats_topic_name("test_topic")
 
-    assert (
-        context.get_se_streaming_stats_topic_name
-        == context.get_se_streaming_stats_topic_name
-    )
+    assert context.get_se_streaming_stats_topic_name == context.get_se_streaming_stats_topic_name
 
 
 def test_get_se_streaming_stats_topic_name_exception():
@@ -1698,11 +1661,6 @@ def test_set_agg_dq_detailed_stats_status():
 
 def test_get_agg_dq_detailed_stats_status():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    assert context.get_agg_dq_detailed_stats_status is True
-
-
-def test_get_agg_dq_detailed_stats_status_2():
-    context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_agg_dq_detailed_stats_status(True)
     assert context.get_agg_dq_detailed_stats_status is True
 
@@ -1776,13 +1734,6 @@ def test_set_source_query_dq_detailed_stats():
 
 
 def test_set_detailed_stats_table_writer_config():
-    context = SparkExpectationsContext(product_id="product1", spark=spark)
-    config = {"key": "value"}
-    context.set_detailed_stats_table_writer_config(config)
-    assert context.get_detailed_stats_table_writer_config() == config
-
-
-def test_set_detailed_stats_table_writer_config_2():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     config = {"setting1": "value1", "setting2": "value2"}
     context.set_detailed_stats_table_writer_config(config)

@@ -5,35 +5,23 @@ from dataclasses import dataclass
 class Constants:
     # declare const user config variables for email notification
     se_notifications_enable_email = "spark.expectations.notifications.email.enabled"
-    se_notifications_email_smtp_host = (
-        "spark.expectations.notifications.email.smtp_host"
-    )
-    se_notifications_email_smtp_port = (
-        "spark.expectations.notifications.email.smtp_port"
-    )
+    se_notifications_email_smtp_host = "spark.expectations.notifications.email.smtp_host"
+    se_notifications_email_smtp_port = "spark.expectations.notifications.email.smtp_port"
     se_notifications_email_from = "spark.expectations.notifications.email.from"
-    se_notifications_email_to_other_mail_id = (
-        "spark.expectations.notifications.email.to.other.mail.com"
-    )
+    se_notifications_email_to_other_mail_id = "spark.expectations.notifications.email.to.other.mail.com"
     se_notifications_email_subject = "spark.expectations.notifications.email.subject"
 
     # declare const user config variables for slack notification
     se_notifications_enable_slack = "spark.expectations.notifications.slack.enabled"
-    se_notifications_slack_webhook_url = (
-        "spark.expectations.notifications.slack.webhook_url"
-    )
+    se_notifications_slack_webhook_url = "spark.expectations.notifications.slack.webhook_url"
 
     # declare const user config variables for teams notification
     se_notifications_enable_teams = "spark.expectations.notifications.teams.enabled"
-    se_notifications_teams_webhook_url = (
-        "spark.expectations.notifications.teams.webhook_url"
-    )
+    se_notifications_teams_webhook_url = "spark.expectations.notifications.teams.webhook_url"
 
     # declare const user config variables for zoom notification
     se_notifications_enable_zoom = "spark.expectations.notifications.zoom.enabled"
-    se_notifications_zoom_webhook_url = (
-        "spark.expectations.notifications.zoom.webhook_url"
-    )
+    se_notifications_zoom_webhook_url = "spark.expectations.notifications.zoom.webhook_url"
     se_notifications_zoom_token = "spark.expectations.notifications.zoom.token"
 
     se_notifications_on_start = "spark.expectations.notifications.on_start"
@@ -42,9 +30,7 @@ class Constants:
     se_notifications_on_error_drop_exceeds_threshold_breach = (
         "spark.expectations.notifications.on.error.drop.exceeds.threshold.breach"
     )
-    se_notifications_on_error_drop_threshold = (
-        "spark.expectations.notifications.error.drop.threshold"
-    )
+    se_notifications_on_error_drop_threshold = "spark.expectations.notifications.error.drop.threshold"
 
     se_enable_streaming = "se.enable.streaming"
     se_enable_error_table = "se.enable.error.table"
@@ -77,9 +63,7 @@ class Constants:
 
     # declare const variable for agg query dq detailed stats
 
-    se_agg_dq_expectation_regex_pattern = (
-        r"(\(.+?\)|\w+\(.+?\))(\s*[<>!=]+\s*.+|\s*between\s*.+)$"
-    )
+    se_agg_dq_expectation_regex_pattern = r"(\(.+?\)|\w+\(.+?\))(\s*[<>!=]+\s*.+|\s*between\s*.+)$"
     # declare const variable for range in agg query dq detailed stats
     se_agg_dq_expectation_range_regex_pattern = (
         r"(\w+\(\w+\)|\w+)(\s*[><]\s*\d+)\s+(and)\s+(\w+\(\w+\)|\w+)(\s*[><]\s*\d+)"

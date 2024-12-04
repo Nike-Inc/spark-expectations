@@ -21,26 +21,17 @@ spark = get_spark_session()
 def fixture_setup_local_kafka_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    if (
-        os.getenv("UNIT_TESTING_ENV")
-        != "spark_expectations_unit_testing_on_github_actions"
-    ):
+    if os.getenv("UNIT_TESTING_ENV") != "spark_expectations_unit_testing_on_github_actions":
         # remove if docker conatiner is running
-        os.system(
-            f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh"
-        )
+        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
         # start docker container and create the topic
-        os.system(
-            f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh"
-        )
+        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
 
         yield "docker container started"
 
         # remove docker container
-        os.system(
-            f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh"
-        )
+        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
     else:
         yield (
@@ -436,17 +427,13 @@ def test_collect_stats_on_success_failure(
     setattr(_mock_context, "get_run_date", "2022-12-27 10:39:44")
     setattr(_mock_context, "get_run_id_name", "meta_dq_run_id")
     setattr(_mock_context, "get_run_id", "product1_run_test")
-    setattr(
-        _mock_context, "get_dq_run_status", input_record.get("status").get("run_status")
-    )
+    setattr(_mock_context, "get_dq_run_status", input_record.get("status").get("run_status"))
     setattr(
         _mock_context,
         "get_source_agg_dq_status",
         input_record.get("status").get("source_agg_dq"),
     )
-    setattr(
-        _mock_context, "get_row_dq_status", input_record.get("status").get("row_dq")
-    )
+    setattr(_mock_context, "get_row_dq_status", input_record.get("status").get("row_dq"))
     setattr(
         _mock_context,
         "get_final_agg_dq_status",
@@ -470,9 +457,7 @@ def test_collect_stats_on_success_failure(
         "get_source_agg_dq_result",
         input_record.get("source_agg_results"),
     )
-    setattr(
-        _mock_context, "get_final_agg_dq_result", input_record.get("final_agg_results")
-    )
+    setattr(_mock_context, "get_final_agg_dq_result", input_record.get("final_agg_results"))
     setattr(_mock_context, "get_table_name", "employee_table")
     setattr(
         _mock_context,
@@ -485,26 +470,19 @@ def test_collect_stats_on_success_failure(
     setattr(
         _mock_context,
         "get_error_percentage",
-        round(
-            (input_record.get("error_count") / input_record.get("input_count")) * 100, 2
-        ),
+        round((input_record.get("error_count") / input_record.get("input_count")) * 100, 2),
     )
     setattr(
         _mock_context,
         "get_success_percentage",
         round(
-            (
-                (input_record.get("input_count") - input_record.get("error_count"))
-                / input_record.get("input_count")
-            )
+            ((input_record.get("input_count") - input_record.get("error_count")) / input_record.get("input_count"))
             * 100,
             2,
         ),
     )
     setattr(_mock_context, "get_env", "local")
-    setattr(
-        _mock_context, "get_se_streaming_stats_topic_name", "dq-sparkexpectations-stats"
-    )
+    setattr(_mock_context, "get_se_streaming_stats_topic_name", "dq-sparkexpectations-stats")
     setattr(
         _mock_context,
         "get_source_query_dq_result",
@@ -970,17 +948,13 @@ def test_collect_stats_on_success_failure_exception(
     setattr(_mock_context, "get_run_date", "2022-12-27 10:39:44")
     setattr(_mock_context, "get_run_id_name", "meta_dq_run_id")
     setattr(_mock_context, "get_run_id", "product1_run_test")
-    setattr(
-        _mock_context, "get_dq_run_status", input_record.get("status").get("run_status")
-    )
+    setattr(_mock_context, "get_dq_run_status", input_record.get("status").get("run_status"))
     setattr(
         _mock_context,
         "get_source_agg_dq_status",
         input_record.get("status").get("source_agg_dq"),
     )
-    setattr(
-        _mock_context, "get_row_dq_status", input_record.get("status").get("row_dq")
-    )
+    setattr(_mock_context, "get_row_dq_status", input_record.get("status").get("row_dq"))
     setattr(
         _mock_context,
         "get_final_agg_dq_status",
@@ -1004,9 +978,7 @@ def test_collect_stats_on_success_failure_exception(
         "get_source_agg_dq_result",
         input_record.get("source_agg_results"),
     )
-    setattr(
-        _mock_context, "get_final_agg_dq_result", input_record.get("final_agg_results")
-    )
+    setattr(_mock_context, "get_final_agg_dq_result", input_record.get("final_agg_results"))
     setattr(_mock_context, "get_table_name", "employee_table")
     setattr(
         _mock_context,
@@ -1019,26 +991,19 @@ def test_collect_stats_on_success_failure_exception(
     setattr(
         _mock_context,
         "get_error_percentage",
-        round(
-            (input_record.get("error_count") / input_record.get("input_count")) * 100, 2
-        ),
+        round((input_record.get("error_count") / input_record.get("input_count")) * 100, 2),
     )
     setattr(
         _mock_context,
         "get_success_percentage",
         round(
-            (
-                (input_record.get("input_count") - input_record.get("error_count"))
-                / input_record.get("input_count")
-            )
+            ((input_record.get("input_count") - input_record.get("error_count")) / input_record.get("input_count"))
             * 100,
             2,
         ),
     )
     setattr(_mock_context, "get_env", "local")
-    setattr(
-        _mock_context, "get_se_streaming_stats_topic_name", "dq-sparkexpectations-stats"
-    )
+    setattr(_mock_context, "get_se_streaming_stats_topic_name", "dq-sparkexpectations-stats")
     setattr(
         _mock_context,
         "get_source_query_dq_result",

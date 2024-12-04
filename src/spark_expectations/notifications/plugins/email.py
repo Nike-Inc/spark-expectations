@@ -46,9 +46,7 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
                 msg.attach(MIMEText(mail_content, "plain"))
 
                 # mailhost.com
-                server = smtplib.SMTP(
-                    _context.get_mail_smtp_server, _context.get_mail_smtp_port
-                )
+                server = smtplib.SMTP(_context.get_mail_smtp_server, _context.get_mail_smtp_port)
                 server.starttls()
                 text = msg.as_string()
                 server.sendmail(

@@ -36,9 +36,7 @@ def test_send_notification_success(_mock_context):
         mock_post.return_value = mock_response
 
         # Act
-        zoom_handler.send_notification(
-            _context=_mock_context, _config_args=_config_args
-        )
+        zoom_handler.send_notification(_context=_mock_context, _config_args=_config_args)
 
         # Assert
         mock_post.assert_called_once_with(
@@ -77,9 +75,7 @@ def test_send_notification_exception(_mock_context):
 
         # Act and Assert
         with pytest.raises(SparkExpectationsZoomNotificationException):
-            zoom_handler.send_notification(
-                _context=_mock_context, _config_args=_config_args
-            )
+            zoom_handler.send_notification(_context=_mock_context, _config_args=_config_args)
 
 
 @patch(
@@ -97,8 +93,6 @@ def test_send_notification_zoom_disabled(_mock_context):
 
     with patch.object(requests, "post") as mock_post:
         # Act
-        zoom_handler.send_notification(
-            _context=_mock_context, _config_args=_config_args
-        )
+        zoom_handler.send_notification(_context=_mock_context, _config_args=_config_args)
 
         mock_post.post.assert_not_called()

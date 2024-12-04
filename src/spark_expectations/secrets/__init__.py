@@ -13,17 +13,13 @@ from spark_expectations.config.user_config import Constants as UserConfig
 
 SPARK_EXPECTATIONS_SECRETS_BACKEND = "spark_expectations_secrets_backend"
 
-spark_expectations_secrets_plugin_spec = pluggy.HookspecMarker(
-    SPARK_EXPECTATIONS_SECRETS_BACKEND
-)
+spark_expectations_secrets_plugin_spec = pluggy.HookspecMarker(SPARK_EXPECTATIONS_SECRETS_BACKEND)
 
 
 class SparkExpectationsSecretPluginSpec:
     @staticmethod
     @spark_expectations_secrets_plugin_spec(firstresult=True)
-    def get_secret_value(
-        secret_key_path: str, secret_dict: Dict[str, str]
-    ) -> Optional["str"]:
+    def get_secret_value(secret_key_path: str, secret_dict: Dict[str, str]) -> Optional["str"]:
         """Custom execute method that is able to be plugged in."""
 
 
@@ -43,17 +39,13 @@ def get_spark_expectations_tasks_hook() -> SparkExpectationsSecretPluginSpec:
     return pm.hook
 
 
-spark_expectations_secrets_backend_plugin_impl = pluggy.HookimplMarker(
-    SPARK_EXPECTATIONS_SECRETS_BACKEND
-)
+spark_expectations_secrets_backend_plugin_impl = pluggy.HookimplMarker(SPARK_EXPECTATIONS_SECRETS_BACKEND)
 
 
 class CerberusSparkExpectationsSecretPluginImpl(SparkExpectationsSecretPluginSpec):
     @staticmethod
     @spark_expectations_secrets_backend_plugin_impl
-    def get_secret_value(
-        secret_key_path: str, secret_dict: Dict[str, str]
-    ) -> Optional[str]:
+    def get_secret_value(secret_key_path: str, secret_dict: Dict[str, str]) -> Optional[str]:
         """
         This function implemented to get secret value from cerberus
         Args:
@@ -63,7 +55,7 @@ class CerberusSparkExpectationsSecretPluginImpl(SparkExpectationsSecretPluginSpe
             str | none : returns secret value in string or none
         """
 
-        from cerberus.client import CerberusClient
+        from cerberus.client import CerberusClient  # pylint: disable=import-error
 
         if secret_dict[UserConfig.secret_type].lower() == "cerberus":
             _client = CerberusClient(secret_dict[UserConfig.cbs_url])
@@ -73,14 +65,10 @@ class CerberusSparkExpectationsSecretPluginImpl(SparkExpectationsSecretPluginSpe
         return None
 
 
-class DatabricksSecretsSparkExpectationsSecretPluginImpl(
-    SparkExpectationsSecretPluginSpec
-):
+class DatabricksSecretsSparkExpectationsSecretPluginImpl(SparkExpectationsSecretPluginSpec):
     @staticmethod
     @spark_expectations_secrets_backend_plugin_impl
-    def get_secret_value(
-        secret_key_path: str, secret_dict: Dict[str, str]
-    ) -> Optional[str]:
+    def get_secret_value(secret_key_path: str, secret_dict: Dict[str, str]) -> Optional[str]:
         """
          # pragma: no cover
         This function implemented to get secret value from databricks scope

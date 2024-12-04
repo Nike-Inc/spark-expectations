@@ -44,9 +44,7 @@ class SparkExpectationsWriter:
     def __post_init__(self) -> None:
         self.spark = self._context.spark
 
-    def save_df_as_table(
-        self, df: DataFrame, table_name: str, config: dict, stats_table: bool = False
-    ) -> None:
+    def save_df_as_table(self, df: DataFrame, table_name: str, config: dict, stats_table: bool = False) -> None:
         """
         This function takes a dataframe and writes into a table
 
@@ -62,13 +60,9 @@ class SparkExpectationsWriter:
         """
         try:
             if not stats_table:
-                df = df.withColumn(
-                    self._context.get_run_id_name, lit(f"{self._context.get_run_id}")
-                ).withColumn(
+                df = df.withColumn(self._context.get_run_id_name, lit(f"{self._context.get_run_id}")).withColumn(
                     self._context.get_run_date_time_name,
-                    to_timestamp(
-                        lit(f"{self._context.get_run_date}"), "yyyy-MM-dd HH:mm:ss"
-                    ),
+                    to_timestamp(lit(f"{self._context.get_run_date}"), "yyyy-MM-dd HH:mm:ss"),
                 )
             _log.info("_save_df_as_table started")
 
@@ -84,9 +78,7 @@ class SparkExpectationsWriter:
                 _df_writer = _df_writer.sortBy(config["sortBy"])
             if config["bucketBy"] is not None and config["bucketBy"] != {}:
                 bucket_by_config = config["bucketBy"]
-                _df_writer = _df_writer.bucketBy(
-                    bucket_by_config["numBuckets"], bucket_by_config["colName"]
-                )
+                _df_writer = _df_writer.bucketBy(bucket_by_config["numBuckets"], bucket_by_config["colName"])
             if config["options"] is not None and config["options"] != {}:
                 _df_writer = _df_writer.options(**config["options"])
 
@@ -99,18 +91,13 @@ class SparkExpectationsWriter:
                 _log.info("finished writing records to table: %s,", table_name)
                 if not stats_table:
                     # Fetch table properties
-                    table_properties = self.spark.sql(
-                        f"SHOW TBLPROPERTIES {table_name}"
-                    ).collect()
-                    table_properties_dict = {
-                        row["key"]: row["value"] for row in table_properties
-                    }
+                    table_properties = self.spark.sql(f"SHOW TBLPROPERTIES {table_name}").collect()
+                    table_properties_dict = {row["key"]: row["value"] for row in table_properties}
 
                     # Set product_id in table properties
                     if (
                         table_properties_dict.get("product_id") is None
-                        or table_properties_dict.get("product_id")
-                        != self._context.product_id
+                        or table_properties_dict.get("product_id") != self._context.product_id
                     ):
                         _log.info(
                             "product_id is not set for table %s in tableproperties, setting it now",
@@ -170,10 +157,7 @@ class SparkExpectationsWriter:
             _rowdq_expectations = self._context.get_dq_expectations
             _row_dq_expectations = _rowdq_expectations["row_dq_rules"]
 
-            if (
-                self._context.get_summarized_row_dq_res is not None
-                and len(self._context.get_summarized_row_dq_res) > 0
-            ):
+            if self._context.get_summarized_row_dq_res is not None and len(self._context.get_summarized_row_dq_res) > 0:
                 _row_dq_res = self._context.get_summarized_row_dq_res
                 _dq_res = {d["rule"]: d["failed_row_count"] for d in _row_dq_res}
 
@@ -194,24 +178,20 @@ class SparkExpectationsWriter:
                             "pass" if int(failed_row_count) == 0 else "fail",
                             None,
                             None,
-                            (
-                                (_input_count - int(failed_row_count))
-                                if int(failed_row_count) != 0
-                                else _input_count
-                            ),
+                            ((_input_count - int(failed_row_count)) if int(failed_row_count) != 0 else _input_count),
                             failed_row_count,
                             _input_count,
                             (
-                                self._context.get_row_dq_start_time.replace(
-                                    tzinfo=timezone.utc
-                                ).strftime("%Y-%m-%d %H:%M:%S")
+                                self._context.get_row_dq_start_time.replace(tzinfo=timezone.utc).strftime(
+                                    "%Y-%m-%d %H:%M:%S"
+                                )
                                 if self._context.get_row_dq_start_time
                                 else "1900-01-01 00:00:00"
                             ),
                             (
-                                self._context.get_row_dq_end_time.replace(
-                                    tzinfo=timezone.utc
-                                ).strftime("%Y-%m-%d %H:%M:%S")
+                                self._context.get_row_dq_end_time.replace(tzinfo=timezone.utc).strftime(
+                                    "%Y-%m-%d %H:%M:%S"
+                                )
                                 if self._context.get_row_dq_end_time
                                 else "1900-01-01 00:00:00"
                             ),
@@ -262,13 +242,9 @@ class SparkExpectationsWriter:
             StructField,
         )
 
-        return StructType(
-            [StructField(name, StringType(), True) for name in field_names]
-        )
+        return StructType([StructField(name, StringType(), True) for name in field_names])
 
-    def _create_dataframe(
-        self, data: Optional[List[Tuple]], schema: StructType
-    ) -> DataFrame:
+    def _create_dataframe(self, data: Optional[List[Tuple]], schema: StructType) -> DataFrame:
         """
         Create a DataFrame from the given data and schema.
 
@@ -304,21 +280,17 @@ class SparkExpectationsWriter:
         """
         _querydq_secondary_query_source_output = (
             self._context.get_source_query_dq_output
-            if self._context.get_source_query_dq_output is not None
-            and self._context.get_query_dq_detailed_stats_status
+            if self._context.get_source_query_dq_output is not None and self._context.get_query_dq_detailed_stats_status
             else []
         )
 
         _querydq_secondary_query_target_output = (
             self._context.get_target_query_dq_output
-            if self._context.get_target_query_dq_output is not None
-            and self._context.get_query_dq_detailed_stats_status
+            if self._context.get_target_query_dq_output is not None and self._context.get_query_dq_detailed_stats_status
             else []
         )
 
-        _querydq_secondary_query_source_output.extend(
-            _querydq_secondary_query_target_output
-        )
+        _querydq_secondary_query_source_output.extend(_querydq_secondary_query_target_output)
 
         _custom_querydq_output_source_schema = self._create_schema(
             [
@@ -348,9 +320,7 @@ class SparkExpectationsWriter:
             split(_df_custom_detailed_stats_source["alias"], "_").getItem(1),
         )
 
-        _df_custom_detailed_stats_source.createOrReplaceTempView(
-            "_df_custom_detailed_stats_source"
-        )
+        _df_custom_detailed_stats_source.createOrReplaceTempView("_df_custom_detailed_stats_source")
 
         _df_custom_detailed_stats_source = self._context.spark.sql(
             "select distinct source.run_id,source.product_id, source.table_name,"
@@ -438,13 +408,8 @@ class SparkExpectationsWriter:
 
         _target_query_dq: bool = rules_execution_settings.get("target_query_dq", False)
 
-        if (
-            _source_aggdq_detailed_stats_result is not None
-            and _source_querydq_detailed_stats_result is not None
-        ):
-            _source_aggdq_detailed_stats_result.extend(
-                _source_querydq_detailed_stats_result
-            )
+        if _source_aggdq_detailed_stats_result is not None and _source_querydq_detailed_stats_result is not None:
+            _source_aggdq_detailed_stats_result.extend(_source_querydq_detailed_stats_result)
 
         if self._context.get_row_dq_status != "Skipped" and _row_dq:
             _rowdq_detailed_stats_result = self.get_row_dq_detailed_stats()
@@ -462,14 +427,9 @@ class SparkExpectationsWriter:
         if (
             (_target_agg_dq is True or _target_query_dq is True)
             and _row_dq is True
-            and (
-                _target_aggdq_detailed_stats_result is not None
-                and _target_querydq_detailed_stats_result is not None
-            )
+            and (_target_aggdq_detailed_stats_result is not None and _target_querydq_detailed_stats_result is not None)
         ):
-            _target_aggdq_detailed_stats_result.extend(
-                _target_querydq_detailed_stats_result
-            )
+            _target_aggdq_detailed_stats_result.extend(_target_querydq_detailed_stats_result)
         else:
             _target_aggdq_detailed_stats_result = []
 
@@ -478,11 +438,7 @@ class SparkExpectationsWriter:
         )
 
         _df_target_aggquery_detailed_stats = _df_target_aggquery_detailed_stats.select(
-            *[
-                col
-                for col in _df_target_aggquery_detailed_stats.columns
-                if col not in ["tag", "description"]
-            ]
+            *[col for col in _df_target_aggquery_detailed_stats.columns if col not in ["tag", "description"]]
         )
 
         _df_detailed_stats = _df_source_aggquery_detailed_stats.join(
@@ -491,9 +447,9 @@ class SparkExpectationsWriter:
             "full_outer",
         )
 
-        _df_detailed_stats = _df_detailed_stats.withColumn(
-            "dq_date", current_date()
-        ).withColumn("dq_time", lit(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+        _df_detailed_stats = _df_detailed_stats.withColumn("dq_date", current_date()).withColumn(
+            "dq_time", lit(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        )
 
         _df_detailed_stats = _df_detailed_stats.withColumn(
             "dq_job_metadata_info", lit(self._context.get_job_metadata).cast("string")
@@ -586,9 +542,7 @@ class SparkExpectationsWriter:
             )
 
         except Exception as e:
-            raise SparkExpectationsMiscException(
-                f"error occurred while saving the data into the stats table {e}"
-            )
+            raise SparkExpectationsMiscException(f"error occurred while saving the data into the stats table {e}")
 
     def write_error_stats(self) -> None:
         """
@@ -609,18 +563,10 @@ class SparkExpectationsWriter:
             input_count: int = self._context.get_input_count
             error_count: int = self._context.get_error_count
             output_count: int = self._context.get_output_count
-            source_agg_dq_result: Optional[List[Dict[str, str]]] = (
-                self._context.get_source_agg_dq_result
-            )
-            final_agg_dq_result: Optional[List[Dict[str, str]]] = (
-                self._context.get_final_agg_dq_result
-            )
-            source_query_dq_result: Optional[List[Dict[str, str]]] = (
-                self._context.get_source_query_dq_result
-            )
-            final_query_dq_result: Optional[List[Dict[str, str]]] = (
-                self._context.get_final_query_dq_result
-            )
+            source_agg_dq_result: Optional[List[Dict[str, str]]] = self._context.get_source_agg_dq_result
+            final_agg_dq_result: Optional[List[Dict[str, str]]] = self._context.get_final_agg_dq_result
+            source_query_dq_result: Optional[List[Dict[str, str]]] = self._context.get_source_query_dq_result
+            final_query_dq_result: Optional[List[Dict[str, str]]] = self._context.get_final_query_dq_result
 
             error_stats_data = [
                 (
@@ -632,26 +578,10 @@ class SparkExpectationsWriter:
                     self._context.get_output_percentage,
                     self._context.get_success_percentage,
                     self._context.get_error_percentage,
-                    (
-                        source_agg_dq_result
-                        if source_agg_dq_result and len(source_agg_dq_result) > 0
-                        else None
-                    ),
-                    (
-                        final_agg_dq_result
-                        if final_agg_dq_result and len(final_agg_dq_result) > 0
-                        else None
-                    ),
-                    (
-                        source_query_dq_result
-                        if source_query_dq_result and len(source_query_dq_result) > 0
-                        else None
-                    ),
-                    (
-                        final_query_dq_result
-                        if final_query_dq_result and len(final_query_dq_result) > 0
-                        else None
-                    ),
+                    (source_agg_dq_result if source_agg_dq_result and len(source_agg_dq_result) > 0 else None),
+                    (final_agg_dq_result if final_agg_dq_result and len(final_agg_dq_result) > 0 else None),
+                    (source_query_dq_result if source_query_dq_result and len(source_query_dq_result) > 0 else None),
+                    (final_query_dq_result if final_query_dq_result and len(final_query_dq_result) > 0 else None),
                     self._context.get_summarized_row_dq_res,
                     self._context.get_rules_exceeds_threshold,
                     {
@@ -740,9 +670,7 @@ class SparkExpectationsWriter:
                         True,
                     ),
                     StructField("dq_status", MapType(StringType(), StringType()), True),
-                    StructField(
-                        "dq_run_time", MapType(StringType(), FloatType()), True
-                    ),
+                    StructField("dq_run_time", MapType(StringType(), FloatType()), True),
                     StructField(
                         "dq_rules",
                         MapType(StringType(), MapType(StringType(), IntegerType())),
@@ -750,9 +678,7 @@ class SparkExpectationsWriter:
                     ),
                     StructField(self._context.get_run_id_name, StringType(), True),
                     StructField(self._context.get_run_date_name, DateType(), True),
-                    StructField(
-                        self._context.get_run_date_time_name, TimestampType(), True
-                    ),
+                    StructField(self._context.get_run_date_time_name, TimestampType(), True),
                 ]
             )
 
@@ -797,9 +723,7 @@ class SparkExpectationsWriter:
 
             _se_stats_dict = self._context.get_se_streaming_stats_dict
             if _se_stats_dict["se.enable.streaming"]:
-                secret_handler = SparkExpectationsSecretsBackend(
-                    secret_dict=_se_stats_dict
-                )
+                secret_handler = SparkExpectationsSecretsBackend(secret_dict=_se_stats_dict)
                 kafka_write_options: dict = (
                     {
                         "kafka.bootstrap.servers": "localhost:9092",
@@ -814,8 +738,7 @@ class SparkExpectationsWriter:
                             "kafka.sasl.mechanism": "OAUTHBEARER",
                             "kafka.sasl.jaas.config": "kafkashaded.org.apache.kafka.common.security.oauthbearer."
                             "OAuthBearerLoginModule required oauth.client.id="
-                            f"'{secret_handler.get_secret(self._context.get_client_id)}'  "
-                            + "oauth.client.secret="
+                            f"'{secret_handler.get_secret(self._context.get_client_id)}'  " + "oauth.client.secret="
                             f"'{secret_handler.get_secret(self._context.get_token)}' "
                             "oauth.token.endpoint.uri="
                             f"'{secret_handler.get_secret(self._context.get_token_endpoint_url)}'; ",
@@ -824,9 +747,7 @@ class SparkExpectationsWriter:
                             "topic": (
                                 self._context.get_se_streaming_stats_topic_name
                                 if self._context.get_env == "local"
-                                else secret_handler.get_secret(
-                                    self._context.get_topic_name
-                                )
+                                else secret_handler.get_secret(self._context.get_topic_name)
                             ),
                         }
                     )
@@ -835,33 +756,23 @@ class SparkExpectationsWriter:
                 _sink_hook.writer(
                     _write_args={
                         "product_id": self._context.product_id,
-                        "enable_se_streaming": _se_stats_dict[
-                            user_config.se_enable_streaming
-                        ],
+                        "enable_se_streaming": _se_stats_dict[user_config.se_enable_streaming],
                         "kafka_write_options": kafka_write_options,
                         "stats_df": df,
                     }
                 )
             else:
-                _log.info(
-                    "Streaming stats to kafka is disabled, hence skipping writing to kafka"
-                )
+                _log.info("Streaming stats to kafka is disabled, hence skipping writing to kafka")
 
         except Exception as e:
-            raise SparkExpectationsMiscException(
-                f"error occurred while saving the data into the stats table {e}"
-            )
+            raise SparkExpectationsMiscException(f"error occurred while saving the data into the stats table {e}")
 
-    def write_error_records_final(
-        self, df: DataFrame, error_table: str, rule_type: str
-    ) -> Tuple[int, DataFrame]:
+    def write_error_records_final(self, df: DataFrame, error_table: str, rule_type: str) -> Tuple[int, DataFrame]:
         try:
             _log.info("_write_error_records_final started")
 
             failed_records = [
-                f"size({dq_column}) != 0"
-                for dq_column in df.columns
-                if dq_column.startswith(f"{rule_type}")
+                f"size({dq_column}) != 0" for dq_column in df.columns if dq_column.startswith(f"{rule_type}")
             ]
 
             failed_records_rules = " or ".join(failed_records)
@@ -871,13 +782,7 @@ class SparkExpectationsWriter:
                 f"meta_{rule_type}_results",
                 when(
                     expr(failed_records_rules),
-                    array(
-                        *[
-                            _col
-                            for _col in df.columns
-                            if _col.startswith(f"{rule_type}")
-                        ]
-                    ),
+                    array(*[_col for _col in df.columns if _col.startswith(f"{rule_type}")]),
                 ).otherwise(array(create_map())),
             ).drop(*[_col for _col in df.columns if _col.startswith(f"{rule_type}")])
 
@@ -886,9 +791,7 @@ class SparkExpectationsWriter:
                     f"meta_{rule_type}_results",
                     remove_empty_maps(df[f"meta_{rule_type}_results"]),
                 )
-                .withColumn(
-                    self._context.get_run_id_name, lit(self._context.get_run_id)
-                )
+                .withColumn(self._context.get_run_id_name, lit(self._context.get_run_id))
                 .withColumn(
                     self._context.get_run_date_time_name,
                     lit(self._context.get_run_date),
@@ -897,9 +800,7 @@ class SparkExpectationsWriter:
             error_df = df.filter(f"size(meta_{rule_type}_results) != 0")
             self._context.print_dataframe_with_debugger(error_df)
 
-            print(
-                f"self._context.get_se_enable_error_table : {self._context.get_se_enable_error_table}"
-            )
+            print(f"self._context.get_se_enable_error_table : {self._context.get_se_enable_error_table}")
             if self._context.get_se_enable_error_table:
                 self.save_df_as_table(
                     error_df,
@@ -915,9 +816,7 @@ class SparkExpectationsWriter:
             return _error_count, df
 
         except Exception as e:
-            raise SparkExpectationsMiscException(
-                f"error occurred while saving data into the final error table {e}"
-            )
+            raise SparkExpectationsMiscException(f"error occurred while saving data into the final error table {e}")
 
     def generate_summarized_row_dq_res(self, df: DataFrame, rule_type: str) -> None:
         """
@@ -931,9 +830,7 @@ class SparkExpectationsWriter:
 
         """
         try:
-            df_explode = df.select(
-                explode(f"meta_{rule_type}_results").alias("row_dq_res")
-            )
+            df_explode = df.select(explode(f"meta_{rule_type}_results").alias("row_dq_res"))
             df_res = (
                 df_explode.withColumn("rule_type", col("row_dq_res")["rule_type"])
                 .withColumn("rule", col("row_dq_res")["rule"])
@@ -988,9 +885,7 @@ class SparkExpectationsWriter:
             self._context.set_summarized_row_dq_res(summarized_row_dq_list)
 
         except Exception as e:
-            raise SparkExpectationsMiscException(
-                f"error occurred created summarized row dq statistics {e}"
-            )
+            raise SparkExpectationsMiscException(f"error occurred created summarized row dq statistics {e}")
 
     def generate_rules_exceeds_threshold(self, rules: dict) -> None:
         """
@@ -1007,8 +902,7 @@ class SparkExpectationsWriter:
                 return None
 
             rules_failed_row_count = {
-                itr["rule"]: int(itr["failed_row_count"])
-                for itr in self._context.get_summarized_row_dq_res
+                itr["rule"]: int(itr["failed_row_count"]) for itr in self._context.get_summarized_row_dq_res
             }
 
             for rule in rules[f"{self._context.get_row_dq_rule_type_name}_rules"]:
@@ -1026,9 +920,7 @@ class SparkExpectationsWriter:
                     failed_row_count = 0
 
                 if failed_row_count is not None and failed_row_count > 0:
-                    error_drop_percentage = round(
-                        (failed_row_count / self._context.get_input_count) * 100, 2
-                    )
+                    error_drop_percentage = round((failed_row_count / self._context.get_input_count) * 100, 2)
                     error_threshold_list.append(
                         {
                             "rule_name": rule_name,
@@ -1044,6 +936,4 @@ class SparkExpectationsWriter:
                 self._context.set_rules_exceeds_threshold(error_threshold_list)
 
         except Exception as e:
-            raise SparkExpectationsMiscException(
-                f"An error occurred while creating error threshold list : {e}"
-            )
+            raise SparkExpectationsMiscException(f"An error occurred while creating error threshold list : {e}")

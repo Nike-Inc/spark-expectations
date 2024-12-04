@@ -195,9 +195,7 @@ def test_notify_on_exceeds_of_error_threshold(
     autospec=True,
     spec_set=True,
 )
-def test_notify_on_failure(
-    _mock_notification_hook, _fixture_mock_context, _fixture_notify_fail_expected_result
-):
+def test_notify_on_failure(_mock_notification_hook, _fixture_mock_context, _fixture_notify_fail_expected_result):
     notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Call the function to be tested
@@ -375,9 +373,7 @@ def test_construct_message_for_each_rules(_fixture_mock_context):
     autospec=True,
     spec_set=True,
 )
-def test_notify_on_exceeds_of_error_threshold_each_rules(
-    _notification_hook, _fixture_mock_context
-):
+def test_notify_on_exceeds_of_error_threshold_each_rules(_notification_hook, _fixture_mock_context):
     from unittest import mock
 
     notify_handler = SparkExpectationsNotify(_fixture_mock_context)
@@ -427,9 +423,7 @@ def test_notify_rules_exceeds_threshold(
     _fixture_mock_context.get_input_count = 10
     # _fixture_mock_context._row_dq_rule_type_name = "row_dq"
 
-    _fixture_mock_context.get_summarized_row_dq_res = [
-        {"rule": "rule1", "failed_row_count": failed_row_count}
-    ]
+    _fixture_mock_context.get_summarized_row_dq_res = [{"rule": "rule1", "failed_row_count": failed_row_count}]
 
     notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
@@ -480,9 +474,7 @@ def test_notify_rules_exceeds_threshold_return_none(
 
 def test_notify_rules_exceeds_threshold_exception(_fixture_mock_context):
     # Simulate the case where get_summarized_row_dq_res is None
-    _fixture_mock_context.get_summarized_row_dq_res = [
-        {"rule": "rule1", "failed_row_count": 10}
-    ]
+    _fixture_mock_context.get_summarized_row_dq_res = [{"rule": "rule1", "failed_row_count": 10}]
 
     rules = {
         "dq_rules": [
@@ -498,7 +490,6 @@ def test_notify_rules_exceeds_threshold_exception(_fixture_mock_context):
     # Expecting a SparkExpectationsMiscException to be raised
     with pytest.raises(
         SparkExpectationsMiscException,
-        match="An error occurred while sending notification "
-        r"when the error threshold is breached: *",
+        match="An error occurred while sending notification " r"when the error threshold is breached: *",
     ):
         notify_handler.notify_rules_exceeds_threshold(rules)

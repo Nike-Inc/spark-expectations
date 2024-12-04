@@ -69,11 +69,7 @@ def fixture_product_rules_schema():
         spark.read.option("header", "true")
         .option("delimiter", "|")
         .schema(csvSchema)
-        .csv(
-            os.path.join(
-                os.path.dirname(__file__), "../resources/product_rules_pipe.csv"
-            )
-        )
+        .csv(os.path.join(os.path.dirname(__file__), "../resources/product_rules_pipe.csv"))
     )
 
     # Set up the mock dataframe as a temporary table
@@ -88,11 +84,7 @@ def fixture_product_rules_pipe():
         spark.read.option("header", "true")
         .option("inferSchema", "true")
         .option("delimiter", "|")
-        .csv(
-            os.path.join(
-                os.path.dirname(__file__), "../resources/product_rules_pipe.csv"
-            )
-        )
+        .csv(os.path.join(os.path.dirname(__file__), "../resources/product_rules_pipe.csv"))
     )
 
     # Set up the mock dataframe as a temporary table
@@ -202,9 +194,7 @@ def test_set_notification_param(notification, expected_result):
                 notification.get("spark.expectations.notifications.email.from")
             )
             mock_context.set_to_mail.assert_called_once_with(
-                notification.get(
-                    "spark.expectations.notifications.email.to.other.mail.com"
-                )
+                notification.get("spark.expectations.notifications.email.to.other.mail.com")
             )
         if notification.get("spark.expectations.notifications.slack.enabled"):
             mock_context.set_enable_slack.assert_called_once_with(
@@ -223,8 +213,7 @@ def test_set_notification_param(notification, expected_result):
     else:
         with pytest.raises(
             expected_result,
-            match=r"All params/variables required for [a-z]+ notification "
-            "is not configured or supplied",
+            match=r"All params/variables required for [a-z]+ notification " "is not configured or supplied",
         ):
             reader_handler.set_notification_param(notification)
 
@@ -260,9 +249,7 @@ def test_set_notification_param(notification, expected_result):
         ("product2", "table2", "tag7", {}),
     ],
 )
-def test_get_rules_dlt(
-    product_id, table_name, tag, expected_output, mocker, _fixture_product_rules_view
-):
+def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fixture_product_rules_view):
     # create mock _context object
     mock_context = mocker.MagicMock()
 
@@ -467,20 +454,16 @@ def test_get_rules_from_table(
 
     reader_handler = SparkExpectationsReader(mock_context)
 
-    dq_queries_dict, expectations, rule_execution_settings = (
-        reader_handler.get_rules_from_df(
-            spark.sql(" select * from product_rules_pipe"), table_name, is_dlt=False
-        )
+    dq_queries_dict, expectations, rule_execution_settings = reader_handler.get_rules_from_df(
+        spark.sql(" select * from product_rules_pipe"), table_name, is_dlt=False
     )
 
     # Assert
     assert expectations == expected_expectations
     assert rule_execution_settings == expected_rule_execution_settings
 
-    dq_queries_dict, expectations, rule_execution_settings = (
-        reader_handler.get_rules_from_df(
-            spark.sql(" select * from product_rules_schema"), table_name, is_dlt=False
-        )
+    dq_queries_dict, expectations, rule_execution_settings = reader_handler.get_rules_from_df(
+        spark.sql(" select * from product_rules_schema"), table_name, is_dlt=False
     )
 
     # Assert
@@ -501,9 +484,7 @@ def test_get_rules_dlt_exception(_fixture_reader):
         SparkExpectationsMiscException,
         match=r"error occurred while retrieving rules list .*",
     ):
-        _fixture_reader.get_rules_from_df(
-            "product_rules_1", "table1", is_dlt=True, tag=None
-        )
+        _fixture_reader.get_rules_from_df("product_rules_1", "table1", is_dlt=True, tag=None)
 
 
 @pytest.mark.usefixtures("_fixture_product_rules_view")
@@ -522,9 +503,7 @@ def test_get_rules_detailed_result_exception(product_id, table_name):
         SparkExpectationsMiscException,
         match=r"error occurred while retrieving rules list .*",
     ):
-        _reader_handler.get_rules_from_df(
-            spark.sql(" select * from product_rules"), table_name
-        )
+        _reader_handler.get_rules_from_df(spark.sql(" select * from product_rules"), table_name)
 
 
 def test_get_rules_from_table_exception(_fixture_reader):
