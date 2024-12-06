@@ -7,6 +7,7 @@ fmt:
 mypy:
 	@hatch run mypy-check
 
+# FIXME: failing with OSError: Unable to locate executables directory within:...
 check: ruff-check mypy
 	@hatch run dev:check
 
