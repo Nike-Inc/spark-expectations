@@ -138,7 +138,6 @@ the `all-tests` or `spark-tests` command.
 installer = "uv"
 features = ["dev", "test"]
 
-
 [tool.hatch.envs.default.scripts]
 # Code Quality commands
 ruff-fmt = "ruff format --check --diff ."
@@ -175,13 +174,14 @@ Note: Test env will run against all specified python and pyspark versions. Use t
 and general use.
 """
 template = "default"
+features = ["dev", "test"]
 parallel = true
-retries = 2
+retries = 0
 retry-delay = 3
 
 [tool.hatch.envs.hatch-test.scripts]
-run = "pytest{env:HATCH_TEST_ARGS:} {args}"
-run-cov = "coverage run -m pytest{env:HATCH_TEST_ARGS:} {args} -v -x"
+run = "pytest {env:HATCH_TEST_ARGS:} {args}"
+run-cov = "coverage run -m pytest {env:HATCH_TEST_ARGS:} {args} -v -x"
 cov-combine = "coverage combine"
 cov-report = "coverage report -m"
 
@@ -225,49 +225,41 @@ name.".*(pyspark35r).*".env-vars = [
   { key = "SPARK_TESTING", value = "True" },
 ]
 
-# TODO: check if these are needed
-#[tool.pytest.ini_options]
-#addopts = "-q --color=yes --order-scope=module"
-#log_level = "CRITICAL"
-#testpaths = ["tests"]
-#asyncio_default_fixture_loop_scope = "scope"
-#markers = [
-#  "default: added to all tests by default if no other marker expect of standard pytest markers is present",
-#  "spark: mark a test as a Spark test",
-#  # "sftp: mark a test as an SFTP test",
-#  # "se: mark a test as a Spark Expectations test",
-#  # "box: mark a test as a Box test",
-#  # "asyncio: mark a test as an asyncio test",
-#  # "asyncio_http: mark a test as an asyncio HTTP test",
-#]
-#filterwarnings = [
-#  # pyspark.pandas warnings
-#  "ignore:distutils.*:DeprecationWarning:pyspark.pandas.*",
-#  "ignore:'PYARROW_IGNORE_TIMEZONE'.*:UserWarning:pyspark.pandas.*",
-#  # pydantic warnings
-#  "ignore:A custom validator is returning a value other than `self`.*.*:UserWarning:pydantic.main.*",
-#  "ignore:<module 'datetime' from .*.*:UserWarning:pydantic._internal.*",
-#  # pyspark.sql.connect warnings
-#  "ignore:is_datetime64tz_dtype.*:DeprecationWarning:pyspark.sql.connect.*",
-#  "ignore:distutils.*:DeprecationWarning:pyspark.sql.connect.*",
-#  # pyspark.sql.pandas warnings
-#  "ignore:distutils.*:DeprecationWarning:pyspark.sql.pandas.*",
-#  "ignore:is_datetime64tz_dtype.*:DeprecationWarning:pyspark.sql.pandas.*",
-#  "ignore:is_categorical_dtype.*:DeprecationWarning:pyspark.sql.pandas.*",
-#  "ignore:iteritems.*:FutureWarning:pyspark.sql.pandas.*",
-#  # Koheesio warnings
-#  "ignore:DayTimeIntervalType.*:UserWarning:koheesio.spark.snowflake.*",
-#]
+[tool.pytest.ini_options]
+addopts = "--color=yes --order-scope=module"
+log_level = "CRITICAL"
+testpaths = ["tests"]
+markers = [
+  "default: applied to all tests by default if no other marker besides standard pytest markers is present",
+  "spark: mark a test as a Spark test",
+]
+filterwarnings = [
+  # pyspark.pandas warnings
+  "ignore:distutils.*:DeprecationWarning:pyspark.pandas.*",
+  "ignore:'PYARROW_IGNORE_TIMEZONE'.*:UserWarning:pyspark.pandas.*",
+  # pyspark.sql.connect warnings
+  "ignore:is_datetime64tz_dtype.*:DeprecationWarning:pyspark.sql.connect.*",
+  "ignore:distutils.*:DeprecationWarning:pyspark.sql.connect.*",
+  # pyspark.sql.pandas warnings
+  "ignore:distutils.*:DeprecationWarning:pyspark.sql.pandas.*",
+  "ignore:is_datetime64tz_dtype.*:DeprecationWarning:pyspark.sql.pandas.*",
+  "ignore:is_categorical_dtype.*:DeprecationWarning:pyspark.sql.pandas.*",
+  "ignore:iteritems.*:FutureWarning:pyspark.sql.pandas.*",
+]
 
 [tool.coverage.run]
-source_pkgs = ["spark_expectations", "tests"]
+source_pkgs = ["src/spark_expectations", "tests"]
 branch = true
 parallel = true
-omit = ["src/koheesio/__about__.py", "src/koheesio/__init__.py"]
+omit = [
+  "src/spark_expectations/__about__.py",
+  "src/spark_expectations/__init__.py",
+  "src/spark_expectations/examples/*"
+]
 
 [tool.coverage.paths]
-spark_expectations = ["src/spark_expectations", "*/spark_expectations/src/spark_expectations"]
-tests = ["tests", "*/spark_expectations/tests"]
+spark_expectations = ["src/spark_expectations"]
+tests = ["tests"]
 
 [tool.coverage.report]
 exclude_lines = ["no cov", "if __name__ == .__main__.:", "if TYPE_CHECKING:"]
@@ -283,11 +275,13 @@ The docs environment is used to build the documentation.
 ---
 Run `hatch run docs:build` to build the documentation and `hatch run docs:serve` to serve it.
 """
-# TODO: take commands from Makefile
 detached = true
 features = ["docs"]
-scripts.build = ["mkdocs build"]
-scripts.serve = ["mkdocs serve --watch ./docs/"]
+scripts.set-default = ["mike set-default latest"]
+scripts.serve = ["mike serve"]
+scripts.deploy-dev = ["mike deploy -u dev latest"]
+scripts.deploy-and-serve-dev = ["deploy-dev", "set-default", "serve"]
+scripts.deploy-docs = ["mike deploy --update-aliases $(version) latest"]
 
 
 ###  ~~~~~~~~~~~~~~~~~~~~  ###
@@ -321,6 +315,7 @@ Available scripts:
 path = ".venv"
 python = "3.12"
 template = "default"
+features = ["dev", "test"]
 
 
 ###  ~~~~~~~~~~~~~~~~~~  ###
@@ -332,7 +327,7 @@ template = "default"
 # https://docs.astral.sh/ruff/configuration/#using-pyprojecttoml
 # https://docs.astral.sh/ruff/settings/
 target-version = "py310"
-line-length = 88
+line-length = 120
 exclude = [
   # Exclude a variety of commonly ignored directories.
   ".bzr",

@@ -1,10 +1,6 @@
 ruff-check:
 	@hatch run ruff-check
 
-black-check:
-	@echo "We've switched to ruff, please use ruff instead of black"
-	@make ruff-check
-
 fmt:
 	@hatch fmt
 
@@ -12,29 +8,27 @@ mypy:
 	@hatch run mypy-check
 
 check: ruff-check mypy
-	@hatch run check
+	@hatch run dev:check
 
 kafka-cluster-start:
-                   ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_github_actions)
-	                   . ./spark_expectations/examples/docker_scripts/kafka_cluster_start.sh
-	                   sleep 30
-	                   . ./spark_expectations/examples/docker_scripts/delete_kafka_topic.sh
-	                   . ./spark_expectations/examples/docker_scripts/create_kafka_topic.sh
-                   endif
+    ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_github_actions)
+	    . ./src/spark_expectations/examples/docker_scripts/kafka_cluster_start.sh
+	    sleep 30
+	    . /src/spark_expectations/examples/docker_scripts/delete_kafka_topic.sh
+	    . /src/spark_expectations/examples/docker_scripts/create_kafka_topic.sh
+    endif
 
 kafka-cluster-stop:
-                  ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_github_actions)
-	                   . ./spark_expectations/examples/docker_scripts/delete_kafka_topic.sh
-	                   . ./spark_expectations/examples/docker_scripts/kafka_cluster_stop.sh
-	                   rm -rf /tmp/kafka-logs
-                   endif
+    ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_github_actions)
+	     . ./src/spark_expectations/examples/docker_scripts/delete_kafka_topic.sh
+	     . ./src/spark_expectations/examples/docker_scripts/kafka_cluster_stop.sh
+	     rm -rf /tmp/kafka-logs
+     endif
 
 #TODO
 cov: kafka-cluster-start
 	-make check
-	@poetry run coverage run --source=src --omit "spark_expectations/examples/*" -m pytest -v -x && \
-	poetry run coverage report -m && \
-	poetry run coverage xml
+	@hatch test -c
 
 	make kafka-cluster-stop
 
@@ -48,9 +42,7 @@ deploy_env_setup:
 
 #TODO
 test: kafka-cluster-start
-	@poetry run coverage run --source=spark_expectations --omit "spark_expectations/examples/*" -m pytest && \
-	poetry run coverage report -m && \
-	poetry run coverage html
+	@hatch test --cover-quiet -a -vvv
 
 	make kafka-cluster-stop
 
@@ -62,9 +54,7 @@ coverage: check test
 #TODO
 .PHONY: docs
 docs:
-	@poetry run mike deploy -u dev latest
-	@poetry run mike set-default latest
-	@poetry run mike serve
+	@hatch run docs:deploy-and-serve-dev
 
 #TODO
 deploy-docs:
@@ -80,3 +70,29 @@ get-version:
 requirements:
 	@hatch run dev:uv pip freeze > requirements.txt
 
+clean:
+	@echo "\033[1mCleaning up:\033[0m\n\033[35m This will remove all local caches and build artifacts\033[0m"
+	@rm -rf `find . -name __pycache__`
+	@rm -f `find . -type f -name '*.py[co]'`
+	@rm -f `find . -type f -name '*~'`
+	@rm -f `find . -type f -name '.*~'`
+	@rm -rf .run
+	@rm -rf .venv
+	@rm -rf .venvs
+	@rm -rf .cache
+	@rm -rf .pytest_cache
+	@rm -rf .ruff_cache
+	@rm -rf htmlcov
+	@rm -rf *.egg-info
+	@rm -f .coverage
+	@rm -f .coverage.*
+	@rm -rf build
+	@rm -rf dist
+	@rm -rf site
+	@rm -rf docs/_build
+	@rm -rf docs/.changelog.md docs/.version.md docs/.tmp_schema_mappings.html
+	@rm -rf fastapi/test.db
+	@rm -rf coverage.xml
+
+
+# TODO - add sync command to sync dependencies in dev env
