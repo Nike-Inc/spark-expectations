@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Any, List, Dict
+import re
 from pyspark.sql import DataFrame
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.notifications import _notification_hook
@@ -56,6 +57,35 @@ class SparkExpectationsNotify:
             return wrapper
 
         return decorator
+
+    def get_custom_notification(self) -> str:
+        """
+        This function returns custom notification
+        Returns: formatted string
+        """
+
+        _dict_list = self._context.get_stats_dict
+        try:
+            if _dict_list and isinstance(_dict_list, list):
+                _custom_email_body = self._context.get_email_custom_body
+                keys = re.findall(r"'(\w+)': \{\}", _custom_email_body)
+                if not keys:
+                    raise SparkExpectationsMiscException(
+                        "No key words for statistics were provided."
+                    )
+                values = {key: _dict_list[0][key] for key in keys}
+                _notification_message = _custom_email_body.format(
+                    *[values[key] for key in keys]
+                )
+                return _notification_message
+            else:
+                raise SparkExpectationsMiscException(
+                    "Stats dictionary list is not available or not a list."
+                )
+        except Exception as e:
+            raise SparkExpectationsMiscException(
+                f"An error occurred while getting dictionary list with stats from dq run: {e}"
+            )
 
     def notify_on_start(self) -> None:
         """
@@ -133,7 +163,8 @@ class SparkExpectationsNotify:
             f"            final_query_dq_status = {self._context.get_final_query_dq_status}\n"
             f"            run_status = {self._context.get_dq_run_status}"
         )
-
+        if self._context.get_enable_custom_email_body is True:
+            _notification_message = self.get_custom_notification()
         _notification_hook.send_notification(
             _context=self._context, _config_args={"message": _notification_message}
         )
@@ -165,6 +196,8 @@ class SparkExpectationsNotify:
             f"            run_status = {self._context.get_dq_run_status}"
         )
 
+        if self._context.get_enable_custom_email_body is True:
+            _notification_message = self.get_custom_notification()
         _notification_hook.send_notification(
             _context=self._context,
             _config_args={
@@ -172,6 +205,7 @@ class SparkExpectationsNotify:
             },
         )
 
+    # pylint: disable=R0917
     def construct_message_for_each_rules(
         self,
         rule_name: str,

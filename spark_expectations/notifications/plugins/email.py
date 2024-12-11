@@ -40,7 +40,6 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
                 msg["Subject"] = _context.get_mail_subject
 
                 # body = _config_args.get('mail_body')
-
                 mail_content = f"""{_config_args.get("message")}"""
                 msg.attach(MIMEText(mail_content, "plain"))
 

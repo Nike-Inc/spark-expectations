@@ -28,6 +28,7 @@ def fixture_mock_context():
     _context_mock.get_dq_run_status = "fail"
     _context_mock.get_row_dq_rule_type_name = "row_dq"
     _context_mock.product_id = "product_id1"
+    _context_mock.get_enable_custom_email_body = False
 
     return _context_mock
 
@@ -505,3 +506,18 @@ def test_notify_rules_exceeds_threshold_exception(_fixture_mock_context):
         r"when the error threshold is breached: *",
     ):
         notify_handler.notify_rules_exceeds_threshold(rules)
+
+
+def test_get_custom_notification(_fixture_mock_context):
+    _fixture_mock_context.get_email_custom_body = '''Custom statistics for dq run:
+    'product_id': {},
+    'table_name': {}'''
+    _fixture_mock_context.get_stats_dict = [{"product_id": "product_id1", "table_name": "test_table", "input_count": 5}]
+
+    result = SparkExpectationsNotify(_fixture_mock_context).get_custom_notification()
+    expected_result = (
+    '''Custom statistics for dq run:
+    'product_id': product_id1,
+    'table_name': test_table'''
+    )
+    assert result == expected_result

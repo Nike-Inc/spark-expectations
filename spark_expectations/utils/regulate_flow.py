@@ -46,6 +46,7 @@ class SparkExpectationsRegulateFlow:
 
         """
 
+        # pylint: disable=R0917
         def func_process(
             df: DataFrame,
             _rule_type: str,
