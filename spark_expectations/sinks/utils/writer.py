@@ -605,18 +605,18 @@ class SparkExpectationsWriter:
             input_count: int = self._context.get_input_count
             error_count: int = self._context.get_error_count
             output_count: int = self._context.get_output_count
-            source_agg_dq_result: Optional[List[Dict[str, str]]] = (
-                self._context.get_source_agg_dq_result
-            )
-            final_agg_dq_result: Optional[List[Dict[str, str]]] = (
-                self._context.get_final_agg_dq_result
-            )
-            source_query_dq_result: Optional[List[Dict[str, str]]] = (
-                self._context.get_source_query_dq_result
-            )
-            final_query_dq_result: Optional[List[Dict[str, str]]] = (
-                self._context.get_final_query_dq_result
-            )
+            source_agg_dq_result: Optional[
+                List[Dict[str, str]]
+            ] = self._context.get_source_agg_dq_result
+            final_agg_dq_result: Optional[
+                List[Dict[str, str]]
+            ] = self._context.get_final_agg_dq_result
+            source_query_dq_result: Optional[
+                List[Dict[str, str]]
+            ] = self._context.get_source_query_dq_result
+            final_query_dq_result: Optional[
+                List[Dict[str, str]]
+            ] = self._context.get_final_query_dq_result
 
             error_stats_data = [
                 (
@@ -796,15 +796,35 @@ class SparkExpectationsWriter:
                 secret_handler = SparkExpectationsSecretsBackend(
                     secret_dict=_se_stats_dict
                 )
-                kafka_write_options: dict = (
-                    {
-                        "kafka.bootstrap.servers": "localhost:9092",
-                        "topic": self._context.get_se_streaming_stats_topic_name,
-                        "failOnDataLoss": "true",
+                if self._context.get_runtime_env == "databricks":
+                    kafka_write_options = {
+                        "kafka.bootstrap.servers": f"{secret_handler.get_secret(self._context.get_server_url_key)}",
+                        "kafka.security.protocol": "SASL_SSL",
+                        "kafka.sasl.mechanism": "OAUTHBEARER",
+                        "kafka.sasl.jaas.config": """{0} required clientId="{1}" clientSecret="{2}" tokenEndpoint="{3}";""".format(
+                            "kafkashaded.org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule",
+                            secret_handler.get_secret(self._context.get_client_id),
+                            secret_handler.get_secret(self._context.get_token),
+                            secret_handler.get_secret(
+                                self._context.get_token_endpoint_url
+                            ),
+                        ),
+                        "kafka.sasl.login.callback.handler.class": "kafkashaded.org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler",
+                        "topic": (
+                            self._context.get_se_streaming_stats_topic_name
+                            if self._context.get_env == "local"
+                            else secret_handler.get_secret(self._context.get_topic_name)
+                        ),
                     }
-                    if self._context.get_env == "local"
-                    else (
+                else:
+                    kafka_write_options = (
                         {
+                            "kafka.bootstrap.servers": "localhost:9092",
+                            "topic": self._context.get_se_streaming_stats_topic_name,
+                            "failOnDataLoss": "true",
+                        }
+                        if self._context.get_env == "local"
+                        else {
                             "kafka.bootstrap.servers": f"{secret_handler.get_secret(self._context.get_server_url_key)}",
                             "kafka.security.protocol": "SASL_SSL",
                             "kafka.sasl.mechanism": "OAUTHBEARER",
@@ -826,7 +846,6 @@ class SparkExpectationsWriter:
                             ),
                         }
                     )
-                )
 
                 _sink_hook.writer(
                     _write_args={

@@ -155,6 +155,12 @@ class SparkExpectationsContext:
         self._query_dq_output_custom_table_name: str
 
     @property
+    def get_runtime_env(self) -> str:
+        if os.environ.get("DATABRICKS_RUNTIME_VERSION", None):
+            return "databricks"
+        return "not_databricks"
+
+    @property
     def get_run_id(self) -> str:
         """
         Get run_id for the instance of spark-expectations class
