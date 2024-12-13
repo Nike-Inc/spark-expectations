@@ -7,6 +7,7 @@ from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from datetime import datetime, date
+import os
 
 spark = get_spark_session()
 
@@ -1188,6 +1189,19 @@ def test_get_dq_run_time():
     context._dq_start_time = now
     context._dq_end_time = now + timedelta(seconds=2)
     assert context.get_dq_run_time == 2.0
+
+
+def test_get_runtime_env():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    os.environ["DATABRICKS_RUNTIME_VERSION"] = "13"
+    assert context.get_runtime_env == "databricks_older_version"
+
+    os.environ["DATABRICKS_RUNTIME_VERSION"] = "13.3"
+    assert context.get_runtime_env == "databricks_newer_version"
+
+    # Remove the mock to test non-Databricks environment
+    del os.environ["DATABRICKS_RUNTIME_VERSION"]
+    assert context.get_runtime_env == "not_databricks"
 
 
 def test_get_run_id_name():
