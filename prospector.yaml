@@ -16,6 +16,9 @@ max-line-length: 120
 
 pylint:
   disable:
+    - too-many-positional-arguments
+    - used-before-assignment
+    - possibly-used-before-assignment
     - too-many-lines
     - too-many-branches
     - too-many-statements
@@ -46,3 +49,7 @@ pycodestyle:
 mccabe:
   disable:
     - MC0001
+
+pyflakes:
+  disable:
+    - F999
