@@ -25,6 +25,7 @@ from spark_expectations.core.expectations import (
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core import get_spark_session
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
+from spark_expectations.notifications.push.spark_expectations_notify import SparkExpectationsNotify
 
 # os.environ["UNIT_TESTING_ENV"] = "local"
 
@@ -3203,6 +3204,147 @@ def test_error_threshold_breach(
         get_dataset()
 
     _mock_notification_hook.assert_called_once()
+    for db in spark.catalog.listDatabases():
+        if db.name != "default":
+            spark.sql(f"DROP DATABASE {db.name} CASCADE")
+    spark.sql("CLEAR CACHE")
+
+
+def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notification(_fixture_create_database):
+    input_df = spark.createDataFrame(
+        [
+            ("1", "product1", 10),
+            ("2", "product2", 20),
+            ("3", "product3", 30),
+        ],
+        ["id", "product", "value"]
+    )
+    input_df.createOrReplaceTempView("test_table")
+
+    rules = [
+        {
+            "product_id": "product1",
+            "table_name": "dq_spark.test_final_table",
+            "rule_type": "row_dq",
+            "rule": "col1_add_col3_threshold",
+            "column_name": "value",
+            "expectation": "(value) > 10",
+            "action_if_failed": "ignore",
+            "tag": "strict",
+            "description": "value must be greater than 10",
+            "enable_for_source_dq_validation": True,
+            "enable_for_target_dq_validation": True,
+            "is_active": True,
+            "enable_error_drop_alert": True,
+            "error_drop_threshold": "25",
+        },
+        {
+            "product_id": "product1",
+            "table_name": "dq_spark.test_final_table",
+            "rule_type": "agg_dq",
+            "rule": "sum_of_value_should_be_less_than_60",
+            "column_name": "value",
+            "expectation": "sum(value) > 60",
+            "action_if_failed": "ignore",
+            "tag": "strict",
+            "description": "desc_sum_of_value_should_be_less_than_60",
+            "enable_for_source_dq_validation": True,
+            "enable_for_target_dq_validation": True,
+            "is_active": True,
+            "enable_error_drop_alert": True,
+            "error_drop_threshold": "25",
+        },
+        {
+            "product_id": "product1",
+            "table_name": "dq_spark.test_final_table",
+            "rule_type": "query_dq",
+            "rule": "value_positive_threshold",
+            "column_name": "col3",
+            "expectation": "(select count(*) from test_table) > 10",
+            "action_if_failed": "ignore",
+            "tag": "strict",
+            "description": "count of value positive value must be greater than 10",
+            "enable_for_source_dq_validation": True,
+            "enable_for_target_dq_validation": True,
+            "is_active": True,
+            "enable_error_drop_alert": True,
+            "error_drop_threshold": "10",
+        },
+    ]
+    rules_df = spark.createDataFrame(rules)
+
+    writer = WrappedDataFrameWriter().mode("append").format("delta")
+
+    from spark_expectations.config.user_config import Constants as user_config
+
+    conf = {
+        user_config.se_notifications_on_rules_action_if_failed_set_ignore: True,
+        user_config.se_enable_query_dq_detailed_result: True,
+        user_config.se_enable_agg_dq_detailed_result: True,
+    }
+
+    with patch(
+            "spark_expectations.notifications.push.spark_expectations_notify.SparkExpectationsNotify"
+            ".notify_on_ignore_rules",
+            autospec=True,
+            spec_set=True,
+    ) as _mock_notification_hook:
+        se = SparkExpectations(
+            product_id="product1",
+            rules_df=rules_df,
+            stats_table="dq_spark.test_dq_stats_table",
+            stats_table_writer=writer,
+            target_and_error_table_writer=writer,
+            debugger=False,
+            stats_streaming_options={user_config.se_enable_streaming: False},
+        )
+
+        @se.with_expectations(
+            target_table="dq_spark.test_final_table",
+            write_to_table=True,
+            user_conf=conf,
+        )
+        def get_dataset() -> DataFrame:
+            return input_df
+
+        get_dataset()
+
+        expected_call = (
+            SparkExpectationsNotify(se._context),
+            [
+                {
+                    "rule": "value_positive_threshold",
+                    "description": "count of value positive value must be greater than 10",
+                    "rule_type": "query_dq",
+                    "tag": "strict",
+                    "action_if_failed": "ignore"
+                },
+                {
+                    "rule": "sum_of_value_should_be_less_than_60",
+                    "description": "desc_sum_of_value_should_be_less_than_60",
+                    "rule_type": "agg_dq",
+                    "tag": "strict",
+                    "action_if_failed": "ignore"
+                },
+                {
+                    "rule": "value_positive_threshold",
+                    "description": "count of value positive value must be greater than 10",
+                    "rule_type": "query_dq",
+                    "tag": "strict",
+                    "action_if_failed": "ignore"
+                },
+                {
+                    "rule": "sum_of_value_should_be_less_than_60",
+                    "description": "desc_sum_of_value_should_be_less_than_60",
+                    "rule_type": "agg_dq",
+                    "tag": "strict",
+                    "action_if_failed": "ignore"
+                }
+            ]
+        )
+
+        _mock_notification_hook.assert_called_once_with(*expected_call)
+
     for db in spark.catalog.listDatabases():
         if db.name != "default":
             spark.sql(f"DROP DATABASE {db.name} CASCADE")
