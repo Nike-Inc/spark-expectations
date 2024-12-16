@@ -205,7 +205,7 @@ class SparkExpectationsNotify:
             },
         )
 
-    # pylint: disable=R0917
+    # pylint: disable=too-many-positional-arguments
     def construct_message_for_each_rules(
         self,
         rule_name: str,

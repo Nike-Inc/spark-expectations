@@ -419,7 +419,7 @@ class SparkExpectationsActions:
                 expected_outcome = None
 
             # pylint: disable=used-before-assignment
-            # pylint: disable=E0606
+            # pylint: disable=possibly-used-before-assignment
             return querydq_output, (
                 _context.get_run_id,
                 _dq_rule["product_id"],

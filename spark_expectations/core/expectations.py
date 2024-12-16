@@ -159,7 +159,7 @@ class SparkExpectations:
 
     # TODO Add target_error_table_writer and stats_table_writer as parameters to this function so this takes precedence
     #  if user provides it
-    # pylint: disable=R0917
+    # pylint: disable=too-many-positional-arguments
     def with_expectations(
         self,
         target_table: str,

@@ -34,10 +34,10 @@ se: SparkExpectations = SparkExpectations(
 user_conf = {
     user_config.se_notifications_enable_email: True,
     user_config.se_notifications_enable_custom_email_body: True,
-    user_config.se_notifications_email_smtp_host: "localhost",
-    user_config.se_notifications_email_smtp_port: 1025,
-    user_config.se_notifications_email_from: "yevheniia.nikonchuk@nike.com",
-    user_config.se_notifications_email_to_other_mail_id: "yevheniia.nikonchuk@nike.com",
+    user_config.se_notifications_email_smtp_host: "mailhost.com",
+    user_config.se_notifications_email_smtp_port: 25,
+    user_config.se_notifications_email_from: "",
+    user_config.se_notifications_email_to_other_mail_id: "",
     user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",
     user_config.se_notifications_email_custom_body: """Spark Expectations Statistics for this dq run:
     'product_id': {},
