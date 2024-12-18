@@ -569,7 +569,7 @@ class SparkExpectations:
                                 >= _error_drop_threshold
                             ):
                                 _ignore_rules_result.extend(
-                                    filter(None, _ignore_rules_result or [])
+                                    [self._context.get_summarized_row_dq_res]
                                 )
                                 # raise SparkExpectationsErrorThresholdExceedsException(
                                 #     "An error has taken place because"
@@ -661,7 +661,7 @@ class SparkExpectations:
                                 ]
                             )
 
-                        if len(_ignore_rules_result) > 0:
+                        if _ignore_rules_result:
                             flattened_ignore_rules_result: List[Dict[str, str]] = [
                                 item
                                 for sublist in filter(None, _ignore_rules_result)
