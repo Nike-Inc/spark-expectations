@@ -83,6 +83,7 @@ se_user_conf = {
     user_config.se_notifications_on_completion: True,
     user_config.se_notifications_on_fail: True,
     user_config.se_notifications_on_error_drop_exceeds_threshold_breach: True, 
+    user_config.se_notifications_on_rules_action_if_failed_set_ignore: True,
     user_config.se_notifications_on_error_drop_threshold: 15,
     #Optional
     #Below two params are optional and need to be enabled to capture the detailed stats in the <stats_table_name>_detailed.

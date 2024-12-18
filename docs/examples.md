@@ -1,4 +1,3 @@
-
 ### Configurations
 
 In order to establish the global configuration parameter for DQ Spark Expectations, you must define and complete the required fields within a variable. This involves creating a variable and ensuring that all the necessary information is provided in the appropriate fields.
@@ -19,16 +18,16 @@ se_user_conf = {
     user_config.se_notifications_on_completion: True,  # (10)!
     user_config.se_notifications_on_fail: True,  # (11)!
     user_config.se_notifications_on_error_drop_exceeds_threshold_breach: True,  # (12)!
-    user_config.se_notifications_on_error_drop_threshold: 15,  # (13)!
-    user_config.se_enable_error_table: True,  # (14)!
-    user_config.enable_query_dq_detailed_result: True, # (15)!
-    user_config.enable_agg_dq_detailed_result: True, # (16)!
-    user_config.querydq_output_custom_table_name: "<catalog.schema.table-name>", #17
+    user_config.se_notifications_on_rules_action_if_failed_set_ignore: True,  # (13)!
+    user_config.se_notifications_on_error_drop_threshold: 15,  # (14)!
+    user_config.se_enable_error_table: True,  # (15)!
+    user_config.enable_query_dq_detailed_result: True, # (16)!
+    user_config.enable_agg_dq_detailed_result: True, # (17)!
+    user_config.querydq_output_custom_table_name: "<catalog.schema.table-name>", #18
     user_config.se_dq_rules_params: {
         "env": "local",
         "table": "product",
-     }, # (18)!
-}
+     }, # (19)!
 }
 ```
 
@@ -44,12 +43,13 @@ se_user_conf = {
 10. When `user_config.se_notifications_on_completion` parameter set to `True` enables notification on completion of spark-expectations framework, variable by default set to `False`
 11. When `user_config.se_notifications_on_fail` parameter set to `True` enables notification on failure of spark-expectations data quality framework, variable by default set to `True`
 12. When `user_config.se_notifications_on_error_drop_exceeds_threshold_breach` parameter set to `True` enables notification when error threshold reaches above the configured value
-13. The `user_config.se_notifications_on_error_drop_threshold` parameter captures error drop threshold value
-14. The `user_config.se_enable_error_table` parameter, which controls whether error data to load into error table, is set to true by default
-15. When `user_config.enable_query_dq_detailed_result` parameter set to `True`, enables the option to cature the query_dq detailed stats to detailed_stats table. By default set to `False`
-16. When `user_config.enable_agg_dq_detailed_result` parameter set to `True`, enables the option to cature the agg_dq detailed stats to detailed_stats table. By default set to `False`
-17. The `user_config.querydq_output_custom_table_name` parameter is used to specify the name of the custom query_dq output table which captures the output of the alias queries passed in the query dq expectation. Default is <stats_table>_custom_output
-18. The `user_config.se_dq_rules_params` parameter, which are required to dynamically update dq rules
+13. When `user_config.se_notifications_on_rules_action_if_failed_set_ignore` parameter set to `True` enables notification when rules action is set to ignore if failed
+14. The `user_config.se_notifications_on_error_drop_threshold` parameter captures error drop threshold value
+15. The `user_config.se_enable_error_table` parameter, which controls whether error data to load into error table, is set to true by default
+16. When `user_config.enable_query_dq_detailed_result` parameter set to `True`, enables the option to capture the query_dq detailed stats to detailed_stats table. By default set to `False`
+17. When `user_config.enable_agg_dq_detailed_result` parameter set to `True`, enables the option to capture the agg_dq detailed stats to detailed_stats table. By default set to `False`
+18. The `user_config.querydq_output_custom_table_name` parameter is used to specify the name of the custom query_dq output table which captures the output of the alias queries passed in the query dq expectation. Default is `<stats_table>_custom_output`
+19. The `user_config.se_dq_rules_params` parameter, which are required to dynamically update dq rules
 
 
 ### Spark Expectations Initialization 
