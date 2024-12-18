@@ -3228,7 +3228,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
             "rule_type": "row_dq",
             "rule": "col1_add_col3_threshold",
             "column_name": "value",
-            "expectation": "(value) > 10",
+            "expectation": "value > 10",
             "action_if_failed": "ignore",
             "tag": "strict",
             "description": "value must be greater than 10",
@@ -3236,7 +3236,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
             "enable_for_target_dq_validation": True,
             "is_active": True,
             "enable_error_drop_alert": True,
-            "error_drop_threshold": "25",
+            "error_drop_threshold": "20",
         },
         {
             "product_id": "product1",
@@ -3281,6 +3281,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
         user_config.se_notifications_on_rules_action_if_failed_set_ignore: True,
         user_config.se_enable_query_dq_detailed_result: True,
         user_config.se_enable_agg_dq_detailed_result: True,
+        user_config.se_notifications_on_error_drop_threshold: 15,
     }
 
     with patch(
@@ -3312,6 +3313,14 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
         expected_call = (
             SparkExpectationsNotify(se._context),
             [
+                {
+                 'rule_type': 'row_dq',
+                 'rule': 'col1_add_col3_threshold',
+                 'description': 'value must be greater than 10',
+                 'tag': 'strict',
+                 'action_if_failed': 'ignore',
+                 'failed_row_count': 1
+                },
                 {
                     "rule": "value_positive_threshold",
                     "description": "count of value positive value must be greater than 10",
