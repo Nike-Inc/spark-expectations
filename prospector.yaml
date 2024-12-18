@@ -25,12 +25,15 @@ pylint:
     - invalid-name
     - no-else-return
     - no-self-use
+    - possibly-used-before-assignment
     - protected-access
     - too-many-arguments
     - too-many-locals
+    - too-many-positional-arguments
     - inconsistent-return-statements
     - import-outside-toplevel
     - consider-using-set-comprehension
+    - used-before-assignment
     - useless-object-inheritance
     - unnecessary-pass
     - raise-missing-from
@@ -46,3 +49,7 @@ pycodestyle:
 mccabe:
   disable:
     - MC0001
+
+pyflakes:
+  disable:
+    - F999

@@ -35,6 +35,7 @@ class SparkExpectationsReader:
         try:
             _default_spark_conf: Dict[str, Union[str, int, bool]] = {
                 user_config.se_notifications_enable_email: False,
+                user_config.se_notifications_enable_custom_email_body: False,
                 user_config.se_notifications_email_smtp_host: "",
                 user_config.se_notifications_email_smtp_port: 25,
                 user_config.se_notifications_email_from: "",
@@ -104,7 +105,22 @@ class SparkExpectationsReader:
                     raise SparkExpectationsMiscException(
                         "All params/variables required for email notification is not configured or supplied"
                     )
-
+                if (
+                    _notification_dict[
+                        user_config.se_notifications_enable_custom_email_body
+                    ]
+                    and _notification_dict[
+                        user_config.se_notifications_email_custom_body
+                    ]
+                ):
+                    self._context.set_enable_custom_email_body(True)
+                    self._context.set_email_custom_body(
+                        str(
+                            _notification_dict[
+                                user_config.se_notifications_email_custom_body
+                            ]
+                        )
+                    )
             if _notification_dict[user_config.se_notifications_enable_slack] is True:
                 if _notification_dict[user_config.se_notifications_slack_webhook_url]:
                     self._context.set_enable_slack(True)

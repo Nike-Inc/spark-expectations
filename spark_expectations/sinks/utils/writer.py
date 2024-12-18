@@ -605,18 +605,18 @@ class SparkExpectationsWriter:
             input_count: int = self._context.get_input_count
             error_count: int = self._context.get_error_count
             output_count: int = self._context.get_output_count
-            source_agg_dq_result: Optional[List[Dict[str, str]]] = (
-                self._context.get_source_agg_dq_result
-            )
-            final_agg_dq_result: Optional[List[Dict[str, str]]] = (
-                self._context.get_final_agg_dq_result
-            )
-            source_query_dq_result: Optional[List[Dict[str, str]]] = (
-                self._context.get_source_query_dq_result
-            )
-            final_query_dq_result: Optional[List[Dict[str, str]]] = (
-                self._context.get_final_query_dq_result
-            )
+            source_agg_dq_result: Optional[
+                List[Dict[str, str]]
+            ] = self._context.get_source_agg_dq_result
+            final_agg_dq_result: Optional[
+                List[Dict[str, str]]
+            ] = self._context.get_final_agg_dq_result
+            source_query_dq_result: Optional[
+                List[Dict[str, str]]
+            ] = self._context.get_source_query_dq_result
+            final_query_dq_result: Optional[
+                List[Dict[str, str]]
+            ] = self._context.get_final_query_dq_result
 
             error_stats_data = [
                 (
@@ -760,6 +760,8 @@ class SparkExpectationsWriter:
                 .withColumn("success_percentage", sql_round(df.success_percentage, 2))
                 .withColumn("error_percentage", sql_round(df.error_percentage, 2))
             )
+
+            self._context.set_stats_dict(df)
             _log.info(
                 "Writing metrics to the stats table: %s, started",
                 self._context.get_dq_stats_table_name,

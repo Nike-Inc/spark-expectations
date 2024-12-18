@@ -32,12 +32,18 @@ se: SparkExpectations = SparkExpectations(
 )
 
 user_conf = {
-    user_config.se_notifications_enable_email: False,
+    user_config.se_notifications_enable_email: True,
+    user_config.se_notifications_enable_custom_email_body: True,
     user_config.se_notifications_email_smtp_host: "mailhost.com",
     user_config.se_notifications_email_smtp_port: 25,
     user_config.se_notifications_email_from: "",
     user_config.se_notifications_email_to_other_mail_id: "",
     user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",
+    user_config.se_notifications_email_custom_body: """Spark Expectations Statistics for this dq run:
+    'product_id': {},
+    'table_name': {},
+    'source_agg_dq_results': {}',
+    'dq_status': {}""",
     user_config.se_notifications_enable_slack: False,
     user_config.se_notifications_slack_webhook_url: "",
     user_config.se_notifications_on_start: True,
