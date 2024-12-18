@@ -46,7 +46,6 @@ class SparkExpectationsRegulateFlow:
 
         """
 
-        # pylint: disable=too-many-positional-arguments
         def func_process(
             df: DataFrame,
             _rule_type: str,

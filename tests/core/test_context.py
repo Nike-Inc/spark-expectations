@@ -542,6 +542,16 @@ def test_set_email_custom_body():
     assert context._email_custom_body == "test email custom body"
     assert context.get_email_custom_body == "test email custom body"
 
+def test_get_email_custom_body_exception():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._email_custom_body = None
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign '_email_custom_body' before 
+            accessing it"""
+    ):
+        context.get_email_custom_body
+
 def test_set_enable_slack():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_enable_slack(True)

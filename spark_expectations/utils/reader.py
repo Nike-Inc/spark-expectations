@@ -282,7 +282,6 @@ class SparkExpectationsReader:
 
         return _dq_queries_dict, column_map
 
-    # pylint: disable=too-many-positional-arguments
     def get_rules_from_df(
         self,
         rules_df: DataFrame,

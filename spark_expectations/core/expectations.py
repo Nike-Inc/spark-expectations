@@ -48,7 +48,7 @@ def check_if_pyspark_connect_is_supported() -> bool:
             importlib.import_module(f"{module_name}.sql.connect")
             from pyspark.sql.connect.column import Column
 
-            _col: Column  # noqa
+            _col: Column
             result = True
         except (ModuleNotFoundError, ImportError):
             result = False
@@ -159,7 +159,6 @@ class SparkExpectations:
 
     # TODO Add target_error_table_writer and stats_table_writer as parameters to this function so this takes precedence
     #  if user provides it
-    # pylint: disable=too-many-positional-arguments
     def with_expectations(
         self,
         target_table: str,

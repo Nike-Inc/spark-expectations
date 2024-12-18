@@ -418,8 +418,6 @@ class SparkExpectationsActions:
                 actual_outcome = None
                 expected_outcome = None
 
-            # pylint: disable=used-before-assignment
-            # pylint: disable=possibly-used-before-assignment
             return querydq_output, (
                 _context.get_run_id,
                 _dq_rule["product_id"],
@@ -512,7 +510,6 @@ class SparkExpectationsActions:
                     f"please configure rules or avoid this error by setting {rule_type} to False"
                 )
 
-            # pylint: disable=used-before-assignment
             for rule in expectations[f"{rule_type}_rules"]:
                 _rule_is_active = SparkExpectationsActions.get_rule_is_active(
                     _context,

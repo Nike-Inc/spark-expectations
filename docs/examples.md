@@ -33,23 +33,25 @@ se_user_conf = {
 ```
 
 1. The `user_config.se_notifications_enable_email` parameter, which controls whether notifications are sent via email, is set to false by default
-2. The `user_config.se_notifications_email_smtp_host` parameter is set to "mailhost.com" by default and is used to specify the email SMTP domain host
-3. The `user_config.se_notifications_email_smtp_port` parameter, which accepts a port number, is set to "25" by default
-4. The `user_config.se_notifications_email_from` parameter is used to specify the email ID that will trigger the email notification
-5. The `user_config.se_notifications_email_to_other_mail_id` parameter accepts a list of recipient email IDs
-6. The `user_config.se_notifications_email_subject` parameter captures the subject line of the email
-7. The `user_config.se_notifications_enable_slack` parameter, which controls whether notifications are sent via slack, is set to false by default
-8. The `user_config/se_notifications_slack_webhook_url` parameter accepts the webhook URL of a Slack channel for sending notifications
-9. When `user_config.se_notifications_on_start` parameter set to `True` enables notification on start of the spark-expectations, variable by default set to `False`
-10. When `user_config.se_notifications_on_completion` parameter set to `True` enables notification on completion of spark-expectations framework, variable by default set to `False`
-11. When `user_config.se_notifications_on_fail` parameter set to `True` enables notification on failure of spark-expectations data quality framework, variable by default set to `True`
-12. When `user_config.se_notifications_on_error_drop_exceeds_threshold_breach` parameter set to `True` enables notification when error threshold reaches above the configured value
-13. The `user_config.se_notifications_on_error_drop_threshold` parameter captures error drop threshold value
-14. The `user_config.se_enable_error_table` parameter, which controls whether error data to load into error table, is set to true by default
-15. When `user_config.enable_query_dq_detailed_result` parameter set to `True`, enables the option to cature the query_dq detailed stats to detailed_stats table. By default set to `False`
-16. When `user_config.enable_agg_dq_detailed_result` parameter set to `True`, enables the option to cature the agg_dq detailed stats to detailed_stats table. By default set to `False`
-17. The `user_config.querydq_output_custom_table_name` parameter is used to specify the name of the custom query_dq output table which captures the output of the alias queries passed in the query dq expectation. Default is <stats_table>_custom_output
-18. The `user_config.se_dq_rules_params` parameter, which are required to dynamically update dq rules
+2. The `user_config.se_notifications_enable_custom_email_body` parameter, which controls whether custom email body is enabled, is set to false by default
+3. The `user_config.se_notifications_email_smtp_host` parameter is set to "mailhost.com" by default and is used to specify the email SMTP domain host
+4. The `user_config.se_notifications_email_smtp_port` parameter, which accepts a port number, is set to "25" by default
+5. The `user_config.se_notifications_email_from` parameter is used to specify the email ID that will trigger the email notification
+6. The `user_config.se_notifications_email_to_other_mail_id` parameter accepts a list of recipient email IDs
+7. The `user_config.se_notifications_email_subject` parameter captures the subject line of the email
+8. The `user_config.se_notifications_email_custom_body` parameter captures the custom email body, need to be compliant with certain syntax
+9. The `user_config.se_notifications_enable_slack` parameter, which controls whether notifications are sent via slack, is set to false by default
+10. The `user_config/se_notifications_slack_webhook_url` parameter accepts the webhook URL of a Slack channel for sending notifications
+11. When `user_config.se_notifications_on_start` parameter set to `True` enables notification on start of the spark-expectations, variable by default set to `False`
+12. When `user_config.se_notifications_on_completion` parameter set to `True` enables notification on completion of spark-expectations framework, variable by default set to `False`
+13. When `user_config.se_notifications_on_fail` parameter set to `True` enables notification on failure of spark-expectations data quality framework, variable by default set to `True`
+14. When `user_config.se_notifications_on_error_drop_exceeds_threshold_breach` parameter set to `True` enables notification when error threshold reaches above the configured value
+15. The `user_config.se_notifications_on_error_drop_threshold` parameter captures error drop threshold value
+16. The `user_config.se_enable_error_table` parameter, which controls whether error data to load into error table, is set to true by default
+17. When `user_config.enable_query_dq_detailed_result` parameter set to `True`, enables the option to cature the query_dq detailed stats to detailed_stats table. By default set to `False`
+18. When `user_config.enable_agg_dq_detailed_result` parameter set to `True`, enables the option to cature the agg_dq detailed stats to detailed_stats table. By default set to `False`
+19. The `user_config.querydq_output_custom_table_name` parameter is used to specify the name of the custom query_dq output table which captures the output of the alias queries passed in the query dq expectation. Default is <stats_table>_custom_output
+20. The `user_config.se_dq_rules_params` parameter, which are required to dynamically update dq rules
 
 
 ### Spark Expectations Initialization 

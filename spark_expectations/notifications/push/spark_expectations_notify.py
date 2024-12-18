@@ -64,24 +64,23 @@ class SparkExpectationsNotify:
         Returns: formatted string
         """
 
-        _dict_list = self._context.get_stats_dict
         try:
-            if _dict_list and isinstance(_dict_list, list):
-                _custom_email_body = self._context.get_email_custom_body
-                keys = re.findall(r"'(\w+)': \{\}", _custom_email_body)
-                if not keys:
-                    raise SparkExpectationsMiscException(
-                        "No key words for statistics were provided."
-                    )
-                values = {key: _dict_list[0][key] for key in keys}
-                _notification_message = _custom_email_body.format(
-                    *[values[key] for key in keys]
-                )
-                return _notification_message
-            else:
+            _dict_list = self._context.get_stats_dict
+            if not (_dict_list and isinstance(_dict_list, list)):
                 raise SparkExpectationsMiscException(
                     "Stats dictionary list is not available or not a list."
                 )
+            _custom_email_body = self._context.get_email_custom_body
+            keys = re.findall(r"'(\w+)': \{\}", _custom_email_body)
+            if not keys:
+                raise SparkExpectationsMiscException(
+                    "No key words for statistics were provided."
+                )
+            values = {key: _dict_list[0][key] for key in keys}
+            _notification_message = _custom_email_body.format(
+                *[values[key] for key in keys]
+            )
+            return _notification_message
         except Exception as e:
             raise SparkExpectationsMiscException(
                 f"An error occurred while getting dictionary list with stats from dq run: {e}"
@@ -205,7 +204,6 @@ class SparkExpectationsNotify:
             },
         )
 
-    # pylint: disable=too-many-positional-arguments
     def construct_message_for_each_rules(
         self,
         rule_name: str,
