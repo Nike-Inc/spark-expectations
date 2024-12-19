@@ -1,7 +1,7 @@
 import functools
 import importlib
 from dataclasses import dataclass
-from typing import Dict, Optional, Any, Union
+from typing import Dict, Optional, Any, Union, List
 
 from pyspark.version import __version__ as spark_version
 from pyspark import StorageLevel
@@ -196,6 +196,7 @@ class SparkExpectations:
                 user_config.se_notifications_on_completion: False,
                 user_config.se_notifications_on_fail: True,
                 user_config.se_notifications_on_error_drop_exceeds_threshold_breach: False,
+                user_config.se_notifications_on_rules_action_if_failed_set_ignore: False,
                 user_config.se_notifications_on_error_drop_threshold: 100,
                 user_config.se_enable_agg_dq_detailed_result: False,
                 user_config.se_enable_query_dq_detailed_result: False,
@@ -342,6 +343,20 @@ class SparkExpectations:
                 )
                 else False
             )
+            _notifications_on_rules_action_if_failed_set_ignore: bool = (
+                bool(
+                    _notification_dict[
+                        user_config.se_notifications_on_rules_action_if_failed_set_ignore
+                    ]
+                )
+                if isinstance(
+                    _notification_dict[
+                        user_config.se_notifications_on_rules_action_if_failed_set_ignore
+                    ],
+                    bool,
+                )
+                else False
+            )
 
             _job_metadata: str = user_config.se_job_metadata
 
@@ -384,6 +399,7 @@ class SparkExpectations:
                     _row_dq_df: DataFrame = _df
                     _final_dq_df: Optional[DataFrame] = None
                     _final_query_dq_df: Optional[DataFrame] = None
+                    _ignore_rules_result: List[Optional[List[Dict[str, str]]]] = []
 
                     # initialize variable with default values through set
                     self._context.set_dq_run_status()
@@ -545,6 +561,17 @@ class SparkExpectations:
                                 >= _error_drop_threshold
                             ):
                                 self._notification.notify_on_exceeds_of_error_threshold()
+
+                            if (
+                                _notifications_on_rules_action_if_failed_set_ignore
+                                is True
+                                and (self._context.get_error_percentage)
+                                >= _error_drop_threshold
+                            ):
+                                failed_ignored_row_dq_res= [
+                                    rule for rule in self._context.get_summarized_row_dq_res
+                                    if rule['action_if_failed'] == 'ignore' and rule['failed_row_count'] > 0
+                                ]
                                 # raise SparkExpectationsErrorThresholdExceedsException(
                                 #     "An error has taken place because"
                                 #     " the set limit for acceptable"
@@ -618,6 +645,33 @@ class SparkExpectations:
 
                             _log.info(
                                 "ended processing data quality rules for query level expectations on final dataframe"
+                            )
+
+                        if _notifications_on_rules_action_if_failed_set_ignore and (
+                            failed_ignored_row_dq_res
+                            or self._context.get_final_query_dq_result
+                            or self._context.get_final_agg_dq_result
+                            or self._context.get_source_query_dq_result
+                            or self._context.get_source_agg_dq_result
+                        ):
+                            _ignore_rules_result.extend(
+                                [
+                                    failed_ignored_row_dq_res,
+                                    self._context.get_final_query_dq_result,
+                                    self._context.get_final_agg_dq_result,
+                                    self._context.get_source_query_dq_result,
+                                    self._context.get_source_agg_dq_result,
+                                ]
+                            )
+
+                        if _ignore_rules_result:
+                            flattened_ignore_rules_result: List[Dict[str, str]] = [
+                                item
+                                for sublist in filter(None, _ignore_rules_result)
+                                for item in sublist
+                            ]
+                            self._notification.notify_on_ignore_rules(
+                                flattened_ignore_rules_result
                             )
 
                         # TODO if row_dq is False and source_agg/source_query is True then we need to write the

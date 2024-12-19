@@ -138,6 +138,29 @@ class SparkExpectationsNotify:
             _context=self._context, _config_args={"message": _notification_message}
         )
 
+    def notify_on_ignore_rules(
+        self, ignored_rules_run_results: List[Dict[str, Any]]
+    ) -> None:
+        """
+        This function sends notification on rules which action_if_failed are set to ignore,
+        and the results of the rules are failed
+        Returns: None
+        """
+
+        _notification_message = (
+            "Spark expectations notification on rules which action_if_failed are set to ignore \n\n"
+            f"product_id: {self._context.product_id}\n"
+            f"table_name: {self._context.get_table_name}\n"
+            f"run_id: {self._context.get_run_id}\n"
+            f"run_date: {self._context.get_run_date}\n"
+            f"input_count: {self._context.get_input_count}\n"
+            f"ignored_rules_run_results: {ignored_rules_run_results}"
+        )
+
+        _notification_hook.send_notification(
+            _context=self._context, _config_args={"message": _notification_message}
+        )
+
     def notify_on_completion(self) -> None:
         """
         This function sends notification on completion of spark expectations project

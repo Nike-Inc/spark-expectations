@@ -21,15 +21,16 @@ se_user_conf = {
     user_config.se_notifications_on_completion: True,  # (12)!
     user_config.se_notifications_on_fail: True,  # (13)!
     user_config.se_notifications_on_error_drop_exceeds_threshold_breach: True,  # (14)!
-    user_config.se_notifications_on_error_drop_threshold: 15,  # (15)!
-    user_config.se_enable_error_table: True,  # (16)!
-    user_config.enable_query_dq_detailed_result: True, # (17)!
-    user_config.enable_agg_dq_detailed_result: True, # (18)!
-    user_config.querydq_output_custom_table_name: "<catalog.schema.table-name>", #19
+    user_config.se_notifications_on_rules_action_if_failed_set_ignore: True,  # (15)!
+    user_config.se_notifications_on_error_drop_threshold: 15,  # (16)!
+    user_config.se_enable_error_table: True,  # (17)!
+    user_config.enable_query_dq_detailed_result: True, # (18)!
+    user_config.enable_agg_dq_detailed_result: True, # (19)!
+    user_config.querydq_output_custom_table_name: "<catalog.schema.table-name>", #20
     user_config.se_dq_rules_params: {
         "env": "local",
         "table": "product",
-     }, # (20)!
+     }, # (21)!
 }
 }
 ```
@@ -48,12 +49,13 @@ se_user_conf = {
 12. When `user_config.se_notifications_on_completion` parameter set to `True` enables notification on completion of spark-expectations framework, variable by default set to `False`
 13. When `user_config.se_notifications_on_fail` parameter set to `True` enables notification on failure of spark-expectations data quality framework, variable by default set to `True`
 14. When `user_config.se_notifications_on_error_drop_exceeds_threshold_breach` parameter set to `True` enables notification when error threshold reaches above the configured value
-15. The `user_config.se_notifications_on_error_drop_threshold` parameter captures error drop threshold value
-16. The `user_config.se_enable_error_table` parameter, which controls whether error data to load into error table, is set to true by default
-17. When `user_config.enable_query_dq_detailed_result` parameter set to `True`, enables the option to cature the query_dq detailed stats to detailed_stats table. By default set to `False`
-18. When `user_config.enable_agg_dq_detailed_result` parameter set to `True`, enables the option to cature the agg_dq detailed stats to detailed_stats table. By default set to `False`
-19. The `user_config.querydq_output_custom_table_name` parameter is used to specify the name of the custom query_dq output table which captures the output of the alias queries passed in the query dq expectation. Default is <stats_table>_custom_output
-20. The `user_config.se_dq_rules_params` parameter, which are required to dynamically update dq rules
+15. When `user_config.se_notifications_on_rules_action_if_failed_set_ignore` parameter set to `True` enables notification when rules action is set to ignore if failed
+16. The `user_config.se_notifications_on_error_drop_threshold` parameter captures error drop threshold value
+17. The `user_config.se_enable_error_table` parameter, which controls whether error data to load into error table, is set to true by default
+18. When `user_config.enable_query_dq_detailed_result` parameter set to `True`, enables the option to cature the query_dq detailed stats to detailed_stats table. By default set to `False`
+19. When `user_config.enable_agg_dq_detailed_result` parameter set to `True`, enables the option to cature the agg_dq detailed stats to detailed_stats table. By default set to `False`
+20. The `user_config.querydq_output_custom_table_name` parameter is used to specify the name of the custom query_dq output table which captures the output of the alias queries passed in the query dq expectation. Default is <stats_table>_custom_output
+21. The `user_config.se_dq_rules_params` parameter, which are required to dynamically update dq rules
 
 
 ### Spark Expectations Initialization 

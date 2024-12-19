@@ -81,6 +81,55 @@ def fixture_notify_error_threshold_expected_result():
     )
 
 
+
+@pytest.fixture(name="_fixture_notify_on_ignore_rules_expected_result")
+def fixture_notify_on_ignore_rules_expected_result(_fixture_mock_context):
+    return (
+        "Spark expectations notification on rules which action_if_failed are set to ignore \n\n"
+        "product_id: product_id1\n"
+        "table_name: test_table\n"
+        "run_id: test_run_id\n"
+        "run_date: test_run_date\n"
+        "input_count: 1000\n"
+        "ignored_rules_run_results: "
+        + str(
+            (
+                SparkExpectationsNotify(_fixture_mock_context),
+                [
+                    {
+                        "rule": "value_positive_threshold",
+                        "description": "count of value positive value must be greater than 10",
+                        "rule_type": "query_dq",
+                        "tag": "strict",
+                        "action_if_failed": "ignore"
+                    },
+                    {
+                        "rule": "sum_of_value_should_be_less_than_60",
+                        "description": "desc_sum_of_value_should_be_less_than_60",
+                        "rule_type": "agg_dq",
+                        "tag": "strict",
+                        "action_if_failed": "ignore"
+                    },
+                    {
+                        "rule": "value_positive_threshold",
+                        "description": "count of value positive value must be greater than 10",
+                        "rule_type": "query_dq",
+                        "tag": "strict",
+                        "action_if_failed": "ignore"
+                    },
+                    {
+                        "rule": "sum_of_value_should_be_less_than_60",
+                        "description": "desc_sum_of_value_should_be_less_than_60",
+                        "rule_type": "agg_dq",
+                        "tag": "strict",
+                        "action_if_failed": "ignore"
+                    }
+                ]
+            )
+        )
+    )
+
+
 @pytest.fixture(name="_fixture_notify_fail_expected_result")
 def fixture_notify_fail_expected_result():
     return (
@@ -190,6 +239,63 @@ def test_notify_on_exceeds_of_error_threshold(
     _mock_notification_hook.send_notification.assert_called_once_with(
         _context=_fixture_mock_context,
         _config_args={"message": _fixture_notify_error_threshold_expected_result},
+    )
+
+
+@patch(
+    "spark_expectations.notifications.push.spark_expectations_notify._notification_hook",
+    autospec=True,
+    spec_set=True,
+)
+def test_notify_on_ignore_rules(
+    _mock_notification_hook,
+    _fixture_mock_context,
+    _fixture_notify_on_ignore_rules_expected_result,
+):
+
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
+
+    ignored_rules_run_results = (
+        SparkExpectationsNotify(_fixture_mock_context),
+        [
+            {
+                "rule": "value_positive_threshold",
+                "description": "count of value positive value must be greater than 10",
+                "rule_type": "query_dq",
+                "tag": "strict",
+                "action_if_failed": "ignore"
+            },
+            {
+                "rule": "sum_of_value_should_be_less_than_60",
+                "description": "desc_sum_of_value_should_be_less_than_60",
+                "rule_type": "agg_dq",
+                "tag": "strict",
+                "action_if_failed": "ignore"
+            },
+            {
+                "rule": "value_positive_threshold",
+                "description": "count of value positive value must be greater than 10",
+                "rule_type": "query_dq",
+                "tag": "strict",
+                "action_if_failed": "ignore"
+            },
+            {
+                "rule": "sum_of_value_should_be_less_than_60",
+                "description": "desc_sum_of_value_should_be_less_than_60",
+                "rule_type": "agg_dq",
+                "tag": "strict",
+                "action_if_failed": "ignore"
+            }
+        ]
+    )
+
+    # Call the function to be tested
+    notify_handler.notify_on_ignore_rules(ignored_rules_run_results)
+
+    # assert for expected result
+    _mock_notification_hook.send_notification.assert_called_once_with(
+        _context=_fixture_mock_context,
+        _config_args={"message": _fixture_notify_on_ignore_rules_expected_result},
     )
 
 
