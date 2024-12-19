@@ -5,6 +5,9 @@ from dataclasses import dataclass
 class Constants:
     # declare const user config variables for email notification
     se_notifications_enable_email = "spark.expectations.notifications.email.enabled"
+    se_notifications_enable_smtp_server_auth = (
+        "spark.expectations.notifications.email.smtp_server_auth"
+    )
     se_notifications_enable_custom_email_body = (
         "spark.expectations.notifications.enable.custom.email.body"
     )
@@ -65,6 +68,7 @@ class Constants:
     cbs_secret_app_name = "se.streaming.cbs.secret.app.name"
     cbs_secret_token = "se.streaming.cerberus.secret.token"
     cbs_topic_name = "se.streaming.cerberus.token.name"
+    cbs_smtp_password = "se.streaming.cerberus.smtp.password"
 
     dbx_workspace_url = "se.streaming.dbx.workspace.url"
     dbx_secret_scope = "se.streaming.dbx.secret.scope"
@@ -73,6 +77,7 @@ class Constants:
     dbx_secret_app_name = "se.streaming.dbx.secret.app.name"
     dbx_secret_token = "se.streaming.dbx.secret.token"
     dbx_topic_name = "se.streaming.dbx.topic.name"
+    dbx_smtp_password = "se.streaming.dbx.smtp.password"
 
     # declare const user config variables for agg query dq detailed stats
     se_enable_agg_dq_detailed_result = "spark.expectations.agg.dq.detailed.stats"

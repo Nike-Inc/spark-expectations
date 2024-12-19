@@ -9,6 +9,7 @@ from spark_expectations.notifications.plugins.base_notification import (
 )
 from spark_expectations.core.exceptions import SparkExpectationsEmailException
 from spark_expectations.core.context import SparkExpectationsContext
+from spark_expectations.secrets import SparkExpectationsSecretsBackend
 
 
 # Create the email plugin
@@ -16,6 +17,51 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
     """
     This class implements/supports functionality to send email
     """
+
+    def _get_smtp_password(
+        self, _context: SparkExpectationsContext, server: smtplib.SMTP
+    ) -> None:
+        """
+        Retrieves the SMTP password from secret and logs in to the server.
+        Args:
+            _context: SparkExpectationsContext object
+            server: smtplib.SMTP object
+        """
+        sender = _context.get_mail_from
+        secret_handler = SparkExpectationsSecretsBackend(
+            secret_dict=_context.get_se_streaming_stats_dict
+        )
+        secret_type = _context.get_secret_type
+        try:
+            if secret_type == "cerberus":
+                cbs_sdb_path = _context.get_cbs_sdb_path
+                smtp_password_key = _context.get_smtp_password_key
+                if cbs_sdb_path and smtp_password_key:
+                    secret = secret_handler.get_secret(cbs_sdb_path)
+                    if isinstance(secret, dict):
+                        password = secret.get(smtp_password_key)
+                    else:
+                        password = None
+            elif secret_type == "databricks":
+                smtp_password_key = _context.get_smtp_password_key
+                if smtp_password_key:
+                    password = secret_handler.get_secret(smtp_password_key)
+                else:
+                    password = None
+            else:
+                password = None
+        except KeyError:
+            raise SparkExpectationsEmailException(
+                "SMTP password key is missing in the secret."
+            )
+        except Exception as e:
+            raise SparkExpectationsEmailException(
+                "Failed to retrieve SMTP password."
+            ) from e
+
+        if password is None:
+            raise SparkExpectationsEmailException("SMTP password is not set.")
+        server.login(sender, password)
 
     @spark_expectations_notification_impl
     def send_notification(
@@ -27,7 +73,7 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
         function to send email notification for requested mail id's
         Args:
             _context: object of SparkExpectationsContext
-            _config_args: dict(which consist to: receiver mail(str), subject: subject of
+            _config_args: dict(which consist of: receiver mail(str), subject: subject of
                           the mail(str) and body: body of the mail(str)
         Returns:
 
@@ -48,6 +94,8 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
                     _context.get_mail_smtp_server, _context.get_mail_smtp_port
                 )
                 server.starttls()
+                if _context.get_enable_smtp_server_auth is True:
+                    self._get_smtp_password(_context, server)
                 text = msg.as_string()
                 server.sendmail(
                     _context.get_mail_from,
