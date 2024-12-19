@@ -52,6 +52,7 @@ def test_context_properties():
     context._mail_smtp_server = "abc"
     context._mail_smtp_port = 25
     context._enable_mail = True
+    context._enable_smtp_server_auth = True
     context._enable_custom_email_body = True
     context._to_mail = "abc@mail.com, decf@mail.com"
     context._mail_from = "abc@mail.com"
@@ -177,6 +178,7 @@ def test_context_properties():
     assert context._mail_smtp_server == "abc"
     assert context.get_mail_smtp_port == 25
     assert context._enable_mail is True
+    assert context._enable_smtp_server_auth is True
     assert context._enable_custom_email_body is True
     assert context._to_mail == "abc@mail.com, decf@mail.com"
     assert context._mail_from == "abc@mail.com"
@@ -493,6 +495,13 @@ def test_set_enable_mail():
     assert context.get_enable_mail is True
 
 
+def test_set_enable_smtp_server_auth():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_enable_smtp_server_auth(True)
+    assert context._enable_smtp_server_auth is True
+    assert context.get_enable_smtp_server_auth is True
+
+
 def test_set_enable_custom_email_body():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_enable_custom_email_body(True)
@@ -752,6 +761,65 @@ def test_get_mail_from_exception():
     ):
         context.get_mail_from
 
+
+def test_get_smtp_password_key():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_se_streaming_stats_dict(
+        {user_config.cbs_smtp_password: "cerberus_password",
+         user_config.dbx_smtp_password: "dbx_password",
+         user_config.secret_type: "cerberus"}
+    )
+
+    assert context.get_smtp_password_key == "cerberus_password"
+
+    context.set_se_streaming_stats_dict(
+        {
+            user_config.cbs_smtp_password: "cerberus_password",
+            user_config.dbx_smtp_password: "dbx_password",
+            user_config.secret_type: "databricks",
+        }
+    )
+    assert context.get_smtp_password_key == "dbx_password"
+
+
+def test_get_smtp_password_key_exception():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_se_streaming_stats_dict(
+        {
+            user_config.cbs_smtp_password: "cerberus_password",
+            user_config.secret_type: "databricks"
+        }
+    )
+
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match=("""The spark expectations context is not set completely, please assign 
+            'UserConfig.cbs_smtp_password' before 
+            accessing it""")
+    ):
+        _ = context.get_smtp_password_key
+
+
+def test_get_cbs_sdb_path():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_se_streaming_stats_dict(
+        {user_config.cbs_sdb_path: "app/your_project/your_env"}
+    )
+    assert context.get_cbs_sdb_path == "app/your_project/your_env"
+
+
+def test_get_cbs_sdb_path_exception():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_se_streaming_stats_dict({})
+
+    with pytest.raises(
+        SparkExpectationsMiscException,
+        match=(
+            r"The spark expectations context is not set completely, please assign\s+"
+            r"'UserConfig.cbs_sdb_path'\s+before\s+accessing it"
+        )
+    ):
+        _ = context.get_cbs_sdb_path
 
 def test_get_slack_webhook_url_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)

@@ -48,8 +48,6 @@ user_conf = {
     user_config.se_enable_query_dq_detailed_result: True,
     user_config.se_enable_agg_dq_detailed_result: True,
     user_config.se_enable_error_table: True,
-    user_config.enable_query_dq_detailed_result: True,
-    user_config.enable_agg_dq_detailed_result: True,
     user_config.se_dq_rules_params: {
         "env": "local",
         "table": "product",

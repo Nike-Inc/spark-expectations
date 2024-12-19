@@ -47,6 +47,7 @@ class SparkExpectationsContext:
         self._dq_config_abs_path: Optional[str] = None
 
         self._enable_mail: bool = False
+        self._enable_smtp_server_auth: bool = False
         self._enable_custom_email_body: bool = False
         self._to_mail: Optional[str] = None
         self._mail_subject: Optional[str] = None
@@ -496,21 +497,21 @@ class SparkExpectationsContext:
         """
         return self._enable_mail
 
-    def set_to_mail(self, to_mail: str) -> None:
-        self._to_mail = to_mail
-
-    def set_enable_custom_email_body(self, enable_custom_email_body: bool) -> None:
-        self._enable_custom_email_body = bool(enable_custom_email_body)
+    def set_enable_smtp_server_auth(self, enable_smtp_server_auth: bool) -> None:
+        self._enable_smtp_server_auth = bool(enable_smtp_server_auth)
 
     @property
-    def get_enable_custom_email_body(self) -> bool:
+    def get_enable_smtp_server_auth(self) -> bool:
         """
-        This function return whether to enable custom email body or not
+        This function return whether smtp server requires authentication or not
         Returns:
-            str: Returns  _enable_custom_email_body(bool)
+            str: Returns  _enable_smtp_server_auth(bool)
 
         """
-        return self._enable_custom_email_body
+        return self._enable_smtp_server_auth
+
+    def set_to_mail(self, to_mail: str) -> None:
+        self._to_mail = to_mail
 
     @property
     def get_to_mail(self) -> str:
@@ -527,6 +528,19 @@ class SparkExpectationsContext:
             """The spark expectations context is not set completely, please assign '_to_mail' before 
             accessing it"""
         )
+
+    def set_enable_custom_email_body(self, enable_custom_email_body: bool) -> None:
+        self._enable_custom_email_body = bool(enable_custom_email_body)
+
+    @property
+    def get_enable_custom_email_body(self) -> bool:
+        """
+        This function return whether to enable custom email body or not
+        Returns:
+            str: Returns  _enable_custom_email_body(bool)
+
+        """
+        return self._enable_custom_email_body
 
     def set_mail_from(self, mail_from: str) -> None:
         self._mail_from = mail_from
@@ -1147,6 +1161,44 @@ class SparkExpectationsContext:
         raise SparkExpectationsMiscException(
             """The spark expectations context is not set completely, please assign 
             'UserConfig.cbs_topic_name' before 
+            accessing it"""
+        )
+
+    @property
+    def get_smtp_password_key(self) -> Optional[str]:
+        """
+        This function helps in getting key / path for smtp password
+        Returns:
+            smtp password key / path in Optional[str]
+        """
+        _smtp_password_key: Optional[str] = (
+            self._se_streaming_stats_dict.get(user_config.cbs_smtp_password)
+            if self.get_secret_type == "cerberus"
+            else self._se_streaming_stats_dict.get(user_config.dbx_smtp_password)
+        )
+        if _smtp_password_key:
+            return _smtp_password_key
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign 
+            'UserConfig.cbs_smtp_password' before 
+            accessing it"""
+        )
+
+    @property
+    def get_cbs_sdb_path(self) -> Optional[str]:
+        """
+        This function helps in cerberus sdb path
+        Returns:
+            cerberus sdb path in Optional[str]
+        """
+        _cbs_sdb_path: Optional[str] = self._se_streaming_stats_dict.get(
+            user_config.cbs_sdb_path
+        )
+        if _cbs_sdb_path:
+            return _cbs_sdb_path
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign 
+            'UserConfig.cbs_sdb_path' before 
             accessing it"""
         )
 
