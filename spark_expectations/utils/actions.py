@@ -129,6 +129,7 @@ class SparkExpectationsActions:
                 str,
                 Any,
                 str,
+                str,
                 dict,
                 str,
             ]
@@ -328,20 +329,24 @@ class SparkExpectationsActions:
                     )
                 ):
                     for _key, _querydq_query in sub_key_value.items():
-                        _querydq_df = _context.spark.sql(_dq_rule["expectation" + "_" + _key])
                         querydq_output.append(
                             (
                                 _context.get_run_id,
                                 _dq_rule["product_id"],
                                 _dq_rule["table_name"],
                                 _dq_rule["rule"],
+                                _dq_rule["column_name"],
                                 _key,
                                 _query_prefix,
                                 dict(
                                     [
                                         (
                                             _key,
-                                            [row.asDict() for row in _querydq_df.collect()],
+                                            _context.spark.sql(
+                                                _dq_rule["expectation" + "_" + _key]
+                                            )
+                                            .toJSON()
+                                            .collect(),
                                         )
                                     ]
                                 ),
@@ -421,6 +426,7 @@ class SparkExpectationsActions:
                 _dq_rule["table_name"],
                 _dq_rule["rule_type"],
                 _dq_rule["rule"],
+                _dq_rule["column_name"],
                 _dq_rule["expectation"],
                 _dq_rule["tag"],
                 _dq_rule["description"],
