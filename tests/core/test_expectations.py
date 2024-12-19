@@ -3331,15 +3331,15 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
             [
                 {
                  'rule_type': 'row_dq',
-                 'rule': 'col1_add_col3_threshold',
+                 'rule': 'value_must_be_greater_than_10',
                  'description': 'value must be greater than 10',
                  'tag': 'strict',
                  'action_if_failed': 'ignore',
                  'failed_row_count': 1
                 },
                 {
-                    "rule": "value_positive_threshold",
-                    "description": "count of value positive value must be greater than 10",
+                    "rule": "count_of_records_must_be_greater_than_10",
+                    "description": "count of records must be greater than 10",
                     "rule_type": "query_dq",
                     "tag": "strict",
                     "action_if_failed": "ignore"
@@ -3352,8 +3352,8 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
                     "action_if_failed": "ignore"
                 },
                 {
-                    "rule": "value_positive_threshold",
-                    "description": "count of value positive value must be greater than 10",
+                    "rule": "count_of_records_must_be_greater_than_10",
+                    "description": "count of records must be greater than 10",
                     "rule_type": "query_dq",
                     "tag": "strict",
                     "action_if_failed": "ignore"
