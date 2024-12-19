@@ -52,9 +52,11 @@ def test_context_properties():
     context._mail_smtp_server = "abc"
     context._mail_smtp_port = 25
     context._enable_mail = True
+    context._enable_custom_email_body = True
     context._to_mail = "abc@mail.com, decf@mail.com"
     context._mail_from = "abc@mail.com"
     context._mail_subject = "spark expectations"
+    context._email_custom_body = "test email body"
     context._enable_slack = True
     context._slack_webhook_url = "abcedfghi"
     context._enable_teams = True
@@ -147,6 +149,12 @@ def test_context_properties():
 
     context._se_streaming_stats_dict = {"a": "b", "c": "d"}
     context._se_streaming_stats_topic_name = "test_topic"
+    context._stats_dict = [
+        {
+            "product_id": "test_product_id",
+            "table_name": "table1",
+        }
+    ]
 
     assert context.get_run_id == "test_run_id"
     assert context.get_run_date == "test_run_date"
@@ -169,9 +177,11 @@ def test_context_properties():
     assert context._mail_smtp_server == "abc"
     assert context.get_mail_smtp_port == 25
     assert context._enable_mail is True
+    assert context._enable_custom_email_body is True
     assert context._to_mail == "abc@mail.com, decf@mail.com"
     assert context._mail_from == "abc@mail.com"
     assert context._mail_subject == "spark expectations"
+    assert context._email_custom_body == "test email body"
     assert context._enable_slack is True
     assert context._slack_webhook_url == "abcedfghi"
     assert context._enable_teams is True
@@ -263,6 +273,12 @@ def test_context_properties():
     assert context._kafka_row_dq_res_topic_name == "abc"
     assert context._se_streaming_stats_dict == {"a": "b", "c": "d"}
     assert context._se_streaming_stats_topic_name == "test_topic"
+    assert context._stats_dict == [
+        {
+            "product_id": "test_product_id",
+            "table_name": "table1",
+        }
+    ]
 
 
 def test_set_dq_stats_table_name():
@@ -477,6 +493,13 @@ def test_set_enable_mail():
     assert context.get_enable_mail is True
 
 
+def test_set_enable_custom_email_body():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_enable_custom_email_body(True)
+    assert context._enable_custom_email_body is True
+    assert context.get_enable_custom_email_body is True
+
+
 def test_set_smtp_server():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_mail_smtp_server("abc")
@@ -512,6 +535,22 @@ def test_set_mail_subject():
     assert context._mail_subject == "spark expectations"
     assert context.get_mail_subject == "spark expectations"
 
+
+def test_set_email_custom_body():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_email_custom_body("test email custom body")
+    assert context._email_custom_body == "test email custom body"
+    assert context.get_email_custom_body == "test email custom body"
+
+def test_get_email_custom_body_exception():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._email_custom_body = None
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="""The spark expectations context is not set completely, please assign '_email_custom_body' before 
+            accessing it"""
+    ):
+        context.get_email_custom_body
 
 def test_set_enable_slack():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
@@ -1428,6 +1467,29 @@ def get_set_se_streaming_stats_dict():
 
     assert context.get_se_streaming_stats_dict == context._se_streaming_stats_dict
 
+
+def test_set_stats_dict():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    data = [("test_product_id", "test_schema.table1", 5)]
+    columns = ["product_id", "table_name", "error_count"]
+    df = spark.createDataFrame(data, columns)
+    context.set_stats_dict(df)
+
+    assert context._stats_dict == [
+        {
+            "product_id": "test_product_id",
+            "table_name": "test_schema.table1",
+            "error_count": 5,
+        }
+    ]
+
+    assert context.get_stats_dict == [
+        {
+            "product_id": "test_product_id",
+            "table_name": "test_schema.table1",
+            "error_count": 5,
+        }
+    ]
 
 def test_get_secret_type():
     context = SparkExpectationsContext(product_id="product1", spark=spark)

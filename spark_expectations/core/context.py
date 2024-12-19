@@ -4,7 +4,7 @@ from datetime import timezone
 from datetime import datetime
 from dataclasses import dataclass
 from uuid import uuid1
-from typing import Dict, Optional, List, Tuple
+from typing import Dict, Optional, List, Tuple, Any
 from pyspark.sql import DataFrame, SparkSession
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
@@ -47,11 +47,13 @@ class SparkExpectationsContext:
         self._dq_config_abs_path: Optional[str] = None
 
         self._enable_mail: bool = False
+        self._enable_custom_email_body: bool = False
         self._to_mail: Optional[str] = None
         self._mail_subject: Optional[str] = None
         self._mail_from: Optional[str] = None
         self._mail_smtp_server: str
         self._mail_smtp_port: int
+        self._email_custom_body: Optional[str] = None
 
         self._enable_slack: bool = False
         self._slack_webhook_url: Optional[str] = None
@@ -153,6 +155,8 @@ class SparkExpectationsContext:
         self._target_query_dq_output: Optional[List[dict]] = None
 
         self._query_dq_output_custom_table_name: str
+
+        self._stats_dict: List[dict] = []
 
     @property
     def get_run_id(self) -> str:
@@ -495,6 +499,19 @@ class SparkExpectationsContext:
     def set_to_mail(self, to_mail: str) -> None:
         self._to_mail = to_mail
 
+    def set_enable_custom_email_body(self, enable_custom_email_body: bool) -> None:
+        self._enable_custom_email_body = bool(enable_custom_email_body)
+
+    @property
+    def get_enable_custom_email_body(self) -> bool:
+        """
+        This function return whether to enable custom email body or not
+        Returns:
+            str: Returns  _enable_custom_email_body(bool)
+
+        """
+        return self._enable_custom_email_body
+
     @property
     def get_to_mail(self) -> str:
         """
@@ -545,6 +562,24 @@ class SparkExpectationsContext:
 
         raise SparkExpectationsMiscException(
             """The spark expectations context is not set completely, please assign '_mail_subject' before 
+            accessing it"""
+        )
+
+    def set_email_custom_body(self, email_custom_body: str) -> None:
+        self._email_custom_body = email_custom_body
+
+    @property
+    def get_email_custom_body(self) -> str:
+        """
+        This function returns email custom body
+        Returns:
+            str: Returns _email_custom_body(str)
+
+        """
+        if self._email_custom_body:
+            return self._email_custom_body
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign '_email_custom_body' before 
             accessing it"""
         )
 
@@ -2007,3 +2042,23 @@ class SparkExpectationsContext:
         if self._job_metadata is not None:
             return str(self._job_metadata)
         return None
+
+    def set_stats_dict(self, df: DataFrame) -> None:
+        """
+        This function is used to set the stats_dict
+
+        Returns:
+            dictionary of statistics
+
+        """
+        self._stats_dict = [row.asDict() for row in df.collect()]
+
+    @property
+    def get_stats_dict(self) -> Optional[List[Dict[str, Any]]]:
+        """
+        This function is used to get the stats_dict
+
+        Returns:
+            Optional[List[Dict[str, Any]]]: Returns the stats_dict if it exists, otherwise None
+        """
+        return self._stats_dict if hasattr(self, "_stats_dict") else None

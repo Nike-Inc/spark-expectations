@@ -89,6 +89,9 @@ se_user_conf = {
     #Below two params are optional and need to be enabled to capture the detailed stats in the <stats_table_name>_detailed.
     #user_config.enable_query_dq_detailed_result: True,
     #user_config.enable_agg_dq_detailed_result: True,
+    #Below two params are optional and need to be enabled to pass the custom email body
+    #user_config.se_notifications_enable_custom_email_body: True,
+    #user_config.se_notifications_email_custom_body: "Custom statistics: 'product_id': {}",
     
 }
 ```

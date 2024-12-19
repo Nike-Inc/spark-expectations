@@ -760,6 +760,8 @@ class SparkExpectationsWriter:
                 .withColumn("success_percentage", sql_round(df.success_percentage, 2))
                 .withColumn("error_percentage", sql_round(df.error_percentage, 2))
             )
+
+            self._context.set_stats_dict(df)
             _log.info(
                 "Writing metrics to the stats table: %s, started",
                 self._context.get_dq_stats_table_name,

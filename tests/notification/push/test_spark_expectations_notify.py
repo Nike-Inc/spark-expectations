@@ -28,6 +28,7 @@ def fixture_mock_context():
     _context_mock.get_dq_run_status = "fail"
     _context_mock.get_row_dq_rule_type_name = "row_dq"
     _context_mock.product_id = "product_id1"
+    _context_mock.get_enable_custom_email_body = False
 
     return _context_mock
 
@@ -611,3 +612,109 @@ def test_notify_rules_exceeds_threshold_exception(_fixture_mock_context):
         r"when the error threshold is breached: *",
     ):
         notify_handler.notify_rules_exceeds_threshold(rules)
+
+
+def test_get_custom_notification(_fixture_mock_context):
+    _fixture_mock_context.get_email_custom_body = '''Custom statistics for dq run:
+    'product_id': {},
+    'table_name': {}'''
+    _fixture_mock_context.get_stats_dict = [{"product_id": "product_id1", "table_name": "test_table", "input_count": 5}]
+
+    result = SparkExpectationsNotify(_fixture_mock_context).get_custom_notification()
+    expected_result = (
+    '''Custom statistics for dq run:
+    'product_id': product_id1,
+    'table_name': test_table'''
+    )
+    assert result == expected_result
+
+def test_get_custom_notification_no_dict_exception(_fixture_mock_context):
+    _fixture_mock_context.get_email_custom_body = '''Custom statistics for dq run:
+        'product_id': {},
+        'table_name': {}'''
+    _fixture_mock_context.get_stats_dict = None
+
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="Stats dictionary list is not available or not a list."
+    ):
+        SparkExpectationsNotify(_fixture_mock_context).get_custom_notification()
+
+def test_get_custom_notification_no_keys_exception(_fixture_mock_context):
+    _fixture_mock_context.get_email_custom_body = '''Custom statistics for dq run:
+        'product_id': ,
+        'table_name': '''
+    _fixture_mock_context.get_stats_dict = [{"product_id": "product_id1", "table_name": "test_table", "input_count": 5}]
+
+    with pytest.raises(
+            SparkExpectationsMiscException,
+            match="No key words for statistics were provided."
+    ):
+        SparkExpectationsNotify(_fixture_mock_context).get_custom_notification()
+
+import pytest
+from unittest.mock import Mock
+from spark_expectations.core.exceptions import SparkExpectationsMiscException
+from spark_expectations.notifications.push.spark_expectations_notify import SparkExpectationsNotify
+
+def test_get_custom_notification_exception(_fixture_mock_context):
+    _fixture_mock_context.get_stats_dict = "Not a list"
+    _fixture_mock_context.get_email_custom_body = Mock(return_value="")
+
+    # Create an instance of SparkExpectationsNotify with the mocked context
+    notify = SparkExpectationsNotify(_context=_fixture_mock_context)
+
+    # Assert that the exception is raised with the correct message
+    with pytest.raises(SparkExpectationsMiscException, match=r"An error occurred while getting dictionary list with stats from dq run: Stats dictionary list is not available or not a list."):
+        notify.get_custom_notification()
+
+
+@patch(
+    "spark_expectations.notifications.push.spark_expectations_notify._notification_hook",
+    autospec=True,
+    spec_set=True,
+)
+@patch.object(SparkExpectationsNotify, 'get_custom_notification', return_value="Custom notification message")
+def test_notify_on_completion_with_custom_email_body(
+    mock_get_custom_notification,
+    _mock_notification_hook,
+    _fixture_mock_context,
+):
+
+    _fixture_mock_context.get_enable_custom_email_body = True
+
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
+
+    # Call the function to be tested
+    notify_handler.notify_on_completion()
+
+    # assert for expected result
+    _mock_notification_hook.send_notification.assert_called_once_with(
+        _context=_fixture_mock_context,
+        _config_args={"message": "Custom notification message"},
+    )
+
+@patch(
+    "spark_expectations.notifications.push.spark_expectations_notify._notification_hook",
+    autospec=True,
+    spec_set=True,
+)
+@patch.object(SparkExpectationsNotify, 'get_custom_notification', return_value="Custom notification message")
+def test_notify_on_failure_with_custom_email_body(
+    mock_get_custom_notification,
+    _mock_notification_hook,
+    _fixture_mock_context,
+):
+
+    _fixture_mock_context.get_enable_custom_email_body = True
+
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
+
+    # Call the function to be tested
+    notify_handler.notify_on_failure("exception")
+
+    # assert for expected result
+    _mock_notification_hook.send_notification.assert_called_once_with(
+        _context=_fixture_mock_context,
+        _config_args={"message": "Custom notification message"},
+    )
