@@ -568,9 +568,10 @@ class SparkExpectations:
                                 and (self._context.get_error_percentage)
                                 >= _error_drop_threshold
                             ):
-                                _ignore_rules_result.extend(
-                                    [self._context.get_summarized_row_dq_res]
-                                )
+                                failed_ignored_row_dq_res= [
+                                    rule for rule in self._context.get_summarized_row_dq_res
+                                    if rule['action_if_failed'] == 'ignore' and rule['failed_row_count'] > 0
+                                ]
                                 # raise SparkExpectationsErrorThresholdExceedsException(
                                 #     "An error has taken place because"
                                 #     " the set limit for acceptable"
@@ -647,13 +648,15 @@ class SparkExpectations:
                             )
 
                         if _notifications_on_rules_action_if_failed_set_ignore and (
-                            self._context.get_final_query_dq_result
+                            failed_ignored_row_dq_res
+                            or self._context.get_final_query_dq_result
                             or self._context.get_final_agg_dq_result
                             or self._context.get_source_query_dq_result
                             or self._context.get_source_agg_dq_result
                         ):
                             _ignore_rules_result.extend(
                                 [
+                                    failed_ignored_row_dq_res,
                                     self._context.get_final_query_dq_result,
                                     self._context.get_final_agg_dq_result,
                                     self._context.get_source_query_dq_result,
