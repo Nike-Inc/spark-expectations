@@ -43,9 +43,20 @@ writer = (
     .option("writeMethod", "direct")
 )
 
-#if smtp server needs to be authenticated, password should be set in secure way like cerberus or databricks secret
-stats_streaming_config_dict = {
-    user_config.se_enable_streaming: False,
+se: SparkExpectations = SparkExpectations(
+    product_id="your_product",
+    rules_df=spark.read.format("bigquery").load(
+        "<project_id>.<dataset_id>.<rules_table>"
+    ),
+    stats_table="<project_id>.<dataset_id>.<stats_table>",
+    stats_table_writer=writer,
+    target_and_error_table_writer=writer,
+    debugger=False,
+    stats_streaming_options={user_config.se_enable_streaming: False},
+)
+
+#if smtp server needs to be authenticated, password can be passed directly with user config or set in a secure way like cerberus or databricks secret
+smtp_creds_dict = {
     user_config.secret_type: "cerberus",
     user_config.cbs_url: "htpps://cerberus.example.com",
     user_config.cbs_sdb_path: "",
@@ -56,19 +67,6 @@ stats_streaming_config_dict = {
     # user_config.dbx_smtp_password: "your_password",
 }
 
-se: SparkExpectations = SparkExpectations(
-    product_id="your_product",
-    rules_df=spark.read.format("bigquery").load(
-        "<project_id>.<dataset_id>.<rules_table>"
-    ),
-    stats_table="<project_id>.<dataset_id>.<stats_table>",
-    stats_table_writer=writer,
-    target_and_error_table_writer=writer,
-    debugger=False,
-    stats_streaming_options=stats_streaming_config_dict,
-)
-
-
 # Commented fields are optional or required when notifications are enabled
 user_conf = {
     user_config.se_notifications_enable_email: False,
@@ -76,6 +74,8 @@ user_conf = {
     # user_config.se_notifications_enable_custom_email_body: True,
     # user_config.se_notifications_email_smtp_host: "mailhost.com",
     # user_config.se_notifications_email_smtp_port: 25,
+    # user_config.se_notifications_smtp_password: "your_password",
+    # user_config.se_notifications_smtp_creds_dict: smtp_creds_dict,
     # user_config.se_notifications_email_from: "",
     # user_config.se_notifications_email_to_other_mail_id: "",
     # user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",

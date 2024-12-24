@@ -34,18 +34,6 @@ from spark_expectations.core.expectations import (
 )
 from spark_expectations.config.user_config import Constants as user_config
 
-# if smtp server needs to be authenticated, password should be set in secure way like cerberus or databricks secret
-stats_streaming_config_dict = {
-    user_config.se_enable_streaming: False,
-    user_config.secret_type: "cerberus",
-    user_config.cbs_url: "htpps://cerberus.example.com",
-    user_config.cbs_sdb_path: "",
-    user_config.cbs_smtp_password: "",
-    # user_config.secret_type: "databricks",
-    # user_config.dbx_workspace_url: "https://workspace.cloud.databricks.com",
-    # user_config.dbx_secret_scope: "your_secret_scope",
-    # user_config.dbx_smtp_password: "your_password",
-}
 
 writer = WrappedDataFrameWriter().mode("append").format("delta")
 
@@ -56,8 +44,20 @@ se: SparkExpectations = SparkExpectations(
     stats_table_writer=writer,
     target_and_error_table_writer=writer,
     debugger=False,
-    stats_streaming_options=stats_streaming_config_dict
+    stats_streaming_options={user_config.se_enable_streaming: False},
 )
+
+#if smtp server needs to be authenticated, password can be passed directly with user config or set in a secure way like cerberus or databricks secret
+smtp_creds_dict = {
+    user_config.secret_type: "cerberus",
+    user_config.cbs_url: "htpps://cerberus.example.com",
+    user_config.cbs_sdb_path: "",
+    user_config.cbs_smtp_password: "",
+    # user_config.secret_type: "databricks",
+    # user_config.dbx_workspace_url: "https://workspace.cloud.databricks.com",
+    # user_config.dbx_secret_scope: "your_secret_scope",
+    # user_config.dbx_smtp_password: "your_password",
+}
 
 # Commented fields are optional or required when notifications are enabled
 user_conf = {
@@ -66,6 +66,8 @@ user_conf = {
     # user_config.se_notifications_enable_custom_email_body: True,
     # user_config.se_notifications_email_smtp_host: "mailhost.com",
     # user_config.se_notifications_email_smtp_port: 25,
+    # user_config.se_notifications_smtp_password: "your_password",
+    # user_config.se_notifications_smtp_creds_dict: smtp_creds_dict,
     # user_config.se_notifications_email_from: "",
     # user_config.se_notifications_email_to_other_mail_id: "",
     # user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",

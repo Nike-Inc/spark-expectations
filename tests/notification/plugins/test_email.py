@@ -76,179 +76,7 @@ def test_send_notification_exception(_mock_context):
 
 
 @patch('spark_expectations.notifications.plugins.email.SparkExpectationsContext', autospec=True, spec_set=True)
-def test_get_smtp_password_cerberus(_mock_context):
-    email_handler = SparkExpectationsEmailPluginImpl()
-    _mock_context.get_secret_type = "cerberus"
-    _mock_context.get_mail_from = "test@example.com"
-    _mock_context.get_se_streaming_stats_dict = {
-        "secret_type": "cerberus"
-    }
-    _mock_context.get_cbs_sdb_path = "path/to/secret"
-    _mock_context.get_smtp_password_key = "password_key"
-    _mock_context.get_cerberus_url = "https://cerberus.example.com"
-
-    with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp, \
-            patch("spark_expectations.secrets.SparkExpectationsSecretsBackend.get_secret") as mock_get_secret:
-        mock_get_secret.return_value = {
-            "password_key": "test_password"
-        }
-        server = mock_smtp.return_value
-        email_handler._get_smtp_password(_mock_context, server)
-        server.login.assert_called_once_with("test@example.com", "test_password")
-
-
-@patch('spark_expectations.notifications.plugins.email.SparkExpectationsContext', autospec=True, spec_set=True)
-def test_get_smtp_password_none_exception(_mock_context):
-    email_handler = SparkExpectationsEmailPluginImpl()
-    _mock_context.get_secret_type = "cerberus"
-    _mock_context.get_mail_from = "test@example.com"
-    _mock_context.get_se_streaming_stats_dict = {
-        "secret_type": "cerberus"
-    }
-    _mock_context.get_cbs_sdb_path = "path/to/secret"
-    _mock_context.get_smtp_password_key = "password_key"
-    _mock_context.get_cerberus_url = "https://cerberus.example.com"
-
-    with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp, \
-            patch("spark_expectations.secrets.SparkExpectationsSecretsBackend.get_secret") as mock_get_secret:
-        mock_get_secret.return_value = {}  # Mocking the return value as an empty dictionary
-        server = mock_smtp.return_value
-
-        with pytest.raises(SparkExpectationsEmailException, match="SMTP password is not set."):
-            email_handler._get_smtp_password(_mock_context, server)
-
-@patch('spark_expectations.notifications.plugins.email.SparkExpectationsContext', autospec=True, spec_set=True)
-def test_get_smtp_password_databricks(_mock_context):
-    email_handler = SparkExpectationsEmailPluginImpl()
-    _mock_context.get_secret_type = "databricks"
-    _mock_context.get_mail_from = "test@example.com"
-    _mock_context.get_se_streaming_stats_dict = {
-        "secret_type": "databricks"
-    }
-    _mock_context.get_smtp_password_key = "password_key"
-
-    with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp, \
-            patch("spark_expectations.secrets.SparkExpectationsSecretsBackend.get_secret") as mock_get_secret:
-        mock_get_secret.return_value = "test_password"
-        server = mock_smtp.return_value
-
-        email_handler._get_smtp_password(_mock_context, server)
-        server.login.assert_called_once_with("test@example.com", "test_password")
-
-
-@patch('spark_expectations.notifications.plugins.email.SparkExpectationsContext', autospec=True, spec_set=True)
-def test_get_smtp_password_databricks_missing_key(_mock_context):
-    email_handler = SparkExpectationsEmailPluginImpl()
-    _mock_context.get_secret_type = "databricks"
-    _mock_context.get_mail_from = "test@example.com"
-    _mock_context.get_se_streaming_stats_dict = {
-        "secret_type": "databricks"
-    }
-    _mock_context.get_smtp_password_key = None
-
-    with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp:
-        server = mock_smtp.return_value
-
-        # Assert that the SparkExpectationsEmailException is raised for missing key
-        with pytest.raises(SparkExpectationsEmailException, match="SMTP password is not set."):
-            email_handler._get_smtp_password(_mock_context, server)
-
-
-@patch('spark_expectations.notifications.plugins.email.SparkExpectationsContext', autospec=True, spec_set=True)
-def test_get_smtp_password_key_error(_mock_context):
-    email_handler = SparkExpectationsEmailPluginImpl()
-    _mock_context.get_secret_type = "cerberus"
-    _mock_context.get_mail_from = "test@example.com"
-    _mock_context.get_se_streaming_stats_dict = {
-        "secret_type": "cerberus"
-    }
-    _mock_context.get_cbs_sdb_path = "path/to/secret"
-    _mock_context.get_smtp_password_key = "password_key"
-
-    with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp, \
-            patch("spark_expectations.secrets.SparkExpectationsSecretsBackend.get_secret", side_effect=KeyError):
-        server = mock_smtp.return_value
-
-        # Assert that the SparkExpectationsEmailException is raised for KeyError
-        with pytest.raises(SparkExpectationsEmailException, match="SMTP password key is missing in the secret."):
-            email_handler._get_smtp_password(_mock_context, server)
-
-
-@patch('spark_expectations.notifications.plugins.email.SparkExpectationsContext', autospec=True, spec_set=True)
-def test_get_smtp_password_generic_exception(_mock_context):
-    email_handler = SparkExpectationsEmailPluginImpl()
-    _mock_context.get_secret_type = "cerberus"
-    _mock_context.get_mail_from = "test@example.com"
-    _mock_context.get_se_streaming_stats_dict = {
-        "secret_type": "cerberus"
-    }
-    _mock_context.get_cbs_sdb_path = "path/to/secret"
-    _mock_context.get_smtp_password_key = "password_key"
-
-    with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp, \
-            patch("spark_expectations.secrets.SparkExpectationsSecretsBackend.get_secret", side_effect=Exception("Test Exception")):
-        server = mock_smtp.return_value
-
-        # Assert that the SparkExpectationsEmailException is raised for a generic exception
-        with pytest.raises(SparkExpectationsEmailException, match="Failed to retrieve SMTP password."):
-            email_handler._get_smtp_password(_mock_context, server)
-
-@patch('spark_expectations.notifications.plugins.email.SparkExpectationsContext', autospec=True, spec_set=True)
-def test_get_smtp_password_cerberus_password_none(_mock_context):
-    email_handler = SparkExpectationsEmailPluginImpl()
-    _mock_context.get_secret_type = "cerberus"
-    _mock_context.get_mail_from = "test@example.com"
-    _mock_context.get_se_streaming_stats_dict = {
-        "secret_type": "cerberus"
-    }
-    _mock_context.get_cbs_sdb_path = "path/to/secret"
-    _mock_context.get_smtp_password_key = "password_key"
-
-    with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp, \
-            patch("spark_expectations.secrets.SparkExpectationsSecretsBackend.get_secret", return_value="not_a_dict"):
-        server = mock_smtp.return_value
-
-        # Assert that the SparkExpectationsEmailException is raised for password being None
-        with pytest.raises(SparkExpectationsEmailException, match="SMTP password is not set."):
-            email_handler._get_smtp_password(_mock_context, server)
-
-@patch('spark_expectations.notifications.plugins.email.SparkExpectationsContext', autospec=True, spec_set=True)
-def test_get_smtp_password_databricks_password_none(_mock_context):
-    email_handler = SparkExpectationsEmailPluginImpl()
-    _mock_context.get_secret_type = "databricks"
-    _mock_context.get_mail_from = "test@example.com"
-    _mock_context.get_se_streaming_stats_dict = {
-        "secret_type": "databricks"
-    }
-    _mock_context.get_smtp_password_key = None
-
-    with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp:
-        server = mock_smtp.return_value
-
-        # Assert that the SparkExpectationsEmailException is raised for password being None
-        with pytest.raises(SparkExpectationsEmailException, match="SMTP password is not set."):
-            email_handler._get_smtp_password(_mock_context, server)
-
-@patch('spark_expectations.notifications.plugins.email.SparkExpectationsContext', autospec=True, spec_set=True)
-def test_get_smtp_password_secret_type_else(_mock_context):
-    email_handler = SparkExpectationsEmailPluginImpl()
-    _mock_context.get_secret_type = "unknown"
-    _mock_context.get_mail_from = "test@example.com"
-    _mock_context.get_se_streaming_stats_dict = {
-        "secret_type": "unknown"
-    }
-
-    with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp:
-        server = mock_smtp.return_value
-
-        # Assert that the SparkExpectationsEmailException is raised for password being None
-        with pytest.raises(SparkExpectationsEmailException, match="SMTP password is not set."):
-            email_handler._get_smtp_password(_mock_context, server)
-
-
-@patch('spark_expectations.notifications.plugins.email.SparkExpectationsContext', autospec=True, spec_set=True)
-@patch.object(SparkExpectationsEmailPluginImpl, '_get_smtp_password')
-def test_send_notification_with_smtp_auth(mock_get_smtp_password, _mock_context):
+def test_send_notification_with_smtp_auth(_mock_context):
     # arrange
     email_handler = SparkExpectationsEmailPluginImpl()
     _mock_context.get_enable_mail = True
@@ -264,14 +92,255 @@ def test_send_notification_with_smtp_auth(mock_get_smtp_password, _mock_context)
     }
 
     with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp, \
-            patch("spark_expectations.notifications.plugins.email.MIMEMultipart") as _mock_mltp:
+            patch("spark_expectations.notifications.plugins.email.MIMEMultipart") as _mock_mltp, \
+            patch("spark_expectations.notifications.plugins.email.SparkExpectationsEmailPluginImpl._get_smtp_password") as mock_get_smtp_password:
         # act
         email_handler.send_notification(_context=_mock_context, _config_args=mock_config_args)
 
         # assert
         mock_smtp.assert_called_with(_mock_context.get_mail_smtp_server, _mock_context.get_mail_smtp_port)
         mock_smtp().starttls.assert_called()
-        mock_get_smtp_password.assert_called_once_with(_mock_context, mock_smtp())
+        mock_get_smtp_password.assert_called_once_with(_mock_context, mock_smtp.return_value)
         mock_smtp().sendmail.assert_called_with(_mock_context.get_mail_from, [email.strip() for email in _mock_context.get_to_mail.split(",")],
                                                 _mock_mltp().as_string())
         mock_smtp().quit.assert_called()
+
+
+@patch("spark_expectations.secrets.SparkExpectationsSecretsBackend", autospec=True, spec_set=True)
+@patch('spark_expectations.secrets.SparkExpectationsSecretsBackend.get_secret', autospec=True, spec_set=True)
+def test_get_cerberus_password(_mock_secret_handler, _mock_get_secret):
+    email_handler = SparkExpectationsEmailPluginImpl()
+    smtp_creds_dict = {
+        "se.streaming.secret.type": "cerberus",
+        "se.streaming.cerberus.url": "https://xyz.com",
+        "se.streaming.cerberus.sdb.path": "app/project/env",
+        "se.streaming.cerberus.smtp.password": "password_key",
+    }
+    _mock_get_secret.return_value = {
+        "password_key": "test_password"
+    }
+    _mock_secret_handler.get_secret = _mock_get_secret
+
+    password = email_handler._get_cerberus_password(_mock_secret_handler, smtp_creds_dict)
+    assert password == "test_password"
+
+
+@patch("spark_expectations.secrets.SparkExpectationsSecretsBackend", autospec=True, spec_set=True)
+@patch('spark_expectations.secrets.SparkExpectationsSecretsBackend.get_secret', autospec=True, spec_set=True)
+def test_get_cerberus_password_none(_mock_secret_handler, _mock_get_secret):
+    email_handler = SparkExpectationsEmailPluginImpl()
+    smtp_creds_dict = {
+        "se.streaming.secret.type": "cerberus",
+        "se.streaming.cerberus.url": "https://xyz.com",
+        "se.streaming.cerberus.sdb.path": "app/project/env",
+        "se.streaming.cerberus.smtp.password": None,
+    }
+    _mock_get_secret.return_value = None
+    _mock_secret_handler.get_secret = _mock_get_secret
+
+    password = email_handler._get_cerberus_password(_mock_secret_handler, smtp_creds_dict)
+    assert password is None
+
+@patch("spark_expectations.secrets.SparkExpectationsSecretsBackend", autospec=True, spec_set=True)
+@patch('spark_expectations.secrets.SparkExpectationsSecretsBackend.get_secret', autospec=True, spec_set=True)
+def test_get_databricks_password(_mock_secret_handler, _mock_get_secret):
+    email_handler = SparkExpectationsEmailPluginImpl()
+    smtp_creds_dict = {
+        "se.streaming.secret.type": "databricks",
+        "se.streaming.dbx.workspace.url": "https://xyz.databricks.com",
+        "se.streaming.dbx.secret.scope": "my_secret_scope",
+        "se.streaming.dbx.smtp.password": "password_key",
+    }
+    _mock_get_secret.return_value = "test_password"
+    _mock_secret_handler.get_secret = _mock_get_secret
+
+    password = email_handler._get_databricks_password(_mock_secret_handler, smtp_creds_dict)
+    assert password == "test_password"
+
+
+@patch("spark_expectations.secrets.SparkExpectationsSecretsBackend", autospec=True, spec_set=True)
+@patch('spark_expectations.secrets.SparkExpectationsSecretsBackend.get_secret', autospec=True, spec_set=True)
+def test_get_databricks_password_none(_mock_secret_handler, _mock_get_secret):
+    email_handler = SparkExpectationsEmailPluginImpl()
+    smtp_creds_dict = {
+        "se.streaming.secret.type": "databricks",
+        "se.streaming.dbx.workspace.url": "https://xyz.databricks.com",
+        "se.streaming.dbx.secret.scope": "my_secret_scope",
+        # Intentionally omitting the key to cover the last line
+    }
+    _mock_get_secret.return_value = None
+    _mock_secret_handler.get_secret = _mock_get_secret
+
+    password = email_handler._get_databricks_password(_mock_secret_handler, smtp_creds_dict)
+    assert password is None
+
+@patch("spark_expectations.secrets.SparkExpectationsSecretsBackend", autospec=True, spec_set=True)
+def test_retrieve_password_cerberus(_mock_secret_handler):
+    email_handler = SparkExpectationsEmailPluginImpl()
+    secret_type = "cerberus"
+    smtp_secret_dict = {
+        "se.streaming.secret.type": "cerberus",
+        "se.streaming.cerberus.url": "https://xyz.com",
+        "se.streaming.cerberus.sdb.path": "app/project/env",
+        "se.streaming.cerberus.smtp.password": "password_key",
+    }
+    with patch("spark_expectations.notifications.plugins.email.SparkExpectationsEmailPluginImpl._get_cerberus_password") as mock_get_cerberus_password:
+        email_handler._retrieve_password(_mock_secret_handler, secret_type, smtp_secret_dict)
+        mock_get_cerberus_password.assert_called_once_with(_mock_secret_handler, smtp_secret_dict)
+
+
+@patch("spark_expectations.secrets.SparkExpectationsSecretsBackend", autospec=True, spec_set=True)
+def test_retrieve_password_databricks(_mock_secret_handler):
+    email_handler = SparkExpectationsEmailPluginImpl()
+    secret_type = "databricks"
+    smtp_secret_dict = {
+        "se.streaming.secret.type": "databricks",
+        "se.streaming.dbx.workspace.url": "https://xyz.databricks.com",
+        "se.streaming.dbx.secret.scope": "my_secret_scope",
+        "se.streaming.dbx.smtp.password": "password_key",
+    }
+    with patch("spark_expectations.notifications.plugins.email.SparkExpectationsEmailPluginImpl._get_databricks_password") as mock_get_databricks_password:
+        email_handler._retrieve_password(_mock_secret_handler, secret_type, smtp_secret_dict)
+        mock_get_databricks_password.assert_called_once_with(_mock_secret_handler, smtp_secret_dict)
+
+
+@patch("spark_expectations.secrets.SparkExpectationsSecretsBackend", autospec=True, spec_set=True)
+@patch('spark_expectations.secrets.SparkExpectationsSecretsBackend.get_secret', autospec=True, spec_set=True)
+def test_get_databricks_password(_mock_secret_handler, _mock_get_secret):
+    email_handler = SparkExpectationsEmailPluginImpl()
+    smtp_creds_dict = {
+        "se.streaming.secret.type": "databricks",
+        "se.streaming.dbx.workspace.url": "https://xyz.databricks.com",
+        "se.streaming.dbx.secret.scope": "my_secret_scope",
+        "se.streaming.dbx.smtp.password": "password_key",
+    }
+    _mock_get_secret.return_value = "test_password"
+    _mock_secret_handler.get_secret = _mock_get_secret
+
+    password = email_handler._get_databricks_password(_mock_secret_handler, smtp_creds_dict)
+    assert password == "test_password"
+
+
+@patch("spark_expectations.secrets.SparkExpectationsSecretsBackend", autospec=True, spec_set=True)
+@patch('spark_expectations.secrets.SparkExpectationsSecretsBackend.get_secret', autospec=True, spec_set=True)
+def test_get_databricks_password_none(_mock_secret_handler, _mock_get_secret):
+    email_handler = SparkExpectationsEmailPluginImpl()
+    smtp_creds_dict = {
+        "se.streaming.secret.type": "databricks",
+        "se.streaming.dbx.workspace.url": "https://xyz.databricks.com",
+        "se.streaming.dbx.secret.scope": "my_secret_scope",
+        # Intentionally omitting the key to cover the last line
+    }
+    _mock_get_secret.return_value = None
+    _mock_secret_handler.get_secret = _mock_get_secret
+
+    password = email_handler._get_databricks_password(_mock_secret_handler, smtp_creds_dict)
+    assert password is None
+
+
+@patch("spark_expectations.secrets.SparkExpectationsSecretsBackend", autospec=True, spec_set=True)
+def test_retrieve_password_none(_mock_secret_handler):
+    email_handler = SparkExpectationsEmailPluginImpl()
+    secret_type = "not_databricks"
+    smtp_secret_dict = {
+        "se.streaming.secret.type": "not_databricks",
+        "se.streaming.dbx.workspace.url": "https://xyz.databricks.com",
+        "se.streaming.dbx.secret.scope": "my_secret_scope",
+        "se.streaming.dbx.smtp.password": "password_key",
+    }
+
+    password = email_handler._retrieve_password(_mock_secret_handler, secret_type, smtp_secret_dict)
+    assert password is None
+
+
+
+@patch('spark_expectations.notifications.plugins.email.SparkExpectationsContext', autospec=True, spec_set=True)
+def test_get_smtp_password(_mock_context):
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_mail_from = "test@example.com"
+    _mock_context.get_mail_smtp_password = "test_password"
+
+    with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp:
+        server = mock_smtp.return_value
+        email_handler._get_smtp_password(_mock_context, server)
+        server.login.assert_called_once_with("test@example.com", "test_password")
+
+
+@patch('spark_expectations.notifications.plugins.email.SparkExpectationsContext', autospec=True, spec_set=True)
+def test_get_smtp_password_with_retrieve_method(_mock_context):
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_mail_from = "test@example.com"
+    _mock_context.get_mail_smtp_password = None
+    _mock_context.get_smtp_creds_dict = {
+        "se.streaming.secret.type": "databricks",
+        "se.streaming.dbx.workspace.url": "https://xyz.databricks.com",
+        "se.streaming.dbx.secret.scope": "my_secret_scope",
+        "se.streaming.dbx.smtp.password": "password_key",
+    }
+
+    with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp,\
+            patch("spark_expectations.notifications.plugins.email.SparkExpectationsEmailPluginImpl._retrieve_password") as mock_retrieve_password:
+        server = mock_smtp.return_value
+        mock_retrieve_password.return_value = "test_password"
+        email_handler._get_smtp_password(_mock_context, server)
+        server.login.assert_called_once_with("test@example.com", "test_password")
+
+@patch('spark_expectations.notifications.plugins.email.SparkExpectationsContext', autospec=True, spec_set=True)
+def test_get_smtp_password_missing_key(_mock_context):
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_mail_from = "test@example.com"
+    _mock_context.get_mail_smtp_password = None
+    _mock_context.get_smtp_creds_dict = {
+        "se.streaming.secret.type": "databricks",
+        "se.streaming.dbx.workspace.url": "https://xyz.databricks.com",
+        "se.streaming.dbx.secret.scope": "my_secret_scope",
+        "se.streaming.dbx.smtp.password": None,
+    }
+
+    with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp, \
+            patch("spark_expectations.notifications.plugins.email.SparkExpectationsEmailPluginImpl._retrieve_password", side_effect=KeyError):
+        server = mock_smtp.return_value
+
+        with pytest.raises(SparkExpectationsEmailException, match="SMTP password key is missing in the secret."):
+            email_handler._get_smtp_password(_mock_context, server)
+
+@patch('spark_expectations.notifications.plugins.email.SparkExpectationsContext', autospec=True, spec_set=True)
+def test_get_smtp_password_failed_retrieve(_mock_context):
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_mail_from = "test@example.com"
+    _mock_context.get_mail_smtp_password = None
+    _mock_context.get_smtp_creds_dict = {
+        "se.streaming.secret.type": "databricks",
+        "se.streaming.dbx.workspace.url": "https://xyz.databricks.com",
+        "se.streaming.dbx.secret.scope": "my_secret_scope",
+        "se.streaming.dbx.smtp.password": "password_key",
+    }
+
+    with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp, \
+            patch("spark_expectations.notifications.plugins.email.SparkExpectationsEmailPluginImpl._retrieve_password", side_effect=Exception("Generic error")):
+        server = mock_smtp.return_value
+
+        with pytest.raises(SparkExpectationsEmailException, match="Failed to retrieve SMTP password."):
+            email_handler._get_smtp_password(_mock_context, server)
+
+
+@patch('spark_expectations.notifications.plugins.email.SparkExpectationsContext', autospec=True, spec_set=True)
+def test_get_smtp_password_none_exception(_mock_context):
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_mail_from = "test@example.com"
+    _mock_context.get_mail_smtp_password = None
+    _mock_context.get_smtp_creds_dict = {
+        "se.streaming.secret.type": "databricks",
+        "se.streaming.dbx.workspace.url": "https://xyz.databricks.com",
+        "se.streaming.dbx.secret.scope": "my_secret_scope",
+        "se.streaming.dbx.smtp.password": "password_key",
+    }
+
+    with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp, \
+            patch("spark_expectations.notifications.plugins.email.SparkExpectationsEmailPluginImpl._retrieve_password") as mock_retrieve_password:
+        server = mock_smtp.return_value
+        mock_retrieve_password.return_value = None
+
+        with pytest.raises(SparkExpectationsEmailException, match="SMTP password is not set."):
+            email_handler._get_smtp_password(_mock_context, server)
+

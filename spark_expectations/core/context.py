@@ -54,6 +54,8 @@ class SparkExpectationsContext:
         self._mail_from: Optional[str] = None
         self._mail_smtp_server: str
         self._mail_smtp_port: int
+        self._mail_smtp_password: Optional[str] = None
+        self._smtp_creds_dict: Dict[str, str] = {}
         self._email_custom_body: Optional[str] = None
 
         self._enable_slack: bool = False
@@ -483,6 +485,35 @@ class SparkExpectationsContext:
             """The spark expectations context is not set completely, please assign '_mail_smtp_port' before 
             accessing it"""
         )
+
+    def set_mail_smtp_password(self, mail_smtp_password: str) -> None:
+        self._mail_smtp_password = mail_smtp_password
+
+    @property
+    def get_mail_smtp_password(self) -> Optional[str]:
+        """
+        This functions returns smtp password
+        Returns:
+            str: returns _mail_smtp_server password or None if smtp password is not set
+
+        """
+        if self._mail_smtp_password:
+            return self._mail_smtp_password
+
+        else:
+            return None
+
+    def set_smtp_creds_dict(self, smtp_creds_dict: Dict[str, str]) -> None:
+        """
+        This function helps to set secret keys dict for smtp server authentication"""
+        self._smtp_creds_dict = smtp_creds_dict
+
+    @property
+    def get_smtp_creds_dict(self) -> Dict[str, str]:
+        """
+        This function returns secret keys dict for smtp server authentication
+        """
+        return self._smtp_creds_dict
 
     def set_enable_mail(self, enable_mail: bool) -> None:
         self._enable_mail = bool(enable_mail)
@@ -1161,44 +1192,6 @@ class SparkExpectationsContext:
         raise SparkExpectationsMiscException(
             """The spark expectations context is not set completely, please assign 
             'UserConfig.cbs_topic_name' before 
-            accessing it"""
-        )
-
-    @property
-    def get_smtp_password_key(self) -> Optional[str]:
-        """
-        This function helps in getting key / path for smtp password
-        Returns:
-            smtp password key / path in Optional[str]
-        """
-        _smtp_password_key: Optional[str] = (
-            self._se_streaming_stats_dict.get(user_config.cbs_smtp_password)
-            if self.get_secret_type == "cerberus"
-            else self._se_streaming_stats_dict.get(user_config.dbx_smtp_password)
-        )
-        if _smtp_password_key:
-            return _smtp_password_key
-        raise SparkExpectationsMiscException(
-            """The spark expectations context is not set completely, please assign 
-            'UserConfig.cbs_smtp_password' before 
-            accessing it"""
-        )
-
-    @property
-    def get_cbs_sdb_path(self) -> Optional[str]:
-        """
-        This function helps in cerberus sdb path
-        Returns:
-            cerberus sdb path in Optional[str]
-        """
-        _cbs_sdb_path: Optional[str] = self._se_streaming_stats_dict.get(
-            user_config.cbs_sdb_path
-        )
-        if _cbs_sdb_path:
-            return _cbs_sdb_path
-        raise SparkExpectationsMiscException(
-            """The spark expectations context is not set completely, please assign 
-            'UserConfig.cbs_sdb_path' before 
             accessing it"""
         )
 

@@ -136,6 +136,7 @@ def fixture_product_rules_pipe():
          "spark.expectations.notifications.email.enabled": True,
          "spark.expectations.notifications.email.smtp_host": "smtp.mail.com",
          "spark.expectations.notifications.email.smtp_port": 587,
+         "spark.expectations.notifications.smtp.password": "password",
          "spark.expectations.notifications.email.from": "sender@mail.com",
          "spark.expectations.notifications.email.to.other.mail.com": "recipient@mail.com",
          "spark.expectations.notifications.email.subject": "Test email",
@@ -144,6 +145,38 @@ def fixture_product_rules_pipe():
          "spark.expectations.notifications.teams.enabled": False,
          "spark.expectations.notifications.teams.webhook_url": "",
      }, None),
+({
+         "spark.expectations.notifications.email.smtp_server_auth": True,
+         "spark.expectations.notifications.email.enabled": True,
+         "spark.expectations.notifications.email.smtp_host": "smtp.mail.com",
+         "spark.expectations.notifications.email.smtp_port": 587,
+         "spark.expectations.notifications.smtp.creds.dict": {
+            "se.streaming.secret.type": "cerberus",
+            "se.streaming.cerberus.url": "https://xyz.com",
+            "se.streaming.cerberus.sdb.path": "abc",
+            "se.streaming.cerberus.smtp.password": "def"
+                },
+         "spark.expectations.notifications.email.from": "sender@mail.com",
+         "spark.expectations.notifications.email.to.other.mail.com": "recipient@mail.com",
+         "spark.expectations.notifications.email.subject": "Test email",
+         "spark.expectations.notifications.slack.enabled": False,
+         "spark.expectations.notifications.slack.webhook_url": "",
+         "spark.expectations.notifications.teams.enabled": False,
+         "spark.expectations.notifications.teams.webhook_url": "",
+     }, None),
+    ({
+         "spark.expectations.notifications.email.smtp_server_auth": True,
+         "spark.expectations.notifications.email.enabled": True,
+         "spark.expectations.notifications.email.smtp_host": "smtp.mail.com",
+         "spark.expectations.notifications.email.smtp_port": 587,
+         "spark.expectations.notifications.email.from": "sender@mail.com",
+         "spark.expectations.notifications.email.to.other.mail.com": "recipient@mail.com",
+         "spark.expectations.notifications.email.subject": "Test email",
+         "spark.expectations.notifications.slack.enabled": False,
+         "spark.expectations.notifications.slack.webhook_url": "",
+         "spark.expectations.notifications.teams.enabled": False,
+         "spark.expectations.notifications.teams.webhook_url": "",
+     }, SparkExpectationsMiscException),
 ])
 def test_set_notification_param(notification, expected_result):
     # This function helps/implements test cases for while setting notification
@@ -189,14 +222,14 @@ def test_set_notification_param(notification, expected_result):
             mock_context.set_email_custom_body.assert_called_once_with(
                 notification.get("spark.expectations.notifications.email.custom.body"))
         if notification.get("spark.expectations.notifications.email.smtp_server_auth"):
-            mock_context.set_enable_mail.assert_called_once_with(
-                notification.get("spark.expectations.notifications.email.enabled"))
-            mock_context.set_enable_mail.assert_called_once_with(
+            mock_context.set_enable_smtp_server_auth.assert_called_once_with(
                 notification.get("spark.expectations.notifications.email.smtp_server_auth"))
-            mock_context.set_mail_subject.assert_called_once_with(
-                notification.get("spark.expectations.notifications.email.subject"))
-            mock_context.set_mail_smtp_server.assert_called_once_with(
-                notification.get("spark.expectations.notifications.email.smtp_host"))
+            if notification.get("spark.expectations.notifications.smtp.password"):
+                mock_context.set_mail_smtp_password.assert_called_once_with(
+                    notification.get("spark.expectations.notifications.smtp.password"))
+            elif notification.get("spark.expectations.notifications.smtp.creds.dict"):
+                mock_context.set_smtp_creds_dict.assert_called_once_with(
+                    notification.get("spark.expectations.notifications.smtp.creds.dict"))
         if notification.get("spark.expectations.notifications.slack.enabled"):
             mock_context.set_enable_slack.assert_called_once_with(
                 notification.get("spark.expectations.notifications.slack.enabled"))
@@ -209,7 +242,7 @@ def test_set_notification_param(notification, expected_result):
                 notification.get("spark.expectations.notifications.teams.webhook_url"))
     else:
         with pytest.raises(expected_result, match=r"All params/variables required for [a-z]+ notification "
-                                                  "is not configured or supplied"):
+                                                  "is not configured or supplied|SMTP password is not set or secret dict for it's retrival is not provided"):
             reader_handler.set_notification_param(notification)
 
 

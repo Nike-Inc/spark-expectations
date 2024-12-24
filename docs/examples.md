@@ -12,25 +12,32 @@ se_user_conf = {
     user_config.se_notifications_enable_custom_email_body: False, # (3)
     user_config.se_notifications_email_smtp_host: "mailhost.com",  # (4)!
     user_config.se_notifications_email_smtp_port: 25,  # (5)!
-    user_config.se_notifications_email_from: "<sender_email_id>",  # (6)!
-    user_config.se_notifications_email_to_other_mail_id: "<receiver_email_id's>",  # (7)!
-    user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",  # (8)!
-    user_config.se_notifications_email_custom_body: "custom stats: 'product_id': {}", # (9)!
-    user_config.se_notifications_enable_slack: True,  # (10)!
-    user_config.se_notifications_slack_webhook_url: "<slack-webhook-url>",  # (11)!
-    user_config.se_notifications_on_start: True,  # (12)!
-    user_config.se_notifications_on_completion: True,  # (13)!
-    user_config.se_notifications_on_fail: True,  # (14)!
-    user_config.se_notifications_on_error_drop_exceeds_threshold_breach: True,  # (15)!
-    user_config.se_notifications_on_error_drop_threshold: 15,  # (16)!
-    user_config.se_enable_error_table: True,  # (17)!
-    user_config.enable_query_dq_detailed_result: True, # (18)!
-    user_config.enable_agg_dq_detailed_result: True, # (19)!
-    user_config.querydq_output_custom_table_name: "<catalog.schema.table-name>", #20
+    user_config.se_notifications_smtp_password: "your_password",# (6)!
+    # user_config.se_notifications_smtp_creds_dict: {
+    #     user_config.secret_type: "cerberus",
+    #     user_config.cbs_url: "https://prod.cerberus.nikecloud.com",
+    #     user_config.cbs_sdb_path: "your_sdb_path",
+    #     user_config.cbs_smtp_password: "your_smtp_password",
+    # }, # (7)!
+    user_config.se_notifications_email_from: "<sender_email_id>",  # (8)!
+    user_config.se_notifications_email_to_other_mail_id: "<receiver_email_id's>",  # (9)!
+    user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",  # (10)!
+    user_config.se_notifications_email_custom_body: "custom stats: 'product_id': {}", # (11)!
+    user_config.se_notifications_enable_slack: True,  # (12)!
+    user_config.se_notifications_slack_webhook_url: "<slack-webhook-url>",  # (13)!
+    user_config.se_notifications_on_start: True,  # (14)!
+    user_config.se_notifications_on_completion: True,  # (15)!
+    user_config.se_notifications_on_fail: True,  # (16)!
+    user_config.se_notifications_on_error_drop_exceeds_threshold_breach: True,  # (17)!
+    user_config.se_notifications_on_error_drop_threshold: 15,  # (18)!
+    user_config.se_enable_error_table: True,  # (19)!
+    user_config.enable_query_dq_detailed_result: True, # (20)!
+    user_config.enable_agg_dq_detailed_result: True, # (21)!
+    user_config.querydq_output_custom_table_name: "<catalog.schema.table-name>", #22
     user_config.se_dq_rules_params: {
         "env": "local",
         "table": "product",
-     }, # (21)!
+     }, # (23)!
 }
 }
 ```
@@ -40,32 +47,66 @@ se_user_conf = {
 3. The `user_config.se_notifications_enable_custom_email_body` optional parameter, which controls whether custom email body is enabled, is set to false by default
 4. The `user_config.se_notifications_email_smtp_host` parameter is set to "mailhost.com" by default and is used to specify the email SMTP domain host
 5. The `user_config.se_notifications_email_smtp_port` parameter, which accepts a port number, is set to "25" by default
-6. The `user_config.se_notifications_email_from` parameter is used to specify the email ID that will trigger the email notification
-7. The `user_config.se_notifications_email_to_other_mail_id` parameter accepts a list of recipient email IDs
-8. The `user_config.se_notifications_email_subject` parameter captures the subject line of the email
-9. The `user_config.se_notifications_email_custom_body` optional parameter, captures the custom email body, need to be compliant with certain syntax
-10. The `user_config.se_notifications_enable_slack` parameter, which controls whether notifications are sent via slack, is set to false by default
-11. The `user_config/se_notifications_slack_webhook_url` parameter accepts the webhook URL of a Slack channel for sending notifications
-12. When `user_config.se_notifications_on_start` parameter set to `True` enables notification on start of the spark-expectations, variable by default set to `False`
-13. When `user_config.se_notifications_on_completion` parameter set to `True` enables notification on completion of spark-expectations framework, variable by default set to `False`
-14. When `user_config.se_notifications_on_fail` parameter set to `True` enables notification on failure of spark-expectations data quality framework, variable by default set to `True`
-15. When `user_config.se_notifications_on_error_drop_exceeds_threshold_breach` parameter set to `True` enables notification when error threshold reaches above the configured value
-16. The `user_config.se_notifications_on_error_drop_threshold` parameter captures error drop threshold value
-17. The `user_config.se_enable_error_table` parameter, which controls whether error data to load into error table, is set to true by default
-18. When `user_config.enable_query_dq_detailed_result` parameter set to `True`, enables the option to cature the query_dq detailed stats to detailed_stats table. By default set to `False`
-19. When `user_config.enable_agg_dq_detailed_result` parameter set to `True`, enables the option to cature the agg_dq detailed stats to detailed_stats table. By default set to `False`
-20. The `user_config.querydq_output_custom_table_name` parameter is used to specify the name of the custom query_dq output table which captures the output of the alias queries passed in the query dq expectation. Default is <stats_table>_custom_output
-21. The `user_config.se_dq_rules_params` parameter, which are required to dynamically update dq rules
+6. The `user_config.se_notifications_smtp_password` parameter is used to specify the password for the SMTP server (if smtp_server requires authentication either this parameter or `user_config.se_notifications_smtp_creds_dict` should be set)
+7. The `user_config.se_notifications_smtp_creds_dict` parameter is used to specify the credentials for the SMTP server (if smtp_server requires authentication either this parameter or `user_config.se_notifications_smtp_password` should be set)
+8. The `user_config.se_notifications_email_from` parameter is used to specify the email ID that will trigger the email notification
+9. The `user_config.se_notifications_email_to_other_mail_id` parameter accepts a list of recipient email IDs
+10. The `user_config.se_notifications_email_subject` parameter captures the subject line of the email
+11. The `user_config.se_notifications_email_custom_body` optional parameter, captures the custom email body, need to be compliant with certain syntax
+12. The `user_config.se_notifications_enable_slack` parameter, which controls whether notifications are sent via slack, is set to false by default 
+13. The `user_config/se_notifications_slack_webhook_url` parameter accepts the webhook URL of a Slack channel for sending notifications 
+14. When `user_config.se_notifications_on_start` parameter set to `True` enables notification on start of the spark-expectations, variable by default set to `False`
+15. When `user_config.se_notifications_on_completion` parameter set to `True` enables notification on completion of spark-expectations framework, variable by default set to `False`
+16. When `user_config.se_notifications_on_fail` parameter set to `True` enables notification on failure of spark-expectations data quality framework, variable by default set to `True`
+17. When `user_config.se_notifications_on_error_drop_exceeds_threshold_breach` parameter set to `True` enables notification when error threshold reaches above the configured value 
+18. The `user_config.se_notifications_on_error_drop_threshold` parameter captures error drop threshold value 
+19. The `user_config.se_enable_error_table` parameter, which controls whether error data to load into error table, is set to true by default 
+20. When `user_config.enable_query_dq_detailed_result` parameter set to `True`, enables the option to cature the query_dq detailed stats to detailed_stats table. By default set to `False`
+21. When `user_config.enable_agg_dq_detailed_result` parameter set to `True`, enables the option to cature the agg_dq detailed stats to detailed_stats table. By default set to `False`
+22. The `user_config.querydq_output_custom_table_name` parameter is used to specify the name of the custom query_dq output table which captures the output of the alias queries passed in the query dq expectation. Default is <stats_table>_custom_output 
+23. The `user_config.se_dq_rules_params` parameter, which are required to dynamically update dq rules
 
+In case of SMTP server authentication, the password can be passed directly with the user config or set in a secure way like Cerberus or Databricks secret.
+If it is preferred to use Cerberus for secure password storage, the `user_config.se_notifications_smtp_creds_dict` parameter can be used to specify the credentials for the SMTP server in the following way:
+```python
+from spark_expectations.config.user_config import Constants as user_config
 
+smtp_creds_dict = {
+    user_config.secret_type: "cerberus", # (1)!
+    user_config.cbs_url: "https://prod.cerberus.nikecloud.com", # (2)!
+    user_config.cbs_sdb_path: "your_sdb_path", # (3)!
+    user_config.cbs_smtp_password: "your_smtp_password", # (4)!
+    }
+```
+1. The `user_config.secret_type` used to define type of secret store and takes two values (`databricks`, `cerberus`)
+2. The `user_config.cbs_url` used to pass Cerberus URL 
+3. The `user_config.cbs_sdb_path` captures Cerberus secure data store path 
+4. The `user_config.cbs_smtp_password` captures key for smtp_password in the Cerberus sdb
+
+Similarly, if it is preferred to use Databricks for secure password storage, the `user_config.se_notifications_smtp_creds_dict` parameter can be used to specify the credentials for the SMTP server in the following way:
+```python
+from spark_expectations.config.user_config import Constants as user_config
+
+smtp_creds_dict = {
+    user_config.secret_type: "databricks", # (1)!
+    user_config.dbx_workspace_url: "https://workspace.cloud.databricks.com", # (2)!
+    user_config.dbx_secret_scope: "your_secret_scope", # (3)!
+    user_config.dbx_smtp_password: "your_password", # (4)!
+    }
+```
+1. The `user_config.secret_type` used to define type of secret store and takes two values (`databricks`, `cerberus`)
+2. The `user_config.dbx_workspace_url` used to pass Databricks workspace in the format `https://<workspace_name>.cloud.databricks.com`
+3. The `user_config.dbx_secret_scope` captures name of the secret scope
+4. The `user_config.dbx_smtp_password` captures secret key for smtp password in the Databricks secret scope
+
+```python
 ### Spark Expectations Initialization 
 
 For all the below examples the below import and SparkExpectations class instantiation is mandatory
 
 When store for sensitive details is Databricks secret scope,construct config dictionary for authentication of Kafka and 
 avoid duplicate construction every time your project is initialized, you can create a dictionary with the following keys and their appropriate values. 
-This dictionary can be placed in the __init__.py file of your project or declared as a global variable. In case you need authentication for smtp server,
-you can store password in Databricks secret scope as well, or choose Cerberus for this secret storage.
+This dictionary can be placed in the __init__.py file of your project or declared as a global variable.
 ```python
 from typing import Dict, Union
 from spark_expectations.config.user_config import Constants as user_config
@@ -80,7 +121,6 @@ stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
     user_config.dbx_secret_app_name: "se_streaming_auth_secret_appid_key", # (7)!
     user_config.dbx_secret_token: "se_streaming_auth_secret_token_key", # (8)!
     user_config.dbx_topic_name: "se_streaming_topic_name", # (9)!
-    user_config.dbx_smtp_password: "smtp_password_secret_key", # (10)!
 }
 ```
 
@@ -93,7 +133,6 @@ stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
 7. The `user_config.dbx_secret_app_name` captures secret key for the Kafka authentication app name
 8. The `user_config.dbx_secret_token` captures secret key for the Kafka authentication app secret token
 9. The `user_config.dbx_topic_name` captures secret key for the Kafka topic name
-10. The `user_config.dbx_smtp_password` captures secret key for the SMTP password
 
 Similarly when sensitive store is Cerberus: 
 
@@ -111,7 +150,6 @@ stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
     user_config.cbs_secret_app_name: "se_streaming_auth_secret_appid_sdb_path", # (7)!
     user_config.cbs_secret_token: "se_streaming_auth_secret_token_sdb_path", # (8)!
     user_config.cbs_topic_name: "se_streaming_topic_name_sdb_path", # (9)!
-    user_config.cbs_smtp_password: "smtp_password_secret_key", # (10)!
 }
 ```
 
@@ -124,12 +162,8 @@ stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
 7. The `user_config.cbs_secret_app_name` captures path where Kafka authentication app name stored in the Cerberus sdb
 8. The `user_config.cbs_secret_token` captures path where Kafka authentication app name secret token stored in the Cerberus sdb
 9. The `user_config.cbs_topic_name`  captures path where Kafka topic name stored in the Cerberus sdb
-10. The `user_config.cbs_smtp_password` captures key for the SMTP password
-
-```python
 
 You can disable the streaming functionality by setting the `user_config.se_enable_streaming` parameter to `False` 
-You can stil pass the secret keys for smtp password, even if streaming is disabled.
 
 ```python
 from typing import Dict, Union

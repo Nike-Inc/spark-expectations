@@ -17,6 +17,10 @@ class Constants:
     se_notifications_email_smtp_port = (
         "spark.expectations.notifications.email.smtp_port"
     )
+    se_notifications_smtp_password = "spark.expectations.notifications.smtp.password"
+    se_notifications_smtp_creds_dict = (
+        "spark.expectations.notifications.smtp.creds.dict"
+    )
     se_notifications_email_from = "spark.expectations.notifications.email.from"
     se_notifications_email_to_other_mail_id = (
         "spark.expectations.notifications.email.to.other.mail.com"
