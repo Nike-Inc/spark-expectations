@@ -177,6 +177,23 @@ def fixture_product_rules_pipe():
          "spark.expectations.notifications.teams.enabled": False,
          "spark.expectations.notifications.teams.webhook_url": "",
      }, SparkExpectationsMiscException),
+    ({
+         "spark.expectations.notifications.email.smtp_server_auth": True,
+         "spark.expectations.notifications.email.enabled": True,
+         "spark.expectations.notifications.email.smtp_host": "smtp.mail.com",
+         "spark.expectations.notifications.email.smtp_port": 587,
+         "spark.expectations.notifications.smtp.creds.dict": {
+            "se.streaming.secret.type": 1,
+            "se.streaming.cerberus.url": True
+         },
+         "spark.expectations.notifications.email.from": "sender@mail.com",
+         "spark.expectations.notifications.email.to.other.mail.com": "recipient@mail.com",
+         "spark.expectations.notifications.email.subject": "Test email",
+         "spark.expectations.notifications.slack.enabled": False,
+         "spark.expectations.notifications.slack.webhook_url": "",
+         "spark.expectations.notifications.teams.enabled": False,
+         "spark.expectations.notifications.teams.webhook_url": "",
+     }, SparkExpectationsMiscException),
 ])
 def test_set_notification_param(notification, expected_result):
     # This function helps/implements test cases for while setting notification
@@ -242,7 +259,9 @@ def test_set_notification_param(notification, expected_result):
                 notification.get("spark.expectations.notifications.teams.webhook_url"))
     else:
         with pytest.raises(expected_result, match=r"All params/variables required for [a-z]+ notification "
-                                                  "is not configured or supplied|SMTP password is not set or secret dict for it's retrival is not provided"):
+                                                  "is not configured or supplied|error occurred while reading "
+                                                  "notification configurations SMTP password is not set or secret dict for its retrieval is not provided|"
+                                                  "error occurred while reading notification configurations SMTP creds dict contains non-string keys or values"):
             reader_handler.set_notification_param(notification)
 
 

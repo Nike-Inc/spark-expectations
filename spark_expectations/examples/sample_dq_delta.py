@@ -21,17 +21,6 @@ dic_job_info = {
 }
 job_info = str(dic_job_info)
 
-# stats_streaming_config_dict = {
-#     user_config.se_enable_streaming: False,
-#     user_config.secret_type: "cerberus",
-#     user_config.cbs_url: "https://prod.cerberus.nikecloud.com",
-#     user_config.cbs_sdb_path: "",
-#     user_config.cbs_smtp_password: "",
-#     # user_config.secret_type: "databricks",
-#     # user_config.dbx_workspace_url: "https://workspace.cloud.databricks.com",
-#     # user_config.dbx_secret_scope: "your_scope",
-#     # user_config.dbx_smtp_password: "your_password",
-# }
 
 se: SparkExpectations = SparkExpectations(
     product_id="your_productreport",
