@@ -114,7 +114,7 @@ def test_get_cerberus_password(_mock_secret_handler, _mock_get_secret):
         "se.streaming.secret.type": "cerberus",
         "se.streaming.cerberus.url": "https://xyz.com",
         "se.streaming.cerberus.sdb.path": "app/project/env",
-        "se.streaming.cerberus.smtp.password": "password_key",
+        "spark.expectations.notifications.cerberus.smtp.password": "password_key",
     }
     _mock_get_secret.return_value = {
         "password_key": "test_password"
@@ -133,7 +133,7 @@ def test_get_cerberus_password_none(_mock_secret_handler, _mock_get_secret):
         "se.streaming.secret.type": "cerberus",
         "se.streaming.cerberus.url": "https://xyz.com",
         "se.streaming.cerberus.sdb.path": "app/project/env",
-        "se.streaming.cerberus.smtp.password": None,
+        "spark.expectations.notifications.cerberus.smtp.password": None,
     }
     _mock_get_secret.return_value = None
     _mock_secret_handler.get_secret = _mock_get_secret
@@ -149,7 +149,7 @@ def test_get_databricks_password(_mock_secret_handler, _mock_get_secret):
         "se.streaming.secret.type": "databricks",
         "se.streaming.dbx.workspace.url": "https://xyz.databricks.com",
         "se.streaming.dbx.secret.scope": "my_secret_scope",
-        "se.streaming.dbx.smtp.password": "password_key",
+        "spark.expectations.notifications.dbx.smtp.password": "password_key",
     }
     _mock_get_secret.return_value = "test_password"
     _mock_secret_handler.get_secret = _mock_get_secret
@@ -182,7 +182,7 @@ def test_retrieve_password_cerberus(_mock_secret_handler):
         "se.streaming.secret.type": "cerberus",
         "se.streaming.cerberus.url": "https://xyz.com",
         "se.streaming.cerberus.sdb.path": "app/project/env",
-        "se.streaming.cerberus.smtp.password": "password_key",
+        "spark.expectations.notifications.cerberus.smtp.password": "password_key",
     }
     with patch("spark_expectations.notifications.plugins.email.SparkExpectationsEmailPluginImpl._get_cerberus_password") as mock_get_cerberus_password:
         email_handler._retrieve_password(_mock_secret_handler, secret_type, smtp_secret_dict)
@@ -197,7 +197,7 @@ def test_retrieve_password_databricks(_mock_secret_handler):
         "se.streaming.secret.type": "databricks",
         "se.streaming.dbx.workspace.url": "https://xyz.databricks.com",
         "se.streaming.dbx.secret.scope": "my_secret_scope",
-        "se.streaming.dbx.smtp.password": "password_key",
+        "spark.expectations.notifications.dbx.smtp.password": "password_key",
     }
     with patch("spark_expectations.notifications.plugins.email.SparkExpectationsEmailPluginImpl._get_databricks_password") as mock_get_databricks_password:
         email_handler._retrieve_password(_mock_secret_handler, secret_type, smtp_secret_dict)
@@ -212,7 +212,7 @@ def test_get_databricks_password(_mock_secret_handler, _mock_get_secret):
         "se.streaming.secret.type": "databricks",
         "se.streaming.dbx.workspace.url": "https://xyz.databricks.com",
         "se.streaming.dbx.secret.scope": "my_secret_scope",
-        "se.streaming.dbx.smtp.password": "password_key",
+        "spark.expectations.notifications.dbx.smtp.password": "password_key",
     }
     _mock_get_secret.return_value = "test_password"
     _mock_secret_handler.get_secret = _mock_get_secret
@@ -246,7 +246,7 @@ def test_retrieve_password_none(_mock_secret_handler):
         "se.streaming.secret.type": "not_databricks",
         "se.streaming.dbx.workspace.url": "https://xyz.databricks.com",
         "se.streaming.dbx.secret.scope": "my_secret_scope",
-        "se.streaming.dbx.smtp.password": "password_key",
+        "spark.expectations.notifications.dbx.smtp.password": "password_key",
     }
 
     password = email_handler._retrieve_password(_mock_secret_handler, secret_type, smtp_secret_dict)
@@ -275,7 +275,7 @@ def test_get_smtp_password_with_retrieve_method(_mock_context):
         "se.streaming.secret.type": "databricks",
         "se.streaming.dbx.workspace.url": "https://xyz.databricks.com",
         "se.streaming.dbx.secret.scope": "my_secret_scope",
-        "se.streaming.dbx.smtp.password": "password_key",
+        "spark.expectations.notifications.dbx.smtp.password": "password_key",
     }
 
     with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp,\
@@ -294,7 +294,7 @@ def test_get_smtp_password_missing_key(_mock_context):
         "se.streaming.secret.type": "databricks",
         "se.streaming.dbx.workspace.url": "https://xyz.databricks.com",
         "se.streaming.dbx.secret.scope": "my_secret_scope",
-        "se.streaming.dbx.smtp.password": None,
+        "spark.expectations.notifications.dbx.smtp.password": None,
     }
 
     with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp, \
@@ -313,7 +313,7 @@ def test_get_smtp_password_failed_retrieve(_mock_context):
         "se.streaming.secret.type": "databricks",
         "se.streaming.dbx.workspace.url": "https://xyz.databricks.com",
         "se.streaming.dbx.secret.scope": "my_secret_scope",
-        "se.streaming.dbx.smtp.password": "password_key",
+        "spark.expectations.notifications.dbx.smtp.password": "password_key",
     }
 
     with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp, \
@@ -333,7 +333,7 @@ def test_get_smtp_password_none_exception(_mock_context):
         "se.streaming.secret.type": "databricks",
         "se.streaming.dbx.workspace.url": "https://xyz.databricks.com",
         "se.streaming.dbx.secret.scope": "my_secret_scope",
-        "se.streaming.dbx.smtp.password": "password_key",
+        "spark.expectations.notifications.dbx.smtp.password": "password_key",
     }
 
     with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp, \

@@ -91,7 +91,7 @@ se_user_conf = {
     #Below two params are optional and need to be enabled to pass the custom email body
     #user_config.se_notifications_enable_custom_email_body: True,
     #user_config.se_notifications_email_custom_body: "Custom statistics: 'product_id': {}",
-    #Below parameter is optional and need to be enabled in case authorization is required to access smtp server.
+    #Below parameter is optional and needs to be enabled in case authorization is required to access smtp server.
     #user_config.se_notifications_email_smtp_auth: True,
 }
 ```

@@ -21,6 +21,8 @@ class Constants:
     se_notifications_smtp_creds_dict = (
         "spark.expectations.notifications.smtp.creds.dict"
     )
+    cbs_smtp_password = "spark.expectations.notifications.cerberus.smtp.password"
+    dbx_smtp_password = "spark.expectations.notifications.dbx.smtp.password"
     se_notifications_email_from = "spark.expectations.notifications.email.from"
     se_notifications_email_to_other_mail_id = (
         "spark.expectations.notifications.email.to.other.mail.com"
@@ -72,7 +74,6 @@ class Constants:
     cbs_secret_app_name = "se.streaming.cbs.secret.app.name"
     cbs_secret_token = "se.streaming.cerberus.secret.token"
     cbs_topic_name = "se.streaming.cerberus.token.name"
-    cbs_smtp_password = "se.streaming.cerberus.smtp.password"
 
     dbx_workspace_url = "se.streaming.dbx.workspace.url"
     dbx_secret_scope = "se.streaming.dbx.secret.scope"
@@ -81,7 +82,6 @@ class Constants:
     dbx_secret_app_name = "se.streaming.dbx.secret.app.name"
     dbx_secret_token = "se.streaming.dbx.secret.token"
     dbx_topic_name = "se.streaming.dbx.topic.name"
-    dbx_smtp_password = "se.streaming.dbx.smtp.password"
 
     # declare const user config variables for agg query dq detailed stats
     se_enable_agg_dq_detailed_result = "spark.expectations.agg.dq.detailed.stats"

@@ -154,7 +154,7 @@ def fixture_product_rules_pipe():
             "se.streaming.secret.type": "cerberus",
             "se.streaming.cerberus.url": "https://xyz.com",
             "se.streaming.cerberus.sdb.path": "abc",
-            "se.streaming.cerberus.smtp.password": "def"
+            "spark.expectations.notifications.cerberus.smtp.password": "def"
                 },
          "spark.expectations.notifications.email.from": "sender@mail.com",
          "spark.expectations.notifications.email.to.other.mail.com": "recipient@mail.com",

@@ -34,7 +34,6 @@ from spark_expectations.core.expectations import (
 )
 from spark_expectations.config.user_config import Constants as user_config
 
-
 writer = WrappedDataFrameWriter().mode("append").format("delta")
 
 se: SparkExpectations = SparkExpectations(
@@ -44,7 +43,7 @@ se: SparkExpectations = SparkExpectations(
     stats_table_writer=writer,
     target_and_error_table_writer=writer,
     debugger=False,
-    stats_streaming_options={user_config.se_enable_streaming: False},
+    stats_streaming_options={user_config.se_enable_streaming: False}
 )
 
 #if smtp server needs to be authenticated, password can be passed directly with user config or set in a secure way like cerberus or databricks secret

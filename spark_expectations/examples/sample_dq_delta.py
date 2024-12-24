@@ -23,7 +23,7 @@ job_info = str(dic_job_info)
 
 
 se: SparkExpectations = SparkExpectations(
-    product_id="your_productreport",
+    product_id="your_product",
     rules_df=spark.table("dq_spark_dev.dq_rules"),
     stats_table="dq_spark_dev.dq_stats",
     stats_table_writer=writer,

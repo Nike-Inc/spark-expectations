@@ -56,7 +56,7 @@ def test_context_properties():
         "se.streaming.secret.type": "cerberus",
         "se.streaming.cerberus.url": "https://xyz.com",
         "se.streaming.cerberus.sdb.path": "abc",
-        "se.streaming.cerberus.smtp.password": "def"
+        "spark.expectations.notifications.cerberus.smtp.password": "def"
     }
     context._enable_mail = True
     context._enable_smtp_server_auth = True
@@ -189,7 +189,7 @@ def test_context_properties():
         "se.streaming.secret.type": "cerberus",
         "se.streaming.cerberus.url": "https://xyz.com",
         "se.streaming.cerberus.sdb.path": "abc",
-        "se.streaming.cerberus.smtp.password": "def"
+        "spark.expectations.notifications.cerberus.smtp.password": "def"
     }
     assert context._enable_mail is True
     assert context._enable_smtp_server_auth is True
@@ -552,20 +552,20 @@ def test_set_smtp_creds_dict():
         "se.streaming.secret.type": "cerberus",
         "se.streaming.cerberus.url": "https://xyz.com",
         "se.streaming.cerberus.sdb.path": "abc",
-        "se.streaming.cerberus.smtp.password": "def"
+        "spark.expectations.notifications.cerberus.smtp.password": "def"
     }
     )
     assert context._smtp_creds_dict == {
         "se.streaming.secret.type": "cerberus",
         "se.streaming.cerberus.url": "https://xyz.com",
         "se.streaming.cerberus.sdb.path": "abc",
-        "se.streaming.cerberus.smtp.password": "def"
+        "spark.expectations.notifications.cerberus.smtp.password": "def"
     }
     assert context.get_smtp_creds_dict == {
         "se.streaming.secret.type": "cerberus",
         "se.streaming.cerberus.url": "https://xyz.com",
         "se.streaming.cerberus.sdb.path": "abc",
-        "se.streaming.cerberus.smtp.password": "def"
+        "spark.expectations.notifications.cerberus.smtp.password": "def"
     }
 
 def test_set_to_mail():
