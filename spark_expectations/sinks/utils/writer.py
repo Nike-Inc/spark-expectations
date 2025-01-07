@@ -801,7 +801,7 @@ class SparkExpectationsWriter:
                         "kafka.bootstrap.servers": f"{secret_handler.get_secret(self._context.get_server_url_key)}",
                         "kafka.security.protocol": "SASL_SSL",
                         "kafka.sasl.mechanism": "OAUTHBEARER",
-                        "kafka.sasl.jaas.config": """{0} required clientId="{1}" clientSecret="{2}" tokenEndpoint="{3}";""".format(
+                        "kafka.sasl.jaas.config": """{0} required clientId="{1}" clientSecret="{2}" tokenEndpointUrl="{3}";""".format(
                             "kafkashaded.org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule",
                             secret_handler.get_secret(self._context.get_client_id),
                             secret_handler.get_secret(self._context.get_token),
