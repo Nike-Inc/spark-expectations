@@ -847,6 +847,8 @@ class SparkExpectationsWriter:
                         }
                     )
 
+                _log.info("kafka write options: %s", kafka_write_options)
+
                 _sink_hook.writer(
                     _write_args={
                         "product_id": self._context.product_id,
