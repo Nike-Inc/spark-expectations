@@ -19,18 +19,6 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
     This class implements/supports functionality to send email
     """
 
-    def _retrieve_password(
-        self,
-        secret_handler: SparkExpectationsSecretsBackend,
-        secret_type: str,
-        smtp_secret_dict: dict,
-    ) -> Optional[str]:
-        if secret_type == "cerberus":
-            return self._get_cerberus_password(secret_handler, smtp_secret_dict)
-        elif secret_type == "databricks":
-            return self._get_databricks_password(secret_handler, smtp_secret_dict)
-        return None
-
     def _get_cerberus_password(
         self, secret_handler: SparkExpectationsSecretsBackend, smtp_secret_dict: dict
     ) -> Optional[str]:
@@ -48,6 +36,18 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
         smtp_password_key = smtp_secret_dict.get(user_config.dbx_smtp_password)
         if smtp_password_key:
             return secret_handler.get_secret(smtp_password_key)
+        return None
+
+    def _retrieve_password(
+        self,
+        secret_handler: SparkExpectationsSecretsBackend,
+        secret_type: str,
+        smtp_secret_dict: dict,
+    ) -> Optional[str]:
+        if secret_type == "cerberus":
+            return self._get_cerberus_password(secret_handler, smtp_secret_dict)
+        elif secret_type == "databricks":
+            return self._get_databricks_password(secret_handler, smtp_secret_dict)
         return None
 
     def _get_smtp_password(
@@ -117,7 +117,7 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
                     _context.get_mail_smtp_server, _context.get_mail_smtp_port
                 )
                 server.starttls()
-                if _context.get_enable_smtp_server_auth is True:
+                if _context.get_enable_smtp_server_auth:
                     self._get_smtp_password(_context, server)
                 text = msg.as_string()
                 server.sendmail(
