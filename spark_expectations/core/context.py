@@ -47,12 +47,15 @@ class SparkExpectationsContext:
         self._dq_config_abs_path: Optional[str] = None
 
         self._enable_mail: bool = False
+        self._enable_smtp_server_auth: bool = False
         self._enable_custom_email_body: bool = False
         self._to_mail: Optional[str] = None
         self._mail_subject: Optional[str] = None
         self._mail_from: Optional[str] = None
         self._mail_smtp_server: str
         self._mail_smtp_port: int
+        self._mail_smtp_password: Optional[str] = None
+        self._smtp_creds_dict: Dict[str, str] = {}
         self._email_custom_body: Optional[str] = None
 
         self._enable_slack: bool = False
@@ -483,6 +486,35 @@ class SparkExpectationsContext:
             accessing it"""
         )
 
+    def set_mail_smtp_password(self, mail_smtp_password: str) -> None:
+        self._mail_smtp_password = mail_smtp_password
+
+    @property
+    def get_mail_smtp_password(self) -> Optional[str]:
+        """
+        This functions returns smtp password
+        Returns:
+            str: returns _mail_smtp_server password or None if smtp password is not set
+
+        """
+        if self._mail_smtp_password:
+            return self._mail_smtp_password
+
+        else:
+            return None
+
+    def set_smtp_creds_dict(self, smtp_creds_dict: Dict[str, str]) -> None:
+        """
+        This function helps to set secret keys dict for smtp server authentication"""
+        self._smtp_creds_dict = smtp_creds_dict
+
+    @property
+    def get_smtp_creds_dict(self) -> Dict[str, str]:
+        """
+        This function returns secret keys dict for smtp server authentication
+        """
+        return self._smtp_creds_dict
+
     def set_enable_mail(self, enable_mail: bool) -> None:
         self._enable_mail = bool(enable_mail)
 
@@ -496,21 +528,21 @@ class SparkExpectationsContext:
         """
         return self._enable_mail
 
-    def set_to_mail(self, to_mail: str) -> None:
-        self._to_mail = to_mail
-
-    def set_enable_custom_email_body(self, enable_custom_email_body: bool) -> None:
-        self._enable_custom_email_body = bool(enable_custom_email_body)
+    def set_enable_smtp_server_auth(self, enable_smtp_server_auth: bool) -> None:
+        self._enable_smtp_server_auth = bool(enable_smtp_server_auth)
 
     @property
-    def get_enable_custom_email_body(self) -> bool:
+    def get_enable_smtp_server_auth(self) -> bool:
         """
-        This function return whether to enable custom email body or not
+        This function return whether smtp server requires authentication or not
         Returns:
-            str: Returns  _enable_custom_email_body(bool)
+            str: Returns  _enable_smtp_server_auth(bool)
 
         """
-        return self._enable_custom_email_body
+        return self._enable_smtp_server_auth
+
+    def set_to_mail(self, to_mail: str) -> None:
+        self._to_mail = to_mail
 
     @property
     def get_to_mail(self) -> str:
@@ -527,6 +559,19 @@ class SparkExpectationsContext:
             """The spark expectations context is not set completely, please assign '_to_mail' before 
             accessing it"""
         )
+
+    def set_enable_custom_email_body(self, enable_custom_email_body: bool) -> None:
+        self._enable_custom_email_body = bool(enable_custom_email_body)
+
+    @property
+    def get_enable_custom_email_body(self) -> bool:
+        """
+        This function return whether to enable custom email body or not
+        Returns:
+            str: Returns  _enable_custom_email_body(bool)
+
+        """
+        return self._enable_custom_email_body
 
     def set_mail_from(self, mail_from: str) -> None:
         self._mail_from = mail_from

@@ -35,9 +35,11 @@ class SparkExpectationsReader:
         try:
             _default_spark_conf: Dict[str, Union[str, int, bool]] = {
                 user_config.se_notifications_enable_email: False,
+                user_config.se_notifications_enable_smtp_server_auth: False,
                 user_config.se_notifications_enable_custom_email_body: False,
                 user_config.se_notifications_email_smtp_host: "",
                 user_config.se_notifications_email_smtp_port: 25,
+                user_config.se_notifications_smtp_password: "",
                 user_config.se_notifications_email_from: "",
                 user_config.se_notifications_email_to_other_mail_id: "",
                 user_config.se_notifications_email_subject: "spark-expectations-testing",
@@ -105,6 +107,44 @@ class SparkExpectationsReader:
                     raise SparkExpectationsMiscException(
                         "All params/variables required for email notification is not configured or supplied"
                     )
+                if _notification_dict[
+                    user_config.se_notifications_enable_smtp_server_auth
+                ]:
+                    self._context.set_enable_smtp_server_auth(True)
+                    if (
+                        _notification_dict[user_config.se_notifications_smtp_password]
+                        and _notification_dict[
+                            user_config.se_notifications_smtp_password
+                        ]
+                        != ""
+                    ):
+                        self._context.set_mail_smtp_password(
+                            str(
+                                _notification_dict[
+                                    user_config.se_notifications_smtp_password
+                                ]
+                            )
+                        )
+                    elif (
+                        user_config.se_notifications_smtp_creds_dict
+                        in _notification_dict
+                    ):
+                        smtp_creds_dict = _notification_dict[
+                            user_config.se_notifications_smtp_creds_dict
+                        ]
+                        if isinstance(smtp_creds_dict, dict) and all(
+                            isinstance(k, str) and isinstance(v, str)
+                            for k, v in smtp_creds_dict.items()
+                        ):
+                            self._context.set_smtp_creds_dict(smtp_creds_dict)
+                        else:
+                            raise SparkExpectationsMiscException(
+                                "SMTP creds dict contains non-string keys or values"
+                            )
+                    else:
+                        raise SparkExpectationsMiscException(
+                            "SMTP password is not set or secret dict for its retrieval is not provided"
+                        )
                 if (
                     _notification_dict[
                         user_config.se_notifications_enable_custom_email_body

@@ -51,7 +51,15 @@ def test_context_properties():
     context._dq_config_abs_path = "sparkexpectations/config.ini"
     context._mail_smtp_server = "abc"
     context._mail_smtp_port = 25
+    context._mail_smtp_password = "test_password"
+    context._smtp_creds_dict = {
+        "se.streaming.secret.type": "cerberus",
+        "se.streaming.cerberus.url": "https://xyz.com",
+        "se.streaming.cerberus.sdb.path": "abc",
+        "spark.expectations.notifications.cerberus.smtp.password": "def"
+    }
     context._enable_mail = True
+    context._enable_smtp_server_auth = True
     context._enable_custom_email_body = True
     context._to_mail = "abc@mail.com, decf@mail.com"
     context._mail_from = "abc@mail.com"
@@ -176,7 +184,15 @@ def test_context_properties():
     assert context._dq_config_abs_path == "sparkexpectations/config.ini"
     assert context._mail_smtp_server == "abc"
     assert context.get_mail_smtp_port == 25
+    assert context._mail_smtp_password == "test_password"
+    assert context._smtp_creds_dict == {
+        "se.streaming.secret.type": "cerberus",
+        "se.streaming.cerberus.url": "https://xyz.com",
+        "se.streaming.cerberus.sdb.path": "abc",
+        "spark.expectations.notifications.cerberus.smtp.password": "def"
+    }
     assert context._enable_mail is True
+    assert context._enable_smtp_server_auth is True
     assert context._enable_custom_email_body is True
     assert context._to_mail == "abc@mail.com, decf@mail.com"
     assert context._mail_from == "abc@mail.com"
@@ -493,6 +509,13 @@ def test_set_enable_mail():
     assert context.get_enable_mail is True
 
 
+def test_set_enable_smtp_server_auth():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_enable_smtp_server_auth(True)
+    assert context._enable_smtp_server_auth is True
+    assert context.get_enable_smtp_server_auth is True
+
+
 def test_set_enable_custom_email_body():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_enable_custom_email_body(True)
@@ -514,6 +537,36 @@ def test_set_smtp_port():
     assert context._mail_smtp_port == 25
     assert context.get_mail_smtp_port == 25
 
+
+def test_set_mail_smtp_password():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_mail_smtp_password("test_password")
+    assert context._mail_smtp_password == "test_password"
+    assert context.get_mail_smtp_password == "test_password"
+
+
+def test_set_smtp_creds_dict():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_smtp_creds_dict(
+        {
+        "se.streaming.secret.type": "cerberus",
+        "se.streaming.cerberus.url": "https://xyz.com",
+        "se.streaming.cerberus.sdb.path": "abc",
+        "spark.expectations.notifications.cerberus.smtp.password": "def"
+    }
+    )
+    assert context._smtp_creds_dict == {
+        "se.streaming.secret.type": "cerberus",
+        "se.streaming.cerberus.url": "https://xyz.com",
+        "se.streaming.cerberus.sdb.path": "abc",
+        "spark.expectations.notifications.cerberus.smtp.password": "def"
+    }
+    assert context.get_smtp_creds_dict == {
+        "se.streaming.secret.type": "cerberus",
+        "se.streaming.cerberus.url": "https://xyz.com",
+        "se.streaming.cerberus.sdb.path": "abc",
+        "spark.expectations.notifications.cerberus.smtp.password": "def"
+    }
 
 def test_set_to_mail():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
@@ -718,6 +771,12 @@ def test_get_mail_smtp_port_exception():
         "'_mail_smtp_port' before \n            accessing it",
     ):
         context.get_mail_smtp_port
+
+
+def test_get_mail_smtp_password_none():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._mail_smtp_password = None
+    assert context.get_mail_smtp_password is None
 
 
 def test_get_to_mail_exception():
