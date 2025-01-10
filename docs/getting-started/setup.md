@@ -156,29 +156,30 @@ product_id string,  -- (2)!
 table_name string,  -- (3)!  
 rule_type string,  -- (4)!  
 rule string,  -- (5)!
-source_expectations string,  -- (6)!
-tag string,  -- (7)!
-description string,  -- (8)!
-source_dq_status string,  -- (9)!
-source_dq_actual_outcome string,  -- (10)!
-source_dq_expected_outcome string,  -- (11)!
-source_dq_actual_row_count string,  -- (12)!
-source_dq_error_row_count string,  -- (13)!
-source_dq_row_count string,  -- (14)!
-source_dq_start_time string,  -- (15)!
-source_dq_end_time string,  -- (16)!
-target_expectations string,  -- (17)!
-target_dq_status string,  -- (18)!
-target_dq_actual_outcome string,  -- (19)!
-target_dq_expected_outcome string,  -- (20)!
-target_dq_actual_row_count string,  -- (21)!
-target_dq_error_row_count string,  -- (22)!
-target_dq_row_count string,  -- (23)!
-target_dq_start_time string,  -- (24)!
-target_dq_end_time string,  -- (25)!
-dq_date date,  -- (26)!
-dq_time string,  -- (27)!
-dq_job_metadata_info string,  -- (28)!
+column_name, --(6)!
+source_expectations string,  -- (7)!
+tag string,  -- (8)!
+description string,  -- (9)!
+source_dq_status string,  -- (10)!
+source_dq_actual_outcome string,  -- (11)!
+source_dq_expected_outcome string,  -- (12)!
+source_dq_actual_row_count string,  -- (13)!
+source_dq_error_row_count string,  -- (14)!
+source_dq_row_count string,  -- (15)!
+source_dq_start_time string,  -- (16)!
+source_dq_end_time string,  -- (17)!
+target_expectations string,  -- (18)!
+target_dq_status string,  -- (19)!
+target_dq_actual_outcome string,  -- (20)!
+target_dq_expected_outcome string,  -- (21)!
+target_dq_actual_row_count string,  -- (22)!
+target_dq_error_row_count string,  -- (23)!
+target_dq_row_count string,  -- (24)!
+target_dq_start_time string,  -- (25)!
+target_dq_end_time string,  -- (26)!
+dq_date date,  -- (27)!
+dq_time string,  -- (28)!
+dq_job_metadata_info string,  -- (29)!
 );
 ```
 
@@ -187,26 +188,27 @@ dq_job_metadata_info string,  -- (28)!
 3. `table_name` The target table where the final data gets inserted
 4. `rule_type` Either row/query/agg dq
 5. `rule`  Rule name
-6. `source_expectations` Actual Rule to be executed on the source dq
-7. `tag` completeness,uniqueness,validity,accuracy,consistency,
-8. `description` Description of the Rule
-9. `source_dq_status` Status of the rule execution in the Source dq
-10. `source_dq_actual_outcome` Actual outcome of the Source dq check
-11. `source_dq_expected_outcome` Expected outcome of the Source dq check
-12. `source_dq_actual_row_count` Number of rows of the source dq
-13. `source_dq_error_row_count` Number of rows failed in the source dq
-14. `source_dq_row_count` Number of rows of the source dq
-15. `source_dq_start_time` source dq start timestamp
-16. `source_dq_end_time` source dq end timestamp
-17. `target_expectations` Actual Rule to be executed on the target dq
-18. `target_dq_status` Status of the rule execution in the Target dq
-19. `target_dq_actual_outcome` Actual outcome of the Target dq check
-20. `target_dq_expected_outcome` Expected outcome of the Target dq check
-21. `target_dq_actual_row_count` Number of rows of the target dq
-22. `target_dq_error_row_count` Number of rows failed in the target dq
-23. `target_dq_row_count` Number of rows of the target dq
-24. `target_dq_start_time` target dq start timestamp
-25. `target_dq_end_time` target dq end timestamp
-26. `dq_date` Dq executed date
-27. `dq_time` Dq executed timestamp
-28. `dq_job_metadata_info` dq job metadata
+6. `column_name` column name where the rule got executed
+7. `source_expectations` Actual Rule to be executed on the source dq
+8. `tag` completeness,uniqueness,validity,accuracy,consistency,
+9. `description` Description of the Rule
+10. `source_dq_status` Status of the rule execution in the Source dq
+11. `source_dq_actual_outcome` Actual outcome of the Source dq check
+12. `source_dq_expected_outcome` Expected outcome of the Source dq check
+13. `source_dq_actual_row_count` Number of rows of the source dq
+14. `source_dq_error_row_count` Number of rows failed in the source dq
+15. `source_dq_row_count` Number of rows of the source dq
+16. `source_dq_start_time` source dq start timestamp
+17. `source_dq_end_time` source dq end timestamp
+18. `target_expectations` Actual Rule to be executed on the target dq
+19. `target_dq_status` Status of the rule execution in the Target dq
+20. `target_dq_actual_outcome` Actual outcome of the Target dq check
+21. `target_dq_expected_outcome` Expected outcome of the Target dq check
+22. `target_dq_actual_row_count` Number of rows of the target dq
+23. `target_dq_error_row_count` Number of rows failed in the target dq
+24. `target_dq_row_count` Number of rows of the target dq
+25. `target_dq_start_time` target dq start timestamp
+26. `target_dq_end_time` target dq end timestamp
+27. `dq_date` Dq executed date
+28. `dq_time` Dq executed timestamp
+29. `dq_job_metadata_info` dq job metadata

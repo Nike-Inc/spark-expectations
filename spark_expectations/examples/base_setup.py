@@ -134,6 +134,7 @@ def set_up_delta() -> SparkSession:
         .config("spark.sql.warehouse.dir", "/tmp/hive/warehouse")
         .config("spark.driver.extraJavaOptions", "-Dderby.system.home=/tmp/derby")
         .config("spark.jars.ivy", "/tmp/ivy2")
+        .config("spark.databricks.delta.schema.autoMerge.enabled", "true")
     )
     spark = builder.getOrCreate()
 
