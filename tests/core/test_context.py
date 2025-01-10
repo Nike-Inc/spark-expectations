@@ -1,3 +1,4 @@
+
 # pylint: disable=pointless-statement
 from datetime import datetime, timedelta
 from unittest.mock import patch
@@ -51,7 +52,15 @@ def test_context_properties():
     context._dq_config_abs_path = "sparkexpectations/config.ini"
     context._mail_smtp_server = "abc"
     context._mail_smtp_port = 25
+    context._mail_smtp_password = "test_password"
+    context._smtp_creds_dict = {
+        "se.streaming.secret.type": "cerberus",
+        "se.streaming.cerberus.url": "https://xyz.com",
+        "se.streaming.cerberus.sdb.path": "abc",
+        "spark.expectations.notifications.cerberus.smtp.password": "def"
+    }
     context._enable_mail = True
+    context._enable_smtp_server_auth = True
     context._enable_custom_email_body = True
     context._to_mail = "abc@mail.com, decf@mail.com"
     context._mail_from = "abc@mail.com"
@@ -176,7 +185,15 @@ def test_context_properties():
     assert context._dq_config_abs_path == "sparkexpectations/config.ini"
     assert context._mail_smtp_server == "abc"
     assert context.get_mail_smtp_port == 25
+    assert context._mail_smtp_password == "test_password"
+    assert context._smtp_creds_dict == {
+        "se.streaming.secret.type": "cerberus",
+        "se.streaming.cerberus.url": "https://xyz.com",
+        "se.streaming.cerberus.sdb.path": "abc",
+        "spark.expectations.notifications.cerberus.smtp.password": "def"
+    }
     assert context._enable_mail is True
+    assert context._enable_smtp_server_auth is True
     assert context._enable_custom_email_body is True
     assert context._to_mail == "abc@mail.com, decf@mail.com"
     assert context._mail_from == "abc@mail.com"
@@ -493,6 +510,13 @@ def test_set_enable_mail():
     assert context.get_enable_mail is True
 
 
+def test_set_enable_smtp_server_auth():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_enable_smtp_server_auth(True)
+    assert context._enable_smtp_server_auth is True
+    assert context.get_enable_smtp_server_auth is True
+
+
 def test_set_enable_custom_email_body():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_enable_custom_email_body(True)
@@ -514,6 +538,36 @@ def test_set_smtp_port():
     assert context._mail_smtp_port == 25
     assert context.get_mail_smtp_port == 25
 
+
+def test_set_mail_smtp_password():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_mail_smtp_password("test_password")
+    assert context._mail_smtp_password == "test_password"
+    assert context.get_mail_smtp_password == "test_password"
+
+
+def test_set_smtp_creds_dict():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_smtp_creds_dict(
+        {
+        "se.streaming.secret.type": "cerberus",
+        "se.streaming.cerberus.url": "https://xyz.com",
+        "se.streaming.cerberus.sdb.path": "abc",
+        "spark.expectations.notifications.cerberus.smtp.password": "def"
+    }
+    )
+    assert context._smtp_creds_dict == {
+        "se.streaming.secret.type": "cerberus",
+        "se.streaming.cerberus.url": "https://xyz.com",
+        "se.streaming.cerberus.sdb.path": "abc",
+        "spark.expectations.notifications.cerberus.smtp.password": "def"
+    }
+    assert context.get_smtp_creds_dict == {
+        "se.streaming.secret.type": "cerberus",
+        "se.streaming.cerberus.url": "https://xyz.com",
+        "se.streaming.cerberus.sdb.path": "abc",
+        "spark.expectations.notifications.cerberus.smtp.password": "def"
+    }
 
 def test_set_to_mail():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
@@ -718,6 +772,12 @@ def test_get_mail_smtp_port_exception():
         "'_mail_smtp_port' before \n            accessing it",
     ):
         context.get_mail_smtp_port
+
+
+def test_get_mail_smtp_password_none():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._mail_smtp_password = None
+    assert context.get_mail_smtp_password is None
 
 
 def test_get_to_mail_exception():
@@ -2120,3 +2180,145 @@ def test_get_job_metadata():
     # testing for None condition
     context._job_metadata = None
     assert context.get_job_metadata is None
+
+
+
+def test_set_enable_obs_dq_report_result():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_enable_obs_dq_report_result(True)
+    assert context.get_enable_obs_dq_report_result is True
+
+def test_get_enable_obs_dq_report_result():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_enable_obs_dq_report_result(True)
+    assert context.get_enable_obs_dq_report_result is True
+
+    # testing for None condition
+    context._enable_obs_dq_report_result = None
+    assert context.get_enable_obs_dq_report_result is None
+
+def test_set_se_dq_obs_alert_flag():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_se_dq_obs_alert_flag(True)
+    assert context.get_se_dq_obs_alert_flag is True
+
+
+def test_get_se_dq_obs_alert_flag():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_se_dq_obs_alert_flag(True)
+    assert context.get_se_dq_obs_alert_flag is True
+
+    # testing for None condition
+    context._se_dq_obs_alert_flag = None
+    assert context.get_se_dq_obs_alert_flag is None
+
+
+def test_set_default_template():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_default_template("test_template")
+    assert context.get_default_template == "test_template"
+
+
+def test_get_default_template():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_default_template("test_template")
+    assert context.get_default_template == "test_template"
+
+    # testing for None condition
+    context._default_template = None
+    assert context.get_default_template is None
+
+
+def test_set_stats_detailed_dataframe():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    data = [("test_product_id", "test_schema.table1", 5)]
+    columns = ["product_id", "table_name", "error_count"]
+    df = spark.createDataFrame(data, columns)
+    context.set_stats_detailed_dataframe(df)
+
+def test_get_stats_detailed_dataframe():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    data = [("test_product_id", "test_schema.table1", 5)]
+    columns = ["product_id", "table_name", "error_count"]
+    df = spark.createDataFrame(data, columns)
+    context._stats_detailed_dataframe = df
+
+    if context.get_stats_detailed_dataframe is None:
+        assert context.get_stats_detailed_dataframe is None
+    else:
+        assert context.get_stats_detailed_dataframe.collect() == df.collect()
+
+
+
+def test_set_custom_detailed_dataframe():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    data = [("test_product_id", "test_schema.table1", 5)]
+    columns = ["product_id", "table_name", "error_count"]
+    df = spark.createDataFrame(data, columns)
+    context.set_custom_detailed_dataframe(df)
+
+def test_get_custom_detailed_dataframe():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    data = [("test_product_id", "test_schema.table1", 5)]
+    columns = ["product_id", "table_name", "error_count"]
+    df = spark.createDataFrame(data, columns)
+    context._custom_detailed_dataframe = df
+
+    if context.get_custom_detailed_dataframe is None:
+        assert context.get_custom_detailed_dataframe is None
+    else:
+        assert context.get_custom_detailed_dataframe.collect() == df.collect()
+
+
+def test_set_report_table_name():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_report_table_name("test_table")
+    assert context.get_report_table_name == "test_table"
+
+
+def test_get_report_table_name():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_report_table_name("test_table")
+    assert context.get_report_table_name == "test_table"
+
+    # testing for None condition
+    context._report_table_name = None
+    assert context.get_report_table_name is None
+
+
+def test_set_dq_obs_rpt_gen_status_flag():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_dq_obs_rpt_gen_status_flag(True)
+    assert context.get_dq_obs_rpt_gen_status_flag is True
+
+
+def test_get_dq_obs_rpt_gen_status_flag():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_dq_obs_rpt_gen_status_flag(True)
+    assert context.get_dq_obs_rpt_gen_status_flag is True
+
+    # testing for None condition
+    context._dq_obs_rpt_gen_status_flag = None
+    assert context.get_dq_obs_rpt_gen_status_flag is None
+
+
+
+def test_set_df_dq_obs_report_dataframe():
+    #
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    data = [("test_product_id", "test_schema.table1", 5)]
+    columns = ["product_id", "table_name", "error_count"]
+    df = spark.createDataFrame(data, columns)
+    context.set_df_dq_obs_report_dataframe(df)
+
+def test_get_df_dq_obs_report_dataframe():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    data = [("test_product_id", "test_schema.table1", 5)]
+    columns = ["product_id", "table_name", "error_count"]
+    df = spark.createDataFrame(data, columns)
+    context._df_dq_obs_report_dataframe = df
+
+    if context.get_df_dq_obs_report_dataframe is None:
+        assert context.get_df_dq_obs_report_dataframe is None
+    else:
+        assert context.get_df_dq_obs_report_dataframe.collect() == df.collect()

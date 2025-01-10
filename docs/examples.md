@@ -8,54 +8,100 @@ from spark_expectations.config.user_config import Constants as user_config
 
 se_user_conf = {
     user_config.se_notifications_enable_email: False,  # (1)!
-    user_config.se_notifications_enable_custom_email_body: False, # (2)
-    user_config.se_notifications_email_smtp_host: "mailhost.com",  # (3)!
-    user_config.se_notifications_email_smtp_port: 25,  # (4)!
-    user_config.se_notifications_email_from: "<sender_email_id>",  # (5)!
-    user_config.se_notifications_email_to_other_mail_id: "<receiver_email_id's>",  # (6)!
-    user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",  # (7)!
-    user_config.se_notifications_email_custom_body: "custom stats: 'product_id': {}", # (8)!
-    user_config.se_notifications_enable_slack: True,  # (9)!
-    user_config.se_notifications_slack_webhook_url: "<slack-webhook-url>",  # (10)!
-    user_config.se_notifications_on_start: True,  # (11)!
-    user_config.se_notifications_on_completion: True,  # (12)!
-    user_config.se_notifications_on_fail: True,  # (13)!
-    user_config.se_notifications_on_error_drop_exceeds_threshold_breach: True,  # (14)!
-    user_config.se_notifications_on_error_drop_threshold: 15,  # (15)!
-    user_config.se_enable_error_table: True,  # (16)!
-    user_config.enable_query_dq_detailed_result: True, # (17)!
-    user_config.enable_agg_dq_detailed_result: True, # (18)!
-    user_config.querydq_output_custom_table_name: "<catalog.schema.table-name>", #19
+    user_config.se_notifications_enable_smtp_server_auth: False, # (2)!
+    user_config.se_notifications_enable_custom_email_body: False, # (3)
+    user_config.se_notifications_email_smtp_host: "mailhost.com",  # (4)!
+    user_config.se_notifications_email_smtp_port: 25,  # (5)!
+    user_config.se_notifications_smtp_password: "your_password",# (6)!
+    # user_config.se_notifications_smtp_creds_dict: {
+    #     user_config.secret_type: "cerberus",
+    #     user_config.cbs_url: "https://cerberus.example.com",
+    #     user_config.cbs_sdb_path: "your_sdb_path",
+    #     user_config.cbs_smtp_password: "your_smtp_password",
+    # }, # (7)!
+    user_config.se_notifications_email_from: "<sender_email_id>",  # (8)!
+    user_config.se_notifications_email_to_other_mail_id: "<receiver_email_id's>",  # (9)!
+    user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",  # (10)!
+    user_config.se_notifications_email_custom_body: "custom stats: 'product_id': {}", # (11)!
+    user_config.se_notifications_enable_slack: True,  # (12)!
+    user_config.se_notifications_slack_webhook_url: "<slack-webhook-url>",  # (13)!
+    user_config.se_notifications_on_start: True,  # (14)!
+    user_config.se_notifications_on_completion: True,  # (15)!
+    user_config.se_notifications_on_fail: True,  # (16)!
+    user_config.se_notifications_on_error_drop_exceeds_threshold_breach: True,  # (17)!
+    user_config.se_notifications_on_rules_action_if_failed_set_ignore: True,  # (18)! 
+   user_config.se_notifications_on_error_drop_threshold: 15,  # (19)!
+    user_config.se_enable_error_table: True,  # (20)!
+    user_config.enable_query_dq_detailed_result: True, # (21)!
+    user_config.enable_agg_dq_detailed_result: True, # (22)!
+    user_config.querydq_output_custom_table_name: "<catalog.schema.table-name>", #23
     user_config.se_dq_rules_params: {
         "env": "local",
         "table": "product",
-     }, # (20)!
+     }, # (24)!
 }
 }
 ```
 
 1. The `user_config.se_notifications_enable_email` parameter, which controls whether notifications are sent via email, is set to false by default
-2. The `user_config.se_notifications_enable_custom_email_body` optional parameter, which controls whether custom email body is enabled, is set to false by default
-3. The `user_config.se_notifications_email_smtp_host` parameter is set to "mailhost.com" by default and is used to specify the email SMTP domain host
-4. The `user_config.se_notifications_email_smtp_port` parameter, which accepts a port number, is set to "25" by default
-5. The `user_config.se_notifications_email_from` parameter is used to specify the email ID that will trigger the email notification
-6. The `user_config.se_notifications_email_to_other_mail_id` parameter accepts a list of recipient email IDs
-7. The `user_config.se_notifications_email_subject` parameter captures the subject line of the email
-8. The `user_config.se_notifications_email_custom_body` optional parameter, captures the custom email body, need to be compliant with certain syntax
-9. The `user_config.se_notifications_enable_slack` parameter, which controls whether notifications are sent via slack, is set to false by default
-10. The `user_config/se_notifications_slack_webhook_url` parameter accepts the webhook URL of a Slack channel for sending notifications
-11. When `user_config.se_notifications_on_start` parameter set to `True` enables notification on start of the spark-expectations, variable by default set to `False`
-12. When `user_config.se_notifications_on_completion` parameter set to `True` enables notification on completion of spark-expectations framework, variable by default set to `False`
-13. When `user_config.se_notifications_on_fail` parameter set to `True` enables notification on failure of spark-expectations data quality framework, variable by default set to `True`
-14. When `user_config.se_notifications_on_error_drop_exceeds_threshold_breach` parameter set to `True` enables notification when error threshold reaches above the configured value
-15. The `user_config.se_notifications_on_error_drop_threshold` parameter captures error drop threshold value
-16. The `user_config.se_enable_error_table` parameter, which controls whether error data to load into error table, is set to true by default
-17. When `user_config.enable_query_dq_detailed_result` parameter set to `True`, enables the option to cature the query_dq detailed stats to detailed_stats table. By default set to `False`
-18. When `user_config.enable_agg_dq_detailed_result` parameter set to `True`, enables the option to cature the agg_dq detailed stats to detailed_stats table. By default set to `False`
-19. The `user_config.querydq_output_custom_table_name` parameter is used to specify the name of the custom query_dq output table which captures the output of the alias queries passed in the query dq expectation. Default is <stats_table>_custom_output
-20. The `user_config.se_dq_rules_params` parameter, which are required to dynamically update dq rules
+2. The `user_config.se_notifications_enable_smtp_server_auth` optional parameter, which controls whether SMTP server authentication is enabled, is set to false by default
+3. The `user_config.se_notifications_enable_custom_email_body` optional parameter, which controls whether custom email body is enabled, is set to false by default
+4. The `user_config.se_notifications_email_smtp_host` parameter is set to "mailhost.com" by default and is used to specify the email SMTP domain host
+5. The `user_config.se_notifications_email_smtp_port` parameter, which accepts a port number, is set to "25" by default
+6. The `user_config.se_notifications_smtp_password` parameter is used to specify the password for the SMTP server (if smtp_server requires authentication either this parameter or `user_config.se_notifications_smtp_creds_dict` should be set)
+7. The `user_config.se_notifications_smtp_creds_dict` parameter is used to specify the credentials for the SMTP server (if smtp_server requires authentication either this parameter or `user_config.se_notifications_smtp_password` should be set)
+8. The `user_config.se_notifications_email_from` parameter is used to specify the email ID that will trigger the email notification
+9. The `user_config.se_notifications_email_to_other_mail_id` parameter accepts a list of recipient email IDs
+10. The `user_config.se_notifications_email_subject` parameter captures the subject line of the email
+11. The `user_config.se_notifications_email_custom_body` optional parameter, captures the custom email body, need to be compliant with certain syntax
+12. The `user_config.se_notifications_enable_slack` parameter, which controls whether notifications are sent via slack, is set to false by default 
+13. The `user_config/se_notifications_slack_webhook_url` parameter accepts the webhook URL of a Slack channel for sending notifications 
+14. When `user_config.se_notifications_on_start` parameter set to `True` enables notification on start of the spark-expectations, variable by default set to `False`
+15. When `user_config.se_notifications_on_completion` parameter set to `True` enables notification on completion of spark-expectations framework, variable by default set to `False`
+16. When `user_config.se_notifications_on_fail` parameter set to `True` enables notification on failure of spark-expectations data quality framework, variable by default set to `True`
+17. When `user_config.se_notifications_on_error_drop_exceeds_threshold_breach` parameter set to `True` enables notification when error threshold reaches above the configured value 
+18. When `user_config.se_notifications_on_rules_action_if_failed_set_ignore` parameter set to `True` enables notification when rules action is set to ignore if failed 
+19. The `user_config.se_notifications_on_error_drop_threshold` parameter captures error drop threshold value 
+20. The `user_config.se_enable_error_table` parameter, which controls whether error data to load into error table, is set to true by default 
+21. When `user_config.enable_query_dq_detailed_result` parameter set to `True`, enables the option to cature the query_dq detailed stats to detailed_stats table. By default set to `False`
+22. When `user_config.enable_agg_dq_detailed_result` parameter set to `True`, enables the option to cature the agg_dq detailed stats to detailed_stats table. By default set to `False`
+23. The `user_config.querydq_output_custom_table_name` parameter is used to specify the name of the custom query_dq output table which captures the output of the alias queries passed in the query dq expectation. Default is <stats_table>_custom_output 
+24. The `user_config.se_dq_rules_params` parameter, which are required to dynamically update dq rules
 
+In case of SMTP server authentication, the password can be passed directly with the user config or set in a secure way like Cerberus or Databricks secret.
+If it is preferred to use Cerberus for secure password storage, the `user_config.se_notifications_smtp_creds_dict` parameter can be used to specify the credentials for the SMTP server in the following way:
+```python
+from spark_expectations.config.user_config import Constants as user_config
 
+smtp_creds_dict = {
+    user_config.secret_type: "cerberus", # (1)!
+    user_config.cbs_url: "https://.example.com", # (2)!
+    user_config.cbs_sdb_path: "your_sdb_path", # (3)!
+    user_config.cbs_smtp_password: "your_smtp_password", # (4)!
+    }
+```
+1. The `user_config.secret_type` used to define type of secret store and takes two values (`databricks`, `cerberus`)
+2. The `user_config.cbs_url` used to pass Cerberus URL 
+3. The `user_config.cbs_sdb_path` captures Cerberus secure data store path 
+4. The `user_config.cbs_smtp_password` captures key for smtp_password in the Cerberus sdb
+
+Similarly, if it is preferred to use Databricks for secure password storage, the `user_config.se_notifications_smtp_creds_dict` parameter can be used to specify the credentials for the SMTP server in the following way:
+```python
+from spark_expectations.config.user_config import Constants as user_config
+
+smtp_creds_dict = {
+    user_config.secret_type: "databricks", # (1)!
+    user_config.dbx_workspace_url: "https://workspace.cloud.databricks.com", # (2)!
+    user_config.dbx_secret_scope: "your_secret_scope", # (3)!
+    user_config.dbx_smtp_password: "your_password", # (4)!
+    }
+```
+1. The `user_config.secret_type` used to define type of secret store and takes two values (`databricks`, `cerberus`)
+2. The `user_config.dbx_workspace_url` used to pass Databricks workspace in the format `https://<workspace_name>.cloud.databricks.com`
+3. The `user_config.dbx_secret_scope` captures name of the secret scope
+4. The `user_config.dbx_smtp_password` captures secret key for smtp password in the Databricks secret scope
+
+```python
 ### Spark Expectations Initialization 
 
 For all the below examples the below import and SparkExpectations class instantiation is mandatory

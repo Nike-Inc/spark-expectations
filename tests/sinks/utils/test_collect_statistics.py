@@ -75,7 +75,8 @@ def fixture_create_stats_table():
     dq_rules map<string, map<string,int>>,
     meta_dq_run_id STRING,
     meta_dq_run_date DATE,
-    meta_dq_run_datetime TIMESTAMP
+    meta_dq_run_datetime TIMESTAMP,
+    dq_env STRING
     )
     USING delta
     """
@@ -425,6 +426,7 @@ def test_collect_stats_on_success_failure(
 ):
     # create mock _context object
     _mock_context = Mock(spec=SparkExpectationsContext)
+    _mock_context.get_dq_rules_params = {"env": "test_env"}
     setattr(_mock_context, "get_dq_stats_table_name", "test_dq_stats_table")
     setattr(_mock_context, "get_run_date_name", "meta_dq_run_date")
     setattr(_mock_context, "get_run_date_time_name", "meta_dq_run_datetime")
@@ -959,6 +961,7 @@ def test_collect_stats_on_success_failure_exception(
     _fixture_create_stats_table,
 ):
     _mock_context = Mock(spec=SparkExpectationsContext)
+    _mock_context.get_dq_rules_params = {"env": "test_env"}
     setattr(_mock_context, "get_dq_stats_table_name", "test_dq_stats_table")
     setattr(_mock_context, "get_run_date_name", "meta_dq_run_date")
     setattr(_mock_context, "get_run_date_time_name", "meta_dq_run_datetime")

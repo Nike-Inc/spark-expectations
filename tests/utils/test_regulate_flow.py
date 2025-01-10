@@ -73,7 +73,8 @@ def fixture_create_stats_table():
     dq_rules map<string, map<string,int>>,
     meta_dq_run_id STRING,
     meta_dq_run_date DATE,
-    meta_dq_run_datetime TIMESTAMP
+    meta_dq_run_datetime TIMESTAMP,
+    dq_env STRING
     )
     USING delta
     """

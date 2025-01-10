@@ -1,4 +1,5 @@
 
+
 import os
 import unittest.mock
 from datetime import datetime
@@ -26,6 +27,7 @@ def fixture_mock_context():
 
     mock_object.get_dq_expectations = {
         "rule": "table_row_count_gt_1",
+        "column_name": "col1",
         "description": "table count should be greater than 1",
         "rule_type": "query_dq",
         "tag": "validity",
@@ -178,7 +180,8 @@ def fixture_create_stats_table():
     dq_rules map<string, map<string,int>>,
     meta_dq_run_id STRING,
     meta_dq_run_date DATE,
-    meta_dq_run_datetime TIMESTAMP
+    meta_dq_run_datetime TIMESTAMP,
+    dq_env STRING
     )
     USING delta
     """
@@ -388,6 +391,7 @@ def test_write_df_to_table(
 )
 def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
     _mock_context = Mock(spec=SparkExpectationsContext)
+    _mock_context.get_dq_rules_params = {"env": "test_env"}
     setattr(_mock_context, "get_dq_expectations", input_record.get("row_dq_rules"))
     _mock_context.spark = spark
     _fixture_writer = SparkExpectationsWriter(_mock_context)
@@ -423,6 +427,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "dq_spark_local.customer_order",
                         "agg_dq",
                         "sum_of_sales",
+                        "sales",
                         "sum(sales)>10000",
                         "validity",
                         "regex format validation for quantity",
@@ -443,6 +448,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "dq_spark_local.customer_order",
                         "agg_dq",
                         "sum_of_sales",
+                        "sales",
                         "sum(sales)>10000",
                         "validity",
                         "regex format validation for quantity",
@@ -463,6 +469,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "dq_spark_local.customer_order",
                         "query_dq",
                         "product_missing_count_threshold",
+                        "product_id",
                         "((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3",
                         "validity",
                         "row count threshold",
@@ -483,6 +490,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "dq_spark_local.customer_order",
                         "query_dq",
                         "product_missing_count_threshold",
+                        "product_id",
                         "((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3",
                         "validity",
                         "row count threshold",
@@ -502,6 +510,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "source_f1",
                         "_source_dq",
                         {
@@ -520,6 +529,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "target_f1",
                         "_source_dq",
                         {
@@ -539,6 +549,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "source_f1",
                         "_target_dq",
                         {
@@ -557,6 +568,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "target_f1",
                         "_target_dq",
                         {
@@ -773,6 +785,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "dq_spark_local.customer_order",
                         "agg_dq",
                         "sum_of_sales",
+                        "sales",
                         "sum(sales)>10000",
                         "validity",
                         "regex format validation for quantity",
@@ -969,6 +982,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "dq_spark_local.customer_order",
                         "agg_dq",
                         "sum_of_sales",
+                        "sales",
                         "sum(sales)>10000",
                         "validity",
                         "regex format validation for quantity",
@@ -991,6 +1005,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "dq_spark_local.customer_order",
                         "query_dq",
                         "product_missing_count_threshold",
+                        "product_id",
                         "((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3",
                         "validity",
                         "row count threshold",
@@ -1011,6 +1026,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "source_f1",
                         "_target_dq",
                         {
@@ -1029,6 +1045,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "target_f1",
                         "_target_dq",
                         {
@@ -1229,6 +1246,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "dq_spark_local.customer_order",
                         "agg_dq",
                         "sum_of_sales",
+                        "sales",
                         "sum(sales)>10000",
                         "validity",
                         "regex format validation for quantity",
@@ -1427,6 +1445,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "dq_spark_local.customer_order",
                         "agg_dq",
                         "sum_of_sales",
+                        "sales",
                         "sum(sales)>10000",
                         "validity",
                         "regex format validation for quantity",
@@ -1448,6 +1467,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "dq_spark_local.customer_order",
                         "query_dq",
                         "product_missing_count_threshold",
+                        "product_id",
                         "((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3",
                         "validity",
                         "row count threshold",
@@ -1468,6 +1488,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "dq_spark_local.customer_order",
                         "query_dq",
                         "product_missing_count_threshold",
+                        "product_id",
                         "((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3",
                         "validity",
                         "row count threshold",
@@ -1487,6 +1508,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "source_f1",
                         "_source_dq",
                         {
@@ -1505,6 +1527,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "target_f1",
                         "_source_dq",
                         {
@@ -1524,6 +1547,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "source_f1",
                         "_target_dq",
                         {
@@ -1542,6 +1566,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "target_f1",
                         "_target_dq",
                         {
@@ -1949,6 +1974,7 @@ def test_write_error_stats(
 ):
     # create mock _context object
     _mock_context = Mock(spec=SparkExpectationsContext)
+    _mock_context.get_dq_rules_params = {"env": "test_env"}
     setattr(_mock_context, "get_dq_stats_table_name", "test_dq_stats_table")
     setattr(_mock_context, "get_run_date_name", "meta_dq_run_date")
     setattr(_mock_context, "get_run_date_time_name", "meta_dq_run_datetime")
@@ -2320,6 +2346,7 @@ def test_write_error_stats(
                         "dq_spark_local.customer_order",
                         "row_dq",
                         "sales_greater_than_zero",
+                        "sales",
                         "sales > 2",
                         "accuracy",
                         "sales value should be greater than zero",
@@ -2341,6 +2368,7 @@ def test_write_error_stats(
                         "dq_spark_local.customer_order",
                         "agg_dq",
                         "sum_of_sales",
+                        "sales",
                         "sum(sales)>10000",
                         "validity",
                         "regex format validation for quantity",
@@ -2361,6 +2389,7 @@ def test_write_error_stats(
                         "dq_spark_local.customer_order",
                         "agg_dq",
                         "sum_of_sales",
+                        "sales",
                         "sum(sales)>10000",
                         "validity",
                         "regex format validation for quantity",
@@ -2381,6 +2410,7 @@ def test_write_error_stats(
                         "dq_spark_local.customer_order",
                         "query_dq",
                         "product_missing_count_threshold",
+                        "product_id",
                         "((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3",
                         "validity",
                         "row count threshold",
@@ -2401,6 +2431,7 @@ def test_write_error_stats(
                         "dq_spark_local.customer_order",
                         "query_dq",
                         "product_missing_count_threshold",
+                        "product_id",
                         "((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3",
                         "validity",
                         "row count threshold",
@@ -2420,6 +2451,7 @@ def test_write_error_stats(
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "source_f1",
                         "_source_dq",
                         {
@@ -2438,6 +2470,7 @@ def test_write_error_stats(
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "target_f1",
                         "_source_dq",
                         {
@@ -2457,6 +2490,7 @@ def test_write_error_stats(
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "source_f1",
                         "_target_dq",
                         {
@@ -2475,6 +2509,7 @@ def test_write_error_stats(
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "target_f1",
                         "_target_dq",
                         {
@@ -2493,6 +2528,7 @@ def test_write_error_stats(
                 "product_id": "product_1",
                 "table_name": "dq_spark_local.customer_order",
                 "rule": "sum_of_sales",
+                "column_name": "sales",
                 "rule_type": "agg_dq",
                 "source_expectations": "sum(sales)>10000",
                 "source_dq_status": "fail",
@@ -2574,6 +2610,7 @@ def test_write_error_stats(
                         "dq_spark_local.customer_order",
                         "row_dq",
                         "sales_greater_than_zero",
+                        "sales",
                         "sales > 2",
                         "accuracy",
                         "sales value should be greater than zero",
@@ -2595,6 +2632,7 @@ def test_write_error_stats(
                         "dq_spark_local.customer_order",
                         "agg_dq",
                         "sum_of_sales",
+                        "sales",
                         "sum(sales)>10000",
                         "validity",
                         "regex format validation for quantity",
@@ -2615,6 +2653,7 @@ def test_write_error_stats(
                         "dq_spark_local.customer_order",
                         "agg_dq",
                         "sum_of_sales",
+                        "sales",
                         "sum(sales)>10000",
                         "validity",
                         "regex format validation for quantity",
@@ -2635,6 +2674,7 @@ def test_write_error_stats(
                         "dq_spark_local.customer_order",
                         "query_dq",
                         "product_missing_count_threshold",
+                        "product_id",
                         "((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3",
                         "validity",
                         "row count threshold",
@@ -2655,6 +2695,7 @@ def test_write_error_stats(
                         "dq_spark_local.customer_order",
                         "query_dq",
                         "product_missing_count_threshold",
+                        "product_id",
                         "((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3",
                         "validity",
                         "row count threshold",
@@ -2674,6 +2715,7 @@ def test_write_error_stats(
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "source_f1",
                         "_source_dq",
                         {
@@ -2692,6 +2734,7 @@ def test_write_error_stats(
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "target_f1",
                         "_source_dq",
                         {
@@ -2711,6 +2754,7 @@ def test_write_error_stats(
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "source_f1",
                         "_target_dq",
                         {
@@ -2729,6 +2773,7 @@ def test_write_error_stats(
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "target_f1",
                         "_target_dq",
                         {
@@ -2747,6 +2792,7 @@ def test_write_error_stats(
                 "product_id": "product1",
                 "table_name": "dq_spark_local.customer_order",
                 "rule": "sales_greater_than_zero",
+                "column_name": "sales",
                 "rule_type": "row_dq",
                 "source_expectations": "sales > 2",
                 "source_dq_status": "fail",
@@ -2805,6 +2851,7 @@ def test_write_error_stats(
                         "dq_spark_local.customer_order",
                         "query_dq",
                         "product_missing_count_threshold",
+                        "product_id",
                         "((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3",
                         "validity",
                         "row count threshold",
@@ -2825,6 +2872,7 @@ def test_write_error_stats(
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "source_f1",
                         "_source_dq",
                         {
@@ -2843,6 +2891,7 @@ def test_write_error_stats(
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "target_f1",
                         "_source_dq",
                         {
@@ -2862,6 +2911,7 @@ def test_write_error_stats(
                 "product_id": "product_1",
                 "table_name": "dq_spark_local.customer_order",
                 "rule": "product_missing_count_threshold",
+                "column_name": "product_id",
                 "rule_type": "query_dq",
                 "source_expectations": "((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3",
                 "source_dq_status": "pass",
@@ -2942,6 +2992,7 @@ def test_write_error_stats(
                         "dq_spark_local.customer_order",
                         "row_dq",
                         "sales_greater_than_zero",
+                        "Sales",
                         "sales > 2",
                         "accuracy",
                         "sales value should be greater than zero",
@@ -2961,6 +3012,7 @@ def test_write_error_stats(
                         "dq_spark_local.customer_order",
                         "agg_dq",
                         "sum_of_sales",
+                        "sales",
                         "sum(sales)>10000",
                         "validity",
                         "regex format validation for quantity",
@@ -2979,6 +3031,7 @@ def test_write_error_stats(
                         "dq_spark_local.customer_order",
                         "agg_dq",
                         "sum_of_sales",
+                        "sales",
                         "sum(sales)>10000",
                         "validity",
                         "regex format validation for quantity",
@@ -2997,6 +3050,7 @@ def test_write_error_stats(
                         "dq_spark_local.customer_order",
                         "query_dq",
                         "product_missing_count_threshold",
+                        "product_id",
                         "((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3",
                         "validity",
                         "row count threshold",
@@ -3017,6 +3071,7 @@ def test_write_error_stats(
                         "dq_spark_local.customer_order",
                         "query_dq",
                         "product_missing_count_threshold",
+                        "product_id",
                         "((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3",
                         "validity",
                         "row count threshold",
@@ -3036,6 +3091,7 @@ def test_write_error_stats(
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "source_f1",
                         "_source_dq",
                         {
@@ -3054,6 +3110,7 @@ def test_write_error_stats(
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "target_f1",
                         "_source_dq",
                         {
@@ -3073,6 +3130,7 @@ def test_write_error_stats(
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "source_f1",
                         "_target_dq",
                         {
@@ -3091,6 +3149,7 @@ def test_write_error_stats(
                         "your_product",
                         "dq_spark_local.customer_order",
                         "product_missing_count_threshold",
+                        "product_id",
                         "target_f1",
                         "_target_dq",
                         {
@@ -3109,6 +3168,7 @@ def test_write_error_stats(
                 "product_id": "product_1",
                 "table_name": "dq_spark_local.customer_order",
                 "rule": "product_missing_count_threshold",
+                "column_name": "product_id",
                 "rule_type": "query_dq",
                 "source_expectations": "((select count(*) from (select distinct product_id,order_id from order_source) a) - (select count(*) from (select distinct product_id,order_id from order_target) b) ) < 3",
                 "source_dq_status": "pass",
@@ -3149,6 +3209,8 @@ def test_write_detailed_stats(
 
     """
     _mock_context = Mock(spec=SparkExpectationsContext)
+    _mock_context.get_dq_rules_params = {"env": "test_env"}
+    
     setattr(
         _mock_context,
         "get_rules_execution_settings_config",
@@ -3328,6 +3390,7 @@ def test_write_detailed_stats_exception() -> None:
 
     """
     _mock_context = Mock(spec=SparkExpectationsContext)
+    _mock_context.get_dq_rules_params = {"env": "test_env"}
     setattr(
         _mock_context,
         "get_rules_execution_settings_config",

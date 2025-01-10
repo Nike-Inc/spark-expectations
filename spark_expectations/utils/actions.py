@@ -1,27 +1,27 @@
-from typing import Dict, List, Any, Optional, Tuple
 import re
 from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
+
 from pyspark.sql import DataFrame
-
-
 from pyspark.sql.functions import (
+    array,
+    array_contains,
+    col,
     create_map,
     expr,
-    when,
-    array,
-    col,
     lit,
-    struct,
     map_from_entries,
-    array_contains,
+    struct,
+    when,
 )
-from spark_expectations.utils.udf import remove_empty_maps, get_actions_list
-from spark_expectations.core.context import SparkExpectationsContext
+
 from spark_expectations.config.user_config import Constants as constant_config
+from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException,
     SparkExpectOrFailException,
 )
+from spark_expectations.utils.udf import get_actions_list, remove_empty_maps
 
 
 class SparkExpectationsActions:
@@ -128,6 +128,7 @@ class SparkExpectationsActions:
                 str,
                 str,
                 Any,
+                str,
                 str,
                 dict,
                 str,
@@ -328,20 +329,26 @@ class SparkExpectationsActions:
                     )
                 ):
                     for _key, _querydq_query in sub_key_value.items():
-                        _querydq_df = _context.spark.sql(_dq_rule["expectation" + "_" + _key])
+                        _querydq_df = _context.spark.sql(
+                            _dq_rule["expectation" + "_" + _key]
+                        )
                         querydq_output.append(
                             (
                                 _context.get_run_id,
                                 _dq_rule["product_id"],
                                 _dq_rule["table_name"],
                                 _dq_rule["rule"],
+                                _dq_rule["column_name"],
                                 _key,
                                 _query_prefix,
                                 dict(
                                     [
                                         (
                                             _key,
-                                            [row.asDict() for row in _querydq_df.collect()],
+                                            [
+                                                row.asDict()
+                                                for row in _querydq_df.collect()
+                                            ],
                                         )
                                     ]
                                 ),
@@ -421,6 +428,7 @@ class SparkExpectationsActions:
                 _dq_rule["table_name"],
                 _dq_rule["rule_type"],
                 _dq_rule["rule"],
+                _dq_rule["column_name"],
                 _dq_rule["expectation"],
                 _dq_rule["tag"],
                 _dq_rule["description"],

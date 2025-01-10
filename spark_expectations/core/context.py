@@ -23,6 +23,14 @@ class SparkExpectationsContext:
 
     def __post_init__(self) -> None:
         self._run_id: str = f"{self.product_id}_{uuid1()}"
+        self._enable_obs_dq_report_result: bool = False
+        self._df_dq_obs_report_dataframe: DataFrame = None
+        self._default_template: str
+        self._dq_obs_rpt_gen_status_flag: bool = False
+        self._dataframe: DataFrame = None
+        self._report_table_name: DataFrame = None
+        self._custom_dataframe: DataFrame = None
+        self._se_dq_obs_alert_flag: bool = False
         self._run_date: str = self.set_run_date()
         self._dq_stats_table_name: Optional[str] = None
         self._dq_detailed_stats_table_name: Optional[str] = None
@@ -47,12 +55,15 @@ class SparkExpectationsContext:
         self._dq_config_abs_path: Optional[str] = None
 
         self._enable_mail: bool = False
+        self._enable_smtp_server_auth: bool = False
         self._enable_custom_email_body: bool = False
         self._to_mail: Optional[str] = None
         self._mail_subject: Optional[str] = None
         self._mail_from: Optional[str] = None
         self._mail_smtp_server: str
         self._mail_smtp_port: int
+        self._mail_smtp_password: Optional[str] = None
+        self._smtp_creds_dict: Dict[str, str] = {}
         self._email_custom_body: Optional[str] = None
 
         self._enable_slack: bool = False
@@ -483,6 +494,35 @@ class SparkExpectationsContext:
             accessing it"""
         )
 
+    def set_mail_smtp_password(self, mail_smtp_password: str) -> None:
+        self._mail_smtp_password = mail_smtp_password
+
+    @property
+    def get_mail_smtp_password(self) -> Optional[str]:
+        """
+        This functions returns smtp password
+        Returns:
+            str: returns _mail_smtp_server password or None if smtp password is not set
+
+        """
+        if self._mail_smtp_password:
+            return self._mail_smtp_password
+
+        else:
+            return None
+
+    def set_smtp_creds_dict(self, smtp_creds_dict: Dict[str, str]) -> None:
+        """
+        This function helps to set secret keys dict for smtp server authentication"""
+        self._smtp_creds_dict = smtp_creds_dict
+
+    @property
+    def get_smtp_creds_dict(self) -> Dict[str, str]:
+        """
+        This function returns secret keys dict for smtp server authentication
+        """
+        return self._smtp_creds_dict
+
     def set_enable_mail(self, enable_mail: bool) -> None:
         self._enable_mail = bool(enable_mail)
 
@@ -496,21 +536,21 @@ class SparkExpectationsContext:
         """
         return self._enable_mail
 
-    def set_to_mail(self, to_mail: str) -> None:
-        self._to_mail = to_mail
-
-    def set_enable_custom_email_body(self, enable_custom_email_body: bool) -> None:
-        self._enable_custom_email_body = bool(enable_custom_email_body)
+    def set_enable_smtp_server_auth(self, enable_smtp_server_auth: bool) -> None:
+        self._enable_smtp_server_auth = bool(enable_smtp_server_auth)
 
     @property
-    def get_enable_custom_email_body(self) -> bool:
+    def get_enable_smtp_server_auth(self) -> bool:
         """
-        This function return whether to enable custom email body or not
+        This function return whether smtp server requires authentication or not
         Returns:
-            str: Returns  _enable_custom_email_body(bool)
+            str: Returns  _enable_smtp_server_auth(bool)
 
         """
-        return self._enable_custom_email_body
+        return self._enable_smtp_server_auth
+
+    def set_to_mail(self, to_mail: str) -> None:
+        self._to_mail = to_mail
 
     @property
     def get_to_mail(self) -> str:
@@ -527,6 +567,19 @@ class SparkExpectationsContext:
             """The spark expectations context is not set completely, please assign '_to_mail' before 
             accessing it"""
         )
+
+    def set_enable_custom_email_body(self, enable_custom_email_body: bool) -> None:
+        self._enable_custom_email_body = bool(enable_custom_email_body)
+
+    @property
+    def get_enable_custom_email_body(self) -> bool:
+        """
+        This function return whether to enable custom email body or not
+        Returns:
+            str: Returns  _enable_custom_email_body(bool)
+
+        """
+        return self._enable_custom_email_body
 
     def set_mail_from(self, mail_from: str) -> None:
         self._mail_from = mail_from
@@ -2062,3 +2115,113 @@ class SparkExpectationsContext:
             Optional[List[Dict[str, Any]]]: Returns the stats_dict if it exists, otherwise None
         """
         return self._stats_dict if hasattr(self, "_stats_dict") else None
+
+    def set_enable_obs_dq_report_result(
+        self, enable_obs_dq_report_result: bool
+    ) -> None:
+        """
+        This function is used to set the enable_obs_dq_report_result
+
+        Returns:
+            None
+
+        """
+        self._enable_obs_dq_report_result = enable_obs_dq_report_result
+
+    @property
+    def get_enable_obs_dq_report_result(self) -> bool:
+        """
+        This function is used to get the enable_obs_dq_report_result
+
+        Returns:
+            bool: Returns the enable_obs_dq_report_result
+        """
+        return self._enable_obs_dq_report_result
+
+    def set_se_dq_obs_alert_flag(self, se_dq_obs_alert_flag: bool) -> None:
+        """
+        This function is used to set the se_dq_obs_alert_flag
+
+        Returns:
+            None
+
+        """
+        self._se_dq_obs_alert_flag = se_dq_obs_alert_flag
+
+    @property
+    def get_se_dq_obs_alert_flag(self) -> bool:
+        """
+        This function is used to get the se_dq_obs_alert_flag
+
+        Returns:
+            bool: Returns the se_dq_obs_alert_flag
+        """
+        return self._se_dq_obs_alert_flag
+
+    def set_default_template(self, default_template: str) -> None:
+        """
+        This function is used to set the default_template
+
+        Returns:
+            None
+
+        """
+        self._default_template = default_template
+
+    @property
+    def get_default_template(self) -> str:
+        """
+        This function is used to get the default_template
+
+        Returns:
+            str: Returns the default_template
+        """
+        return self._default_template
+
+    def set_stats_detailed_dataframe(self, dataframe: DataFrame) -> None:
+        self._dataframe = dataframe
+
+    @property
+    def get_stats_detailed_dataframe(self) -> DataFrame:
+        return self._dataframe
+
+    def set_custom_detailed_dataframe(self, dataframe: DataFrame) -> None:
+        self._custom_dataframe = dataframe
+
+    @property
+    def get_custom_detailed_dataframe(self) -> DataFrame:
+        return self._custom_dataframe
+
+    def set_report_table_name(self, report_table_name: str) -> None:
+        self._report_table_name = report_table_name
+
+    @property
+    def get_report_table_name(self) -> str:
+        return self._report_table_name
+
+    def set_dq_obs_rpt_gen_status_flag(self, dq_obs_rpt_gen_status_flag: bool) -> None:
+        """
+        This function is used to set the dq_obs_rpt_gen_status_flag
+
+        Returns:
+            None
+
+        """
+        self._dq_obs_rpt_gen_status_flag = dq_obs_rpt_gen_status_flag
+
+    @property
+    def get_dq_obs_rpt_gen_status_flag(self) -> bool:
+        """
+        This function is used to get the dq_obs_rpt_gen_status_flag
+
+        Returns:
+            bool: Returns the dq_obs_rpt_gen_status_flag
+        """
+        return self._dq_obs_rpt_gen_status_flag
+
+    def set_df_dq_obs_report_dataframe(self, dataframe: DataFrame) -> None:
+        self._df_dq_obs_report_dataframe = dataframe
+
+    @property
+    def get_df_dq_obs_report_dataframe(self) -> DataFrame:
+        return self._df_dq_obs_report_dataframe

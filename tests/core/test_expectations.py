@@ -25,6 +25,7 @@ from spark_expectations.core.expectations import (
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core import get_spark_session
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
+from spark_expectations.notifications.push.spark_expectations_notify import SparkExpectationsNotify
 
 # os.environ["UNIT_TESTING_ENV"] = "local"
 
@@ -2839,7 +2840,7 @@ def test_with_expectations(
         "dq_spark.test_final_table",
         user_conf={
             user_config.se_notifications_on_fail: False,
-            user_config.se_dq_rules_params: {"table": "test_table"},
+            user_config.se_dq_rules_params: {"table": "test_table","env" :"local"},
         },
         write_to_table=write_to_table,
         write_to_temp_table=write_to_temp_table,
@@ -2905,7 +2906,8 @@ def test_with_expectations(
     assert row.meta_dq_run_id == "product1_run_test"
     assert row.meta_dq_run_date == datetime.date(2022, 12, 27)
     assert row.meta_dq_run_datetime == datetime.datetime(2022, 12, 27, 10, 00, 00)
-    assert len(stats_table.columns) == 20
+    assert row.dq_env == "local"
+    assert len(stats_table.columns) == 21
 
     assert (
         spark.read.format("kafka")
@@ -3209,6 +3211,172 @@ def test_error_threshold_breach(
     spark.sql("CLEAR CACHE")
 
 
+def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notification(_fixture_create_database):
+    input_df = spark.createDataFrame(
+        [
+            ("1", "product1", 10),
+            ("2", "product2", 20),
+            ("3", "product3", 30),
+        ],
+        ["id", "product", "value"]
+    )
+    input_df.createOrReplaceTempView("test_table")
+
+    rules = [
+        {
+            "product_id": "product1",
+            "table_name": "dq_spark.test_final_table",
+            "rule_type": "row_dq",
+            "rule": "value_should_be_bigger_than_0",
+            "column_name": "value",
+            "expectation": "value > 0",
+            "action_if_failed": "ignore",
+            "tag": "strict",
+            "description": "value must be greater than 10",
+            "enable_for_source_dq_validation": True,
+            "enable_for_target_dq_validation": True,
+            "is_active": True,
+            "enable_error_drop_alert": True,
+            "error_drop_threshold": "20",
+        },
+        {
+            "product_id": "product1",
+            "table_name": "dq_spark.test_final_table",
+            "rule_type": "row_dq",
+            "rule": "value_must_be_greater_than_10",
+            "column_name": "value",
+            "expectation": "value > 10",
+            "action_if_failed": "ignore",
+            "tag": "strict",
+            "description": "value must be greater than 10",
+            "enable_for_source_dq_validation": True,
+            "enable_for_target_dq_validation": True,
+            "is_active": True,
+            "enable_error_drop_alert": True,
+            "error_drop_threshold": "20",
+        },
+        {
+            "product_id": "product1",
+            "table_name": "dq_spark.test_final_table",
+            "rule_type": "agg_dq",
+            "rule": "sum_of_value_should_be_less_than_60",
+            "column_name": "value",
+            "expectation": "sum(value) > 60",
+            "action_if_failed": "ignore",
+            "tag": "strict",
+            "description": "desc_sum_of_value_should_be_less_than_60",
+            "enable_for_source_dq_validation": True,
+            "enable_for_target_dq_validation": True,
+            "is_active": True,
+            "enable_error_drop_alert": True,
+            "error_drop_threshold": "25",
+        },
+        {
+            "product_id": "product1",
+            "table_name": "dq_spark.test_final_table",
+            "rule_type": "query_dq",
+            "rule": "count_of_records_must_be_greater_than_10",
+            "column_name": "col3",
+            "expectation": "(select count(*) from test_table) > 10",
+            "action_if_failed": "ignore",
+            "tag": "strict",
+            "description": "count of records must be greater than 10",
+            "enable_for_source_dq_validation": True,
+            "enable_for_target_dq_validation": True,
+            "is_active": True,
+            "enable_error_drop_alert": True,
+            "error_drop_threshold": "10",
+        },
+    ]
+    rules_df = spark.createDataFrame(rules)
+
+    writer = WrappedDataFrameWriter().mode("append").format("delta")
+
+    from spark_expectations.config.user_config import Constants as user_config
+
+    conf = {
+        user_config.se_notifications_on_rules_action_if_failed_set_ignore: True,
+        user_config.se_enable_query_dq_detailed_result: True,
+        user_config.se_enable_agg_dq_detailed_result: True,
+        user_config.se_notifications_on_error_drop_threshold: 15,
+    }
+
+    with patch(
+            "spark_expectations.notifications.push.spark_expectations_notify.SparkExpectationsNotify"
+            ".notify_on_ignore_rules",
+            autospec=True,
+            spec_set=True,
+    ) as _mock_notification_hook:
+        se = SparkExpectations(
+            product_id="product1",
+            rules_df=rules_df,
+            stats_table="dq_spark.test_dq_stats_table",
+            stats_table_writer=writer,
+            target_and_error_table_writer=writer,
+            debugger=False,
+            stats_streaming_options={user_config.se_enable_streaming: False},
+        )
+
+        @se.with_expectations(
+            target_table="dq_spark.test_final_table",
+            write_to_table=True,
+            user_conf=conf,
+        )
+        def get_dataset() -> DataFrame:
+            return input_df
+
+        get_dataset()
+
+        expected_call = (
+            SparkExpectationsNotify(se._context),
+            [
+                {
+                 'rule_type': 'row_dq',
+                 'rule': 'value_must_be_greater_than_10',
+                 'description': 'value must be greater than 10',
+                 'tag': 'strict',
+                 'action_if_failed': 'ignore',
+                 'failed_row_count': 1
+                },
+                {
+                    "rule": "count_of_records_must_be_greater_than_10",
+                    "description": "count of records must be greater than 10",
+                    "rule_type": "query_dq",
+                    "tag": "strict",
+                    "action_if_failed": "ignore"
+                },
+                {
+                    "rule": "sum_of_value_should_be_less_than_60",
+                    "description": "desc_sum_of_value_should_be_less_than_60",
+                    "rule_type": "agg_dq",
+                    "tag": "strict",
+                    "action_if_failed": "ignore"
+                },
+                {
+                    "rule": "count_of_records_must_be_greater_than_10",
+                    "description": "count of records must be greater than 10",
+                    "rule_type": "query_dq",
+                    "tag": "strict",
+                    "action_if_failed": "ignore"
+                },
+                {
+                    "rule": "sum_of_value_should_be_less_than_60",
+                    "description": "desc_sum_of_value_should_be_less_than_60",
+                    "rule_type": "agg_dq",
+                    "tag": "strict",
+                    "action_if_failed": "ignore"
+                }
+            ]
+        )
+
+        _mock_notification_hook.assert_called_once_with(*expected_call)
+
+    for db in spark.catalog.listDatabases():
+        if db.name != "default":
+            spark.sql(f"DROP DATABASE {db.name} CASCADE")
+    spark.sql("CLEAR CACHE")
+
+
 def test_target_table_view_exception(
     _fixture_create_database, _fixture_local_kafka_topic
 ):
@@ -3435,3 +3603,5 @@ def test_get_spark_minor_version():
     """Test that get_spark_minor_version returns the correctly formatted version."""
     with patch("spark_expectations.core.expectations.spark_version", "9.9.42"):
         assert get_spark_minor_version() == 9.9
+
+

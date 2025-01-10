@@ -49,42 +49,39 @@ nav:
   - Migration_Guide:
       - comparison: configurations/migration_versions_comparison.md
   - Examples:
-      Understand Args: examples.md
-      Delta: delta.md
-      BigQuery: bigquery.md
-      Iceberg: iceberg.md
-      Rules: configurations/rules.md
-      Configure Rules: configurations/configure_rules.md
+      - Understand Args: examples.md
+      - Delta: delta.md
+      - BigQuery: bigquery.md
+      - Iceberg: iceberg.md
+      - Rules: configurations/rules.md
+      - Configure Rules: configurations/configure_rules.md
   - Python API:
       - Core:
-          Init: api/core_init.md
-          Context: api/context.md
-          Exceptions: api/exceptions.md
-          Expectations: api/expectations.md
+          - Init: api/core_init.md
+          - Context: api/context.md
+          - Exceptions: api/exceptions.md
+          - Expectations: api/expectations.md
       - Sinks:
-          Init: api/sinks_init.md
-          Base_Writer_Plugin: api/base_sink_plugin.md
-          Delta_Sink_Plugin: api/delta_sink_plugin.md
-          Kafka_Sink_plugin: api/kafka_sink_plugin.md
-          Utils:
-            - Writer: api/writer.md
-            - Sink_Decorater: api/sinks_decorater
+          - Init: api/sinks_init.md
+          - Base_Writer_Plugin: api/base_sink_plugin.md
+          - Kafka_Sink_plugin: api/kafka_sink_plugin.md
+          - Utils:
+              - Writer: api/writer.md
+              - Sink_Decorater: api/sinks_decorater.md
       - Notification:
-          Init: api/notifications_init.md
-          Base_Notification_plugin: api/base_notification_plugin.md
-          Email_Notification_plugin: api/email_plugin.md
-          Slack_Notification_plugin: api/slack_plugin.md
-          Push:
-            - Notification_Decorater: api/notifications_decorater
+          - Init: api/notifications_init.md
+          - Base_Notification_plugin: api/base_notification_plugin.md
+          - Email_Notification_plugin: api/email_plugin.md
+          - Slack_Notification_plugin: api/slack_plugin.md
+          - Push:
+              - Notification_Decorater: api/notifications_decorater.md
       - Utils:
-          Actions: api/actions.md
-          Reader: api/reader.md
-          Regulate_flow: api/regulate_flow.md
-          Udf: api/udf.md
+          - Actions: api/actions.md
+          - Reader: api/reader.md
+          - Regulate_flow: api/regulate_flow.md
+          - Udf: api/udf.md
       - Examples:
-          Base_Setup: api/base_setup.md
-          Sample_DQ: api/sample_dq.md
-
+          - Base_Setup: api/base_setup.md
 
 plugins:
   - search:
@@ -123,8 +120,8 @@ markdown_extensions:
   - pymdownx.caret
   - pymdownx.details
   - pymdownx.emoji:
-      emoji_generator: !!python/name:materialx.emoji.to_svg
-      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
   - pymdownx.highlight:
       anchor_linenums: true
   - pymdownx.inlinehilite
@@ -145,7 +142,6 @@ markdown_extensions:
   - pymdownx.tasklist:
       custom_checkbox: true
   - pymdownx.tilde
-
 
 
 watch:
