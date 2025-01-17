@@ -28,6 +28,7 @@ pylint:
     - possibly-used-before-assignment
     - protected-access
     - too-many-arguments
+    - too-many-boolean-expressions
     - too-many-locals
     - too-many-positional-arguments
     - inconsistent-return-statements
@@ -53,3 +54,4 @@ mccabe:
 pyflakes:
   disable:
     - F999
+
