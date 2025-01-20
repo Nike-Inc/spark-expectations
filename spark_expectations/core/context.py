@@ -25,6 +25,7 @@ class SparkExpectationsContext:
         self._run_id: str = f"{self.product_id}_{uuid1()}"
         self._run_date: str = self.set_run_date()
         self._dq_stats_table_name: Optional[str] = None
+        self._dq_stats_report_table_name: Optional[str] = None
         self._dq_detailed_stats_table_name: Optional[str] = None
         self._final_table_name: Optional[str] = None
         self._error_table_name: Optional[str] = None
@@ -142,6 +143,7 @@ class SparkExpectationsContext:
 
         self._target_and_error_table_writer_config: dict = {}
         self._stats_table_writer_config: dict = {}
+        self._report_table_config: dict = {}
 
         # The below config is user config and will be enabled if detailed result is required for agg and query dq
         self._enable_agg_dq_detailed_result: bool = False
@@ -194,6 +196,25 @@ class SparkExpectationsContext:
             return self._dq_stats_table_name
         raise SparkExpectationsMiscException(
             """The spark expectations context is not set completely, please assign '_dq_stats_table_name' before 
+            accessing it"""
+        )
+    def set_dq_stats_report_table_name(self,dq_stats_report_table_name: str) -> None:
+        self._dq_stats_report_table_name = dq_stats_report_table_name
+
+
+
+    @property
+    def get_dq_stats_report_table_name(self) -> str:
+        """
+        Get dq_stats_table_name to which the final stats of the dq job will be written into
+
+        Returns:
+            str: returns the dq_stats_table_name
+        """
+        if self._dq_stats_report_table_name:
+            return self._dq_stats_report_table_name
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign '_dq_stats_report_table_name' before 
             accessing it"""
         )
 
@@ -1844,7 +1865,7 @@ class SparkExpectationsContext:
         self._dq_detailed_stats_table_name = dq_detailed_stats_table_name
 
     @property
-    def get_dq_detailed_stats_table_name(self) -> str:
+    def  get_dq_detailed_stats_table_name(self) -> str:
         """
         Get dq_stats_table_name to which the final stats of the dq job will be written into
 
@@ -1885,6 +1906,23 @@ class SparkExpectationsContext:
             '_dq_detailed_stats_table_name,query_dq_detailed_stats_status' before 
             accessing it"""
         )
+    def set_report_table_config(self, config: dict) -> None:
+        """
+        This function sets report table config
+        Args:
+            config: dict
+        Returns: None
+        """
+        self._report_table_config = config
+
+    @property
+    def get_report_table_config(self) -> dict:
+        """
+        This function returns report table config
+        Returns:
+            dict: Returns report_table_config which in dict
+        """
+        return self._report_table_config
 
     def set_detailed_stats_table_writer_config(self, config: dict) -> None:
         """
@@ -2062,3 +2100,7 @@ class SparkExpectationsContext:
             Optional[List[Dict[str, Any]]]: Returns the stats_dict if it exists, otherwise None
         """
         return self._stats_dict if hasattr(self, "_stats_dict") else None
+
+    @property
+    def report_table_config(self):
+        return self._report_table_config

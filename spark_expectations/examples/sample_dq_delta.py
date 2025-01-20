@@ -15,8 +15,9 @@ writer = WrappedDataFrameWriter().mode("append").format("delta")
 
 spark = set_up_delta()
 dic_job_info = {
-    "job": "job_name",
+    "job": "na_CORL_DIGITAL_source_to_o9",
     "Region": "NA",
+    "env": "dev",
     "Snapshot": "2024-04-15",
 }
 job_info = str(dic_job_info)
@@ -32,12 +33,13 @@ se: SparkExpectations = SparkExpectations(
 )
 
 user_conf = {
-    user_config.se_notifications_enable_email: True,
-    user_config.se_notifications_enable_custom_email_body: True,
-    user_config.se_notifications_email_smtp_host: "mailhost.com",
-    user_config.se_notifications_email_smtp_port: 25,
-    user_config.se_notifications_email_from: "",
-    user_config.se_notifications_email_to_other_mail_id: "",
+    user_config.se_enable_observability:"Enable",
+    user_config.se_notifications_enable_email: False,
+    user_config.se_notifications_enable_custom_email_body: False,
+    user_config.se_notifications_email_smtp_host: "smtp.office365.com",
+    user_config.se_notifications_email_smtp_port: 587,
+    user_config.se_notifications_email_from: "sudeepta.pal@nike.com",
+    user_config.se_notifications_email_to_other_mail_id: "sudeepta.pal@nike.com",
     user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",
     user_config.se_notifications_email_custom_body: """Spark Expectations Statistics for this dq run:
     'product_id': {},
@@ -116,12 +118,16 @@ if __name__ == "__main__":
     spark.sql("select * from dq_spark_dev.dq_stats").show(truncate=False)
     spark.sql("select * from dq_spark_dev.dq_stats_detailed").show(truncate=False)
     spark.sql("select * from dq_spark_dev.dq_stats_querydq_output").show(truncate=False)
-    spark.sql("select * from dq_spark_dev.dq_stats").printSchema()
-    spark.sql("select * from dq_spark_dev.dq_stats_detailed").printSchema()
-    spark.sql("select * from dq_spark_dev.customer_order").show(truncate=False)
+    _log.info("BELOW IS THE REPORT TABLE")
+
+    spark.sql("select * from dq_spark_dev.dq_obs_report_data").show(truncate=False)
+
     # spark.sql("select count(*) from dq_spark_local.customer_order_error ").show(
     #    truncate=False
     # )
+    if user_config.se_enable_observability == "spark.expectations.observability.enabled":
+        _log.info("alert_send_successfully")
+
 
     _log.info("stats data in the kafka topic")
     # display posted statistics from the kafka topic

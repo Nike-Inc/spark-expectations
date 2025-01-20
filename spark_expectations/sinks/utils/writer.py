@@ -23,6 +23,7 @@ from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException,
 )
 from spark_expectations.secrets import SparkExpectationsSecretsBackend
+from spark_expectations.utils.alert import AlertTrial
 from spark_expectations.utils.udf import remove_empty_maps
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.sinks import _sink_hook
@@ -592,6 +593,21 @@ class SparkExpectationsWriter:
             raise SparkExpectationsMiscException(
                 f"error occurred while saving the data into the stats table {e}"
             )
+        print("------------------------------------------########################################################################spark expectation ending here.#####################------------------------------------------")
+        print(user_config.se_enable_observability)
+        # Call the dq_obs_report_data_insert method from report.py
+        if user_config.se_enable_observability=="spark.expectations.observability.enabled":
+            from spark_expectations.utils.report import SparkExpectationsReport
+            context = self._context
+            # report = SparkExpectationsReport(_context=context)
+            # report.dq_obs_report_data_insert(_df_detailed_stats,_df_custom_detailed_stats_source)
+            from spark_expectations.utils.alert import AlertTrial
+            alert = AlertTrial(self._context)
+            alert.get_report_data(_df_detailed_stats, _df_custom_detailed_stats_source)
+
+
+
+
 
     def write_error_stats(self) -> None:
         """
