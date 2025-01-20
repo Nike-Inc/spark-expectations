@@ -48,6 +48,9 @@ class Constants:
     se_notifications_on_error_drop_exceeds_threshold_breach = (
         "spark.expectations.notifications.on.error.drop.exceeds.threshold.breach"
     )
+    se_notifications_on_rules_action_if_failed_set_ignore = (
+        "spark.expectations.notifications.on.rules.action.if.failed.set.ignore"
+    )
     se_notifications_on_error_drop_threshold = (
         "spark.expectations.notifications.error.drop.threshold"
     )
