@@ -595,8 +595,11 @@ class SparkExpectationsWriter:
             )
         print("------------------------------------------########################################################################spark expectation ending here.#####################------------------------------------------")
         print(user_config.se_enable_observability)
+        print(user_config.se_notifications_enable_email)
+
+        # print(self.spark.expectations.notifications.observability.enabled)
         # Call the dq_obs_report_data_insert method from report.py
-        if user_config.se_enable_observability=="spark.expectations.observability.enabled":
+        if self._context.get_enable_observability is True:
             from spark_expectations.utils.report import SparkExpectationsReport
             context = self._context
             # report = SparkExpectationsReport(_context=context)

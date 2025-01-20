@@ -33,11 +33,13 @@ se: SparkExpectations = SparkExpectations(
 )
 
 user_conf = {
-    user_config.se_enable_observability:"Enable",
+    user_config.se_enable_observability: True,
     user_config.se_notifications_enable_email: False,
     user_config.se_notifications_enable_custom_email_body: False,
     user_config.se_notifications_email_smtp_host: "smtp.office365.com",
     user_config.se_notifications_email_smtp_port: 587,
+    user_config.se_notifications_service_account_email: "a.dsm.pss.obs@nike.com",
+    user_config.se_notifications_service_account_password: "wp=Wq$37#UI?Ijy7_HNU",
     user_config.se_notifications_email_from: "sudeepta.pal@nike.com",
     user_config.se_notifications_email_to_other_mail_id: "sudeepta.pal@nike.com",
     user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",
@@ -120,7 +122,7 @@ if __name__ == "__main__":
     spark.sql("select * from dq_spark_dev.dq_stats_querydq_output").show(truncate=False)
     _log.info("BELOW IS THE REPORT TABLE")
 
-    spark.sql("select * from dq_spark_dev.dq_obs_report_data").show(truncate=False)
+    # spark.sql("select * from dq_spark_dev.dq_obs_report_data").show(truncate=False)
 
     # spark.sql("select count(*) from dq_spark_local.customer_order_error ").show(
     #    truncate=False

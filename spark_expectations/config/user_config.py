@@ -4,8 +4,11 @@ from dataclasses import dataclass
 @dataclass
 class Constants:
     # declare const user config variables for email notification
+    se_notifications_service_account_email="spark.expectations.notifications.service.account.email"
+    se_notifications_service_account_password="spark.expectations.notifications.service.account.password"
+    se_notifications_smtp_user_name = "spark.expectations.notifications.smtp.user.name"
     se_notifications_enable_email = "spark.expectations.notifications.email.enabled"
-    se_enable_observability = "spark.expectations.observability.enabled"
+    se_enable_observability = "spark.expectations.notifications.observability.enabled"
     se_notifications_enable_custom_email_body = (
         "spark.expectations.notifications.enable.custom.email.body"
     )

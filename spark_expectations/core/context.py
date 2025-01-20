@@ -48,12 +48,14 @@ class SparkExpectationsContext:
         self._dq_config_abs_path: Optional[str] = None
 
         self._enable_mail: bool = False
+        self._enable_observability : bool =False
         self._enable_custom_email_body: bool = False
         self._to_mail: Optional[str] = None
         self._mail_subject: Optional[str] = None
         self._mail_from: Optional[str] = None
         self._mail_smtp_server: str
         self._mail_smtp_port: int
+        self._service_account_email: str
         self._email_custom_body: Optional[str] = None
 
         self._enable_slack: bool = False
@@ -104,6 +106,7 @@ class SparkExpectationsContext:
         self._se_streaming_stats_dict: Dict[str, str]
         self._enable_se_streaming: bool = False
         self._se_streaming_secret_env: str = ""
+        self._service_account_password: str
 
         self._debugger_mode: bool = False
         self._supported_df_query_dq: DataFrame = self.set_supported_df_query_dq()
@@ -465,6 +468,18 @@ class SparkExpectationsContext:
             """The spark expectations context is not set completely, please assign '_dq_config_abs_path' before
             accessing it"""
         )
+    def set_service_account_password(self, password: str) -> None:
+        self._service_account_password = password
+
+    @property
+    def get_service_account_password(self) -> str:
+        return self._service_account_password
+
+    def set_service_account_email(self, email: str) -> None:
+        self._service_account_email = email
+    @property
+    def get_service_account_email(self) -> str:
+        return self._service_account_email
 
     def set_mail_smtp_server(self, mail_smtp_server: str) -> None:
         self._mail_smtp_server = mail_smtp_server
@@ -503,6 +518,18 @@ class SparkExpectationsContext:
             """The spark expectations context is not set completely, please assign '_mail_smtp_port' before 
             accessing it"""
         )
+    def set_enable_observability(self, _enable_observability: bool) -> None:
+        self._enable_observability = bool(_enable_observability)
+
+    @property
+    def get_enable_observability(self) -> bool:
+        """
+        This function return whether mail notification to enable or not
+        Returns:
+            str: Returns  _enable_mail(bool)
+
+        """
+        return self._enable_observability
 
     def set_enable_mail(self, enable_mail: bool) -> None:
         self._enable_mail = bool(enable_mail)

@@ -36,11 +36,13 @@ class AlertTrial:
         try:
             cerberus_url = 'https://prod.cerberus.nikecloud.com/'
             cerberus_sdb_path = "app/if-common/smtp"
-            smtp_details = {'a.dsm.pss.obs': 'wp=Wq$37#UI?Ijy7_HNU', 'a.e2e.map.smtp': 'wp=Wq$37#UI?Ijy7_HNU'}
+            # smtp_details = {'a.dsm.pss.obs': 'wp=Wq$37#UI?Ijy7_HNU', 'a.e2e.map.smtp': 'wp=Wq$37#UI?Ijy7_HNU'}
 
-            SMTP_USER_NAME = list(smtp_details.keys())[0]
-            service_account_email = f"{SMTP_USER_NAME}@nike.com"
-            service_account_password = smtp_details.get(SMTP_USER_NAME)
+            # SMTP_USER_NAME = list(smtp_details.keys())[0]
+            # service_account_email = f"{SMTP_USER_NAME}@nike.com"
+            # service_account_password = smtp_details.get(SMTP_USER_NAME)
+            service_account_email = self._context.get_service_account_email
+            service_account_password = self._context.get_service_account_password
             body = MIMEText(body, 'html')
             msg = MIMEMultipart()
             msg.attach(body)
@@ -48,8 +50,8 @@ class AlertTrial:
             msg['From'] = service_account_email
             msg['To'] = receivers_list
 
-            smtp_host = getenv('SMTP_HOST') or "smtp.office365.com"
-            smtp_port = getenv('SMTP_PORT') or 587
+            smtp_host = self._context.get_mail_smtp_server
+            smtp_port = self._context.get_mail_smtp_port
 
             with smtplib.SMTP(smtp_host, port=smtp_port) as smtp_server:
                 smtp_server.ehlo()
@@ -97,7 +99,7 @@ class AlertTrial:
                 region_code='US',
                 dag_name='Sample DAG',
                 run_id='run_12345',
-                overall_status='Pass',
+                overall_status='fail',
                 overall_status_bgcolor='#00FF00',
                 total_rules_executed=10,
                 total_passed_rules=9,
@@ -106,8 +108,10 @@ class AlertTrial:
                 competency_metrics=[],
                 criticality_metrics=[]
             )
+            mail_reciver_list="sudeepta.pal@nike.com,aaaalfyofqi7i7nxuvxlboxbym@nike.org.slack.com"
+
             print("calling the send mail to the users")
-            # self.send_mail(html_output, "test", "aaaalfyofqi7i7nxuvxlboxbym@nike.org.slack.com")
+            self.send_mail(html_output, "test", mail_reciver_list)
 
             print("print the html data")
             print(html_output)
