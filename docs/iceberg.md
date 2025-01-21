@@ -1,8 +1,8 @@
 ### Example - Write to Delta
 
 Setup SparkSession for iceberg to test in your local environment. Configure accordingly for higher environments.
-Refer to Examples in [base_setup.py](../spark_expectations/examples/base_setup.py) and
-[delta.py](../spark_expectations/examples/sample_dq_iceberg.py)
+Refer to Examples in [base_setup.py](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/examples/base_setup.py) and
+[iceberg.py](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/examples/sample_dq_iceberg.py)
 
 ```python title="spark_session"
 from pyspark.sql import SparkSession
