@@ -33,14 +33,17 @@ se: SparkExpectations = SparkExpectations(
 )
 
 user_conf = {
-    user_config.se_enable_observability: True,
+    user_config.se_dq_obs_mode_of_communication : False,
+    user_config.se_enable_obs_dq_report_result: True,
+    user_config.se_dq_obs_alert_flag: False,
     user_config.se_notifications_enable_email: False,
     user_config.se_notifications_enable_custom_email_body: False,
+    user_config.se_dq_only_alert: False,
     user_config.se_notifications_email_smtp_host: "smtp.office365.com",
     user_config.se_notifications_email_smtp_port: 587,
     user_config.se_notifications_service_account_email: "a.dsm.pss.obs@nike.com",
     user_config.se_notifications_service_account_password: "wp=Wq$37#UI?Ijy7_HNU",
-    user_config.se_notifications_email_from: "sudeepta.pal@nike.com",
+    user_config.se_notifications_email_from: "sudeepta.pal@nike.com,aaaalfyofqi7i7nxuvxlboxbym@nike.org.slack.com,aaaali2kvghxahbath2kkud3ga@nike.org.slack.com",
     user_config.se_notifications_email_to_other_mail_id: "sudeepta.pal@nike.com",
     user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",
     user_config.se_notifications_email_custom_body: """Spark Expectations Statistics for this dq run:
@@ -127,7 +130,7 @@ if __name__ == "__main__":
     # spark.sql("select count(*) from dq_spark_local.customer_order_error ").show(
     #    truncate=False
     # )
-    if user_config.se_enable_observability == "spark.expectations.observability.enabled":
+    if user_config.se_enable_obs_dq_report_result == "spark.expectations.observability.enabled":
         _log.info("alert_send_successfully")
 
 

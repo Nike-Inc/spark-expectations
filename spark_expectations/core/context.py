@@ -50,10 +50,11 @@ class SparkExpectationsContext:
         self._enable_mail: bool = False
         self._enable_observability : bool =False
         self._enable_custom_email_body: bool = False
-        self._to_mail: Optional[str] = None
-        self._mail_subject: Optional[str] = None
+        self._to_mail: str =""
+        self._mail_subject: str=""
         self._mail_from: Optional[str] = None
         self._mail_smtp_server: str
+        self._mode_of_communication: str
         self._mail_smtp_port: int
         self._service_account_email: str
         self._email_custom_body: Optional[str] = None
@@ -93,8 +94,11 @@ class SparkExpectationsContext:
         self._target_query_dq_detailed_stats: Optional[List[Tuple]] = None
 
         self._notification_on_start: bool = False
+        self._se_dq_obs_alert_flag : bool = False
+        self._only_alert : bool=False
         self._notification_on_completion: bool = False
         self._notification_on_fail: bool = False
+        self._only_alert_with_default_template : bool = False
         self._error_drop_threshold: int = 100
 
         self._cerberus_url: str = "your_cerberus_url"
@@ -518,11 +522,54 @@ class SparkExpectationsContext:
             """The spark expectations context is not set completely, please assign '_mail_smtp_port' before 
             accessing it"""
         )
-    def set_enable_observability(self, _enable_observability: bool) -> None:
+
+    def set_only_alert(self, only_alert: bool) -> None:
+        self._only_alert = only_alert
+
+    @property
+    def get_only_alert(self) -> bool:
+        """
+        This function returns only_alert
+        Returns:
+            bool: returns _only_alert
+        """
+        return self._only_alert
+
+
+
+
+
+
+    def set_mode_of_communication(self, mode_of_communication: bool) -> None:
+        self._mode_of_communication = str(mode_of_communication)
+
+    @property
+    def get_mode_of_communication(self) -> str:
+        """
+        This function returns mode_of_communication
+        Returns:
+            str: returns _mode_of_communication
+        """
+        return self._mode_of_communication
+
+    def set_se_dq_obs_alert_flag(self, se_dq_obs_alert_flag: bool) -> None:
+        self._se_dq_obs_alert_flag = se_dq_obs_alert_flag
+
+    @property
+    def get_se_dq_obs_alert_flag(self) -> bool:
+        """
+        This functions returns se_dq_obs_alert_flag
+        Returns:
+            bool: returns _se_dq_obs_alert_flag
+
+        """
+        return self._se_dq_obs_alert_flag
+
+    def set_enable_obs_dq_report_result(self, _enable_observability: bool) -> None:
         self._enable_observability = bool(_enable_observability)
 
     @property
-    def get_enable_observability(self) -> bool:
+    def get_enable_obs_dq_report_result(self) -> bool:
         """
         This function return whether mail notification to enable or not
         Returns:
@@ -547,6 +594,17 @@ class SparkExpectationsContext:
     def set_to_mail(self, to_mail: str) -> None:
         self._to_mail = to_mail
 
+    @property
+    def get_to_mail(self) -> str:
+        """
+        This function returns list of mail id's
+        Returns:
+            str: Returns _mail_id(str)
+
+        """
+        if self._to_mail:
+            return self._to_mail
+
     def set_enable_custom_email_body(self, enable_custom_email_body: bool) -> None:
         self._enable_custom_email_body = bool(enable_custom_email_body)
 
@@ -560,21 +618,7 @@ class SparkExpectationsContext:
         """
         return self._enable_custom_email_body
 
-    @property
-    def get_to_mail(self) -> str:
-        """
-        This function returns list of mail id's
-        Returns:
-            str: Returns _mail_id(str)
 
-        """
-        if self._to_mail:
-            return self._to_mail
-
-        raise SparkExpectationsMiscException(
-            """The spark expectations context is not set completely, please assign '_to_mail' before 
-            accessing it"""
-        )
 
     def set_mail_from(self, mail_from: str) -> None:
         self._mail_from = mail_from
@@ -612,6 +656,21 @@ class SparkExpectationsContext:
             """The spark expectations context is not set completely, please assign '_mail_subject' before 
             accessing it"""
         )
+
+
+    def set_only_alert_with_default_template(self, only_alert_with_default_template: bool) -> None:
+        self._only_alert_with_default_template = only_alert_with_default_template
+
+
+    @property
+    def get_only_alert_with_default_template(self) -> bool:
+        """
+        This function returns only_alert_with_default_template
+        Returns:
+            bool: Returns _only_alert_with_default_template(bool)
+
+        """
+        return self._only_alert_with_default_template
 
     def set_email_custom_body(self, email_custom_body: str) -> None:
         self._email_custom_body = email_custom_body

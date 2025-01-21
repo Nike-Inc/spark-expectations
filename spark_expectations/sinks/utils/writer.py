@@ -594,12 +594,18 @@ class SparkExpectationsWriter:
                 f"error occurred while saving the data into the stats table {e}"
             )
         print("------------------------------------------########################################################################spark expectation ending here.#####################------------------------------------------")
-        print(user_config.se_enable_observability)
+        print(user_config.se_enable_obs_dq_report_result)
         print(user_config.se_notifications_enable_email)
 
         # print(self.spark.expectations.notifications.observability.enabled)
         # Call the dq_obs_report_data_insert method from report.py
-        if self._context.get_enable_observability is True:
+        # if se_enable_obs_dq_report_result is True:
+        #     than call the report generation
+        # if .se_dq_obs_alert_flag is true call alert one with
+
+        print("1st flow")
+
+        if self._context.get_se_dq_obs_alert_flag is True:
             from spark_expectations.utils.report import SparkExpectationsReport
             context = self._context
             # report = SparkExpectationsReport(_context=context)
@@ -607,6 +613,19 @@ class SparkExpectationsWriter:
             from spark_expectations.utils.alert import AlertTrial
             alert = AlertTrial(self._context)
             alert.get_report_data(_df_detailed_stats, _df_custom_detailed_stats_source)
+        #calling the only alert with default template
+        if self._context.get_only_alert is True:
+            from spark_expectations.utils.alert import send_mail
+
+            if self._context.get_only_alert is True:
+                from spark_expectations.utils.alert import send_mail
+                send_mail(
+                    to=self._context.get_to_mail,
+                    subject=self._context.get_mail_subject,
+                    body=self._context.get_email_custom_body
+                )
+        #calling the alert with custom template
+
 
 
 

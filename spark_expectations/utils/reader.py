@@ -34,7 +34,7 @@ class SparkExpectationsReader:
         """
         try:
             _default_spark_conf: Dict[str, Union[str, int, bool]] = {
-                user_config.se_enable_observability: True,
+                user_config.se_enable_obs_dq_report_result: True,
                 user_config.se_notifications_enable_email: False,
                 user_config.se_notifications_enable_custom_email_body: False,
                 user_config.se_notifications_email_smtp_host: "",
@@ -59,10 +59,9 @@ class SparkExpectationsReader:
             #changes by SE team
             print("..........................................................................")
             print(_notification_dict)
-            print(_notification_dict.get(user_config.se_enable_observability))
 
-            if _notification_dict.get(user_config.se_enable_observability) is True:
-                self._context.set_enable_observability(True)
+            if _notification_dict.get(user_config.se_dq_obs_alert_flag) is True:
+                self._context.set_se_dq_obs_alert_flag(True)
                 if (
                         _notification_dict.get(user_config.se_notifications_email_smtp_port)
                         and _notification_dict.get(user_config.se_notifications_email_smtp_host)
@@ -81,8 +80,56 @@ class SparkExpectationsReader:
                     self._context.set_service_account_password(
                         _notification_dict[user_config.se_notifications_service_account_password]
                     )
-            print(self._context.get_mail_smtp_port)
-            print(self._context.get_mail_smtp_server)
+                    self._context.set_to_mail(
+                        _notification_dict[user_config.se_notifications_email_to_other_mail_id]
+                    )
+                    self._context.set_mail_subject(
+                        _notification_dict[user_config.se_notifications_email_subject]
+                    )
+                else:
+                    raise SparkExpectationsMiscException(
+                        "All params/variables required for email notification is not configured or supplied"
+                    )
+            #changes by SE team for only alert
+
+            if _notification_dict.get(user_config.se_dq_only_alert) is True:
+                self._context.set_only_alert(True)
+                if (
+                        _notification_dict.get(user_config.se_notifications_email_smtp_port)
+                        and _notification_dict.get(user_config.se_notifications_email_smtp_host)
+                        and _notification_dict.get(user_config.se_notifications_service_account_email)
+                        and _notification_dict.get(user_config.se_notifications_service_account_password)
+                ):
+                    self._context.set_mail_smtp_port(
+                        _notification_dict[user_config.se_notifications_email_smtp_port]
+                    )
+                    self._context.set_mail_smtp_server(
+                        _notification_dict[user_config.se_notifications_email_smtp_host]
+                    )
+                    self._context.set_service_account_email(
+                        _notification_dict[user_config.se_notifications_service_account_email]
+                    )
+                    self._context.set_service_account_password(
+                        _notification_dict[user_config.se_notifications_service_account_password]
+                    )
+                    self._context.set_to_mail(
+                        _notification_dict[user_config.se_notifications_email_to_other_mail_id]
+                    )
+                    self._context.set_mail_subject(
+                        _notification_dict[user_config.se_notifications_email_subject]
+                    )
+                    self._context.set_email_custom_body(
+                        _notification_dict[user_config.se_notifications_email_custom_body]
+                    )
+                else:
+                    raise SparkExpectationsMiscException(
+                        "All params/variables required for email notification is not configured or supplied"
+                    )
+
+
+
+
+
 
             if (
                 _notification_dict.get(user_config.se_notifications_enable_email)

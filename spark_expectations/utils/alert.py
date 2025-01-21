@@ -36,8 +36,6 @@ class AlertTrial:
         try:
             cerberus_url = 'https://prod.cerberus.nikecloud.com/'
             cerberus_sdb_path = "app/if-common/smtp"
-            # smtp_details = {'a.dsm.pss.obs': 'wp=Wq$37#UI?Ijy7_HNU', 'a.e2e.map.smtp': 'wp=Wq$37#UI?Ijy7_HNU'}
-
             # SMTP_USER_NAME = list(smtp_details.keys())[0]
             # service_account_email = f"{SMTP_USER_NAME}@nike.com"
             # service_account_password = smtp_details.get(SMTP_USER_NAME)
@@ -73,6 +71,7 @@ class AlertTrial:
         """
         try:
             from spark_expectations.utils.report import SparkExpectationsReport
+            print(self._context.get_mode_of_communication)
 
             report = SparkExpectationsReport(self._context)
             df = report.dq_obs_report_data_insert(df_detailed, df_query_output)
@@ -108,10 +107,11 @@ class AlertTrial:
                 competency_metrics=[],
                 criticality_metrics=[]
             )
-            mail_reciver_list="sudeepta.pal@nike.com,aaaalfyofqi7i7nxuvxlboxbym@nike.org.slack.com"
+            mail_reciver_list=self._context.get_to_mail
+            mail_subject= self._context.get_mail_subject
 
             print("calling the send mail to the users")
-            self.send_mail(html_output, "test", mail_reciver_list)
+            self.send_mail(html_output,mail_subject,mail_reciver_list)
 
             print("print the html data")
             print(html_output)
