@@ -38,7 +38,7 @@ user_conf = {
     user_config.se_dq_obs_alert_flag: False,
     user_config.se_notifications_enable_email: False,
     user_config.se_notifications_enable_custom_email_body: False,
-    user_config.se_dq_only_alert: False,
+    user_config.se_dq_only_alert: True,
     user_config.se_notifications_email_smtp_host: "smtp.office365.com",
     user_config.se_notifications_email_smtp_port: 587,
     user_config.se_notifications_service_account_email: "a.dsm.pss.obs@nike.com",

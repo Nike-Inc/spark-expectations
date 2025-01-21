@@ -603,9 +603,10 @@ class SparkExpectationsWriter:
         #     than call the report generation
         # if .se_dq_obs_alert_flag is true call alert one with
 
-        print("1st flow")
 
         if self._context.get_se_dq_obs_alert_flag is True:
+            print("1st flow")
+
             from spark_expectations.utils.report import SparkExpectationsReport
             context = self._context
             # report = SparkExpectationsReport(_context=context)
@@ -615,14 +616,17 @@ class SparkExpectationsWriter:
             alert.get_report_data(_df_detailed_stats, _df_custom_detailed_stats_source)
         #calling the only alert with default template
         if self._context.get_only_alert is True:
-            from spark_expectations.utils.alert import send_mail
+            print("2nd flow")
+            from spark_expectations.utils.alert import AlertTrial
 
             if self._context.get_only_alert is True:
-                from spark_expectations.utils.alert import send_mail
-                send_mail(
-                    to=self._context.get_to_mail,
-                    subject=self._context.get_mail_subject,
-                    body=self._context.get_email_custom_body
+                from spark_expectations.utils.alert import AlertTrial
+                alert = AlertTrial(self._context)
+
+                alert.send_mail(
+                    self._context.get_email_custom_body,
+                    self._context.get_mail_subject,
+                    self._context.get_to_mail
                 )
         #calling the alert with custom template
 
