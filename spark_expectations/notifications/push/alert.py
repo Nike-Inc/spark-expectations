@@ -79,9 +79,15 @@ class AlertTrial:
 
             print("success lets redesign the report")
             df.show()
-            template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-            env_loader = Environment(loader=FileSystemLoader(template_dir))
-            template = env_loader.get_template('advanced_email_alert_template.jinja')
+            if self._context.get_default_template is True:
+                template_dir = os.path.join(os.path.dirname(__file__), 'templates')
+                env_loader = Environment(loader=FileSystemLoader(template_dir))
+                template = env_loader.get_template('advanced_email_alert_template.jinja')
+            else:
+                template_dir = os.path.join(os.path.dirname(__file__), 'templates')
+                env_loader = Environment(loader=FileSystemLoader(template_dir))
+                template = env_loader.get_template('user_defined_template.jinja')
+
             df_data = [row.asDict() for row in df.collect()]
             headers = list(df.columns)
             rows = [row.asDict().values() for row in df.collect()]

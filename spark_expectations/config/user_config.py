@@ -4,6 +4,7 @@ from dataclasses import dataclass
 @dataclass
 class Constants:
     # declare const user config variables for email notification
+    se_dq_obs_default_email_template = "spark.expectations.dq.obs.default.email.template"
     se_dq_obs_mode_of_communication="spark.expectations.dq.obs.mode.of.communication"
     se_notifications_service_account_email="spark.expectations.notifications.service.account.email"
     se_dq_obs_alert_flag="spark.expectations.notifications.only.alert.with.default.template"

@@ -91,6 +91,8 @@ class SparkExpectationsReader:
                         "All params/variables required for email notification is not configured or supplied"
                     )
             #changes by SE team for only alert
+            if _notification_dict.get(user_config.se_dq_obs_default_email_template) is False:
+                self._context.set_default_template(False)
 
             if _notification_dict.get(user_config.se_dq_only_alert) is True:
                 self._context.set_only_alert(True)

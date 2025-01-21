@@ -33,6 +33,7 @@ se: SparkExpectations = SparkExpectations(
 )
 
 user_conf = {
+    user_config.se_dq_obs_default_email_template : True,
     user_config.se_dq_obs_mode_of_communication : False,
     user_config.se_enable_obs_dq_report_result: True,
     user_config.se_dq_obs_alert_flag: False,

@@ -23,7 +23,7 @@ from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException,
 )
 from spark_expectations.secrets import SparkExpectationsSecretsBackend
-from spark_expectations.utils.alert import AlertTrial
+from spark_expectations.notifications.push.alert import AlertTrial
 from spark_expectations.utils.udf import remove_empty_maps
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.sinks import _sink_hook
@@ -607,20 +607,20 @@ class SparkExpectationsWriter:
         if self._context.get_se_dq_obs_alert_flag is True:
             print("1st flow")
 
-            from spark_expectations.utils.report import SparkExpectationsReport
+            from spark_expectations.sinks.utils.report import SparkExpectationsReport
             context = self._context
-            # report = SparkExpectationsReport(_context=context)
-            # report.dq_obs_report_data_insert(_df_detailed_stats,_df_custom_detailed_stats_source)
-            from spark_expectations.utils.alert import AlertTrial
+            report = SparkExpectationsReport(_context=context)
+            report.dq_obs_report_data_insert(_df_detailed_stats,_df_custom_detailed_stats_source)
+            from spark_expectations.notifications.push.alert import AlertTrial
             alert = AlertTrial(self._context)
             alert.get_report_data(_df_detailed_stats, _df_custom_detailed_stats_source)
         #calling the only alert with default template
         if self._context.get_only_alert is True:
             print("2nd flow")
-            from spark_expectations.utils.alert import AlertTrial
+            from spark_expectations.notifications.push.alert import AlertTrial
 
             if self._context.get_only_alert is True:
-                from spark_expectations.utils.alert import AlertTrial
+                from spark_expectations.notifications.push.alert import AlertTrial
                 alert = AlertTrial(self._context)
 
                 alert.send_mail(

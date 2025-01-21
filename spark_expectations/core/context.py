@@ -66,6 +66,7 @@ class SparkExpectationsContext:
         self._teams_webhook_url: Optional[str] = None
 
         self._enable_zoom: bool = False
+        self.__default_template: bool = False
         self._zoom_webhook_url: Optional[str] = None
         self._zoom_token: Optional[str] = None
 
@@ -593,6 +594,22 @@ class SparkExpectationsContext:
 
     def set_to_mail(self, to_mail: str) -> None:
         self._to_mail = to_mail
+
+
+    def set_default_template(self, default_template: bool) -> None:
+        self._default_template = bool(default_template)
+
+
+    @property
+    def get_default_template(self) -> bool:
+        """
+        This function returns whether to enable default template or not
+        Returns:
+            str: Returns  _default_template(bool)
+
+        """
+        return self._default_template
+
 
     @property
     def get_to_mail(self) -> str:
