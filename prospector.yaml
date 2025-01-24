@@ -16,9 +16,6 @@ max-line-length: 120
 
 pylint:
   disable:
-    - too-many-positional-arguments
-    - used-before-assignment
-    - possibly-used-before-assignment
     - too-many-lines
     - too-many-branches
     - too-many-statements
@@ -31,6 +28,7 @@ pylint:
     - possibly-used-before-assignment
     - protected-access
     - too-many-arguments
+    - too-many-boolean-expressions
     - too-many-locals
     - too-many-positional-arguments
     - inconsistent-return-statements

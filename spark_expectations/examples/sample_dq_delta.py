@@ -21,6 +21,7 @@ dic_job_info = {
 }
 job_info = str(dic_job_info)
 
+
 se: SparkExpectations = SparkExpectations(
     product_id="your_product",
     rules_df=spark.table("dq_spark_dev.dq_rules"),
@@ -32,10 +33,18 @@ se: SparkExpectations = SparkExpectations(
 )
 
 user_conf = {
-    user_config.se_notifications_enable_email: True,
+    user_config.se_notifications_enable_email: False,
+    user_config.se_notifications_enable_smtp_server_auth: True,
     user_config.se_notifications_enable_custom_email_body: True,
     user_config.se_notifications_email_smtp_host: "mailhost.com",
     user_config.se_notifications_email_smtp_port: 25,
+    user_config.se_notifications_smtp_password: "your_password",
+    # user_config.se_notifications_smtp_creds_dict: {
+    #     user_config.secret_type: "cerberus",
+    #     user_config.cbs_url: "https://prod.cerberus.nikecloud.com",
+    #     user_config.cbs_sdb_path: "your_sdb_path",
+    #     user_config.cbs_smtp_password: "your_smtp_password",
+    # },
     user_config.se_notifications_email_from: "",
     user_config.se_notifications_email_to_other_mail_id: "",
     user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",

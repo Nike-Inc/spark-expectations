@@ -1,8 +1,8 @@
 ### Example - Write to Delta 
 
 Setup SparkSession for Delta Lake to test in your local environment. Configure accordingly for higher environments.
-Refer to Examples in [base_setup.py](../spark_expectations/examples/base_setup.py) and 
-[delta.py](../spark_expectations/examples/sample_dq_delta.py)
+Refer to Examples in [base_setup.py](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/examples/base_setup.py) and 
+[delta.py](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/examples/sample_dq_delta.py)
 
 ```python title="spark_session"
 from pyspark.sql import SparkSession
@@ -46,12 +46,27 @@ se: SparkExpectations = SparkExpectations(
     stats_streaming_options={user_config.se_enable_streaming: False}
 )
 
+#if smtp server needs to be authenticated, password can be passed directly with user config or set in a secure way like cerberus or databricks secret
+smtp_creds_dict = {
+    user_config.secret_type: "cerberus",
+    user_config.cbs_url: "htpps://cerberus.example.com",
+    user_config.cbs_sdb_path: "",
+    user_config.cbs_smtp_password: "",
+    # user_config.secret_type: "databricks",
+    # user_config.dbx_workspace_url: "https://workspace.cloud.databricks.com",
+    # user_config.dbx_secret_scope: "your_secret_scope",
+    # user_config.dbx_smtp_password: "your_password",
+}
+
 # Commented fields are optional or required when notifications are enabled
 user_conf = {
     user_config.se_notifications_enable_email: False,
+    # user_config.se_notifications_enable_smtp_server_auth: False,
     # user_config.se_notifications_enable_custom_email_body: True,
     # user_config.se_notifications_email_smtp_host: "mailhost.com",
     # user_config.se_notifications_email_smtp_port: 25,
+    # user_config.se_notifications_smtp_password: "your_password",
+    # user_config.se_notifications_smtp_creds_dict: smtp_creds_dict,
     # user_config.se_notifications_email_from: "",
     # user_config.se_notifications_email_to_other_mail_id: "",
     # user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",

@@ -400,6 +400,7 @@ class SparkExpectations:
                     _final_dq_df: Optional[DataFrame] = None
                     _final_query_dq_df: Optional[DataFrame] = None
                     _ignore_rules_result: List[Optional[List[Dict[str, str]]]] = []
+                    failed_ignored_row_dq_res: List[Dict[str, str]] = []
 
                     # initialize variable with default values through set
                     self._context.set_dq_run_status()
@@ -564,13 +565,19 @@ class SparkExpectations:
 
                             if (
                                 _notifications_on_rules_action_if_failed_set_ignore
-                                is True
-                                and (self._context.get_error_percentage)
+                                and isinstance(
+                                    self._context.get_error_percentage, (int, float)
+                                )
+                                and self._context.get_error_percentage
                                 >= _error_drop_threshold
                             ):
-                                failed_ignored_row_dq_res= [
-                                    rule for rule in self._context.get_summarized_row_dq_res
-                                    if rule['action_if_failed'] == 'ignore' and rule['failed_row_count'] > 0
+                                failed_ignored_row_dq_res = [
+                                    rule
+                                    for rule in self._context.get_summarized_row_dq_res
+                                    or []
+                                    if rule["action_if_failed"] == "ignore"
+                                    and isinstance(rule["failed_row_count"], int)
+                                    and rule["failed_row_count"] > 0
                                 ]
                                 # raise SparkExpectationsErrorThresholdExceedsException(
                                 #     "An error has taken place because"
