@@ -24,7 +24,7 @@ class SparkExpectationsContext:
     def __post_init__(self) -> None:
         self._dataframe: DataFrame
         self._df_dq_obs_report_dataframe: DataFrame
-        self._dq_obs_rpt_gen_status_flag: bool = False
+        self._dq_obs_rpt_gen_status_flag: bool
         self._custom_dataframe: DataFrame
         self._run_id: str = f"{self.product_id}_{uuid1()}"
         self._run_date: str = self.set_run_date()

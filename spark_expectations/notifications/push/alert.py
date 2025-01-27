@@ -112,23 +112,15 @@ class AlertTrial:
                     competency_metrics=[],
                     criticality_metrics=[]
                 )
+                print(html_output)
                 mail_reciver_list=self._context.get_to_mail
                 # mail_subject= self._context.get_mail_subject
                 mail_subject="test"
                 self.send_mail(html_output, mail_subject, mail_reciver_list)
-            elif len(self._context.get_email_custom_body) !=0 and len(self._context.get_mail_subject):
-                self.send_mail(self._context.get_email_custom_body, self._context.get_mail_subject, self._context.get_to_mail)
+
 
 
 
         except Exception as e:
             print(f"Error in get_report_data: {e}")
             traceback.print_exc()
-
-    def with_alert(self,custom_table:str):
-        def wrapper(*args, **kwargs):
-            self.send_mail("Email body", "Email subject", "receiver@example.com")  # Call the send_mail function
-
-            return
-
-        return wrapper

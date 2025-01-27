@@ -1,5 +1,8 @@
 # mypy: ignore-errors
 import os
+from spark_expectations.notifications.push.alert import AlertTrial
+from spark_expectations.core.context import SparkExpectationsContext
+
 
 from pyspark.sql import DataFrame
 from spark_expectations import _log
@@ -35,7 +38,7 @@ se: SparkExpectations = SparkExpectations(
 
 user_conf = {
     user_config.se_enable_obs_dq_report_result: True,
-    user_config.se_dq_obs_alert_flag : False,
+    user_config.se_dq_obs_alert_flag : True,
     user_config.se_dq_obs_default_email_template : "",
     user_config.se_dq_obs_mode_of_communication : False,
     user_config.se_notifications_enable_email: False,
@@ -116,52 +119,51 @@ def build_new() -> DataFrame:
     _df_customer_target.createOrReplaceTempView("customer_target")
 
     return _df_order_target
-
-
-
-
 #
-@se.with_alert(
-custom_table="dq_spark_dev.customer_order"
-)
-def build_new() -> DataFrame:
-    _df_order_source: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/order_s.csv"))
-    )
-    _df_order_source.createOrReplaceTempView("order_source")
-
-    _df_order_target: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/order_t.csv"))
-    )
-    _df_order_target.createOrReplaceTempView("order_target")
-
-    _df_product: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/product.csv"))
-    )
-    _df_product.createOrReplaceTempView("product")
-
-    _df_customer_source: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/customer_source.csv"))
-    )
-
-    _df_customer_source.createOrReplaceTempView("customer_source")
-
-    _df_customer_target: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/customer_source.csv"))
-    )
-    _df_customer_target.createOrReplaceTempView("customer_target")
-
-    return _df_order_target
+# context = SparkExpectationsContext()
+#
+# # Create an instance of AlertTrial
+# alert_trial = AlertTrial(context)
+#
+# @alert_trial.with_alert
+# def build_new() -> DataFrame:
+#     _df_order_source: DataFrame = (
+#         spark.read.option("header", "true")
+#         .option("inferSchema", "true")
+#         .csv(os.path.join(os.path.dirname(__file__), "resources/order_s.csv"))
+#     )
+#     _df_order_source.createOrReplaceTempView("order_source")
+#
+#     _df_order_target: DataFrame = (
+#         spark.read.option("header", "true")
+#         .option("inferSchema", "true")
+#         .csv(os.path.join(os.path.dirname(__file__), "resources/order_t.csv"))
+#     )
+#     _df_order_target.createOrReplaceTempView("order_target")
+#
+#     _df_product: DataFrame = (
+#         spark.read.option("header", "true")
+#         .option("inferSchema", "true")
+#         .csv(os.path.join(os.path.dirname(__file__), "resources/product.csv"))
+#     )
+#     _df_product.createOrReplaceTempView("product")
+#
+#     _df_customer_source: DataFrame = (
+#         spark.read.option("header", "true")
+#         .option("inferSchema", "true")
+#         .csv(os.path.join(os.path.dirname(__file__), "resources/customer_source.csv"))
+#     )
+#
+#     _df_customer_source.createOrReplaceTempView("customer_source")
+#
+#     _df_customer_target: DataFrame = (
+#         spark.read.option("header", "true")
+#         .option("inferSchema", "true")
+#         .csv(os.path.join(os.path.dirname(__file__), "resources/customer_source.csv"))
+#     )
+#     _df_customer_target.createOrReplaceTempView("customer_target")
+#
+#     return _df_order_target
 
 
 if __name__ == "__main__":

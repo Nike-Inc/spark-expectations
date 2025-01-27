@@ -19,10 +19,10 @@ class SparkExpectationsReport:
             print("dq_obs_report_data_insert method called stats_detailed table")
             df_stats_detailed = context.get_stats_detailed_dataframe
             df_custom_detailed = context.get_custom_detailed_dataframe
-            df_stats_detailed = df_stats_detailed.withColumn("job", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.job")) \
-                .withColumn("Region", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.Region")) \
-                .withColumn("Snapshot", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.Snapshot")) \
-                .withColumn("data_object_name", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.data_object_name"))
+            # df_stats_detailed = df_stats_detailed.withColumn("job", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.job")) \
+            #     .withColumn("Region", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.Region")) \
+            #     .withColumn("Snapshot", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.Snapshot")) \
+            #     .withColumn("data_object_name", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.data_object_name"))
             print("logic implementation started")
             #final table for stats detailed table
             df_stats_detailed = df_stats_detailed.withColumnRenamed("source_dq_row_count", "total_records") \
@@ -127,19 +127,67 @@ class SparkExpectationsReport:
             df_joined = df_joined.withColumn("total_records_int",
                                              regexp_extract(col("total_records"), r'\d+', 0).cast("int"))
             df_joined = df_joined.withColumn("failed_records", abs(expr("total_records_int - valid_records_int")))
-            df_joined = df_joined.withColumn("sucess_percentage", expr(
+            df_joined = df_joined.withColumn("success_percentage", expr(
                 "(1 - failed_records / greatest(valid_records_int, total_records_int)) * 100"))
 
 
 
 
-            drop_list=["source_f1_array","total_records","valid_records","range","alias","dq_type","source_output","source_output","target_output","source_output_array","total_records_dict_source","total_records_split_source","total_records_dict_target","total_records_split_target"]
+            drop_list=["dq_time","column_name","column_name_","source_f1_array","total_records","valid_records","range","alias","dq_type","source_output","source_output","target_output","source_output_array","total_records_dict_source","total_records_split_source","total_records_dict_target","total_records_split_target"]
             print("df_joined")
             print("report_table")
             df_joined=df_joined.drop(*drop_list)
+            df_joined = df_joined.withColumn(
+                "source_dq_status",
+                when(df_joined["failed_records"] > 0, "fail").otherwise("pass")
+
+            )
+            df_joined = df_joined.withColumnRenamed("valid_records_int", "valid_records") \
+                .withColumnRenamed("failed_records", "error_records") \
+                .withColumnRenamed("total_records_int", "total_records")
+            df_joined = df_joined.select(
+                "run_id",
+                "product_id",
+                "table_name",
+                "rule",
+                "source_dq_status",
+                "valid_records",
+                "error_records",
+                "total_records",
+                "success_percentage"
+            )
+
+
+
+
+
 
             df_joined.show()
             print("df_stats_detailed")
+            columns_to_remove = [
+                "target_dq_status",
+                "source_expectations",
+                "source_dq_actual_outcome",
+                "source_dq_expected_outcome",
+                "source_dq_start_time",
+                "source_dq_end_time",
+                "target_expectations",
+                "target_dq_actual_outcome",
+                "target_dq_expected_outcome",
+                "target_dq_actual_row_count",
+                "target_dq_error_row_count",
+                "target_dq_row_count",
+                "target_dq_start_time",
+                "target_dq_end_time",
+                "rule_type",
+                "dq_job_metadata_info",
+                "dq_time",
+                "description",
+                "dq_date",
+                "tag",
+                "column_name"
+            ]
+            df_stats_detailed=df_stats_detailed.drop(*columns_to_remove)
             df_stats_detailed.show(truncate=False)
 
 
@@ -164,33 +212,25 @@ class SparkExpectationsReport:
 
             # Remove duplicate rows
             print("report_table")
+            df_union = df_joined.unionByName(df_stats_detailed)
+            # df_stats_detailed = df_stats_detailed.withColumn("job", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.job")) \
+            #     .withColumn("Region", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.Region")) \
+            #     .withColumn("Snapshot", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.Snapshot")) \
+            #     .withColumn("data_object_name", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.data_object_name"))
+
+            # Show the result
 
 
             # Show the result
-            columns_to_remove = [
-                "target_dq_status",
-                "source_expectations",
-                "source_dq_actual_outcome",
-                "source_dq_expected_outcome",
-                "source_dq_start_time",
-                "source_dq_end_time",
-                "target_expectations",
-                "target_dq_actual_outcome",
-                "target_dq_expected_outcome",
-                "target_dq_actual_row_count",
-                "target_dq_error_row_count",
-                "target_dq_row_count",
-                "target_dq_start_time",
-                "target_dq_end_time"
-            ]
-            df1=df_stats_detailed.drop(*columns_to_remove)
+            df_union.show(truncate=False)
+
 
             #writing the data into the report table
 
             # Create an instance of AlertTrial and call get_report_data
 
 
-            return True,df_stats_detailed
+            return True,df_union
         except Exception as e:
             raise SparkExpectationsMiscException(
                 f"An error occurred in dq_obs_report_data_insert: {e}"

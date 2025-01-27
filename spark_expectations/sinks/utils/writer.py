@@ -617,14 +617,14 @@ class SparkExpectationsWriter:
             report = SparkExpectationsReport(_context=context)
             print("report being called")
             dq_obs_rpt_gen_status_flag,df= report.dq_obs_report_data_insert()
-            context.set_dq_obs_rpt_gen_status_flag=dq_obs_rpt_gen_status_flag
-            print("set_dq_obs_rpt_gen_status_flag",context.set_dq_obs_rpt_gen_status_flag)
-            context.set_df_dq_obs_report_dataframe=df
+            if dq_obs_rpt_gen_status_flag is True:
+              context.set_dq_obs_rpt_gen_status_flag(True)
+            print("set_dq_obs_rpt_gen_status_flag",context.get_dq_obs_rpt_gen_status_flag)
+            context.set_df_dq_obs_report_dataframe(df)
        # calling only alert
         if self._context.get_se_dq_obs_alert_flag is True:
             context = self._context
             print("alert being called")
-            context.set_dq_obs_rpt_gen_status_flag=False
             alert = AlertTrial(self._context)
             alert.get_report_data()
         #
