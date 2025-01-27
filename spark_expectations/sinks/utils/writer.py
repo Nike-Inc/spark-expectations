@@ -355,7 +355,7 @@ class SparkExpectationsWriter:
 
         _df_custom_detailed_stats_source = self._context.spark.sql(
             "select distinct source.run_id,source.product_id, source.table_name,"
-            + "source.rule,source.alias,source.dq_type,source.source_dq as source_output,"
+            + "source.rule,source.column_name,source.alias,source.dq_type,source.source_dq as source_output,"
             + "target.source_dq as target_output from _df_custom_detailed_stats_source as source "
             + "left outer join _df_custom_detailed_stats_source as target "
             + "on source.run_id=target.run_id and source.product_id=target.product_id and "
@@ -364,6 +364,7 @@ class SparkExpectationsWriter:
             + "and source.alias_comp=target.alias_comp "
             + "and source.compare = 'source' and target.compare = 'target' "
         )
+
 
         _df_custom_detailed_stats_source = _df_custom_detailed_stats_source.withColumn(
             "dq_time", lit(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
@@ -596,6 +597,12 @@ class SparkExpectationsWriter:
         print("------------------------------------------########################################################################spark expectation ending here.#####################------------------------------------------")
         print(user_config.se_enable_obs_dq_report_result)
         print(user_config.se_notifications_enable_email)
+        context = self._context
+        context.set_stats_detailed_dataframe(_df_detailed_stats)
+        context.set_custom_detailed_dataframe(_df_custom_detailed_stats_source)
+
+
+
 
         # print(self.spark.expectations.notifications.observability.enabled)
         # Call the dq_obs_report_data_insert method from report.py
@@ -603,32 +610,46 @@ class SparkExpectationsWriter:
         #     than call the report generation
         # if .se_dq_obs_alert_flag is true call alert one with
 
-
-        if self._context.get_se_dq_obs_alert_flag is True:
-            print("1st flow")
+        if self._context.get_enable_obs_dq_report_result is True:
 
             from spark_expectations.sinks.utils.report import SparkExpectationsReport
             context = self._context
             report = SparkExpectationsReport(_context=context)
-            report.dq_obs_report_data_insert(_df_detailed_stats,_df_custom_detailed_stats_source)
-            from spark_expectations.notifications.push.alert import AlertTrial
+            print("report being called")
+            dq_obs_rpt_gen_status_flag,df= report.dq_obs_report_data_insert()
+            context.set_dq_obs_rpt_gen_status_flag=dq_obs_rpt_gen_status_flag
+            print("set_dq_obs_rpt_gen_status_flag",context.set_dq_obs_rpt_gen_status_flag)
+            context.set_df_dq_obs_report_dataframe=df
+       # calling only alert
+        if self._context.get_se_dq_obs_alert_flag is True:
+            context = self._context
+            print("alert being called")
+            context.set_dq_obs_rpt_gen_status_flag=False
             alert = AlertTrial(self._context)
-            alert.get_report_data(_df_detailed_stats, _df_custom_detailed_stats_source)
-        #calling the only alert with default template
-        if self._context.get_only_alert is True:
-            print("2nd flow")
-            from spark_expectations.notifications.push.alert import AlertTrial
-
-            if self._context.get_only_alert is True:
-                from spark_expectations.notifications.push.alert import AlertTrial
-                alert = AlertTrial(self._context)
-
-                alert.send_mail(
-                    self._context.get_email_custom_body,
-                    self._context.get_mail_subject,
-                    self._context.get_to_mail
-                )
-        #calling the alert with custom template
+            alert.get_report_data()
+        #
+        # # from spark_expectations.notifications.push.alert import AlertTrial
+        # # alert = AlertTrial(self._context)
+        # # alert.get_report_data(_df_detailed_stats, _df_custom_detailed_stats_source)
+        #
+        # # from spark_expectations.notifications.push.alert import AlertTrial
+        # # alert = AlertTrial(self._context)
+        # # alert.get_report_data(_df_detailed_stats, _df_custom_detailed_stats_source)
+        # #calling the only alert with default template
+        # # if self._context.get_only_alert is True:
+        # #     print("2nd flow")
+        # #     from spark_expectations.notifications.push.alert import AlertTrial
+        # #
+        # #     if self._context.set_default_template is True:
+        # #         from spark_expectations.notifications.push.alert import AlertTrial
+        # #         alert = AlertTrial(self._context)
+        # #
+        # #         alert.send_mail(
+        # #             self._context.get_email_custom_body,
+        # #             self._context.get_mail_subject,
+        # #             self._context.get_to_mail
+        # #         )
+        # #calling the alert with custom template
 
 
 

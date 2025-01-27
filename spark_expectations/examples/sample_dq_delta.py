@@ -19,6 +19,7 @@ dic_job_info = {
     "Region": "NA",
     "env": "dev",
     "Snapshot": "2024-04-15",
+    "data_object_name ": "customer_order",
 }
 job_info = str(dic_job_info)
 
@@ -33,13 +34,12 @@ se: SparkExpectations = SparkExpectations(
 )
 
 user_conf = {
-    user_config.se_dq_obs_default_email_template : True,
-    user_config.se_dq_obs_mode_of_communication : False,
     user_config.se_enable_obs_dq_report_result: True,
-    user_config.se_dq_obs_alert_flag: False,
+    user_config.se_dq_obs_alert_flag : False,
+    user_config.se_dq_obs_default_email_template : "",
+    user_config.se_dq_obs_mode_of_communication : False,
     user_config.se_notifications_enable_email: False,
     user_config.se_notifications_enable_custom_email_body: False,
-    user_config.se_dq_only_alert: True,
     user_config.se_notifications_email_smtp_host: "smtp.office365.com",
     user_config.se_notifications_email_smtp_port: 587,
     user_config.se_notifications_service_account_email: "a.dsm.pss.obs@nike.com",
@@ -48,10 +48,8 @@ user_conf = {
     user_config.se_notifications_email_to_other_mail_id: "sudeepta.pal@nike.com",
     user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",
     user_config.se_notifications_email_custom_body: """Spark Expectations Statistics for this dq run:
-    'product_id': {},
-    'table_name': {},
-    'source_agg_dq_results': {}',
-    'dq_status': {}""",
+    vamsi sudeep malik raghav 
+    """,
     user_config.se_notifications_enable_slack: False,
     user_config.se_notifications_slack_webhook_url: "",
     user_config.se_notifications_on_start: True,
@@ -66,6 +64,9 @@ user_conf = {
     user_config.se_dq_rules_params: {
         "env": "dev",
         "table": "product",
+        "data_object_name" :"customer_order",
+        "data_source" : "customer_source",
+       " data_layer" : "Integrated"
     },
     user_config.se_job_metadata: job_info,
 }
@@ -114,17 +115,63 @@ def build_new() -> DataFrame:
     )
     _df_customer_target.createOrReplaceTempView("customer_target")
 
-    return _df_order_source
+    return _df_order_target
+
+
+
+
+#
+@se.with_alert(
+custom_table="dq_spark_dev.customer_order"
+)
+def build_new() -> DataFrame:
+    _df_order_source: DataFrame = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(os.path.join(os.path.dirname(__file__), "resources/order_s.csv"))
+    )
+    _df_order_source.createOrReplaceTempView("order_source")
+
+    _df_order_target: DataFrame = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(os.path.join(os.path.dirname(__file__), "resources/order_t.csv"))
+    )
+    _df_order_target.createOrReplaceTempView("order_target")
+
+    _df_product: DataFrame = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(os.path.join(os.path.dirname(__file__), "resources/product.csv"))
+    )
+    _df_product.createOrReplaceTempView("product")
+
+    _df_customer_source: DataFrame = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(os.path.join(os.path.dirname(__file__), "resources/customer_source.csv"))
+    )
+
+    _df_customer_source.createOrReplaceTempView("customer_source")
+
+    _df_customer_target: DataFrame = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(os.path.join(os.path.dirname(__file__), "resources/customer_source.csv"))
+    )
+    _df_customer_target.createOrReplaceTempView("customer_target")
+
+    return _df_order_target
 
 
 if __name__ == "__main__":
     build_new()
 
-    spark.sql("use dq_spark_dev")
-    spark.sql("select * from dq_spark_dev.dq_stats").show(truncate=False)
-    spark.sql("select * from dq_spark_dev.dq_stats_detailed").show(truncate=False)
-    spark.sql("select * from dq_spark_dev.dq_stats_querydq_output").show(truncate=False)
-    _log.info("BELOW IS THE REPORT TABLE")
+    # spark.sql("use dq_spark_dev")
+    # spark.sql("select * from dq_spark_dev.dq_stats").show(truncate=False)
+    # spark.sql("select * from dq_spark_dev.dq_stats_detailed").show(truncate=False)
+    # spark.sql("select * from dq_spark_dev.dq_stats_querydq_output").show(truncate=False)
+    # _log.info("BELOW IS THE REPORT TABLE")
 
     # spark.sql("select * from dq_spark_dev.dq_obs_report_data").show(truncate=False)
 

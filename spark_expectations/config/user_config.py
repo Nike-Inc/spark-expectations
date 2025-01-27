@@ -8,7 +8,6 @@ class Constants:
     se_dq_obs_mode_of_communication="spark.expectations.dq.obs.mode.of.communication"
     se_notifications_service_account_email="spark.expectations.notifications.service.account.email"
     se_dq_obs_alert_flag="spark.expectations.notifications.only.alert.with.default.template"
-    se_dq_only_alert="spark.expectations.notifications.only.alert"
     se_notifications_service_account_password="spark.expectations.notifications.service.account.password"
     se_notifications_smtp_user_name = "spark.expectations.notifications.smtp.user.name"
     se_notifications_enable_email = "spark.expectations.notifications.email.enabled"

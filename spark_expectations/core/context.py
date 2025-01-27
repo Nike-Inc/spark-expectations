@@ -22,6 +22,10 @@ class SparkExpectationsContext:
     spark: SparkSession
 
     def __post_init__(self) -> None:
+        self._dataframe: DataFrame
+        self._df_dq_obs_report_dataframe: DataFrame
+        self._dq_obs_rpt_gen_status_flag: bool = False
+        self._custom_dataframe: DataFrame
         self._run_id: str = f"{self.product_id}_{uuid1()}"
         self._run_date: str = self.set_run_date()
         self._dq_stats_table_name: Optional[str] = None
@@ -66,7 +70,7 @@ class SparkExpectationsContext:
         self._teams_webhook_url: Optional[str] = None
 
         self._enable_zoom: bool = False
-        self.__default_template: bool = False
+        self.__default_template: str
         self._zoom_webhook_url: Optional[str] = None
         self._zoom_token: Optional[str] = None
 
@@ -99,7 +103,6 @@ class SparkExpectationsContext:
         self._only_alert : bool=False
         self._notification_on_completion: bool = False
         self._notification_on_fail: bool = False
-        self._only_alert_with_default_template : bool = False
         self._error_drop_threshold: int = 100
 
         self._cerberus_url: str = "your_cerberus_url"
@@ -206,8 +209,14 @@ class SparkExpectationsContext:
             """The spark expectations context is not set completely, please assign '_dq_stats_table_name' before 
             accessing it"""
         )
-    def set_dq_stats_report_table_name(self,dq_stats_report_table_name: str) -> None:
-        self._dq_stats_report_table_name = dq_stats_report_table_name
+
+
+    def set_df_dq_obs_report_dataframe(self, dataframe: DataFrame) -> None:
+        self._df_dq_obs_report_dataframe = dataframe
+
+    @property
+    def get_df_dq_obs_report_dataframe(self) -> DataFrame:
+        return self._df_dq_obs_report_dataframe
 
 
 
@@ -596,12 +605,12 @@ class SparkExpectationsContext:
         self._to_mail = to_mail
 
 
-    def set_default_template(self, default_template: bool) -> None:
-        self._default_template = bool(default_template)
+    def set_default_template(self, default_template: str) -> None:
+        self._default_template = str(default_template)
 
 
     @property
-    def get_default_template(self) -> bool:
+    def get_default_template(self) -> str:
         """
         This function returns whether to enable default template or not
         Returns:
@@ -609,6 +618,19 @@ class SparkExpectationsContext:
 
         """
         return self._default_template
+
+    def set_dq_obs_rpt_gen_status_flag(self, dq_obs_rpt_gen_status_flag: bool) -> None:
+        self._dq_obs_rpt_gen_status_flag = dq_obs_rpt_gen_status_flag
+
+    @property
+    def get_dq_obs_rpt_gen_status_flag(self):
+        """
+        This function returns whether to enable dq_obs_rpt_gen_status_flag or not
+        Returns:
+            str: Returns  _dq_obs_rpt_gen_status_flag(bool)
+
+        """
+        return self._dq_obs_rpt_gen_status_flag
 
 
     @property
@@ -2207,3 +2229,18 @@ class SparkExpectationsContext:
     @property
     def report_table_config(self):
         return self._report_table_config
+
+    def set_stats_detailed_dataframe(self, dataframe: DataFrame) -> None:
+        self._dataframe = dataframe
+
+    @property
+    def get_stats_detailed_dataframe(self) -> DataFrame:
+        return self._dataframe
+
+    def set_custom_detailed_dataframe(self, dataframe: DataFrame) -> None:
+        self._custom_dataframe = dataframe
+
+    @property
+    def get_custom_detailed_dataframe(self) -> DataFrame:
+        return self._custom_dataframe
+
