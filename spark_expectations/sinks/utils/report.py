@@ -32,27 +32,6 @@ class SparkExpectationsReport:
                                                              expr("(valid_records / total_records )* 100"))
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
             df_source = df_custom_detailed
             df_target = df_custom_detailed
             from pyspark.sql.functions import split, regexp_replace, explode, col

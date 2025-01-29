@@ -1,5 +1,12 @@
-# mypy: ignore-errors
+# Define the product_id
+from pyspark.sql.types import StructType, StructField, IntegerType, StringType
+
+from spark_expectations.notifications.push.alert import AlertTrial
+from spark_expectations.core.context import SparkExpectationsContext
+from pyspark.sql import SparkSession
 import os
+from spark_expectations.utils.reader import SparkExpectationsReader
+
 from spark_expectations.notifications.push.alert import AlertTrial
 from spark_expectations.core.context import SparkExpectationsContext
 
@@ -35,12 +42,28 @@ se: SparkExpectations = SparkExpectations(
     debugger=False,
     # stats_streaming_options={user_config.se_enable_streaming: False},
 )
+schema = StructType([
+    StructField("id", IntegerType(), True),
+    StructField("name", StringType(), True),
+    StructField("age", IntegerType(), True)
+])
+
+# Create a list of sample data
+data = [
+    (1, "Alice", 30),
+    (2, "Bob", 25),
+    (3, "Cathy", 28)
+]
+default_df = spark.createDataFrame(data, schema)
+
+
 
 user_conf = {
+    user_config.se_notifications_enable_custom_dataframe: False,
     user_config.se_enable_obs_dq_report_result: True,
-    user_config.se_dq_obs_alert_flag : True,
-    user_config.se_dq_obs_default_email_template : "",
-    user_config.se_dq_obs_mode_of_communication : False,
+    user_config.se_dq_obs_alert_flag: True,
+    user_config.se_dq_obs_default_email_template: "",
+    user_config.se_dq_obs_mode_of_communication: False,
     user_config.se_notifications_enable_email: False,
     user_config.se_notifications_enable_custom_email_body: False,
     user_config.se_notifications_email_smtp_host: "smtp.office365.com",
@@ -51,7 +74,7 @@ user_conf = {
     user_config.se_notifications_email_to_other_mail_id: "sudeepta.pal@nike.com",
     user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",
     user_config.se_notifications_email_custom_body: """Spark Expectations Statistics for this dq run:
-    vamsi sudeep malik raghav 
+    vamsi sudeep malik raghav
     """,
     user_config.se_notifications_enable_slack: False,
     user_config.se_notifications_slack_webhook_url: "",
@@ -62,18 +85,15 @@ user_conf = {
     user_config.se_notifications_on_error_drop_threshold: 15,
     user_config.se_enable_query_dq_detailed_result: True,
     user_config.se_enable_agg_dq_detailed_result: True,
-    # user_config.querydq_output_custom_table_name: "dq_spark_local.dq_stats_detailed_outputt",
     user_config.se_enable_error_table: True,
     user_config.se_dq_rules_params: {
         "env": "dev",
         "table": "product",
-        "data_object_name" :"customer_order",
-        "data_source" : "customer_source",
-       " data_layer" : "Integrated"
+        "data_object_name": "customer_order",
+        "data_source": "customer_source",
+        "data_layer": "Integrated"
     },
-    user_config.se_job_metadata: job_info,
-}
-
+    user_config.se_job_metadata: job_info,}
 
 @se.with_expectations(
     target_table="dq_spark_dev.customer_order",
@@ -120,68 +140,26 @@ def build_new() -> DataFrame:
 
     return _df_order_target
 #
-# context = SparkExpectationsContext()
-#
-# # Create an instance of AlertTrial
-# alert_trial = AlertTrial(context)
-#
-# @alert_trial.with_alert
-# def build_new() -> DataFrame:
-#     _df_order_source: DataFrame = (
-#         spark.read.option("header", "true")
-#         .option("inferSchema", "true")
-#         .csv(os.path.join(os.path.dirname(__file__), "resources/order_s.csv"))
-#     )
-#     _df_order_source.createOrReplaceTempView("order_source")
-#
-#     _df_order_target: DataFrame = (
-#         spark.read.option("header", "true")
-#         .option("inferSchema", "true")
-#         .csv(os.path.join(os.path.dirname(__file__), "resources/order_t.csv"))
-#     )
-#     _df_order_target.createOrReplaceTempView("order_target")
-#
-#     _df_product: DataFrame = (
-#         spark.read.option("header", "true")
-#         .option("inferSchema", "true")
-#         .csv(os.path.join(os.path.dirname(__file__), "resources/product.csv"))
-#     )
-#     _df_product.createOrReplaceTempView("product")
-#
-#     _df_customer_source: DataFrame = (
-#         spark.read.option("header", "true")
-#         .option("inferSchema", "true")
-#         .csv(os.path.join(os.path.dirname(__file__), "resources/customer_source.csv"))
-#     )
-#
-#     _df_customer_source.createOrReplaceTempView("customer_source")
-#
-#     _df_customer_target: DataFrame = (
-#         spark.read.option("header", "true")
-#         .option("inferSchema", "true")
-#         .csv(os.path.join(os.path.dirname(__file__), "resources/customer_source.csv"))
-#     )
-#     _df_customer_target.createOrReplaceTempView("customer_target")
-#
-#     return _df_order_target
-
 
 if __name__ == "__main__":
-    build_new()
+    se_dq_obs_alert_flag = user_conf.get(user_config.se_dq_obs_alert_flag, "False")
+    se_enable_obs_dq_report_result = user_conf.get(user_config.se_enable_obs_dq_report_result, "False")
 
-    # spark.sql("use dq_spark_dev")
-    # spark.sql("select * from dq_spark_dev.dq_stats").show(truncate=False)
-    # spark.sql("select * from dq_spark_dev.dq_stats_detailed").show(truncate=False)
-    # spark.sql("select * from dq_spark_dev.dq_stats_querydq_output").show(truncate=False)
-    # _log.info("BELOW IS THE REPORT TABLE")
+    if se_dq_obs_alert_flag is True and se_enable_obs_dq_report_result is False :
+            product_id="your_product"
+            # Create an instance of SparkExpectationsContext with the required arguments
+            _context = SparkExpectationsContext(product_id, spark)
+            reader = SparkExpectationsReader(_context)
+            reader.set_notification_param(user_conf)
+            instance = AlertTrial(_context)
+            # Create an instance of AlertTrial with the context
+            if (user_conf.get(user_config.se_notifications_enable_custom_dataframe)) is True:
+                instance.custom_report_dataframe(default_df)
+            else:
+              instance.send_mail(user_conf.get(user_config.se_notifications_email_subject),user_conf.get(user_config.se_notifications_email_custom_body),user_conf.get(user_config.se_notifications_email_to_other_mail_id))
+    else:
+        build_new()
 
-    # spark.sql("select * from dq_spark_dev.dq_obs_report_data").show(truncate=False)
-
-    # spark.sql("select count(*) from dq_spark_local.customer_order_error ").show(
-    #    truncate=False
-    # )
-    if user_config.se_enable_obs_dq_report_result == "spark.expectations.observability.enabled":
-        _log.info("alert_send_successfully")
 
 
     _log.info("stats data in the kafka topic")

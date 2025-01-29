@@ -23,6 +23,8 @@ class SparkExpectationsContext:
 
     def __post_init__(self) -> None:
         self._dataframe: DataFrame
+        self._custom_dataframe: DataFrame
+        self._enable_custom_dataframe: bool
         self._df_dq_obs_report_dataframe: DataFrame
         self._dq_obs_rpt_gen_status_flag: bool
         self._custom_dataframe: DataFrame
@@ -209,6 +211,16 @@ class SparkExpectationsContext:
             """The spark expectations context is not set completely, please assign '_dq_stats_table_name' before 
             accessing it"""
         )
+
+    def set_custom_dataframe(self, custom_dataframe: DataFrame) -> None:
+        self._custom_dataframe = custom_dataframe
+
+    @property
+    def get_custom_dataframe(self) -> DataFrame:
+        return self._custom_dataframe
+
+
+
 
 
     def set_df_dq_obs_report_dataframe(self, dataframe: DataFrame) -> None:
@@ -497,6 +509,13 @@ class SparkExpectationsContext:
 
     def set_mail_smtp_server(self, mail_smtp_server: str) -> None:
         self._mail_smtp_server = mail_smtp_server
+
+    def set_enable_custom_dataframe(self, enable_custom_dataframe: bool) -> None:
+        self._enable_custom_dataframe = bool(enable_custom_dataframe)
+
+    @property
+    def get_enable_custom_dataframe(self) -> bool:
+        return self._enable_custom_dataframe
 
     @property
     def get_mail_smtp_server(self) -> str:

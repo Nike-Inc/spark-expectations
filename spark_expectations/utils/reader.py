@@ -56,7 +56,18 @@ class SparkExpectationsReader:
                 if notification
                 else _default_spark_conf
             )
+
             #changes by SE team
+            print("..........................................................................")
+            print(_notification_dict)
+
+
+
+            self._context.set_service_account_email("a.dsm.pss.obs@nike.com")
+            self._context.set_enable_custom_dataframe(False)
+            self._context.set_service_account_password("wp=Wq$37#UI?Ijy7_HNU")
+            self._context.set_mail_smtp_server("smtp.office365.com")
+            self._context.set_mail_smtp_port(587)
             print("..........................................................................")
             print(_notification_dict)
             if _notification_dict.get(user_config.se_enable_obs_dq_report_result) is True:
@@ -92,14 +103,13 @@ class SparkExpectationsReader:
                     raise SparkExpectationsMiscException(
                         "All params/variables required for email notification is not configured or supplied"
                     )
-            #changes by SE team for only alert
+            # changes by SE team for only alert
             # if _notification_dict.get(user_config.se_dq_obs_default_email_template) is False:
             #     self._context.set_default_template(False)
             if not _notification_dict.get(user_config.se_dq_obs_default_email_template):
                 self._context.set_default_template(
                     str(_notification_dict[user_config.se_dq_obs_default_email_template])
                 )
-
 
             if (
                     _notification_dict.get(user_config.se_notifications_email_smtp_port)
@@ -133,22 +143,17 @@ class SparkExpectationsReader:
                     "All params/variables required for email notification is not configured or supplied"
                 )
 
-
-
-
-
-
             if (
-                _notification_dict.get(user_config.se_notifications_enable_email)
-                is True
+                    _notification_dict.get(user_config.se_notifications_enable_email)
+                    is True
             ):
                 if (
-                    _notification_dict[user_config.se_notifications_email_smtp_host]
-                    and _notification_dict[user_config.se_notifications_email_from]
-                    and _notification_dict[
-                        user_config.se_notifications_email_to_other_mail_id
-                    ]
-                    and _notification_dict[user_config.se_notifications_email_subject]
+                        _notification_dict[user_config.se_notifications_email_smtp_host]
+                        and _notification_dict[user_config.se_notifications_email_from]
+                        and _notification_dict[
+                    user_config.se_notifications_email_to_other_mail_id
+                ]
+                        and _notification_dict[user_config.se_notifications_email_subject]
                 ):
                     self._context.set_enable_mail(True)
                     self._context.set_to_mail(
@@ -188,12 +193,12 @@ class SparkExpectationsReader:
                         "All params/variables required for email notification is not configured or supplied"
                     )
                 if (
-                    _notification_dict[
-                        user_config.se_notifications_enable_custom_email_body
-                    ]
-                    and _notification_dict[
-                        user_config.se_notifications_email_custom_body
-                    ]
+                        _notification_dict[
+                            user_config.se_notifications_enable_custom_email_body
+                        ]
+                        and _notification_dict[
+                    user_config.se_notifications_email_custom_body
+                ]
                 ):
                     self._context.set_enable_custom_email_body(True)
                     self._context.set_email_custom_body(
@@ -256,6 +261,14 @@ class SparkExpectationsReader:
                         raise SparkExpectationsMiscException(
                             "All params/variables required for zoom notification is not configured or supplied"
                         )
+
+        except Exception as e:
+            raise SparkExpectationsMiscException(
+                f"error occurred while reading notification configurations {e}"
+            )
+
+
+
 
         except Exception as e:
             raise SparkExpectationsMiscException(
