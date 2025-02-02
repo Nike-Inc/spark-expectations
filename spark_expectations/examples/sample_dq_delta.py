@@ -22,7 +22,7 @@ from spark_expectations.config.user_config import Constants as user_config
 
 
 writer = WrappedDataFrameWriter().mode("append").format("delta")
-
+product_id="your_product"
 spark = set_up_delta()
 dic_job_info = {
     "job": "na_CORL_DIGITAL_source_to_o9",
@@ -61,7 +61,7 @@ default_df = spark.createDataFrame(data, schema)
 user_conf = {
     user_config.se_notifications_enable_custom_dataframe: False,
     user_config.se_enable_obs_dq_report_result: True,
-    user_config.se_dq_obs_alert_flag: True,
+    user_config.se_dq_obs_alert_flag: False,
     user_config.se_dq_obs_default_email_template: "",
     user_config.se_dq_obs_mode_of_communication: False,
     user_config.se_notifications_enable_email: False,
@@ -146,7 +146,6 @@ if __name__ == "__main__":
     se_enable_obs_dq_report_result = user_conf.get(user_config.se_enable_obs_dq_report_result, "False")
 
     if se_dq_obs_alert_flag is True and se_enable_obs_dq_report_result is False :
-            product_id="your_product"
             # Create an instance of SparkExpectationsContext with the required arguments
             _context = SparkExpectationsContext(product_id, spark)
             reader = SparkExpectationsReader(_context)

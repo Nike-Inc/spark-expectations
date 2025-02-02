@@ -5,6 +5,12 @@ from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from spark_expectations.notifications.push.alert import AlertTrial
 # from alert_trial import AlertTrial  # Import AlertTrial
+from pyspark.sql.functions import lit
+from pyspark.sql.functions import col, lit, split, regexp_extract, regexp_replace, round, explode, expr, trim, \
+    coalesce, when, size, concat_ws, abs, filter, regexp_replace
+from pyspark.sql.types import DateType, StringType, TimestampType, DoubleType, DecimalType
+import time
+
 
 @dataclass
 class SparkExpectationsReport:
@@ -19,130 +25,168 @@ class SparkExpectationsReport:
             print("dq_obs_report_data_insert method called stats_detailed table")
             df_stats_detailed = context.get_stats_detailed_dataframe
             df_custom_detailed = context.get_custom_detailed_dataframe
-            # df_stats_detailed = df_stats_detailed.withColumn("job", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.job")) \
-            #     .withColumn("Region", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.Region")) \
-            #     .withColumn("Snapshot", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.Snapshot")) \
-            #     .withColumn("data_object_name", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.data_object_name"))
-            print("logic implementation started")
-            #final table for stats detailed table
-            df_stats_detailed = df_stats_detailed.withColumnRenamed("source_dq_row_count", "total_records") \
-                .withColumnRenamed("source_dq_error_row_count", "error_records") \
-                .withColumnRenamed("source_dq_actual_row_count", "valid_records")
-            df_stats_detailed = df_stats_detailed.withColumn("success_percentage",
-                                                             expr("(valid_records / total_records )* 100"))
+            df=df_custom_detailed
+            dq_status_calculation_attribute = "success_percentage"
+            source_zero_and_target_zero_is = "pass"
+            df = df.filter((df.source_output.isNotNull()) & (df.target_output.isNotNull()))
+            df = df.withColumn("success_percentage", lit(None).cast(DoubleType())) \
+                .withColumn("failed_records", lit(0)) \
+                .withColumn("status", lit(None).cast(StringType())) \
+                .withColumnRenamed("source_output", "total_records") \
+                .withColumnRenamed("target_output", "valid_records")
+            join_columns = ["run_id", "product_id", "table_name", "column_name", "rule"]
+            only_querydq_src_base_df = df
+            only_querydq_src_base_df = only_querydq_src_base_df.withColumn('extracted_total_records_data', split(
+                regexp_extract('total_records', r'=\[(.*)\]', 1), '},'))
+            only_querydq_src_df = only_querydq_src_base_df.select('*', explode('extracted_total_records_data').alias(
+                'total_records_dict'))
+            only_querydq_src_df = only_querydq_src_df.withColumn('total_records_dict_split', split(
+                regexp_replace(col('total_records_dict'), '[}{]', ''), ','))
 
-
-            df_source = df_custom_detailed
-            df_target = df_custom_detailed
-            from pyspark.sql.functions import split, regexp_replace, explode, col
-
-            # detailed source calculation
-            df_with_array = df_source.withColumn(
-                "source_output_array",
-                split(regexp_replace(col("source_output"), r"[\{\}\[\]]", ""), ", ")
+            only_querydq_src_df = only_querydq_src_df.withColumn(
+                'total_records',
+                expr("element_at(total_records_dict_split, -1)")
+            )
+            only_querydq_src_df = only_querydq_src_df.withColumn(
+                'column_name',
+                when(size(col('total_records_dict_split')) > 1,
+                     concat_ws(",", expr("slice(total_records_dict_split, 1, size(total_records_dict_split)-1)")))
+                .otherwise(col('column_name'))
             )
 
-            # Explode the array to create a new row for each element
-            df_with_array = df_with_array.select(
-                '*',
-                explode(col('source_output_array')).alias('total_records_dict_source')
+            data_types = {
+                "rule": StringType(),
+                "column_name": StringType(),
+                "dq_time": TimestampType(),
+                "product_id": StringType(),
+                "table_name": StringType(),
+                "status": StringType(),
+                "total_records": StringType(),
+                "failed_records": StringType(),
+                "valid_records": StringType(),
+                "success_percentage": StringType(),
+                "run_id": StringType()
+            }
+            dq_column_list = [col_name for col_name in data_types.keys()]
+            src_dq_column_list = [col_name for col_name in dq_column_list if col_name not in ['valid_records']]
+            only_querydq_src_final_df = only_querydq_src_df.selectExpr(*src_dq_column_list)
+
+            only_querydq_tgt_base_df = df
+            only_querydq_tgt_base_df = only_querydq_tgt_base_df.withColumn('extracted_valid_records_data', split(
+                regexp_extract('valid_records', r'=\[(.*)\]', 1), '},'))
+            only_querydq_tgt_df = only_querydq_tgt_base_df.select('*', explode('extracted_valid_records_data').alias(
+                'valid_records_dict'))
+            only_querydq_tgt_df = only_querydq_tgt_df.withColumn('total_valid_dict_split', split(
+                regexp_replace(col('valid_records_dict'), '[}{]', ''), ','))
+            only_querydq_tgt_df = only_querydq_tgt_df.withColumn(
+                'valid_records',
+                expr("element_at(total_valid_dict_split, -1)")
+            )
+            only_querydq_tgt_df = only_querydq_tgt_df.withColumn(
+                'column_name',
+                when(size(col('total_valid_dict_split')) > 1,
+                     concat_ws(",", expr("slice(total_valid_dict_split, 1, size(total_valid_dict_split)-1)")))
+                .otherwise(col('column_name'))
             )
 
-            df_split = df_with_array.withColumn("total_records_split_source", split("total_records_dict_source", ", "))
-            from pyspark.sql.functions import regexp_extract
-            df_with_count = df_with_array.withColumn(
-                "total_records",
-                regexp_extract(col("total_records_dict_source"), r'([^,]+:[^,]+)$', 1)
+            tgt_dq_column_list = [col_name for col_name in dq_column_list if col_name not in ['total_records']]
+            only_querydq_tgt_final_df = only_querydq_tgt_df.selectExpr(*tgt_dq_column_list)
+
+            ignore_colums = ["valid_records", "total_records"]
+            only_querydq_src_final_df = only_querydq_src_final_df.select(
+                [col(c).alias('src_' + c) if c not in ignore_colums else col(c).alias(c) for c in
+                 only_querydq_src_final_df.columns])
+            only_querydq_src_final_df.createOrReplaceTempView("src_df")
+            only_querydq_tgt_final_df = only_querydq_tgt_final_df.select(
+                [col(c).alias('tgt_' + c) if c not in ignore_colums else col(c).alias(c) for c in
+                 only_querydq_tgt_final_df.columns])
+            only_querydq_tgt_final_df.createOrReplaceTempView("tgt_df")
+
+            trim_col_list = 'column_name'
+            sql_query = "SELECT " + ", ".join(
+                [f"COALESCE(src_df.src_{col}, tgt_df.tgt_{col}) AS {col}" if col not in ignore_colums else f"{col}" for
+                 col
+                 in dq_column_list]) + " FROM src_df FULL JOIN tgt_df ON " + " AND ".join(
+                [
+                    f"REGEXP_REPLACE(REGEXP_REPLACE(lower(src_df.src_{col}), '\"', ''), ' ', '') = REGEXP_REPLACE(REGEXP_REPLACE(lower(tgt_df.tgt_{col}), '\"', ''), ' ', '')" if col not in ignore_colums else f"src_df.{col} = tgt_df.{col} "
+                    for
+                    col in join_columns])
+            # Execute the SQL query
+            only_querydq_final_after_join_df = self.spark.sql(sql_query)
+
+            only_querydq_final_after_join_df = (only_querydq_final_after_join_df.withColumn('total_records_only_nbr',
+                                                                                            regexp_extract(
+                                                                                                col('total_records'),
+                                                                                                r'\d+', 0).cast(
+                                                                                                'bigint'))
+                                                .withColumn('valid_records_only_nbr',
+                                                            regexp_extract(col('valid_records'), r'\d+', 0).cast(
+                                                                'bigint')))
+
+            only_querydq_final_after_join_df = only_querydq_final_after_join_df.withColumn(
+                'success_percentage',
+                when((col('total_records_only_nbr') == '') & (col('valid_records_only_nbr').isNull()), lit(100))
+                .when((col('total_records_only_nbr') == '') & (col('valid_records_only_nbr') == ''), lit(100))
+                .when((col('total_records_only_nbr') != '') & (col('valid_records_only_nbr').isNull()), lit(0))
+                .otherwise(
+                    coalesce(
+                        (
+                                100 * coalesce(trim(col('valid_records_only_nbr')), lit(0)) /
+                                coalesce(trim(col('total_records_only_nbr')), lit(0))
+                        ).cast(DecimalType(20, 2)),
+                        lit(0)
+                    )
+                )
             )
-
-            df_11 = df_with_array.withColumn('source_f1_array', split(col('source_output'), ','))
-            df111 = df_11.withColumn('column_name_', concat_ws(',', element_at(col('source_f1_array'), 1),
-                                                               element_at(col('source_f1_array'), 2)))
-            df_111 = df111.withColumn(
-                "total_records",
-                regexp_extract(col("total_records_dict_source"), r'([^,]+:[^,]+)$', 1)
+            only_querydq_final_after_join_df = only_querydq_final_after_join_df.withColumn(
+                'failed_rec_perc_variance',
+                when((col('total_records_only_nbr') == '') & (col('valid_records_only_nbr').isNull()), lit(0))
+                .when((col('total_records_only_nbr') == '') & (col('valid_records_only_nbr') == ''), lit(0))
+                .when((col('total_records_only_nbr') != '') & (col('valid_records_only_nbr').isNull()), lit(100))
+                .when(
+                    (coalesce(col('total_records_only_nbr'), lit(0)) != 0) &
+                    (coalesce(col('valid_records_only_nbr'), lit(0)) != 0),
+                    coalesce(
+                        round(
+                            ((col('total_records_only_nbr') - col('valid_records_only_nbr')) / col(
+                                'total_records_only_nbr')) * 100,
+                            2
+                        ),
+                        lit(0)
+                    )
+                )
+                .otherwise(100)
             )
-            df_source_final = df_111.select("column_name_", "total_records", "*")
-            print("df_source_final")
+            only_querydq_final_after_join_df = only_querydq_final_after_join_df.withColumn('failed_records',
+                                                                                           coalesce(coalesce(trim(
+                                                                                               col('total_records_only_nbr')).cast(
+                                                                                               'bigint'), lit(0)) -
+                                                                                                    coalesce(trim(
+                                                                                                        col('valid_records_only_nbr')).cast(
+                                                                                                        'bigint'),
+                                                                                                        lit(0)),
+                                                                                                    lit(0)))
 
-
-
-
-
-
-
-
-            #calculation for the detailed table.
-
-            df_with_array1 = df_target.withColumn(
-                "target_output_array",
-                split(regexp_replace(col("target_output"), r"[\{\}\[\]]", ""), ", ")
+            only_querydq_final_after_join_df = only_querydq_final_after_join_df.withColumn(
+                'dq_status',
+                when((col('total_records') == lit(0)) & (col('valid_records') == lit(0)) & (
+                        lit(source_zero_and_target_zero_is) == 'pass'), 'PASS')
+                .when((lit(dq_status_calculation_attribute) == 'failed_records') & (col('failed_records') != lit(0)),
+                      'PASS')
+                .when((col('total_records') == '') & (col('valid_records') == ''), 'PASS')
+                .when((coalesce(col('total_records'), lit(0)) == 0) & (coalesce(col('valid_records'), lit(0)) == 0),
+                      'PASS')
+                .when(
+                    (lit(dq_status_calculation_attribute) != 'failed_records') & (
+                                col('success_percentage') == lit(100.00)),
+                    'PASS')
             )
-            df_with_array1 = df_with_array1.select(
-                '*',
-                explode(col('target_output_array')).alias('total_records_dict_target')
-            )
-            from pyspark.sql.functions import split
+            only_querydq_final_after_join_df = only_querydq_final_after_join_df.drop('total_records_only_nbr',
+                                                                                     'valid_records_only_nbr')
 
-            df_split1 = df_with_array1.withColumn("total_records_split_target",
-                                                  split("total_records_dict_target", ", "))
+            only_querydq_final_after_join_df = only_querydq_final_after_join_df.drop("failed_rec_perc_variance",
+                                                                                     "dq_status")
 
-            # df_with_count1 = df_with_array1.withColumn("valid_records", regexp_extract("total_records_dict_target", r'"count":(\d+)', 1).cast("int"))
-            df_with_count1 = df_with_array1.withColumn(
-                "valid_records",
-                regexp_extract(col("total_records_dict_target"), r'([^,]+:[^,]+)$', 1))
-            # df_with_count1 = df_with_count1.withColumn("new_column_name_target", regexp_extract("total_records_dict_target", r'^(.*)"count":\d+(.*)$', 1))
-            df_target_final = df_with_count1.select("valid_records")
-
-            df2 = df_target_final
-            df1 = df_source_final
-            from pyspark.sql.functions import lit, monotonically_increasing_id
-            from pyspark.sql.types import IntegerType
-            df1 = df1.withColumn("range", monotonically_increasing_id().cast(IntegerType()))
-            df2 = df2.withColumn("range", monotonically_increasing_id().cast(IntegerType()))
-            df_joined = df2.join(df1, on="range", how="inner")
-            df_joined = df_joined.withColumn("valid_records_int",
-                                             regexp_extract(col("valid_records"), r'\d+', 0).cast("int"))
-            df_joined = df_joined.withColumn("total_records_int",
-                                             regexp_extract(col("total_records"), r'\d+', 0).cast("int"))
-            df_joined = df_joined.withColumn("failed_records", abs(expr("total_records_int - valid_records_int")))
-            df_joined = df_joined.withColumn("success_percentage", expr(
-                "(1 - failed_records / greatest(valid_records_int, total_records_int)) * 100"))
-
-
-
-
-            drop_list=["dq_time","column_name","column_name_","source_f1_array","total_records","valid_records","range","alias","dq_type","source_output","source_output","target_output","source_output_array","total_records_dict_source","total_records_split_source","total_records_dict_target","total_records_split_target"]
-            print("df_joined")
-            print("report_table")
-            df_joined=df_joined.drop(*drop_list)
-            df_joined = df_joined.withColumn(
-                "source_dq_status",
-                when(df_joined["failed_records"] > 0, "fail").otherwise("pass")
-
-            )
-            df_joined = df_joined.withColumnRenamed("valid_records_int", "valid_records") \
-                .withColumnRenamed("failed_records", "error_records") \
-                .withColumnRenamed("total_records_int", "total_records")
-            df_joined = df_joined.select(
-                "run_id",
-                "product_id",
-                "table_name",
-                "rule",
-                "source_dq_status",
-                "valid_records",
-                "error_records",
-                "total_records",
-                "success_percentage"
-            )
-
-
-
-
-
-
-            df_joined.show()
-            print("df_stats_detailed")
             columns_to_remove = [
                 "target_dq_status",
                 "source_expectations",
@@ -160,56 +204,23 @@ class SparkExpectationsReport:
                 "target_dq_end_time",
                 "rule_type",
                 "dq_job_metadata_info",
-                "dq_time",
-                "description",
-                "dq_date",
                 "tag",
-                "column_name"
+                "dq_date",
+                "description",
             ]
-            df_stats_detailed=df_stats_detailed.drop(*columns_to_remove)
-            df_stats_detailed.show(truncate=False)
+            df_stats_detailed = df_stats_detailed.drop(*columns_to_remove)
+
+            df_stats_detailed = df_stats_detailed.withColumnRenamed("source_dq_row_count", "total_records") \
+                .withColumnRenamed("source_dq_status", "status") \
+                .withColumnRenamed("source_dq_actual_row_count", "valid_records") \
+                .withColumnRenamed("source_dq_error_row_count", "failed_records") \
+                .withColumn("success_percentage", (col("valid_records") / col("total_records")) * 100)
+
+            df_report_table = only_querydq_final_after_join_df.unionByName(df_stats_detailed)
+            df_report_table.show(truncate=False)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            # Remove duplicate rows
-            print("report_table")
-            df_union = df_joined.unionByName(df_stats_detailed)
-            # df_stats_detailed = df_stats_detailed.withColumn("job", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.job")) \
-            #     .withColumn("Region", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.Region")) \
-            #     .withColumn("Snapshot", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.Snapshot")) \
-            #     .withColumn("data_object_name", get_json_object(df_stats_detailed["dq_job_metadata_info"], "$.data_object_name"))
-
-            # Show the result
-
-
-            # Show the result
-            df_union.show(truncate=False)
-
-
-            #writing the data into the report table
-
-            # Create an instance of AlertTrial and call get_report_data
-
-
-            return True,df_union
+            return True,df_report_table
         except Exception as e:
             raise SparkExpectationsMiscException(
                 f"An error occurred in dq_obs_report_data_insert: {e}"

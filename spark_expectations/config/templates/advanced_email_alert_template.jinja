@@ -1,228 +1,52 @@
 
+<style>
+    table {
+        border-collapse: collapse;
+        width: 60%; /* Reduced width from 100% to 80% */
+        font-family: Arial, sans-serif;
+        border: 2px solid black; /* Added black border for the table */
+    }
+    th, td {
+        border: 1px solid black; /* Changed to black border */
+        text-align: left;
+        padding: 4px; /* Reduced padding from 8px to 6px */
+    }
+    th {
+        background-color: #add8e6; /* Changed to light blue */
+    }
+    tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    .fail {
+        background-color: orange; /* Changed to orange */
+        color: black;
+    }
+</style>
 
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>{{ title }}</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f4f4;
-        }
-        .container {
-            width: 100%;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 15px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-            overflow-x: auto;
-        }
-        h1, h2, h4 {
-            margin: 0 0 10px;
-            color: #333;
-            text-align: center;
-        }
-        table {
-            width: 95%;
-            border-collapse: separate;
-            margin-bottom: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-        }
-        th, td {
-            padding: 10px;
-            text-align: center;
-        }
-        th {
-            background-color: #f4f4f4;
-            font-weight: bold;
-        }
-        .header {
-            margin-top: 20px;
-            text-align: center;
-        }
-        .header h1 {
-            font-size: 1.5em;
-            color: #333;
-        }
-        .header h4 {
-            font-size: 1em;
-            color: #f51111;
-            margin-top: 5px;
-        }
-        img {
-            width: 200px;
-            height: 200px;
-            border-radius: 8px;
-        }
-        .summary-box {
-            display: inline-block;
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            color: #fff;
-            font-weight: bold;
-            border-radius: 4px;
-            text-align: center;
-            box-sizing: border-box;
-        }
-        .summarytable {
-            margin-bottom:10px;
-            border: 2px solid #ddd;
-        }
-        .detailedtable th,.detailedtable td{
-            width: 100%;
-            border: 2px solid #ddd;
-        }
-        .status-container {
-            text-align: center;
-            margin: 15px 0;
-        }
-        .status-container img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-        }
-        @media (max-width: 768px) {
-            .container {
-                padding: 10px;
-            }
-            h1 {
-                font-size: 1.5em;
-            }
-            table, th, td {
-                font-size: 0.9em;
-            }
-        }
-    </style>
-
-            </head>
-            <body>
-                <!-- Header -->
-                <div class="header">
-                    <h1 style="text-align: center;"> {{ title }} </h1></center>
-                </div>
-                {%if communication_engine == 'outlook' %}
-                    <table class="summarytable">
-                {% else %}
-                    <table border="1" cellpadding="5" cellspacing="0" style="border: 2px solid #ddd; border-collapse: collapse;">
-                {% endif %}
-                    <tr>
-                        <td>
-                            <h4 style="text-align:left; line-height:2">
-                                {% if persona == 'engineer' %}
-                                    Summary of Data quality execution for the product id : {{product_id}}<br>
-                                {%else%}
-                                    Summary of Data quality execution for the data product {{data_object_name}}<br>
-                                {%endif%}
-                                Snapshot Date : {{ snapshot_date }} <br>
-                                Region Code : {{ region_code }}
-                                {% if persona == 'engineer' %}
-                                <br> DAG Name : {{ dag_name }}
-                                <br> run_id : {{ run_id }}
-                                {% endif %}
-                            </h4>
-                        </td>
-                            {% if (communication_engine == 'outlook')  %}
-                            <td>
-                                <h2>Overall Status</h2>
-                                <img src="data:image/png;base64,{{ overall_status_chart }}" alt="Progress Chart">
-                                <h5>DQ Rules(Pass/Total) - {{ total_passed_rules }} / {{ total_rules_executed }}</h5>
-                            {% else %}
-                                <td class="summary-box" style="background-color: {{ overall_status_bgcolor }};">
-                                <h2>Overall Status</h2>
-                                <h3 style="text-align: center;">{{overall_status}}</h3>
-                                <p>Total DQ Rules : {{ total_rules_executed }}</p>
-                                <p>Passed : {{ total_passed_rules }} / Failed : {{ total_failed_rules }}</p>
-                                </td>
-                            {% endif %}
-                            <!-- Legend Table -->
-                        </td>
-                    </tr>
-                </table>
-                {% if persona == 'engineer' %}
-                <!-- Competency and Criticality Row -->
-                {% if communication_engine == 'outlook' %}
-                    <table class="summarytable">
-                {% else %}
-                   <table border="1" cellpadding="5" cellspacing="0" style="border: 2px solid #ddd; border-collapse: collapse;">
-                {% endif %}
-
-
-
-                    <tr>
-                        <td style="border-right: 4px solid #f4f4f4; padding-right: 10px;">
-                            <h2>Summary of Data Quality Competency</h2>
-                            <table>
-                            {% if communication_engine == 'outlook' %}
-                                <tr>
-                                    {% for metric in competency_metrics %}
-                                    <td>
-                                        <img src="data:image/png;base64,{{ metric.chart }}" alt="Progress Chart">
-                                        <p><b>{{ metric.name }}</b><br><b>{{ metric.description }}</b></p>
-                                    </td>
-                                    {% endfor %}
-                                </tr>
-                            {% else %}
-                                <tr>
-                                    {% for criticality in competency_metrics_slack %}
-                                        <td class="summary-box" style="background-color: {{ criticality.color }};">
-                                            {{ criticality.value }}<br><span>{{ criticality.label }}</span>
-                                        </td>
-                                    {% endfor %}
-                                </tr>
-                            {% endif %}
-                            </table>
-                        </td>
-                        <td style="padding-left: 10px;">
-                            <h2>Summary of TC Criticality</h2>
-                            <table>
-                                <tr>
-                                    {% for criticality in criticality_metrics|sort(attribute='sort_number')  %}
-                                    <td class="summary-box" style="background-color: {{ criticality.color }};">
-                                        {{ criticality.value }}<br><span> Criticality {{ criticality.label }}</span>
-                                    </td>
-                                    {% endfor %}
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-                {% endif %}
-                <!-- Detailed Table -->
-                <table class="summarytable">
-                    {% if communication_engine == 'outlook' %}
-                        <table class="detailedtable">
+{% macro render_table(headers, rows) %}
+<table border=1>
+    <thead>
+        <tr>
+            {% for header in headers %}
+                <th>{{ header }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+            <tr>
+                {% for cell in row %}
+                    {% if cell == 'fail' or cell == 'FAIL' %}
+                        <td class="fail">{{ cell }}</td>
                     {% else %}
-                        <table border="1" cellpadding="5" cellspacing="0" style="border: 2px solid #ddd; border-collapse: collapse;">
+                        <td>{{ cell }}</td>
                     {% endif %}
-                        <thead>
-                            <tr>
-                                {% for column in columns %}
-                                <th bgcolor="#f4f4f4">{{ column.replace('-', ' ').replace('_', ' ').title() }}</th>
-                                {% endfor %}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for row in table_rows %}
-                            <tr>
-                                {% for cell in row %}
-                                    {% if cell == 'fail' or cell == 'FAIL' %}
-                                            <td class="fail">{{ cell }}</td>
-                                        {% else %}
-                                            <td>{{ cell }}</td>
-                                    {% endif %}
-                                {% endfor %}
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </table>
-            </body>
-            </html>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endmacro %}
+
+<h2>{{ title }}</h2>
+{{ render_table(headers, rows) }}

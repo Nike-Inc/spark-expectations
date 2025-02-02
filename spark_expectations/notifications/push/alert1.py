@@ -7,6 +7,7 @@ from email.mime.text import MIMEText
 from typing import Dict, Tuple
 
 from jinja2 import Environment, FileSystemLoader, BaseLoader
+from pyspark import Row
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.types import StructType, StructField, StringType
 
@@ -54,7 +55,9 @@ class AlertTrial:
             print(f"Error in send_mail: {e}")
             traceback.print_exc()
 
-    def get_report_data(self) -> None:
+
+
+    def get_report_data(self,report_type : str) -> tuple[list[str], list[Row], int]:
         """
         This function calls the dq_obs_report_data_insert method from SparkExpectationsReport.
         """
@@ -67,57 +70,74 @@ class AlertTrial:
                 else:
                     report = SparkExpectationsReport(self._context)
                     df = self._context.get_df_dq_obs_report_dataframe
+                df.createOrReplaceTempView("temp_dq_obs_report")
 
-                print("Success! Let's redesign the report")
-                df.show()
+            queries = {
+                "header": "select *,source_dq_status from temp_dq_obs_report",
 
-                if not self._context.get_default_template:
-                    template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-                    env_loader = Environment(loader=FileSystemLoader(template_dir))
-                    template = env_loader.get_template('advanced_email_alert_template.jinja')
-                else:
-                    template_dir = self._context.get_default_template
-                    template = Environment(loader=BaseLoader).from_string(template_dir)
+                "summary": "select *,source_dq_status from temp_dq_obs_report",
 
-                df_data = [row.asDict() for row in df.collect()]
-                headers = list(df.columns)
-                rows = [row.asDict().values() for row in df.collect()]
+                "detailed": "select *,source_dq_status from temp_dq_obs_report",
+            }
 
-                html_output = template.render(
-                    title='central_repo_test_table',
-                    columns=headers,
-                    table_rows=rows,
-                    product_id='12345',
-                    data_object_name='Sample Data Object',
-                    snapshot_date='2023-10-01',
-                    region_code='US',
-                    dag_name='Sample DAG',
-                    run_id='run_12345',
-                    overall_status='fail',
-                    overall_status_bgcolor='#00FF00',
-                    total_rules_executed=10,
-                    total_passed_rules=9,
-                    total_failed_rules=1,
-                    competency_metrics_slack=[],
-                    competency_metrics=[],
-                    criticality_metrics=[]
-                )
+            format_col_lists = {
+                "header": ['source_dq_status'],
+                "summary": ['source_dq_status'],
+                "detailed": ['source_dq_status']
+            }
 
+            query = queries[report_type]
+            df = self.spark.sql(query)
+            format_col_list = format_col_lists[report_type]
 
+            columns = df.columns
+            data = df.collect()
+            format_col_idx = columns.index(format_col_list[0])
 
-
-                mail_receiver_list = self._context.get_to_mail
-                mail_subject = "test"
-                self.send_mail(html_output, mail_subject, mail_receiver_list)
+            return columns, data,format_col_idx
         except Exception as e:
             print(f"Error in get_report_data: {e}")
             traceback.print_exc()
+    def prep_report_data(self):
 
-    def custom_report_dataframe(self, userdataframe : DataFrame) -> None:
-        """
-    This function takes a DataFrame from the user, sets it as the custom DataFrame, and generates the report.
-        """
-        if self._context.set_enable_custom_dataframe:
-            self._context.set_custom_dataframe(userdataframe)
-            self._context.set_dq_obs_rpt_gen_status_flag(True)
-            self.get_report_data()
+        if not self._context.get_default_template:
+            template_dir = os.path.join(os.path.dirname(__file__), 'templates')
+            env_loader = Environment(loader=FileSystemLoader(template_dir))
+            template = env_loader.get_template('advanced_email_alert_template.jinja')
+        else:
+            template_dir = self._context.get_default_template
+            template = Environment(loader=BaseLoader).from_string(template_dir)
+
+        header_columns, header_data, header_format_col_idx = self.get_report_data( "header")
+        summary_columns, summary_data, summary_format_col_idx = self.get_report_data( "summary")
+        detailed_columns, detailed_data, detailed_format_col_idx = self.get_report_data("detailed")
+        mail_subject="hi"
+        mail_receivers_list="sudeepta.pal@nike.com"
+
+
+
+
+
+
+        data_dicts = [
+            {
+                "title": f"Summary by product ID for the run_id ",
+                "headers": header_columns,
+                "rows": header_data
+            },
+            {
+                "title": "Summary by Scenario :",
+                "headers": summary_columns,
+                "rows": summary_data
+            },
+            {
+                "title": "Summary by data_rule:",
+                "headers": detailed_columns,
+                "rows": detailed_data
+            }
+        ]
+        html_data = "<br>".join(
+            [template.render(render_table=template.module.render_table, **data_dict) for data_dict in data_dicts])
+        html_data = f"<h2>{mail_subject}</h2>" + html_data
+        self.send_mail(html_data, mail_subject, mail_receivers_list)
+

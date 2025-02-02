@@ -23,7 +23,7 @@ from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException,
 )
 from spark_expectations.secrets import SparkExpectationsSecretsBackend
-from spark_expectations.notifications.push.alert import AlertTrial
+from spark_expectations.notifications.push.alert1 import AlertTrial
 from spark_expectations.utils.udf import remove_empty_maps
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.sinks import _sink_hook
@@ -626,7 +626,8 @@ class SparkExpectationsWriter:
             context = self._context
             print("alert being called")
             alert = AlertTrial(self._context)
-            alert.get_report_data()
+            # alert.get_report_data()
+            alert.prep_report_data()
         #
         # # from spark_expectations.notifications.push.alert import AlertTrial
         # # alert = AlertTrial(self._context)
