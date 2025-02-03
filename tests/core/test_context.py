@@ -2120,3 +2120,11 @@ def test_get_job_metadata():
     # testing for None condition
     context._job_metadata = None
     assert context.get_job_metadata is None
+
+def test_set_enable_obs_dq_report_result():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_enable_obs_dq_report_result(True)
+    assert context.get_enable_obs_dq_report_result is True
+
+    context.set_enable_obs_dq_report_result(False)
+    assert context.get_enable_obs_dq_report_result is False

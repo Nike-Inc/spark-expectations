@@ -4,6 +4,7 @@ from dataclasses import dataclass
 @dataclass
 class Constants:
     # declare const user config variables for email notification
+    se_custom_dataframe = "spark.expectations.notifications.custom.dataframe"
     se_notifications_enable_custom_dataframe = "spark.expectations.notifications.enable.custom.dataframe"
     se_dq_obs_default_email_template = "spark.expectations.dq.obs.default.email.template"
     se_dq_obs_mode_of_communication="spark.expectations.dq.obs.mode.of.communication"
@@ -24,7 +25,7 @@ class Constants:
     )
     se_notifications_email_from = "spark.expectations.notifications.email.from"
     se_notifications_email_to_other_mail_id = (
-        "spark.expectations.notifications.email.to"
+        'spark.expectations.notifications.email.to.other.mail.com'
     )
     se_notifications_email_subject = "spark.expectations.notifications.email.subject"
     se_notifications_email_custom_body = (

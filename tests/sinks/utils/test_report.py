@@ -1,43 +1,19 @@
 import pytest
-from your_module import Report  # Replace with the actual import path
-from your_module.exceptions import SparkExpectationsMiscException  # Replace with the actual import path
+from unittest.mock import MagicMock, patch
+from pyspark.sql import SparkSession
+
+from spark_expectations.core.expectations import DataFrame
+from spark_expectations.sinks.utils.report import SparkExpectationsReport
+from spark_expectations.core.context import SparkExpectationsContext
+from spark_expectations.core.exceptions import SparkExpectationsMiscException
+from spark_expectations.core import get_spark_session
 
 
-
-
-# Assuming you have a fixture for the Report class
-@pytest.fixture
-def _fixture_report():
-    return Report()
-
-
-
-def test_generate_report_success(_fixture_report):
-    # Assuming generate_report is a method in the Report class
-    result = _fixture_report.generate_report()
-    assert result is not None
-    assert isinstance(result, dict)  # Replace with the expected type
-
-def test_generate_report_exception(_fixture_report):
-    with pytest.raises(SparkExpectationsMiscException, match=r"error occurred while generating report .*"):
-        _fixture_report.generate_report(invalid_input)  # Replace with actual invalid input
-
-@pytest.mark.parametrize(
-    "input_data, expected_result",
-    [
-        ({"key1": "value1"}, {"result_key": "expected_value1"}),  # Replace with actual test data
-        ({"key2": "value2"}, {"result_key": "expected_value2"}),
-    ],
-)
-def test_generate_report_parametrized(_fixture_report, input_data, expected_result):
-    result = _fixture_report.generate_report(input_data)
-    assert result == expected_result
-
-def test_save_report_success(_fixture_report):
-    # Assuming save_report is a method in the Report class
-    result = _fixture_report.save_report()
-    assert result is True  # Replace with the expected result
-
-def test_save_report_exception(_fixture_report):
-    with pytest.raises(SparkExpectationsMiscException, match=r"error occurred while saving report .*"):
-        _fixture_report.save_report(invalid_input)  # Replace with actual invalid input
+def test_dq_obs_report_data_insert():
+    spark = get_spark_session()
+    _context = SparkExpectationsContext(product_id="product_1", spark=spark)
+    report = SparkExpectationsReport(_context)
+    print("report being called")
+    dq_obs_rpt_gen_status_flag, df_1 = report.dq_obs_report_data_insert()
+    assert type(dq_obs_rpt_gen_status_flag) is bool
+    assert  type(df_1) is DataFrame

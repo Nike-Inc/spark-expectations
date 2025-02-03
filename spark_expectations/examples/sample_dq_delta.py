@@ -7,7 +7,7 @@ from pyspark.sql import SparkSession
 import os
 from spark_expectations.utils.reader import SparkExpectationsReader
 
-from spark_expectations.notifications.push.alert import AlertTrial
+from spark_expectations.notifications.push.alert1 import AlertTrial
 from spark_expectations.core.context import SparkExpectationsContext
 
 
@@ -61,7 +61,7 @@ default_df = spark.createDataFrame(data, schema)
 user_conf = {
     user_config.se_notifications_enable_custom_dataframe: False,
     user_config.se_enable_obs_dq_report_result: True,
-    user_config.se_dq_obs_alert_flag: False,
+    user_config.se_dq_obs_alert_flag: True,
     user_config.se_dq_obs_default_email_template: "",
     user_config.se_dq_obs_mode_of_communication: False,
     user_config.se_notifications_enable_email: False,
@@ -153,7 +153,7 @@ if __name__ == "__main__":
             instance = AlertTrial(_context)
             # Create an instance of AlertTrial with the context
             if (user_conf.get(user_config.se_notifications_enable_custom_dataframe)) is True:
-                instance.custom_report_dataframe(default_df)
+                instance.prep_report_data()
             else:
               instance.send_mail(user_conf.get(user_config.se_notifications_email_subject),user_conf.get(user_config.se_notifications_email_custom_body),user_conf.get(user_config.se_notifications_email_to_other_mail_id))
     else:

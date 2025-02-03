@@ -2263,3 +2263,8 @@ class SparkExpectationsContext:
     def get_custom_detailed_dataframe(self) -> DataFrame:
         return self._custom_dataframe
 
+    # In `spark_expectations/core/context.py`
+
+
+
+

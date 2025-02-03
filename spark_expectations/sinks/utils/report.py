@@ -187,6 +187,9 @@ class SparkExpectationsReport:
             only_querydq_final_after_join_df = only_querydq_final_after_join_df.drop("failed_rec_perc_variance",
                                                                                      "dq_status")
 
+            only_querydq_final_after_join_df=only_querydq_final_after_join_df.withColumn(
+                "dq_job_metadata_info", lit(self._context.get_job_metadata).cast("string"))
+
             columns_to_remove = [
                 "target_dq_status",
                 "source_expectations",
@@ -203,11 +206,14 @@ class SparkExpectationsReport:
                 "target_dq_start_time",
                 "target_dq_end_time",
                 "rule_type",
-                "dq_job_metadata_info",
+                "description",
                 "tag",
                 "dq_date",
-                "description",
             ]
+            print("df_stats_detailed")
+
+            df_stats_detailed.show(truncate=False)
+
             df_stats_detailed = df_stats_detailed.drop(*columns_to_remove)
 
             df_stats_detailed = df_stats_detailed.withColumnRenamed("source_dq_row_count", "total_records") \
@@ -217,6 +223,11 @@ class SparkExpectationsReport:
                 .withColumn("success_percentage", (col("valid_records") / col("total_records")) * 100)
 
             df_report_table = only_querydq_final_after_join_df.unionByName(df_stats_detailed)
+            df_report_table = df_report_table.withColumn("job", get_json_object(df_report_table["dq_job_metadata_info"], "$.job")) \
+                .withColumn("Region", get_json_object(df_report_table["dq_job_metadata_info"], "$.Region")) \
+                .withColumn("Snapshot", get_json_object(df_report_table["dq_job_metadata_info"], "$.Snapshot")) \
+                .withColumn("data_object_name", get_json_object(df_report_table["dq_job_metadata_info"], "$.data_object_name"))
+            df_report_table=df_report_table.drop("dq_job_metadata_info")
             df_report_table.show(truncate=False)
 
 

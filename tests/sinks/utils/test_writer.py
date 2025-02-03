@@ -3372,6 +3372,16 @@ def test_write_detailed_stats(
         assert row.target_dq_row_count == expected_result.get("target_dq_row_count")
 
 
+
+
+
+
+
+
+
+
+
+
 def test_write_detailed_stats_exception() -> None:
     """
     This functions writes the detailed stats for all rule type into the detailed stats table

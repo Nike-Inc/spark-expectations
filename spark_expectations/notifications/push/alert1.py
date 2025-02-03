@@ -73,17 +73,29 @@ class AlertTrial:
                 df.createOrReplaceTempView("temp_dq_obs_report")
 
             queries = {
-                "header": "select *,source_dq_status from temp_dq_obs_report",
+                "header": f"""SELECT  dq_time AS snapshot_date, product_id,job,
+                      CASE WHEN (SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END)) >= 1 THEN 'FAIL' ELSE 'PASS' END AS status
+                      FROM temp_dq_obs_report
+                      GROUP BY  dq_time, product_id,job""",
 
-                "summary": "select *,source_dq_status from temp_dq_obs_report",
+                "summary": f"""SELECT product_id, rule, COUNT(rule) AS no_of_rules_executed,
+                       'Completed' AS Execution_Status,
+                       CASE WHEN (SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END)) >= 1 THEN 'FAIL' ELSE 'PASS' END AS Overall_status,
+                       CONCAT('Pass:', SUM(CASE WHEN status = 'pass' THEN 1 ELSE 0 END), ' / Fail:', SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END)) AS status_summary
+                       FROM temp_dq_obs_report
+                       GROUP BY product_id,rule""",
 
-                "detailed": "select *,source_dq_status from temp_dq_obs_report",
+                "detailed": f"""SELECT DISTINCT rule, rule AS rule_description,
+                        column_name, 'Completed' AS Execution_Status, status AS Validation_Status, total_records,
+                        failed_records, valid_records, success_percentage
+                        FROM temp_dq_obs_report
+                        ORDER BY  rule""",
             }
 
             format_col_lists = {
-                "header": ['source_dq_status'],
-                "summary": ['source_dq_status'],
-                "detailed": ['source_dq_status']
+                "header": ['status'],
+                "summary": ['status_summary'],
+                "detailed": ['Validation_Status']
             }
 
             query = queries[report_type]
@@ -98,46 +110,75 @@ class AlertTrial:
         except Exception as e:
             print(f"Error in get_report_data: {e}")
             traceback.print_exc()
+
     def prep_report_data(self):
-
-        if not self._context.get_default_template:
-            template_dir = os.path.join(os.path.dirname(__file__), 'templates')
-            env_loader = Environment(loader=FileSystemLoader(template_dir))
-            template = env_loader.get_template('advanced_email_alert_template.jinja')
-        else:
-            template_dir = self._context.get_default_template
-            template = Environment(loader=BaseLoader).from_string(template_dir)
-
-        header_columns, header_data, header_format_col_idx = self.get_report_data( "header")
-        summary_columns, summary_data, summary_format_col_idx = self.get_report_data( "summary")
-        detailed_columns, detailed_data, detailed_format_col_idx = self.get_report_data("detailed")
-        mail_subject="hi"
-        mail_receivers_list="sudeepta.pal@nike.com"
+        try:
+            mail_subject = "hi"
+            mail_receivers_list = "sudeepta.pal@nike.com"
+            if not self._context.get_default_template:
+                template_dir = os.path.join(os.path.dirname(__file__), 'templates')
+                env_loader = Environment(loader=FileSystemLoader(template_dir))
+                template = env_loader.get_template('advanced_email_alert_template.jinja')
+            else:
+                template_dir = self._context.get_default_template
+                template = Environment(loader=BaseLoader).from_string(template_dir)
 
 
+            if self._context.get_enable_custom_dataframe is False or  self._context.get_dq_obs_rpt_gen_status_flag is True:
+                header_columns, header_data, header_format_col_idx = self.get_report_data("header")
+                summary_columns, summary_data, summary_format_col_idx = self.get_report_data("summary")
+                detailed_columns, detailed_data, detailed_format_col_idx = self.get_report_data("detailed")
 
 
 
+                data_dicts = [
+                    {
+                        "title": f"Summary by product ID for the run_id ",
+                        "headers": header_columns,
+                        "rows": header_data
+                    },
+                    {
+                        "title": "Summary by Scenario :",
+                        "headers": summary_columns,
+                        "rows": summary_data
+                    },
+                    {
+                        "title": "Summary by data_rule:",
+                        "headers": detailed_columns,
+                        "rows": detailed_data
+                    }
+                ]
+                html_data = "<br>".join(
+                    [template.render(render_table=template.module.render_table, **data_dict) for data_dict in data_dicts])
+                html_data = f"<h2>{mail_subject}</h2>" + html_data
+            else:
 
-        data_dicts = [
-            {
-                "title": f"Summary by product ID for the run_id ",
-                "headers": header_columns,
-                "rows": header_data
-            },
-            {
-                "title": "Summary by Scenario :",
-                "headers": summary_columns,
-                "rows": summary_data
-            },
-            {
-                "title": "Summary by data_rule:",
-                "headers": detailed_columns,
-                "rows": detailed_data
-            }
-        ]
-        html_data = "<br>".join(
-            [template.render(render_table=template.module.render_table, **data_dict) for data_dict in data_dicts])
-        html_data = f"<h2>{mail_subject}</h2>" + html_data
-        self.send_mail(html_data, mail_subject, mail_receivers_list)
 
+
+                #sample dataframe only for example
+                schema = StructType([
+                    StructField("column1", StringType(), True),
+                    StructField("column2", StringType(), True),
+                    StructField("status", StringType(), True)
+                ])
+
+                # Sample data
+                data = [
+                    ("value1", "value4", "pass"),
+                    ("value2", "value5", "fail"),
+                    ("value3", "value6", "pass")
+                ]
+
+                # Create DataFrame
+
+                custom_dataframe = self.spark.createDataFrame(data, schema)
+                headers = list(custom_dataframe.columns)
+                rows = [row.asDict().values() for row in custom_dataframe.collect()]
+                html_data = template.render(title="hi", headers=headers, rows=rows)
+
+
+
+            self.send_mail(html_data, mail_subject, mail_receivers_list)
+        except Exception as e:
+            print(f"Error in prep_report_data: {e}")
+            traceback.print_exc()

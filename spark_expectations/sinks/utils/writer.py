@@ -623,7 +623,6 @@ class SparkExpectationsWriter:
             context.set_df_dq_obs_report_dataframe(df_1)
        # calling only alert
         if self._context.get_se_dq_obs_alert_flag is True:
-            context = self._context
             print("alert being called")
             alert = AlertTrial(self._context)
             # alert.get_report_data()
