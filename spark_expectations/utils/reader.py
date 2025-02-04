@@ -33,7 +33,7 @@ class SparkExpectationsReader:
 
         """
         try:
-            _default_spark_conf: Dict[str, Union[str, int, bool]] = {
+            _default_spark_conf: Dict[str, Union[str, int, bool,DataFrame]] = {
                 user_config.se_enable_obs_dq_report_result: True,
                 user_config.se_notifications_enable_email: False,
                 user_config.se_notifications_enable_custom_email_body: False,
@@ -51,24 +51,30 @@ class SparkExpectationsReader:
                 user_config.se_notifications_zoom_token: "",
             }
 
-            _notification_dict: Dict[str, Union[str, int, bool]] = (
+            _notification_dict: Dict[str, Union[str, int, bool,DataFrame]] = (
                 {**_default_spark_conf, **notification}
                 if notification
                 else _default_spark_conf
             )
 
-            #changes by SE team
-            print("..........................................................................")
-            print(_notification_dict)
-
 
 
             self._context.set_service_account_email("a.dsm.pss.obs@nike.com")
-            self._context.set_enable_custom_dataframe(False)
+            if _notification_dict.get(user_config.se_notifications_enable_custom_dataframe) is True:
+                self._context.set_enable_custom_dataframe(True)
+                self._context.set_se_custom_dataframe(_notification_dict.get(user_config.se_custom_dataframe))
+            else:
+                self._context.set_enable_custom_dataframe(False)
             self._context.set_service_account_password("wp=Wq$37#UI?Ijy7_HNU")
             self._context.set_mail_smtp_server("smtp.office365.com")
             self._context.set_mail_smtp_port(587)
-            print("..........................................................................")
+            if _notification_dict.get(user_config.se_dq_obs_alert_flag) is True:
+                self._context.set_dq_obs_rpt_gen_status_flag(True)
+            else:
+                self._context.set_dq_obs_rpt_gen_status_flag(False)
+
+            print("..........................................................................000000")
+
             print(_notification_dict)
             if _notification_dict.get(user_config.se_enable_obs_dq_report_result) is True:
                 self._context.set_enable_obs_dq_report_result(True)

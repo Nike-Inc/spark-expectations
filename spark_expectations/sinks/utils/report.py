@@ -24,11 +24,12 @@ class SparkExpectationsReport:
             context = self._context
             print("dq_obs_report_data_insert method called stats_detailed table")
             df_stats_detailed = context.get_stats_detailed_dataframe
+            df_stats_detailed.show(2)
             df_custom_detailed = context.get_custom_detailed_dataframe
             df=df_custom_detailed
             dq_status_calculation_attribute = "success_percentage"
             source_zero_and_target_zero_is = "pass"
-            df = df.filter((df.source_output.isNotNull()) & (df.target_output.isNotNull()))
+            # df = df.filter((df.source_output.isNotNull()) & (df.target_output.isNotNull()))
             df = df.withColumn("success_percentage", lit(None).cast(DoubleType())) \
                 .withColumn("failed_records", lit(0)) \
                 .withColumn("status", lit(None).cast(StringType())) \

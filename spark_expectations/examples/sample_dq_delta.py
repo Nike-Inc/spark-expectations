@@ -58,10 +58,42 @@ default_df = spark.createDataFrame(data, schema)
 
 
 
+# Define the schema with more columns
+schema = StructType([
+    StructField("id", IntegerType(), True),
+    StructField("name", StringType(), True),
+    StructField("age", IntegerType(), True),
+    StructField("city", StringType(), True),
+    StructField("country", StringType(), True)
+])
+
+# Create a list of sample data with more rows
+data = [
+    (1, "Alice", 30, "New York", "USA"),
+    (2, "Bob", 25, "Los Angeles", "USA"),
+    (3, "Cathy", 28, "Chicago", "USA"),
+    (4, "David", 35, "Houston", "USA"),
+    (5, "Eva", 22, "Phoenix", "USA"),
+    (6, "Frank", 40, "Philadelphia", "USA"),
+    (7, "Grace", 29, "San Antonio", "USA"),
+    (8, "Hank", 33, "San Diego", "USA"),
+    (9, "Ivy", 27, "Dallas", "USA"),
+    (10, "Jack", 31, "San Jose", "USA")
+]
+
+# Create DataFrame
+large_df = spark.createDataFrame(data, schema)
+
+# Show the DataFrame
+
+
+
+
 user_conf = {
     user_config.se_notifications_enable_custom_dataframe: False,
-    user_config.se_enable_obs_dq_report_result: True,
-    user_config.se_dq_obs_alert_flag: True,
+    user_config.se_custom_dataframe : large_df,
+    user_config.se_enable_obs_dq_report_result: False,
+    user_config.se_dq_obs_alert_flag: False,
     user_config.se_dq_obs_default_email_template: "",
     user_config.se_dq_obs_mode_of_communication: False,
     user_config.se_notifications_enable_email: False,
@@ -71,7 +103,7 @@ user_conf = {
     user_config.se_notifications_service_account_email: "a.dsm.pss.obs@nike.com",
     user_config.se_notifications_service_account_password: "wp=Wq$37#UI?Ijy7_HNU",
     user_config.se_notifications_email_from: "sudeepta.pal@nike.com,aaaalfyofqi7i7nxuvxlboxbym@nike.org.slack.com,aaaali2kvghxahbath2kkud3ga@nike.org.slack.com",
-    user_config.se_notifications_email_to_other_mail_id: "sudeepta.pal@nike.com",
+    user_config.se_notifications_email_to_other_mail_id: "sudeepta.pal@nike.com,vikas.ubale@nike.com",
     user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",
     user_config.se_notifications_email_custom_body: """Spark Expectations Statistics for this dq run:
     vamsi sudeep malik raghav

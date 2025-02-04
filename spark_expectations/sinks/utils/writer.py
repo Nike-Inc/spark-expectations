@@ -598,6 +598,8 @@ class SparkExpectationsWriter:
         print(user_config.se_enable_obs_dq_report_result)
         print(user_config.se_notifications_enable_email)
         context = self._context
+        _df_detailed_stats.show(truncate=False)
+        _df_custom_detailed_stats_source.show(truncate=False)
         context.set_stats_detailed_dataframe(_df_detailed_stats)
         context.set_custom_detailed_dataframe(_df_custom_detailed_stats_source)
 

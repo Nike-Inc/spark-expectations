@@ -7,6 +7,7 @@ from email.mime.text import MIMEText
 from typing import Dict, Tuple
 
 from jinja2 import Environment, FileSystemLoader, BaseLoader
+from matplotlib.pyplot import title
 from pyspark import Row
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.types import StructType, StructField, StringType
@@ -72,49 +73,49 @@ class AlertTrial:
                     df = self._context.get_df_dq_obs_report_dataframe
                 df.createOrReplaceTempView("temp_dq_obs_report")
 
-            queries = {
-                "header": f"""SELECT  dq_time AS snapshot_date, product_id,job,
-                      CASE WHEN (SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END)) >= 1 THEN 'FAIL' ELSE 'PASS' END AS status
-                      FROM temp_dq_obs_report
-                      GROUP BY  dq_time, product_id,job""",
+                queries = {
+                    "header": f"""SELECT  dq_time AS snapshot_date, product_id,job,
+                          CASE WHEN (SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END)) >= 1 THEN 'FAIL' ELSE 'PASS' END AS status
+                          FROM temp_dq_obs_report
+                          GROUP BY  dq_time, product_id,job""",
 
-                "summary": f"""SELECT product_id, rule, COUNT(rule) AS no_of_rules_executed,
-                       'Completed' AS Execution_Status,
-                       CASE WHEN (SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END)) >= 1 THEN 'FAIL' ELSE 'PASS' END AS Overall_status,
-                       CONCAT('Pass:', SUM(CASE WHEN status = 'pass' THEN 1 ELSE 0 END), ' / Fail:', SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END)) AS status_summary
-                       FROM temp_dq_obs_report
-                       GROUP BY product_id,rule""",
+                    "summary": f"""SELECT product_id, rule, COUNT(rule) AS no_of_rules_executed,
+                           'Completed' AS Execution_Status,
+                           CASE WHEN (SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END)) >= 1 THEN 'FAIL' ELSE 'PASS' END AS Overall_status,
+                           CONCAT('Pass:', SUM(CASE WHEN status = 'pass' THEN 1 ELSE 0 END), ' / Fail:', SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END)) AS status_summary
+                           FROM temp_dq_obs_report
+                           GROUP BY product_id,rule""",
 
-                "detailed": f"""SELECT DISTINCT rule, rule AS rule_description,
-                        column_name, 'Completed' AS Execution_Status, status AS Validation_Status, total_records,
-                        failed_records, valid_records, success_percentage
-                        FROM temp_dq_obs_report
-                        ORDER BY  rule""",
-            }
+                    "detailed": f"""SELECT DISTINCT rule, rule AS rule_description,
+                            column_name, 'Completed' AS Execution_Status, status AS Validation_Status, total_records,
+                            failed_records, valid_records, success_percentage
+                            FROM temp_dq_obs_report
+                            ORDER BY  rule""",
+                }
 
-            format_col_lists = {
-                "header": ['status'],
-                "summary": ['status_summary'],
-                "detailed": ['Validation_Status']
-            }
+                format_col_lists = {
+                    "header": ['status'],
+                    "summary": ['status_summary'],
+                    "detailed": ['Validation_Status']
+                }
 
-            query = queries[report_type]
-            df = self.spark.sql(query)
-            format_col_list = format_col_lists[report_type]
+                query = queries[report_type]
+                df = self.spark.sql(query)
+                format_col_list = format_col_lists[report_type]
 
-            columns = df.columns
-            data = df.collect()
-            format_col_idx = columns.index(format_col_list[0])
+                columns = df.columns
+                data = df.collect()
+                format_col_idx = columns.index(format_col_list[0])
 
-            return columns, data,format_col_idx
+                return columns, data,format_col_idx
         except Exception as e:
             print(f"Error in get_report_data: {e}")
             traceback.print_exc()
 
     def prep_report_data(self):
         try:
-            mail_subject = "hi"
-            mail_receivers_list = "sudeepta.pal@nike.com"
+            mail_subject = self._context.get_mail_subject
+            mail_receivers_list = self._context.get_to_mail
             if not self._context.get_default_template:
                 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
                 env_loader = Environment(loader=FileSystemLoader(template_dir))
@@ -124,7 +125,7 @@ class AlertTrial:
                 template = Environment(loader=BaseLoader).from_string(template_dir)
 
 
-            if self._context.get_enable_custom_dataframe is False or  self._context.get_dq_obs_rpt_gen_status_flag is True:
+            if self._context.get_enable_custom_dataframe is False and  self._context.get_dq_obs_rpt_gen_status_flag is True:
                 header_columns, header_data, header_format_col_idx = self.get_report_data("header")
                 summary_columns, summary_data, summary_format_col_idx = self.get_report_data("summary")
                 detailed_columns, detailed_data, detailed_format_col_idx = self.get_report_data("detailed")
@@ -171,10 +172,10 @@ class AlertTrial:
 
                 # Create DataFrame
 
-                custom_dataframe = self.spark.createDataFrame(data, schema)
+                custom_dataframe = self._context.get_custom_dataframe
                 headers = list(custom_dataframe.columns)
                 rows = [row.asDict().values() for row in custom_dataframe.collect()]
-                html_data = template.render(title="hi", headers=headers, rows=rows)
+                html_data = template.render(title=self._context.get_mail_subject, headers=headers, rows=rows)
 
 
 

@@ -27,7 +27,6 @@ class SparkExpectationsContext:
         self._enable_custom_dataframe: bool
         self._df_dq_obs_report_dataframe: DataFrame
         self._dq_obs_rpt_gen_status_flag: bool
-        self._custom_dataframe: DataFrame
         self._run_id: str = f"{self.product_id}_{uuid1()}"
         self._run_date: str = self.set_run_date()
         self._dq_stats_table_name: Optional[str] = None
@@ -2261,6 +2260,14 @@ class SparkExpectationsContext:
 
     @property
     def get_custom_detailed_dataframe(self) -> DataFrame:
+        return self._custom_dataframe
+
+
+    def set_se_custom_dataframe(self, dataframe: DataFrame) -> None:
+        self._custom_dataframe = dataframe
+
+    @property
+    def get_se_custom_dataframe(self) -> DataFrame:
         return self._custom_dataframe
 
     # In `spark_expectations/core/context.py`
