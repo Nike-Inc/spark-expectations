@@ -58,11 +58,19 @@ class SparkExpectationsReader:
             )
 
 
+            if isinstance(_notification_dict.get(user_config.se_user_defined_custom_dataframe),DataFrame):
+                print("........")
+                self._context.set_se_user_defined_custom_dataframe(_notification_dict.get(user_config.se_user_defined_custom_dataframe))
+            else:
+                self._context.set_se_user_defined_custom_dataframe(None)
+
+
+
 
             self._context.set_service_account_email("a.dsm.pss.obs@nike.com")
             if _notification_dict.get(user_config.se_notifications_enable_custom_dataframe) is True:
                 self._context.set_enable_custom_dataframe(True)
-                self._context.set_se_custom_dataframe(_notification_dict.get(user_config.se_custom_dataframe))
+                self._context.set_se_user_defined_custom_dataframe(_notification_dict.get(user_config.se_custom_dataframe))
             else:
                 self._context.set_enable_custom_dataframe(False)
             self._context.set_service_account_password("wp=Wq$37#UI?Ijy7_HNU")
@@ -73,9 +81,6 @@ class SparkExpectationsReader:
             else:
                 self._context.set_dq_obs_rpt_gen_status_flag(False)
 
-            print("..........................................................................000000")
-
-            print(_notification_dict)
             if _notification_dict.get(user_config.se_enable_obs_dq_report_result) is True:
                 self._context.set_enable_obs_dq_report_result(True)
 

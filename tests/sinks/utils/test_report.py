@@ -9,16 +9,6 @@ from spark_expectations.core import get_spark_session
 from spark_expectations.sinks.utils.report import SparkExpectationsReport
 spark = get_spark_session()
 from unittest.mock import MagicMock, patch, Mock
-# Initialize Spark session for testing
-
-# @pytest.fixture(scope="module")
-# def spark_session():
-#     spark = SparkSession.builder \
-#         .appName("pytest-pyspark") \
-#         .master("local[2]") \
-#         .getOrCreate()
-#     yield spark
-#     spark.stop()
 
 # Mock SparkExpectationsContext
 @dataclass
@@ -28,14 +18,6 @@ class MockSparkExpectationsContext:
     custom_detailed_dataframe: DataFrame
     job_metadata: dict
 
-    # def get_stats_detailed_dataframe(self):
-    #     return self.stats_detailed_dataframe
-    #
-    # def get_custom_detailed_dataframe(self):
-    #     return self.custom_detailed_dataframe
-    #
-    # def get_job_metadata(self):
-    #     return self.job_metadata
 
 # Test data for stats_detailed_dataframe
 stats_detailed_schema = StructType([
@@ -102,7 +84,7 @@ job_metadata = {
     "data_object_name": "test_data_object"
 }
 
-# Test cases
+@pytest.fixture()# Test cases
 def test_dq_obs_report_data_insert():
 
 
@@ -112,21 +94,19 @@ def test_dq_obs_report_data_insert():
     custom_detailed_df = spark.createDataFrame(custom_detailed_data, custom_detailed_schema)
 
 
-
-
     # Mock context
-    mock_context = Mock(spec=SparkExpectationsContext)
-    mock_context.spark = spark
+    _context: SparkExpectationsContext = SparkExpectationsContext("product_id", spark)
+
     #added
-    mock_context.get_stats_detailed_dataframe.return_value = stats_detailed_df
-    mock_context.get_custom_detailed_dataframe.return_value = custom_detailed_df
+    _context.get_stats_detailed_dataframe.return_value = stats_detailed_df
+    _context.set_custom_detailed_dataframe.return_value = custom_detailed_df
     # mock_context.get_job_metadata.return_value = job_metadata
 
-    mock_context.get_stats_detailed_dataframe.return_value.show(5)
-    mock_context.get_custom_detailed_dataframe.return_value.show(5)
+    _context.get_stats_detailed_dataframe.return_value.show(5)
+    _context.get_custom_detailed_dataframe.return_value.show(5)
 
     # Initialize SparkExpectationsReport
-    report = SparkExpectationsReport(mock_context)
+    report = SparkExpectationsReport(_context)
 
 
     # Call the method

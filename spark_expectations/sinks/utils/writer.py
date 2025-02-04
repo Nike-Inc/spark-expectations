@@ -598,8 +598,6 @@ class SparkExpectationsWriter:
         print(user_config.se_enable_obs_dq_report_result)
         print(user_config.se_notifications_enable_email)
         context = self._context
-        _df_detailed_stats.show(truncate=False)
-        _df_custom_detailed_stats_source.show(truncate=False)
         context.set_stats_detailed_dataframe(_df_detailed_stats)
         context.set_custom_detailed_dataframe(_df_custom_detailed_stats_source)
 
@@ -618,16 +616,16 @@ class SparkExpectationsWriter:
             context = self._context
             report = SparkExpectationsReport(_context=context)
             print("report being called")
-            dq_obs_rpt_gen_status_flag,df_1= report.dq_obs_report_data_insert()
+            dq_obs_rpt_gen_status_flag,df_report_table= report.dq_obs_report_data_insert()
             if dq_obs_rpt_gen_status_flag is True:
               context.set_dq_obs_rpt_gen_status_flag(True)
             print("set_dq_obs_rpt_gen_status_flag",context.get_dq_obs_rpt_gen_status_flag)
-            context.set_df_dq_obs_report_dataframe(df_1)
+            context.set_df_dq_obs_report_dataframe(df_report_table)
        # calling only alert
         if self._context.get_se_dq_obs_alert_flag is True:
             print("alert being called")
+            print(self._context.get_dq_obs_rpt_gen_status_flag)
             alert = AlertTrial(self._context)
-            # alert.get_report_data()
             alert.prep_report_data()
         #
         # # from spark_expectations.notifications.push.alert import AlertTrial

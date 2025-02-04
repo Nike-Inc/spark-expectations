@@ -23,6 +23,7 @@ class SparkExpectationsContext:
 
     def __post_init__(self) -> None:
         self._dataframe: DataFrame
+        self._se_user_defined_custom_dataframe: DataFrame
         self._custom_dataframe: DataFrame
         self._enable_custom_dataframe: bool
         self._df_dq_obs_report_dataframe: DataFrame
@@ -210,13 +211,6 @@ class SparkExpectationsContext:
             """The spark expectations context is not set completely, please assign '_dq_stats_table_name' before 
             accessing it"""
         )
-
-    def set_custom_dataframe(self, custom_dataframe: DataFrame) -> None:
-        self._custom_dataframe = custom_dataframe
-
-    @property
-    def get_custom_dataframe(self) -> DataFrame:
-        return self._custom_dataframe
 
 
 
@@ -2255,6 +2249,10 @@ class SparkExpectationsContext:
     def get_stats_detailed_dataframe(self) -> DataFrame:
         return self._dataframe
 
+
+
+
+
     def set_custom_detailed_dataframe(self, dataframe: DataFrame) -> None:
         self._custom_dataframe = dataframe
 
@@ -2262,15 +2260,29 @@ class SparkExpectationsContext:
     def get_custom_detailed_dataframe(self) -> DataFrame:
         return self._custom_dataframe
 
-
-    def set_se_custom_dataframe(self, dataframe: DataFrame) -> None:
-        self._custom_dataframe = dataframe
+    def set_se_user_defined_custom_dataframe(self, dataframe: DataFrame) -> None:
+        self._se_user_defined_custom_dataframe = dataframe
 
     @property
-    def get_se_custom_dataframe(self) -> DataFrame:
-        return self._custom_dataframe
+    def get_se_user_defined_custom_dataframe(self) -> DataFrame:
+        return self._se_user_defined_custom_dataframe
 
-    # In `spark_expectations/core/context.py`
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

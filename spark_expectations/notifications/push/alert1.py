@@ -66,8 +66,8 @@ class AlertTrial:
             if self._context.get_dq_obs_rpt_gen_status_flag:
                 from spark_expectations.sinks.utils.report import SparkExpectationsReport
 
-                if self._context.get_enable_custom_dataframe:
-                    df = self._context.get_custom_dataframe
+                if isinstance(self._context.get_se_user_defined_custom_dataframe,DataFrame):
+                    df = self._context.get_se_user_defined_custom_dataframe
                 else:
                     report = SparkExpectationsReport(self._context)
                     df = self._context.get_df_dq_obs_report_dataframe
@@ -125,7 +125,7 @@ class AlertTrial:
                 template = Environment(loader=BaseLoader).from_string(template_dir)
 
 
-            if self._context.get_enable_custom_dataframe is False and  self._context.get_dq_obs_rpt_gen_status_flag is True:
+            if not isinstance(self._context.get_se_user_defined_custom_dataframe,DataFrame)  and  self._context.get_dq_obs_rpt_gen_status_flag is True:
                 header_columns, header_data, header_format_col_idx = self.get_report_data("header")
                 summary_columns, summary_data, summary_format_col_idx = self.get_report_data("summary")
                 detailed_columns, detailed_data, detailed_format_col_idx = self.get_report_data("detailed")
@@ -154,25 +154,10 @@ class AlertTrial:
                 html_data = f"<h2>{mail_subject}</h2>" + html_data
             else:
 
+                # get the custom  DataFrame from the user.
 
-
-                #sample dataframe only for example
-                schema = StructType([
-                    StructField("column1", StringType(), True),
-                    StructField("column2", StringType(), True),
-                    StructField("status", StringType(), True)
-                ])
-
-                # Sample data
-                data = [
-                    ("value1", "value4", "pass"),
-                    ("value2", "value5", "fail"),
-                    ("value3", "value6", "pass")
-                ]
-
-                # Create DataFrame
-
-                custom_dataframe = self._context.get_custom_dataframe
+                custom_dataframe = self._context.get_se_user_defined_custom_dataframe
+                custom_dataframe.show()
                 headers = list(custom_dataframe.columns)
                 rows = [row.asDict().values() for row in custom_dataframe.collect()]
                 html_data = template.render(title=self._context.get_mail_subject, headers=headers, rows=rows)

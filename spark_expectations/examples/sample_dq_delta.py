@@ -1,7 +1,7 @@
 # Define the product_id
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType
 
-from spark_expectations.notifications.push.alert import AlertTrial
+from spark_expectations.notifications.push.alert1 import AlertTrial
 from spark_expectations.core.context import SparkExpectationsContext
 from pyspark.sql import SparkSession
 import os
@@ -67,7 +67,7 @@ schema = StructType([
     StructField("country", StringType(), True)
 ])
 
-# Create a list of sample data with more rows
+
 data = [
     (1, "Alice", 30, "New York", "USA"),
     (2, "Bob", 25, "Los Angeles", "USA"),
@@ -81,7 +81,7 @@ data = [
     (10, "Jack", 31, "San Jose", "USA")
 ]
 
-# Create DataFrame
+#
 large_df = spark.createDataFrame(data, schema)
 
 # Show the DataFrame
@@ -90,12 +90,10 @@ large_df = spark.createDataFrame(data, schema)
 
 
 user_conf = {
-    user_config.se_notifications_enable_custom_dataframe: False,
-    user_config.se_custom_dataframe : large_df,
+    user_config.se_user_defined_custom_dataframe : None,
     user_config.se_enable_obs_dq_report_result: False,
-    user_config.se_dq_obs_alert_flag: False,
+    user_config.se_dq_obs_alert_flag: True,
     user_config.se_dq_obs_default_email_template: "",
-    user_config.se_dq_obs_mode_of_communication: False,
     user_config.se_notifications_enable_email: False,
     user_config.se_notifications_enable_custom_email_body: False,
     user_config.se_notifications_email_smtp_host: "smtp.office365.com",
@@ -103,10 +101,10 @@ user_conf = {
     user_config.se_notifications_service_account_email: "a.dsm.pss.obs@nike.com",
     user_config.se_notifications_service_account_password: "wp=Wq$37#UI?Ijy7_HNU",
     user_config.se_notifications_email_from: "sudeepta.pal@nike.com,aaaalfyofqi7i7nxuvxlboxbym@nike.org.slack.com,aaaali2kvghxahbath2kkud3ga@nike.org.slack.com",
-    user_config.se_notifications_email_to_other_mail_id: "sudeepta.pal@nike.com,vikas.ubale@nike.com",
+    user_config.se_notifications_email_to_other_mail_id: "sudeepta.pal@nike.com",
     user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",
     user_config.se_notifications_email_custom_body: """Spark Expectations Statistics for this dq run:
-    vamsi sudeep malik raghav
+    vamsi sudeep malik raghav spark expectation itc
     """,
     user_config.se_notifications_enable_slack: False,
     user_config.se_notifications_slack_webhook_url: "",
@@ -126,6 +124,7 @@ user_conf = {
         "data_layer": "Integrated"
     },
     user_config.se_job_metadata: job_info,}
+
 
 @se.with_expectations(
     target_table="dq_spark_dev.customer_order",
@@ -184,10 +183,10 @@ if __name__ == "__main__":
             reader.set_notification_param(user_conf)
             instance = AlertTrial(_context)
             # Create an instance of AlertTrial with the context
-            if (user_conf.get(user_config.se_notifications_enable_custom_dataframe)) is True:
+            if isinstance(user_conf.get(user_config.se_user_defined_custom_dataframe), DataFrame):
                 instance.prep_report_data()
             else:
-              instance.send_mail(user_conf.get(user_config.se_notifications_email_subject),user_conf.get(user_config.se_notifications_email_custom_body),user_conf.get(user_config.se_notifications_email_to_other_mail_id))
+              instance.send_mail(user_conf.get(user_config.se_notifications_email_custom_body),user_conf.get(user_config.se_notifications_email_subject),user_conf.get(user_config.se_notifications_email_to_other_mail_id))
     else:
         build_new()
 

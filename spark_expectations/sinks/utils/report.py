@@ -3,7 +3,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import *
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
-from spark_expectations.notifications.push.alert import AlertTrial
+from spark_expectations.notifications.push.alert1 import AlertTrial
 # from alert_trial import AlertTrial  # Import AlertTrial
 from pyspark.sql.functions import lit
 from pyspark.sql.functions import col, lit, split, regexp_extract, regexp_replace, round, explode, expr, trim, \
@@ -24,12 +24,11 @@ class SparkExpectationsReport:
             context = self._context
             print("dq_obs_report_data_insert method called stats_detailed table")
             df_stats_detailed = context.get_stats_detailed_dataframe
-            df_stats_detailed.show(2)
             df_custom_detailed = context.get_custom_detailed_dataframe
             df=df_custom_detailed
             dq_status_calculation_attribute = "success_percentage"
             source_zero_and_target_zero_is = "pass"
-            # df = df.filter((df.source_output.isNotNull()) & (df.target_output.isNotNull()))
+            df = df.filter((df.source_output.isNotNull()) & (df.target_output.isNotNull()))
             df = df.withColumn("success_percentage", lit(None).cast(DoubleType())) \
                 .withColumn("failed_records", lit(0)) \
                 .withColumn("status", lit(None).cast(StringType())) \
@@ -229,6 +228,7 @@ class SparkExpectationsReport:
                 .withColumn("Snapshot", get_json_object(df_report_table["dq_job_metadata_info"], "$.Snapshot")) \
                 .withColumn("data_object_name", get_json_object(df_report_table["dq_job_metadata_info"], "$.data_object_name"))
             df_report_table=df_report_table.drop("dq_job_metadata_info")
+            print("below is the report table")
             df_report_table.show(truncate=False)
 
 
