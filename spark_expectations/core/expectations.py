@@ -744,6 +744,7 @@ class WrappedDataFrameWriter:
     """
 
     def __init__(self) -> None:
+
         self._mode: Optional[str] = None
         self._format: Optional[str] = None
         self._partition_by: list = []

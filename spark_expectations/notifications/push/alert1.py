@@ -113,6 +113,25 @@ class AlertTrial:
             traceback.print_exc()
 
     def prep_report_data(self):
+
+        """
+        Prepares the report data and sends it via email.
+
+        This method generates the report data based on the context and sends it
+        to the specified email recipients. It uses a Jinja2 template to format
+        the report data into HTML.
+
+        The method performs the following steps:
+        1. Retrieves the email subject and recipient list from the context.
+        2. Loads the email template from the specified directory or context either custom or default
+        3. Checks if a custom DataFrame is provided and the report generation status flag is set.
+        4. If no custom DataFrame is provided, generates the report data for header, summary, and detailed sections.
+        5. Renders the report data into HTML using the Jinja2 template.
+        6. Sends the formatted HTML report via email.
+
+        Raises:
+            Exception: If an error occurs during the report preparation or email sending process.
+        """
         try:
             mail_subject = self._context.get_mail_subject
             mail_receivers_list = self._context.get_to_mail
@@ -154,16 +173,13 @@ class AlertTrial:
                 html_data = f"<h2>{mail_subject}</h2>" + html_data
             else:
 
-                # get the custom  DataFrame from the user.
+                # get the custom  DataFrame from the user .
 
                 custom_dataframe = self._context.get_se_user_defined_custom_dataframe
                 custom_dataframe.show()
                 headers = list(custom_dataframe.columns)
                 rows = [row.asDict().values() for row in custom_dataframe.collect()]
                 html_data = template.render(title=self._context.get_mail_subject, headers=headers, rows=rows)
-
-
-
             self.send_mail(html_data, mail_subject, mail_receivers_list)
         except Exception as e:
             print(f"Error in prep_report_data: {e}")

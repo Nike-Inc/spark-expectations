@@ -1,7 +1,6 @@
 # Define the product_id
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType
 
-from spark_expectations.notifications.push.alert1 import AlertTrial
 from spark_expectations.core.context import SparkExpectationsContext
 from pyspark.sql import SparkSession
 import os
@@ -91,9 +90,11 @@ large_df = spark.createDataFrame(data, schema)
 
 user_conf = {
     user_config.se_user_defined_custom_dataframe : None,
-    user_config.se_enable_obs_dq_report_result: False,
+    # user_config.se_custom_dataframe_for_alert: None,
+    user_config.se_enable_obs_dq_report_result: True,
     user_config.se_dq_obs_alert_flag: True,
     user_config.se_dq_obs_default_email_template: "",
+    # user_config.se_custom_email_template: None,
     user_config.se_notifications_enable_email: False,
     user_config.se_notifications_enable_custom_email_body: False,
     user_config.se_notifications_email_smtp_host: "smtp.office365.com",
@@ -104,7 +105,7 @@ user_conf = {
     user_config.se_notifications_email_to_other_mail_id: "sudeepta.pal@nike.com",
     user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",
     user_config.se_notifications_email_custom_body: """Spark Expectations Statistics for this dq run:
-    vamsi sudeep malik raghav spark expectation itc
+    vamsi sudeep malik raghav spark expectation itc nike team
     """,
     user_config.se_notifications_enable_slack: False,
     user_config.se_notifications_slack_webhook_url: "",
@@ -124,6 +125,8 @@ user_conf = {
         "data_layer": "Integrated"
     },
     user_config.se_job_metadata: job_info,}
+se_dq_obs_alert_flag = user_conf.get(user_config.se_dq_obs_alert_flag, "False")
+se_enable_obs_dq_report_result = user_conf.get(user_config.se_enable_obs_dq_report_result, "False")
 
 
 @se.with_expectations(
@@ -173,8 +176,7 @@ def build_new() -> DataFrame:
 #
 
 if __name__ == "__main__":
-    se_dq_obs_alert_flag = user_conf.get(user_config.se_dq_obs_alert_flag, "False")
-    se_enable_obs_dq_report_result = user_conf.get(user_config.se_enable_obs_dq_report_result, "False")
+
 
     if se_dq_obs_alert_flag is True and se_enable_obs_dq_report_result is False :
             # Create an instance of SparkExpectationsContext with the required arguments
@@ -184,8 +186,10 @@ if __name__ == "__main__":
             instance = AlertTrial(_context)
             # Create an instance of AlertTrial with the context
             if isinstance(user_conf.get(user_config.se_user_defined_custom_dataframe), DataFrame):
+                print("only alert with custom dataFrame  is called")
                 instance.prep_report_data()
             else:
+              print("only alert with custom body is called")
               instance.send_mail(user_conf.get(user_config.se_notifications_email_custom_body),user_conf.get(user_config.se_notifications_email_subject),user_conf.get(user_config.se_notifications_email_to_other_mail_id))
     else:
         build_new()
