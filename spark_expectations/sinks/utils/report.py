@@ -3,13 +3,9 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import *
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
-from spark_expectations.notifications.push.alert1 import AlertTrial
-# from alert_trial import AlertTrial  # Import AlertTrial
-from pyspark.sql.functions import lit
 from pyspark.sql.functions import col, lit, split, regexp_extract, regexp_replace, round, explode, expr, trim, \
     coalesce, when, size, concat_ws, abs, filter, regexp_replace
 from pyspark.sql.types import DateType, StringType, TimestampType, DoubleType, DecimalType,StructField,IntegerType
-import time
 from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
 
 
@@ -58,23 +54,6 @@ class SparkExpectationsReport:
                 .withColumnRenamed("target_output", "valid_records")
             join_columns = ["run_id", "product_id", "table_name", "column_name", "rule"]
             only_querydq_src_base_df = df
-            # only_querydq_src_base_df = only_querydq_src_base_df.withColumn('extracted_total_records_data', split(
-            #     regexp_extract('total_records', r'=\[(.*)\]', 1), '},'))
-            # only_querydq_src_df = only_querydq_src_base_df.select('*', explode('extracted_total_records_data').alias(
-            #     'total_records_dict'))
-            # only_querydq_src_df = only_querydq_src_df.withColumn('total_records_dict_split', split(
-            #     regexp_replace(col('total_records_dict'), '[}{]', ''), ','))
-            #
-            # only_querydq_src_df = only_querydq_src_df.withColumn(
-            #     'total_records',
-            #     expr("element_at(total_records_dict_split, -1)")
-            # )
-            # only_querydq_src_df = only_querydq_src_df.withColumn(
-            #     'column_name',
-            #     when(size(col('total_records_dict_split')) > 1,
-            #          concat_ws(",", expr("slice(total_records_dict_split, 1, size(total_records_dict_split)-1)")))
-            #     .otherwise(col('column_name'))
-            # )
             only_querydq_src_df = only_querydq_src_base_df.withColumn('extracted_total_records_data', split(
                 regexp_extract('total_records', r'=\[(.*)\]', 1), '},')) \
                 .select('*', explode('extracted_total_records_data').alias('total_records_dict')) \
@@ -100,26 +79,7 @@ class SparkExpectationsReport:
             dq_column_list = [col_name for col_name in data_types.keys()]
             src_dq_column_list = [col_name for col_name in dq_column_list if col_name not in ['valid_records']]
             only_querydq_src_final_df = only_querydq_src_df.selectExpr(*src_dq_column_list)
-
-
-
             only_querydq_tgt_base_df = df
-            # only_querydq_tgt_base_df = only_querydq_tgt_base_df.withColumn('extracted_valid_records_data', split(
-            #     regexp_extract('valid_records', r'=\[(.*)\]', 1), '},'))
-            # only_querydq_tgt_df = only_querydq_tgt_base_df.select('*', explode('extracted_valid_records_data').alias(
-            #     'valid_records_dict'))
-            # only_querydq_tgt_df = only_querydq_tgt_df.withColumn('total_valid_dict_split', split(
-            #     regexp_replace(col('valid_records_dict'), '[}{]', ''), ','))
-            # only_querydq_tgt_df = only_querydq_tgt_df.withColumn(
-            #     'valid_records',
-            #     expr("element_at(total_valid_dict_split, -1)")
-            # )
-            # only_querydq_tgt_df = only_querydq_tgt_df.withColumn(
-            #     'column_name',
-            #     when(size(col('total_valid_dict_split')) > 1,
-            #          concat_ws(",", expr("slice(total_valid_dict_split, 1, size(total_valid_dict_split)-1)")))
-            #     .otherwise(col('column_name'))
-            # )
             only_querydq_tgt_df = only_querydq_tgt_base_df.withColumn('extracted_valid_records_data', split(
                 regexp_extract('valid_records', r'=\[(.*)\]', 1), '},')) \
                 .select('*', explode('extracted_valid_records_data').alias('valid_records_dict')) \
@@ -155,90 +115,8 @@ class SparkExpectationsReport:
             # Execute the SQL query
             only_querydq_final_after_join_df = self.spark.sql(sql_query)
 
-            # only_querydq_final_after_join_df = (only_querydq_final_after_join_df.withColumn('total_records_only_nbr',
-            #                                                                                 regexp_extract(
-            #                                                                                     col('total_records'),
-            #                                                                                     r'\d+', 0).cast(
-            #                                                                                     'bigint'))
-            #                                     .withColumn('valid_records_only_nbr',
-            #                                                 regexp_extract(col('valid_records'), r'\d+', 0).cast(
-            #                                                     'bigint')))
-            #
-            # only_querydq_final_after_join_df = only_querydq_final_after_join_df.withColumn(
-            #     'success_percentage',
-            #     when((col('total_records_only_nbr') == '') & (col('valid_records_only_nbr').isNull()), lit(100))
-            #     .when((col('total_records_only_nbr') == '') & (col('valid_records_only_nbr') == ''), lit(100))
-            #     .when((col('total_records_only_nbr') != '') & (col('valid_records_only_nbr').isNull()), lit(0))
-            #     .otherwise(
-            #         coalesce(
-            #             (
-            #                     100 * least(abs(trim(col('valid_records_only_nbr'))),
-            #                                 abs(trim(col('total_records_only_nbr')))) /
-            #                     greatest(abs(trim(col('valid_records_only_nbr'))),
-            #                              abs(trim(col('total_records_only_nbr'))))
-            #             ).cast(DecimalType(20, 2)),
-            #             lit(0)
-            #         )
-            #     )
-            # )
-            # only_querydq_final_after_join_df = only_querydq_final_after_join_df.withColumn(
-            #     'failed_rec_perc_variance',
-            #     when((col('total_records_only_nbr') == '') & (col('valid_records_only_nbr').isNull()), lit(0))
-            #     .when((col('total_records_only_nbr') == '') & (col('valid_records_only_nbr') == ''), lit(0))
-            #     .when((col('total_records_only_nbr') != '') & (col('valid_records_only_nbr').isNull()), lit(100))
-            #     .when(
-            #         (coalesce(col('total_records_only_nbr'), lit(0)) != 0) &
-            #         (coalesce(col('valid_records_only_nbr'), lit(0)) != 0),
-            #         coalesce(
-            #             round(
-            #                 ((col('total_records_only_nbr') - col('valid_records_only_nbr')) / col(
-            #                     'total_records_only_nbr')) * 100,
-            #                 2
-            #             ),
-            #             lit(0)
-            #         )
-            #     )
-            #     .otherwise(100)
-            # )
-            # only_querydq_final_after_join_df = only_querydq_final_after_join_df.withColumn(
-            #     'failed_records',
-            #     abs(
-            #         coalesce(
-            #             coalesce(trim(col('total_records_only_nbr')).cast('bigint'), lit(0)) -
-            #             coalesce(trim(col('valid_records_only_nbr')).cast('bigint'), lit(0)),
-            #             lit(0)
-            #         )
-            #     )
-            # )
-            #
-            # only_querydq_final_after_join_df = only_querydq_final_after_join_df.withColumn(
-            #     'dq_status',
-            #     when((col('total_records') == lit(0)) & (col('valid_records') == lit(0)) & (
-            #             lit(source_zero_and_target_zero_is) == 'pass'), 'PASS')
-            #     .when((lit(dq_status_calculation_attribute) == 'failed_records') & (col('failed_records') != lit(0)),
-            #           'PASS')
-            #     .when((col('total_records') == '') & (col('valid_records') == ''), 'PASS')
-            #     .when((coalesce(col('total_records'), lit(0)) == 0) & (coalesce(col('valid_records'), lit(0)) == 0),
-            #           'PASS')
-            #     .when(
-            #         (lit(dq_status_calculation_attribute) != 'failed_records') & (
-            #                     col('success_percentage') == lit(100.00)),
-            #         'PASS')
-            # )
-            # only_querydq_final_after_join_df = only_querydq_final_after_join_df.drop('total_records_only_nbr',
-            #                                                                          'valid_records_only_nbr')
-            #
-            # only_querydq_final_after_join_df = only_querydq_final_after_join_df.drop("failed_rec_perc_variance",
-            #                                                                          "dq_status")
-            #
-            # only_querydq_final_after_join_df=only_querydq_final_after_join_df.withColumn(
-            #     "dq_job_metadata_info", lit(self._context.get_job_metadata).cast("string"))
-
-            only_querydq_final_after_join_df = only_querydq_final_after_join_df.withColumn('total_records_only_nbr',
-                                                                                           regexp_extract(
-                                                                                               col('total_records'),
-                                                                                               r'\d+', 0).cast(
-                                                                                               'bigint')) \
+            only_querydq_final_after_join_df = only_querydq_final_after_join_df \
+                .withColumn('total_records_only_nbr', regexp_extract(col('total_records'), r'\d+', 0).cast('bigint')) \
                 .withColumn('valid_records_only_nbr', regexp_extract(col('valid_records'), r'\d+', 0).cast('bigint')) \
                 .withColumn('success_percentage',
                             when((col('total_records_only_nbr') == '') & (col('valid_records_only_nbr').isNull()),
@@ -247,35 +125,37 @@ class SparkExpectationsReport:
                                   lit(100))
                             .when((col('total_records_only_nbr') != '') & (col('valid_records_only_nbr').isNull()),
                                   lit(0))
-                            .otherwise(coalesce((100 * least(abs(trim(col('valid_records_only_nbr'))),
-                                                             abs(trim(col('total_records_only_nbr')))) /
-                                                 greatest(abs(trim(col('valid_records_only_nbr'))),
-                                                          abs(trim(col('total_records_only_nbr'))))).cast(
-                                DecimalType(20, 2)), lit(0)))) \
+                            .otherwise(coalesce(
+                                (100 * least(abs(trim(col('valid_records_only_nbr'))),
+                                             abs(trim(col('total_records_only_nbr')))) /
+                                 greatest(abs(trim(col('valid_records_only_nbr'))),
+                                          abs(trim(col('total_records_only_nbr')))))
+                                .cast(DecimalType(20, 2)), lit(0)))) \
                 .withColumn('failed_rec_perc_variance',
                             when((col('total_records_only_nbr') == '') & (col('valid_records_only_nbr').isNull()),
                                  lit(0))
                             .when((col('total_records_only_nbr') == '') & (col('valid_records_only_nbr') == ''), lit(0))
                             .when((col('total_records_only_nbr') != '') & (col('valid_records_only_nbr').isNull()),
                                   lit(100))
-                            .when((coalesce(col('total_records_only_nbr'), lit(0)) != 0) & (
-                                        coalesce(col('valid_records_only_nbr'), lit(0)) != 0),
-                                  coalesce(round(((col('total_records_only_nbr') - col('valid_records_only_nbr')) / col(
-                                      'total_records_only_nbr')) * 100, 2), lit(0)))
+                            .when((coalesce(col('total_records_only_nbr'), lit(0)) != 0) &
+                                  (coalesce(col('valid_records_only_nbr'), lit(0)) != 0),
+                                  coalesce(round(((col('total_records_only_nbr') - col('valid_records_only_nbr')) /
+                                                  col('total_records_only_nbr')) * 100, 2), lit(0)))
                             .otherwise(100)) \
-                .withColumn('failed_records', abs(coalesce(
-                coalesce(trim(col('total_records_only_nbr')).cast('bigint'), lit(0)) - coalesce(
-                    trim(col('valid_records_only_nbr')).cast('bigint'), lit(0)), lit(0)))) \
-                .withColumn('dq_status', when((col('total_records') == lit(0)) & (col('valid_records') == lit(0)) & (
-                        lit(source_zero_and_target_zero_is) == 'pass'), 'PASS')
-                            .when(
-                (lit(dq_status_calculation_attribute) == 'failed_records') & (col('failed_records') != lit(0)), 'PASS')
+                .withColumn('failed_records',
+                            abs(coalesce(
+                                coalesce(trim(col('total_records_only_nbr')).cast('bigint'), lit(0)) -
+                                coalesce(trim(col('valid_records_only_nbr')).cast('bigint'), lit(0)), lit(0)))) \
+                .withColumn('dq_status',
+                            when((col('total_records') == lit(0)) & (col('valid_records') == lit(0)) &
+                                 (lit(source_zero_and_target_zero_is) == 'pass'), 'PASS')
+                            .when((lit(dq_status_calculation_attribute) == 'failed_records') &
+                                  (col('failed_records') != lit(0)), 'PASS')
                             .when((col('total_records') == '') & (col('valid_records') == ''), 'PASS')
-                            .when(
-                (coalesce(col('total_records'), lit(0)) == 0) & (coalesce(col('valid_records'), lit(0)) == 0), 'PASS')
-                            .when(
-                (lit(dq_status_calculation_attribute) != 'failed_records') & (col('success_percentage') == lit(100.00)),
-                'PASS')) \
+                            .when((coalesce(col('total_records'), lit(0)) == 0) &
+                                  (coalesce(col('valid_records'), lit(0)) == 0), 'PASS')
+                            .when((lit(dq_status_calculation_attribute) != 'failed_records') &
+                                  (col('success_percentage') == lit(100.00)), 'PASS')) \
                 .drop('total_records_only_nbr', 'valid_records_only_nbr', 'failed_rec_perc_variance', 'dq_status') \
                 .withColumn('dq_job_metadata_info', lit(self._context.get_job_metadata).cast('string'))
 
@@ -299,7 +179,6 @@ class SparkExpectationsReport:
                 "tag",
                 "dq_date",
             ]
-
             df_stats_detailed = df_stats_detailed.drop(*columns_to_remove)
 
             df_stats_detailed = df_stats_detailed.withColumnRenamed("source_dq_row_count", "total_records") \
@@ -324,7 +203,7 @@ class SparkExpectationsReport:
                 {
                     "mode": "append",
                     "format": "delta",
-                    "partitionBy": ["product_id", "region"],
+                    "partitionBy": ["product_id","meta_dq_run_datetime"],
                     "sortBy": None,
                     "bucketBy": None,
                     "options": None
@@ -332,7 +211,6 @@ class SparkExpectationsReport:
                 stats_table=False,
             )
             self.spark.table("dq_stats_rpt").show(truncate=False)
-
             return True,df_report_table
         except Exception as e:
             raise SparkExpectationsMiscException(

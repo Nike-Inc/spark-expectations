@@ -4,17 +4,11 @@ import traceback
 from dataclasses import dataclass
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import Dict, Tuple
-
 from jinja2 import Environment, FileSystemLoader, BaseLoader
-from matplotlib.pyplot import title
 from pyspark import Row
-from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql import DataFrame
 from pyspark.sql.types import StructType, StructField, StringType
-
 from spark_expectations.core.context import SparkExpectationsContext
-
-
 @dataclass
 class AlertTrial:
     """

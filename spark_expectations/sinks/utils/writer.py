@@ -597,6 +597,7 @@ class SparkExpectationsWriter:
         print("------------------------------------------########################################################################spark expectation ending here#####################------------------------------------------")
         print(user_config.se_enable_obs_dq_report_result)
         print(user_config.se_notifications_enable_email)
+        _df_detailed_stats.show(truncate=False)
         if self._context.get_enable_obs_dq_report_result is True:
             context = self._context
             context.set_stats_detailed_dataframe(_df_detailed_stats)
