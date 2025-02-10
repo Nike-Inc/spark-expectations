@@ -3,7 +3,7 @@ from pyspark.sql.types import StructType, StructField, IntegerType, StringType
 import os
 from spark_expectations.utils.reader import SparkExpectationsReader
 
-from spark_expectations.notifications.push.alert1 import AlertTrial
+from spark_expectations.notifications.push.alert import SparkExpectationsAlert
 from spark_expectations.core.context import SparkExpectationsContext
 
 
@@ -85,12 +85,9 @@ large_df = spark.createDataFrame(data, schema)
 
 
 user_conf = {
-    user_config.se_user_defined_custom_dataframe : None,
-    # user_config.se_custom_dataframe_for_alert: None,
-    user_config.se_enable_obs_dq_report_result: False,
+    user_config.se_enable_obs_dq_report_result: True,
     user_config.se_dq_obs_alert_flag: True,
     user_config.se_dq_obs_default_email_template: "",
-    # user_config.se_custom_email_template: None,
     user_config.se_notifications_enable_email: False,
     user_config.se_notifications_enable_custom_email_body: False,
     user_config.se_notifications_email_smtp_host: "smtp.office365.com",

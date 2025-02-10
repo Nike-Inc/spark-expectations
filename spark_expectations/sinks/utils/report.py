@@ -15,6 +15,7 @@ class SparkExpectationsReport:
 
     def __post_init__(self) -> None:
         self.spark = self._context.spark
+        self._context.set_report_table_name("dq_stats_rpt")
 
     def dq_obs_report_data_insert(self) -> tuple[bool, DataFrame]:
         try:
@@ -37,8 +38,7 @@ class SparkExpectationsReport:
                 StructField("Snapshot", StringType(), True),
                 StructField("data_object_name", StringType(), True)
             ])
-            report_df = self.spark.createDataFrame([], schema)
-            report_df.write.mode("append").saveAsTable("dq_spark_dev.df_stats_report")
+            df_report_table = self.spark.createDataFrame([], schema)
 
             print("dq_obs_report_data_insert method called stats_detailed table")
             df_stats_detailed = context.get_stats_detailed_dataframe
@@ -199,7 +199,7 @@ class SparkExpectationsReport:
             save_df_report_table = SparkExpectationsWriter(_context=context)
             save_df_report_table.save_df_as_table(
                 df_report_table,
-                "dq_stats_rpt",
+                self._context.get_report_table_name,
                 {
                     "mode": "append",
                     "format": "delta",

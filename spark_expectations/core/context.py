@@ -23,6 +23,7 @@ class SparkExpectationsContext:
 
     def __post_init__(self) -> None:
         self._dataframe: DataFrame
+        self._report_table_name:str
         self._se_user_defined_custom_dataframe: DataFrame
         self._custom_dataframe: DataFrame
         self._enable_custom_dataframe: bool
@@ -2266,6 +2267,14 @@ class SparkExpectationsContext:
     @property
     def get_se_user_defined_custom_dataframe(self) -> DataFrame:
         return self._se_user_defined_custom_dataframe
+
+
+    def set_report_table_name(self, report_table_name: str) -> None:
+        self._report_table_name = report_table_name
+
+    @property
+    def get_report_table_name(self)->str:
+        return self._report_table_name
 
 
 

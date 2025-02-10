@@ -23,7 +23,7 @@ from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException,
 )
 from spark_expectations.secrets import SparkExpectationsSecretsBackend
-from spark_expectations.notifications.push.alert1 import AlertTrial
+from spark_expectations.notifications.push.alert import SparkExpectationsAlert
 from spark_expectations.utils.udf import remove_empty_maps
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.sinks import _sink_hook
@@ -615,7 +615,7 @@ class SparkExpectationsWriter:
         if self._context.get_se_dq_obs_alert_flag is True:
             print("alert being called")
             print(self._context.get_dq_obs_rpt_gen_status_flag)
-            alert = AlertTrial(self._context)
+            alert = SparkExpectationsAlert(self._context)
             alert.prep_report_data()
 
 

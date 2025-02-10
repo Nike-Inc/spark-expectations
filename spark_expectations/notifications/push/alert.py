@@ -10,7 +10,7 @@ from pyspark.sql import DataFrame
 from pyspark.sql.types import StructType, StructField, StringType
 from spark_expectations.core.context import SparkExpectationsContext
 @dataclass
-class AlertTrial:
+class SparkExpectationsAlert:
     """
     This class implements the alert trial functionality.
     """
@@ -22,7 +22,6 @@ class AlertTrial:
     def send_mail(self, body: str, subject: str, receivers_list: str) -> None:
         """
         This function sends the DQ report to the users.
-
         Args:
             body: Email body.
             subject: Email subject.
@@ -57,14 +56,10 @@ class AlertTrial:
         This function calls the dq_obs_report_data_insert method from SparkExpectationsReport.
         """
         try:
-            if self._context.get_dq_obs_rpt_gen_status_flag:
-                from spark_expectations.sinks.utils.report import SparkExpectationsReport
 
-                if isinstance(self._context.get_se_user_defined_custom_dataframe,DataFrame):
-                    df = self._context.get_se_user_defined_custom_dataframe
-                else:
-                    report = SparkExpectationsReport(self._context)
-                    df = self._context.get_df_dq_obs_report_dataframe
+                from spark_expectations.sinks.utils.report import SparkExpectationsReport
+                report = SparkExpectationsReport(self._context)
+                df = self._context.get_df_dq_obs_report_dataframe
                 df.createOrReplaceTempView("temp_dq_obs_report")
 
                 queries = {
@@ -130,50 +125,37 @@ class AlertTrial:
             mail_subject = self._context.get_mail_subject
             mail_receivers_list = self._context.get_to_mail
             if not self._context.get_default_template:
-                template_dir = os.path.join(os.path.dirname(__file__), 'templates')
+                template_dir = '../../spark_expectations/config/templates'
                 env_loader = Environment(loader=FileSystemLoader(template_dir))
                 template = env_loader.get_template('advanced_email_alert_template.jinja')
             else:
                 template_dir = self._context.get_default_template
                 template = Environment(loader=BaseLoader).from_string(template_dir)
 
+            header_columns, header_data, header_format_col_idx = self.get_report_data("header")
+            summary_columns, summary_data, summary_format_col_idx = self.get_report_data("summary")
+            detailed_columns, detailed_data, detailed_format_col_idx = self.get_report_data("detailed")
 
-            if not isinstance(self._context.get_se_user_defined_custom_dataframe,DataFrame)  and  self._context.get_dq_obs_rpt_gen_status_flag is True:
-                header_columns, header_data, header_format_col_idx = self.get_report_data("header")
-                summary_columns, summary_data, summary_format_col_idx = self.get_report_data("summary")
-                detailed_columns, detailed_data, detailed_format_col_idx = self.get_report_data("detailed")
-
-
-
-                data_dicts = [
-                    {
-                        "title": f"Summary by product ID for the run_id ",
-                        "headers": header_columns,
-                        "rows": header_data
-                    },
-                    {
-                        "title": "Summary by Scenario :",
-                        "headers": summary_columns,
-                        "rows": summary_data
-                    },
-                    {
-                        "title": "Summary by data_rule:",
-                        "headers": detailed_columns,
-                        "rows": detailed_data
-                    }
-                ]
-                html_data = "<br>".join(
-                    [template.render(render_table=template.module.render_table, **data_dict) for data_dict in data_dicts])
-                html_data = f"<h2>{mail_subject}</h2>" + html_data
-            else:
-
-                # get the custom  DataFrame from the user .
-
-                custom_dataframe = self._context.get_se_user_defined_custom_dataframe
-                custom_dataframe.show()
-                headers = list(custom_dataframe.columns)
-                rows = [row.asDict().values() for row in custom_dataframe.collect()]
-                html_data = template.render(title=self._context.get_mail_subject, headers=headers, rows=rows)
+            data_dicts = [
+                {
+                    "title": f"Summary by product ID for the run_id ",
+                    "headers": header_columns,
+                    "rows": header_data
+                },
+                {
+                    "title": "Summary by Scenario :",
+                    "headers": summary_columns,
+                    "rows": summary_data
+                },
+                {
+                    "title": "Summary by data_rule:",
+                    "headers": detailed_columns,
+                    "rows": detailed_data
+                }
+            ]
+            html_data = "<br>".join(
+                [template.render(render_table=template.module.render_table, **data_dict) for data_dict in data_dicts])
+            html_data = f"<h2>{mail_subject}</h2>" + html_data
             self.send_mail(html_data, mail_subject, mail_receivers_list)
         except Exception as e:
             print(f"Error in prep_report_data: {e}")
