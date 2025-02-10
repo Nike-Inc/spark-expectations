@@ -720,9 +720,14 @@ def test_get_mail_smtp_port_exception():
         context.get_mail_smtp_port
 
 
+def test_set_to_mail_exception():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._to_mail = "abc@mail.com"
+
+
 def test_get_to_mail_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context._to_mail = False
+    context._to_mail = None
     with pytest.raises(
         SparkExpectationsMiscException,
         match="The spark expectations context is not set completely, please assign "
@@ -733,7 +738,7 @@ def test_get_to_mail_exception():
 
 def test_get_mail_subject_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context._to_mail = False
+    context._to_mail = "abc@mail.com"
     with pytest.raises(
         SparkExpectationsMiscException,
         match="The spark expectations context is not set completely, please assign "
@@ -2122,6 +2127,13 @@ def test_get_job_metadata():
     assert context.get_job_metadata is None
 
 def test_set_enable_obs_dq_report_result():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_enable_obs_dq_report_result(True)
+    assert context.get_enable_obs_dq_report_result is True
+
+    context.set_enable_obs_dq_report_result(False)
+    assert context.get_enable_obs_dq_report_result is False
+def test_get_enable_obs_dq_report_result():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_enable_obs_dq_report_result(True)
     assert context.get_enable_obs_dq_report_result is True
