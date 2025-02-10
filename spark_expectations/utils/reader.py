@@ -7,7 +7,6 @@ from pyspark.sql.functions import expr, when, max
 from spark_expectations import _log
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.config.user_config import Constants as user_config
-
 from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException,
 )

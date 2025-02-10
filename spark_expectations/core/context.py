@@ -2269,6 +2269,7 @@ class SparkExpectationsContext:
         return self._se_user_defined_custom_dataframe
 
 
+
     def set_report_table_name(self, report_table_name: str) -> None:
         self._report_table_name = report_table_name
 

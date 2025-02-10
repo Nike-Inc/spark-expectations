@@ -19,7 +19,7 @@ class SparkExpectationsAlert:
     def __post_init__(self) -> None:
         self.spark = self._context.spark  # Initialize the attribute
 
-    def send_mail(self, body: str, subject: str, receivers_list: str) -> None:
+    def send_mail(self, body: str, subject: str, receivers_list: str) -> bool:
         """
         This function sends the DQ report to the users.
         Args:
@@ -45,6 +45,7 @@ class SparkExpectationsAlert:
                 smtp_server.login(service_account_email, service_account_password)
                 smtp_server.sendmail(msg['From'], receivers_list.split(','), msg.as_string())
                 print("Report sent successfully!")
+                return True
         except Exception as e:
             print(f"Error in send_mail: {e}")
             traceback.print_exc()
@@ -157,6 +158,7 @@ class SparkExpectationsAlert:
                 [template.render(render_table=template.module.render_table, **data_dict) for data_dict in data_dicts])
             html_data = f"<h2>{mail_subject}</h2>" + html_data
             self.send_mail(html_data, mail_subject, mail_receivers_list)
+            return html_data, mail_subject, mail_receivers_list
         except Exception as e:
             print(f"Error in prep_report_data: {e}")
             traceback.print_exc()

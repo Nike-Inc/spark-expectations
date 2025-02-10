@@ -197,20 +197,20 @@ class SparkExpectationsReport:
 
 
             save_df_report_table = SparkExpectationsWriter(_context=context)
-            save_df_report_table.save_df_as_table(
-                df_report_table,
-                self._context.get_report_table_name,
-                {
-                    "mode": "append",
-                    "format": "delta",
-                    "partitionBy": ["product_id","meta_dq_run_datetime"],
-                    "sortBy": None,
-                    "bucketBy": None,
-                    "options": None
-                },
-                stats_table=False,
-            )
-            self.spark.table("dq_stats_rpt").show(truncate=False)
+            # save_df_report_table.save_df_as_table(
+            #     df_report_table,
+            #     self._context.get_report_table_name,
+            #     {
+            #         "mode": "append",
+            #         "format": "delta",
+            #         "partitionBy": ["product_id","meta_dq_run_datetime"],
+            #         "sortBy": None,
+            #         "bucketBy": None,
+            #         "options": None
+            #     },
+            #     stats_table=False,
+            # )
+            # self.spark.table("dq_stats_rpt").show(truncate=False)
             return True,df_report_table
         except Exception as e:
             raise SparkExpectationsMiscException(
