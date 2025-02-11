@@ -7,6 +7,8 @@ from pyspark.sql.functions import col, lit, split, regexp_extract, regexp_replac
     coalesce, when, size, concat_ws, abs, filter, regexp_replace
 from pyspark.sql.types import DateType, StringType, TimestampType, DoubleType, DecimalType,StructField,IntegerType
 from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
+from spark_expectations import _log
+
 
 
 @dataclass
@@ -38,7 +40,6 @@ class SparkExpectationsReport:
                 StructField("Snapshot", StringType(), True),
                 StructField("data_object_name", StringType(), True)
             ])
-            df_report_table = self.spark.createDataFrame([], schema)
 
             print("dq_obs_report_data_insert method called stats_detailed table")
             df_stats_detailed = context.get_stats_detailed_dataframe
@@ -193,29 +194,31 @@ class SparkExpectationsReport:
                 .withColumn("Snapshot", get_json_object(df_report_table["dq_job_metadata_info"], "$.Snapshot")) \
                 .withColumn("data_object_name", get_json_object(df_report_table["dq_job_metadata_info"], "$.data_object_name"))
             df_report_table=df_report_table.drop("dq_job_metadata_info")
-            print("below is the report table")
+            _log.info("below is the report table")
 
-
-            save_df_report_table = SparkExpectationsWriter(_context=context)
-            # save_df_report_table.save_df_as_table(
-            #     df_report_table,
-            #     self._context.get_report_table_name,
-            #     {
-            #         "mode": "append",
-            #         "format": "delta",
-            #         "partitionBy": ["product_id","meta_dq_run_datetime"],
-            #         "sortBy": None,
-            #         "bucketBy": None,
-            #         "options": None
-            #     },
-            #     stats_table=False,
-            # )
-            # self.spark.table("dq_stats_rpt").show(truncate=False)
             return True,df_report_table
         except Exception as e:
             raise SparkExpectationsMiscException(
                 f"An error occurred in dq_obs_report_data_insert: {e}"
             )
+
+    # function to save the report table
+    def save_report_table(self, df_report_table):
+        context = self._context
+        save_df_report_table = SparkExpectationsWriter(_context=context)
+        save_df_report_table.save_df_as_table(
+            df_report_table,
+            context.get_report_table_name,
+            {
+                "mode": "append",
+                "format": "delta",
+                "partitionBy": ["product_id", "meta_dq_run_datetime"],
+                "sortBy": None,
+                "bucketBy": None,
+                "options": None
+            },
+            stats_table=False,
+        )
 
 
 

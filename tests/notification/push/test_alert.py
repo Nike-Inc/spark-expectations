@@ -5,20 +5,16 @@ from spark_expectations.core import get_spark_session
 from spark_expectations.notifications.push.alert import SparkExpectationsAlert
 from pyspark.sql.types import StructType, StructField, StringType
 from spark_expectations.core.context import SparkExpectationsContext
+import pytest
+import re
 spark = get_spark_session()
-
 context = SparkExpectationsContext("product_id", spark)
 alert = SparkExpectationsAlert(context)
 
 
 
 
-
-# def test_get_report_data():
-#     assert alert.get_report_data("report_type") == ([], [], 0)
-
-
-
+@pytest.fixture(scope="module")
 def test_prep_report_data():
     default_template = """
 
@@ -151,7 +147,7 @@ def test_prep_report_data():
 
 
     context.set_mail_subject("test_mail_subject")
-    context.set_to_mail("sudeepta.pal")
+    context.set_to_mail("abcd@se.com")
     context.set_service_account_password("password")
     context.set_mail_smtp_server("smtp.office365.com")
     context.set_mail_smtp_port(587)
@@ -159,6 +155,59 @@ def test_prep_report_data():
     context.set_df_dq_obs_report_dataframe(df_report_table_test)
 
     html_data, mail_subject, mail_receivers_list = alert.prep_report_data()
+    # assert isinstance(html_data, str)
+    # assert isinstance(mail_subject, str)
+    # assert isinstance(mail_receivers_list, str)
+    return html_data, mail_subject, mail_receivers_list
+
+
+@pytest.mark.usefixtures("test_prep_report_data")
+def test_prep_report_data_type(test_prep_report_data):
+    html_data, mail_subject, mail_receivers_list = test_prep_report_data
     assert isinstance(html_data, str)
     assert isinstance(mail_subject, str)
     assert isinstance(mail_receivers_list, str)
+
+
+@pytest.mark.usefixtures("test_prep_report_data")
+def test_prep_report_data_value(test_prep_report_data):
+    html_data, mail_subject, mail_receivers_list = test_prep_report_data
+    assert mail_subject == "test_mail_subject"
+    assert mail_receivers_list == "abcd@se.com"
+    assert "Summary by product ID for the run_id" in html_data
+
+
+@pytest.mark.usefixtures("test_prep_report_data")
+def test_prep_report_data_html_content(test_prep_report_data):
+    html_data, mail_subject, mail_receivers_list = test_prep_report_data
+    assert any(tag in html_data for tag in
+               ["<html>", "<head>", "<body>", "<div>", "<span>", "<p>", "<a>", "<table>", "<tr>", "<td>", "<th>",
+                "<h1>", "<h2>", "<h3>", "<h4>", "<h5>", "<h6>"]), "The string does not contain HTML content"
+
+@pytest.mark.usefixtures("test_prep_report_data")
+def test_data_not_empty(test_prep_report_data):
+    html_data, mail_subject, mail_receivers_list = test_prep_report_data
+    assert html_data.strip() != "", "HTML data should not be empty"
+    assert mail_subject.strip() != "", "Mail subject should not be empty"
+
+
+
+
+@pytest.mark.usefixtures("test_prep_report_data")
+def test_valid_email_format(test_prep_report_data):
+    _, _, mail_receivers_list = test_prep_report_data
+    email_pattern = re.compile(r"[^@]+@[^@]+\.[^@]+")
+    assert email_pattern.match(mail_receivers_list), "Invalid email format"
+
+
+@pytest.mark.usefixtures("test_prep_report_data")
+def test_specific_html_elements(test_prep_report_data):
+    html_data, _, _ = test_prep_report_data
+    assert "<table" in html_data, "HTML data should contain a table element"
+    assert "<style" in html_data, "HTML data should contain a style element"
+
+
+
+
+
+

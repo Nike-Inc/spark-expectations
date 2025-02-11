@@ -2,7 +2,6 @@
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType
 import os
 from spark_expectations.utils.reader import SparkExpectationsReader
-
 from spark_expectations.notifications.push.alert import SparkExpectationsAlert
 from spark_expectations.core.context import SparkExpectationsContext
 
@@ -85,6 +84,14 @@ large_df = spark.createDataFrame(data, schema)
 
 
 user_conf = {
+user_config.se_notifications_smtp_password: "your_password",
+    # user_config.se_notifications_smtp_creds_dict: {
+    #     user_config.secret_type: "cerberus",
+    #     user_config.cbs_url: "https://prod.cerberus.nikecloud.com",
+    #     user_config.cbs_sdb_path: "your_sdb_path",
+    #     user_config.cbs_smtp_password: "your_smtp_password",
+    # },
+    user_config.se_notifications_enable_smtp_server_auth: True,
     user_config.se_enable_obs_dq_report_result: True,
     user_config.se_dq_obs_alert_flag: True,
     user_config.se_dq_obs_default_email_template: "",

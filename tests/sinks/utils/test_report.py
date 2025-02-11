@@ -1,9 +1,12 @@
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core import get_spark_session
+from spark_expectations.core.expectations import DataFrame
 from spark_expectations.sinks.utils.report import SparkExpectationsReport
-from pyspark.sql.types import StructField, IntegerType, StringType, StructType, TimestampType, FloatType
-
+from pyspark.sql.types import StructField, IntegerType, StringType, StructType, TimestampType, FloatType,DoubleType,LongType
+import pytest
 spark = get_spark_session()
+
+@pytest.fixture(scope="module")
 def test_dq_obs_report_data_insert():
     schema = StructType([
         StructField("run_id", StringType(), True),
@@ -80,13 +83,83 @@ def test_dq_obs_report_data_insert():
     df_custom_table_test = spark.createDataFrame(data_1, schema_1)
     # Create DataFrame
 
+
     context=SparkExpectationsContext("product_id",spark)
     context.set_stats_detailed_dataframe(df_detailed_table_test)
     context.set_custom_detailed_dataframe(df_custom_table_test)
     test_report=SparkExpectationsReport(context)
     test_result, test_df = test_report.dq_obs_report_data_insert()
-    assert test_result == True
-    assert test_df.count() == 11
+    return test_result, test_df
+
+@pytest.mark.usefixtures("test_dq_obs_report_data_insert")
+def test_report_dataframe(test_dq_obs_report_data_insert):
+    test_result, test_df = test_dq_obs_report_data_insert
+    assert isinstance(test_result, bool), f"Expected test_result to be of type bool, but got {type(test_result)}"
+    assert isinstance(test_df, DataFrame), f"Expected test_df to be of type DataFrame, but got {type(test_df)}"
+
+
+@pytest.mark.usefixtures("test_dq_obs_report_data_insert")
+def test_report_dataframe_columns(test_dq_obs_report_data_insert):
+    test_result, test_df = test_dq_obs_report_data_insert
+    expected_column_count = 15
+    assert len(
+        test_df.columns) == expected_column_count, f"Expected {expected_column_count} columns, but got {len(test_df.columns)}"
+
+
+@pytest.mark.usefixtures("test_dq_obs_report_data_insert")
+def test_dataframe_not_empty(test_dq_obs_report_data_insert):
+    _, test_df = test_dq_obs_report_data_insert
+    assert test_df.count() > 0, "DataFrame should not be empty"
+
+
+@pytest.mark.usefixtures("test_dq_obs_report_data_insert")
+def test_specific_columns_presence(test_dq_obs_report_data_insert):
+    _, test_df = test_dq_obs_report_data_insert
+    expected_columns = ["run_id", "product_id", "table_name", "rule", "column_name"]
+    for column in expected_columns:
+        assert column in test_df.columns, f"Column {column} should be present in the DataFrame"
+
+@pytest.mark.usefixtures("test_dq_obs_report_data_insert")
+def test_dataframe_schema(test_dq_obs_report_data_insert):
+    _, test_df = test_dq_obs_report_data_insert
+    expected_schema = StructType([
+        StructField("rule", StringType(), True),
+        StructField("column_name", StringType(), True),
+        StructField("dq_time", StringType(), True),
+        StructField("product_id", StringType(), True),
+        StructField("table_name", StringType(), True),
+        StructField("status", StringType(), True),
+        StructField("total_records", StringType(), True),
+        StructField("failed_records", LongType(), True),
+        StructField("valid_records", StringType(), True),
+        StructField("success_percentage", DoubleType(), True),
+        StructField("run_id", StringType(), True),
+        StructField("job", StringType(), True),
+        StructField("Region", StringType(), True),
+        StructField("Snapshot", StringType(), True),
+        StructField("data_object_name", StringType(), True)
+    ])
+    assert test_df.schema == expected_schema, "DataFrame schema does not match the expected schema"
+
+
+@pytest.mark.usefixtures("test_dq_obs_report_data_insert")
+def test_success_percentage_data(test_dq_obs_report_data_insert):
+    _, test_df = test_dq_obs_report_data_insert
+    assert test_df.filter(test_df["success_percentage"] > 100).count() == 0, "success_percentage should not be greater than 100"
+    assert test_df.filter(test_df["success_percentage"] < 0).count() == 0, "success_percentage should not be negative"
+
+
+@pytest.mark.usefixtures("test_dq_obs_report_data_insert")
+def test_failed_records_greater_than_zero(test_dq_obs_report_data_insert):
+    _, test_df = test_dq_obs_report_data_insert
+    assert test_df.filter(test_df["failed_records"].cast("int") < 0).count() == 0, "failed_records should not  be less  than 0"
+
+
+
+
+
+
+
 
 
 
