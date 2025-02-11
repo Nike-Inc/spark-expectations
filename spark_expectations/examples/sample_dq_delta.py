@@ -118,83 +118,65 @@ user_conf = {
         "data_layer": "Integrated"
     },
     user_config.se_job_metadata: job_info,}
-se_dq_obs_alert_flag = user_conf.get(user_config.se_dq_obs_alert_flag, "False")
-print(se_dq_obs_alert_flag)
-se_enable_obs_dq_report_result = user_conf.get(user_config.se_enable_obs_dq_report_result, "False")
-print(se_enable_obs_dq_report_result)
-product_id="your_product"
-
-
-if se_dq_obs_alert_flag is True and se_enable_obs_dq_report_result is False:
-    def handle_alerts(se_dq_obs_alert_flag, se_enable_obs_dq_report_result, product_id, spark, user_conf):
-        if se_dq_obs_alert_flag is True and se_enable_obs_dq_report_result is False:
-            # Create an instance of SparkExpectationsContext with the required arguments
-            _context = SparkExpectationsContext(product_id, spark)
-            reader = SparkExpectationsReader(_context)
-            reader.set_notification_param(user_conf)
-            instance = AlertTrial(_context)
-            # Create an instance of AlertTrial with the context
-            if isinstance(user_conf.get(user_config.se_user_defined_custom_dataframe), DataFrame):
-                print("only alert with custom dataFrame is called")
-                instance.prep_report_data()
-            else:
-                print("only alert with custom body is called")
-                instance.send_mail(user_conf.get(user_config.se_notifications_email_custom_body), user_conf.get(user_config.se_notifications_email_subject), user_conf.get(user_config.se_notifications_email_to_other_mail_id))
-
-    if __name__ == "__main__":
-        handle_alerts(se_dq_obs_alert_flag, se_enable_obs_dq_report_result, product_id, spark, user_conf)
-
-else:
-    @se.with_expectations(
-        target_table="dq_spark_dev.customer_order",
-        write_to_table=True,
-        user_conf=user_conf,
-        target_table_view="order",
+@se.with_expectations(
+    target_table="dq_spark_dev.customer_order",
+    write_to_table=True,
+    user_conf=user_conf,
+    target_table_view="order",
+)
+def build_new() -> DataFrame:
+    _df_order_source: DataFrame = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(os.path.join(os.path.dirname(__file__), "resources/order_s.csv"))
     )
-    def build_new() -> DataFrame:
-        _df_order_source: DataFrame = (
-            spark.read.option("header", "true")
-            .option("inferSchema", "true")
-            .csv(os.path.join(os.path.dirname(__file__), "resources/order_s.csv"))
-        )
-        _df_order_source.createOrReplaceTempView("order_source")
+    _df_order_source.createOrReplaceTempView("order_source")
 
-        _df_order_target: DataFrame = (
-            spark.read.option("header", "true")
-            .option("inferSchema", "true")
-            .csv(os.path.join(os.path.dirname(__file__), "resources/order_t.csv"))
-        )
-        _df_order_target.createOrReplaceTempView("order_target")
+    _df_order_target: DataFrame = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(os.path.join(os.path.dirname(__file__), "resources/order_t.csv"))
+    )
+    _df_order_target.createOrReplaceTempView("order_target")
 
-        _df_product: DataFrame = (
-            spark.read.option("header", "true")
-            .option("inferSchema", "true")
-            .csv(os.path.join(os.path.dirname(__file__), "resources/product.csv"))
-        )
-        _df_product.createOrReplaceTempView("product")
+    _df_product: DataFrame = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(os.path.join(os.path.dirname(__file__), "resources/product.csv"))
+    )
+    _df_product.createOrReplaceTempView("product")
 
-        _df_customer_source: DataFrame = (
-            spark.read.option("header", "true")
-            .option("inferSchema", "true")
-            .csv(os.path.join(os.path.dirname(__file__), "resources/customer_source.csv"))
-        )
+    _df_customer_source: DataFrame = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(os.path.join(os.path.dirname(__file__), "resources/customer_source.csv"))
+    )
 
-        _df_customer_source.createOrReplaceTempView("customer_source")
+    _df_customer_source.createOrReplaceTempView("customer_source")
 
-        _df_customer_target: DataFrame = (
-            spark.read.option("header", "true")
-            .option("inferSchema", "true")
-            .csv(os.path.join(os.path.dirname(__file__), "resources/customer_source.csv"))
-        )
-        _df_customer_target.createOrReplaceTempView("customer_target")
+    _df_customer_target: DataFrame = (
+        spark.read.option("header", "true")
+        .option("inferSchema", "true")
+        .csv(os.path.join(os.path.dirname(__file__), "resources/customer_source.csv"))
+    )
+    _df_customer_target.createOrReplaceTempView("customer_target")
 
-        return _df_order_target
+    return _df_order_source
 
 
-    if __name__ == "__main__":
-        build_new()
+if __name__ == "__main__":
+    build_new()
 
-
+    spark.sql("use dq_spark_dev")
+    spark.sql("select * from dq_spark_dev.dq_stats").show(truncate=False)
+    spark.sql("select * from dq_spark_dev.dq_stats_detailed").show(truncate=False)
+    spark.sql("select * from dq_spark_dev.dq_stats_querydq_output").show(truncate=False)
+    spark.sql("select * from dq_spark_dev.dq_stats").printSchema()
+    spark.sql("select * from dq_spark_dev.dq_stats_detailed").printSchema()
+    spark.sql("select * from dq_spark_dev.customer_order").show(truncate=False)
+    # spark.sql("select count(*) from dq_spark_local.customer_order_error ").show(
+    #    truncate=False
+    # )
 
     _log.info("stats data in the kafka topic")
     # display posted statistics from the kafka topic

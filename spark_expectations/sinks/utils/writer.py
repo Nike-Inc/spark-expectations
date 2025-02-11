@@ -606,7 +606,7 @@ class SparkExpectationsWriter:
             dq_obs_rpt_gen_status_flag,df_report_table= report.dq_obs_report_data_insert()
             if dq_obs_rpt_gen_status_flag is True:
               context.set_dq_obs_rpt_gen_status_flag(True)
-            _log.info("set_dq_obs_rpt_gen_status_flag",context.get_dq_obs_rpt_gen_status_flag)
+            _log.info("set_dq_obs_rpt_gen_status_flag")
             context.set_df_dq_obs_report_dataframe(df_report_table)
        # calling only alert
         if self._context.get_se_dq_obs_alert_flag is True:
