@@ -595,7 +595,6 @@ class SparkExpectationsWriter:
                 f"error occurred while saving the data into the stats table {e}"
             )
 
-        print("------------------------------------------########################################################################spark expectation ending here#####################------------------------------------------")
         if self._context.get_enable_obs_dq_report_result is True:
             context = self._context
             context.set_stats_detailed_dataframe(_df_detailed_stats)
@@ -603,16 +602,15 @@ class SparkExpectationsWriter:
             from spark_expectations.sinks.utils.report import SparkExpectationsReport
             context = self._context
             report = SparkExpectationsReport(_context=context)
-            print("report being called")
+            _log.info("report being called")
             dq_obs_rpt_gen_status_flag,df_report_table= report.dq_obs_report_data_insert()
             if dq_obs_rpt_gen_status_flag is True:
               context.set_dq_obs_rpt_gen_status_flag(True)
-            print("set_dq_obs_rpt_gen_status_flag",context.get_dq_obs_rpt_gen_status_flag)
+            _log.info("set_dq_obs_rpt_gen_status_flag",context.get_dq_obs_rpt_gen_status_flag)
             context.set_df_dq_obs_report_dataframe(df_report_table)
        # calling only alert
         if self._context.get_se_dq_obs_alert_flag is True:
-            print("alert being called")
-            print(self._context.get_dq_obs_rpt_gen_status_flag)
+            _log.info("alert being called")
             alert = SparkExpectationsAlert(self._context)
             alert.prep_report_data()
 

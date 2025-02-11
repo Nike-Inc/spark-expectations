@@ -6,6 +6,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from jinja2 import Environment, FileSystemLoader, BaseLoader
 from pyspark import Row
+from spark_expectations import _log
 from pyspark.sql import DataFrame
 from pyspark.sql.types import StructType, StructField, StringType
 from spark_expectations.core.context import SparkExpectationsContext
@@ -44,10 +45,10 @@ class SparkExpectationsAlert:
                 smtp_server.starttls()
                 smtp_server.login(service_account_email, service_account_password)
                 smtp_server.sendmail(msg['From'], receivers_list.split(','), msg.as_string())
-                print("Report sent successfully!")
+                _log.info("Report sent successfully!")
                 return True
         except Exception as e:
-            print(f"Error in send_mail: {e}")
+            _log.info(f"Error in send_mail: {e}")
             traceback.print_exc()
 
 
@@ -99,7 +100,7 @@ class SparkExpectationsAlert:
 
                 return columns, data,format_col_idx
         except Exception as e:
-            print(f"Error in get_report_data: {e}")
+            _log.info(f"Error in get_report_data: {e}")
             traceback.print_exc()
 
     def prep_report_data(self):
