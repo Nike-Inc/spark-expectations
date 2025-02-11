@@ -152,7 +152,7 @@ def test_prep_report_data():
 
     context.set_mail_subject("test_mail_subject")
     context.set_to_mail("sudeepta.pal")
-    context.set_service_account_password("wp=Wq$37#UI?Ijy7_HNU")
+    context.set_service_account_password("password")
     context.set_mail_smtp_server("smtp.office365.com")
     context.set_mail_smtp_port(587)
     context.set_service_account_email("a.dsm.pss.obs@nike.com")

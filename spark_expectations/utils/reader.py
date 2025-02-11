@@ -7,6 +7,7 @@ from pyspark.sql.functions import expr, when, max
 from spark_expectations import _log
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.config.user_config import Constants as user_config
+
 from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException,
 )
@@ -32,8 +33,7 @@ class SparkExpectationsReader:
 
         """
         try:
-            _default_spark_conf: Dict[str, Union[str, int, bool,DataFrame]] = {
-                user_config.se_enable_obs_dq_report_result: True,
+            _default_spark_conf: Dict[str, Union[str, int, bool]] = {
                 user_config.se_notifications_enable_email: False,
                 user_config.se_notifications_enable_custom_email_body: False,
                 user_config.se_notifications_email_smtp_host: "",
@@ -50,120 +50,88 @@ class SparkExpectationsReader:
                 user_config.se_notifications_zoom_token: "",
             }
 
-            _notification_dict: Dict[str, Union[str, int, bool,DataFrame]] = (
+            _notification_dict: Dict[str, Union[str, int, bool]] = (
                 {**_default_spark_conf, **notification}
                 if notification
                 else _default_spark_conf
             )
-
-
-            if isinstance(_notification_dict.get(user_config.se_user_defined_custom_dataframe),DataFrame):
-                print("........")
-                self._context.set_se_user_defined_custom_dataframe(_notification_dict.get(user_config.se_user_defined_custom_dataframe))
-            else:
-                self._context.set_se_user_defined_custom_dataframe(None)
-
-
-
-
-            self._context.set_service_account_email("a.dsm.pss.obs@nike.com")
-            if _notification_dict.get(user_config.se_notifications_enable_custom_dataframe) is True:
-                self._context.set_enable_custom_dataframe(True)
-                self._context.set_se_user_defined_custom_dataframe(_notification_dict.get(user_config.se_custom_dataframe))
-            else:
-                self._context.set_enable_custom_dataframe(False)
-            self._context.set_service_account_password("wp=Wq$37#UI?Ijy7_HNU")
-            self._context.set_mail_smtp_server("smtp.office365.com")
-            self._context.set_mail_smtp_port(587)
-            if _notification_dict.get(user_config.se_dq_obs_alert_flag) is True:
-                self._context.set_dq_obs_rpt_gen_status_flag(True)
-            else:
-                self._context.set_dq_obs_rpt_gen_status_flag(False)
-
-            if _notification_dict.get(user_config.se_enable_obs_dq_report_result) is True:
+            if (_notification_dict.get(user_config.se_dq_obs_alert_flag) is False) and (
+                _notification_dict.get(user_config.se_enable_obs_dq_report_result) is True
+            ):
                 self._context.set_enable_obs_dq_report_result(True)
 
-            if _notification_dict.get(user_config.se_dq_obs_alert_flag) is True:
-                self._context.set_se_dq_obs_alert_flag(True)
-                if (
-                        _notification_dict.get(user_config.se_notifications_email_smtp_port)
-                        and _notification_dict.get(user_config.se_notifications_email_smtp_host)
-                        and _notification_dict.get(user_config.se_notifications_service_account_email)
-                        and _notification_dict.get(user_config.se_notifications_service_account_password)
-                ):
-                    self._context.set_mail_smtp_port(
-                        _notification_dict[user_config.se_notifications_email_smtp_port]
-                    )
-                    self._context.set_mail_smtp_server(
-                        _notification_dict[user_config.se_notifications_email_smtp_host]
-                    )
-                    self._context.set_service_account_email(
-                        _notification_dict[user_config.se_notifications_service_account_email]
-                    )
-                    self._context.set_service_account_password(
-                        _notification_dict[user_config.se_notifications_service_account_password]
-                    )
-                    self._context.set_to_mail(
-                        _notification_dict[user_config.se_notifications_email_to_other_mail_id]
-                    )
-                    self._context.set_mail_subject(
-                        _notification_dict[user_config.se_notifications_email_subject]
-                    )
-                else:
-                    raise SparkExpectationsMiscException(
-                        "All params/variables required for email notification is not configured or supplied"
-                    )
-            # changes by SE team for only alert
-            # if _notification_dict.get(user_config.se_dq_obs_default_email_template) is False:
-            #     self._context.set_default_template(False)
-            if not _notification_dict.get(user_config.se_dq_obs_default_email_template):
-                self._context.set_default_template(
-                    str(_notification_dict[user_config.se_dq_obs_default_email_template])
-                )
 
-            if (
-                    _notification_dict.get(user_config.se_notifications_email_smtp_port)
-                    and _notification_dict.get(user_config.se_notifications_email_smtp_host)
-                    and _notification_dict.get(user_config.se_notifications_service_account_email)
-                    and _notification_dict.get(user_config.se_notifications_service_account_password)
+
+
+
+            if (_notification_dict.get(user_config.se_dq_obs_alert_flag) is True) and (
+                _notification_dict.get(user_config.se_enable_obs_dq_report_result) is True
             ):
-                self._context.set_mail_smtp_port(
-                    _notification_dict[user_config.se_notifications_email_smtp_port]
-                )
+                self._context.set_enable_obs_dq_report_result(True)
+                self._context.set_se_dq_obs_alert_flag(True)
+                self._context.set_default_template(str(_notification_dict.get(user_config.se_dq_obs_default_email_template)))
                 self._context.set_mail_smtp_server(
-                    _notification_dict[user_config.se_notifications_email_smtp_host]
+                    str(
+                        _notification_dict[
+                            user_config.se_notifications_email_smtp_host
+                        ]
+                    )
                 )
-                self._context.set_service_account_email(
-                    _notification_dict[user_config.se_notifications_service_account_email]
+                self._context.set_mail_smtp_port(
+                    int(
+                        _notification_dict[
+                            user_config.se_notifications_email_smtp_port
+                        ]
+                    )
                 )
-                self._context.set_service_account_password(
-                    _notification_dict[user_config.se_notifications_service_account_password]
+                self._context.set_mail_from(
+                    str(_notification_dict[user_config.se_notifications_email_from])
                 )
                 self._context.set_to_mail(
-                    _notification_dict[user_config.se_notifications_email_to_other_mail_id]
+                    str(
+                        _notification_dict[
+                            user_config.se_notifications_email_to_other_mail_id
+                        ]
+                    )
                 )
                 self._context.set_mail_subject(
-                    _notification_dict[user_config.se_notifications_email_subject]
+                    str(
+                        _notification_dict[
+                            user_config.se_notifications_email_subject
+                        ]
+                    )
                 )
-                self._context.set_email_custom_body(
-                    _notification_dict[user_config.se_notifications_email_custom_body]
+                self._context.set_service_account_email(
+                    str(
+                        _notification_dict[
+                            user_config.se_notifications_service_account_email
+                        ]
+                    )
                 )
-            else:
-                raise SparkExpectationsMiscException(
-                    "All params/variables required for email notification is not configured or supplied"
+                self._context.set_service_account_password(
+                    str(
+                        _notification_dict[
+                            user_config.se_notifications_service_account_password
+                        ]
+                    )
                 )
 
+
+
+
+
+
             if (
-                    _notification_dict.get(user_config.se_notifications_enable_email)
-                    is True
+                _notification_dict.get(user_config.se_notifications_enable_email)
+                is True
             ):
                 if (
-                        _notification_dict[user_config.se_notifications_email_smtp_host]
-                        and _notification_dict[user_config.se_notifications_email_from]
-                        and _notification_dict[
-                    user_config.se_notifications_email_to_other_mail_id
-                ]
-                        and _notification_dict[user_config.se_notifications_email_subject]
+                    _notification_dict[user_config.se_notifications_email_smtp_host]
+                    and _notification_dict[user_config.se_notifications_email_from]
+                    and _notification_dict[
+                        user_config.se_notifications_email_to_other_mail_id
+                    ]
+                    and _notification_dict[user_config.se_notifications_email_subject]
                 ):
                     self._context.set_enable_mail(True)
                     self._context.set_to_mail(
@@ -203,12 +171,12 @@ class SparkExpectationsReader:
                         "All params/variables required for email notification is not configured or supplied"
                     )
                 if (
-                        _notification_dict[
-                            user_config.se_notifications_enable_custom_email_body
-                        ]
-                        and _notification_dict[
-                    user_config.se_notifications_email_custom_body
-                ]
+                    _notification_dict[
+                        user_config.se_notifications_enable_custom_email_body
+                    ]
+                    and _notification_dict[
+                        user_config.se_notifications_email_custom_body
+                    ]
                 ):
                     self._context.set_enable_custom_email_body(True)
                     self._context.set_email_custom_body(
@@ -271,14 +239,6 @@ class SparkExpectationsReader:
                         raise SparkExpectationsMiscException(
                             "All params/variables required for zoom notification is not configured or supplied"
                         )
-
-        except Exception as e:
-            raise SparkExpectationsMiscException(
-                f"error occurred while reading notification configurations {e}"
-            )
-
-
-
 
         except Exception as e:
             raise SparkExpectationsMiscException(
