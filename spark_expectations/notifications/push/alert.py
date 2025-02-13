@@ -7,50 +7,22 @@ from email.mime.text import MIMEText
 from jinja2 import Environment, FileSystemLoader, BaseLoader
 from pyspark import Row
 from spark_expectations import _log
+from spark_expectations.notifications import SparkExpectationsEmailPluginImpl
 from pyspark.sql import DataFrame
 from pyspark.sql.types import StructType, StructField, StringType
 from spark_expectations.core.context import SparkExpectationsContext
+
+
+
 @dataclass
 class SparkExpectationsAlert:
     """
-    This class implements the alert trial functionality.
+    This class implements the alert  functionality.
     """
     _context: SparkExpectationsContext
 
     def __post_init__(self) -> None:
         self.spark = self._context.spark  # Initialize the attribute
-
-    def send_mail(self, body: str, subject: str, receivers_list: str) -> bool:
-        """
-        This function sends the DQ report to the users.
-        Args:
-            body: Email body.
-            subject: Email subject.
-            receivers_list: List of email receivers.
-        """
-        try:
-            service_account_email = self._context.get_service_account_email
-            service_account_password = self._context.get_service_account_password
-            smtp_host = self._context.get_mail_smtp_server
-            smtp_port = self._context.get_mail_smtp_port
-
-            msg = MIMEMultipart()
-            msg.attach(MIMEText(body, 'html'))
-            msg['Subject'] = subject
-            msg['From'] = service_account_email
-            msg['To'] = receivers_list
-
-            with smtplib.SMTP(smtp_host, port=smtp_port) as smtp_server:
-                smtp_server.ehlo()
-                smtp_server.starttls()
-                smtp_server.login(service_account_email, service_account_password)
-                smtp_server.sendmail(msg['From'], receivers_list.split(','), msg.as_string())
-                _log.info("Report sent successfully!")
-                return True
-        except Exception as e:
-            _log.info(f"Error in send_mail: {e}")
-            traceback.print_exc()
-
 
 
     def get_report_data(self,report_type : str) -> tuple[list[str], list[Row], int]:
@@ -124,6 +96,7 @@ class SparkExpectationsAlert:
             Exception: If an error occurs during the report preparation or email sending process.
         """
         try:
+            context=self._context
             mail_subject = self._context.get_mail_subject
             mail_receivers_list = self._context.get_to_mail
             if not self._context.get_default_template:
@@ -158,7 +131,16 @@ class SparkExpectationsAlert:
             html_data = "<br>".join(
                 [template.render(render_table=template.module.render_table, **data_dict) for data_dict in data_dicts])
             html_data = f"<h2>{mail_subject}</h2>" + html_data
-            self.send_mail(html_data, mail_subject, mail_receivers_list)
+
+            email_plugin = SparkExpectationsEmailPluginImpl()
+            config_args = {
+                "receiver_mail": context.get_to_mail,
+                "subject": context.get_mail_subject,
+                "message": str(html_data)
+            }
+            #calling the email_plugin of Spark expectation
+            email_plugin.send_notification(context, config_args)
+
             return html_data, mail_subject, mail_receivers_list
         except Exception as e:
             print(f"Error in prep_report_data: {e}")
