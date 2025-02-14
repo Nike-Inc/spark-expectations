@@ -81,6 +81,114 @@ def test_dq_obs_report_data_insert():
                 "{'job': 'na_CORL_DIGITAL_source_to_o9', 'Region': 'NA', 'env': 'dev', 'Snapshot': '2024-04-15', "
                 "'data_object_name ': 'customer_order'}"
             )
+        ),
+        (
+            "your_product_2aacbbd4-e7de-11ef-bac4-4240eb7a97f9",
+            "your_product",
+            "dq_spark_dev.customer_order",
+            "query_dq",
+            "order_date_check",
+            "order_date",
+            (
+                "SELECT COUNT(*) FROM order_source WHERE order_date IS NULL"
+            ),
+            "completeness",
+            "null check",
+            "pass",
+            "0",
+            "0",
+            100,
+            0,
+            100,
+            "2025-02-11 00:08:39",
+            "2025-02-11 00:08:40",
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            "2025-02-10",
+            "2025-02-11 00:08:46",
+            (
+                "{'job': 'na_CORL_DIGITAL_source_to_o9', 'Region': 'NA', 'env': 'dev', 'Snapshot': '2024-04-15', "
+                "'data_object_name ': 'customer_order'}"
+            )
+        ),
+        (
+            "your_product_3aacbbd4-e7de-11ef-bac4-4240eb7a97f9",
+            "your_product",
+            "dq_spark_dev.customer_order",
+            "query_dq",
+            "order_id_uniqueness",
+            "order_id",
+            (
+                "SELECT COUNT(*) FROM (SELECT order_id, COUNT(*) FROM order_source GROUP BY order_id HAVING COUNT(*) > 1)"
+            ),
+            "uniqueness",
+            "duplicate check",
+            "fail",
+            "5",
+            "0",
+            95,
+            5,
+            100,
+            "2025-02-11 00:09:39",
+            "2025-02-11 00:09:40",
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            "2025-02-10",
+            "2025-02-11 00:09:46",
+            (
+                "{'job': 'na_CORL_DIGITAL_source_to_o9', 'Region': 'NA', 'env': 'dev', 'Snapshot': '2024-04-15', "
+                "'data_object_name ': 'customer_order'}"
+            )
+        ),
+        (
+            "your_product_4aacbbd4-e7de-11ef-bac4-4240eb7a97f9",
+            "your_product",
+            "dq_spark_dev.customer_order",
+            "query_dq",
+            "product_id_format_check",
+            "product_id",
+            (
+                "SELECT COUNT(*) FROM order_source WHERE product_id NOT LIKE 'PROD-%'"
+            ),
+            "format",
+            "pattern check",
+            "pass",
+            "0",
+            "0",
+            100,
+            0,
+            100,
+            "2025-02-11 00:10:39",
+            "2025-02-11 00:10:40",
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            "2025-02-10",
+            "2025-02-11 00:10:46",
+            (
+                "{'job': 'na_CORL_DIGITAL_source_to_o9', 'Region': 'NA', 'env': 'dev', 'Snapshot': '2024-04-15', "
+                "'data_object_name ': 'customer_order'}"
+            )
         )
     ]
     # Create DataFrame
@@ -140,6 +248,60 @@ def test_dq_obs_report_data_insert():
             ),
             "NULL",
             "2025-02-11 00:11:41"
+        ),
+        (
+            "your_product_b67e4db2-e7de-11ef-bb70-4240eb7a97f9",
+            "your_product",
+            "dq_spark_dev.customer_order",
+            "order_date_check",
+            "order_date",
+            "source_f2",
+            "_source_dq",
+            (
+                '{source_f2=[{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156","order_date":"11/8/2016","count":1}, '
+                '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688","order_date":"6/12/2016","count":1}]}'
+            ),
+            (
+                '{target_f2=[{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156","order_date":"11/8/2016","count":2}, '
+                '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688","order_date":"6/12/2016","count":2}]}'
+            ),
+            "2025-02-11 00:12:41"
+        ),
+        (
+            "your_product_c67e4db2-e7de-11ef-bb70-4240eb7a97f9",
+            "your_product",
+            "dq_spark_dev.customer_order",
+            "order_id_uniqueness",
+            "order_id",
+            "source_f3",
+            "_source_dq",
+            (
+                '{source_f3=[{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156","order_date":"11/8/2016","count":1}, '
+                '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688","order_date":"6/12/2016","count":1}]}'
+            ),
+            (
+                '{target_f3=[{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156","order_date":"11/8/2016","count":2}, '
+                '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688","order_date":"6/12/2016","count":2}]}'
+            ),
+            "2025-02-11 00:13:41"
+        ),
+        (
+            "your_product_d67e4db2-e7de-11ef-bb70-4240eb7a97f9",
+            "your_product",
+            "dq_spark_dev.customer_order",
+            "product_id_format_check",
+            "product_id",
+            "source_f4",
+            "_source_dq",
+            (
+                '{source_f4=[{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156","order_date":"11/8/2016","count":1}, '
+                '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688","order_date":"6/12/2016","count":1}]}'
+            ),
+            (
+                '{target_f4=[{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156","order_date":"11/8/2016","count":2}, '
+                '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688","order_date":"6/12/2016","count":2}]}'
+            ),
+            "2025-02-11 00:14:41"
         )
     ]
 

@@ -1,6 +1,4 @@
 from pyspark.sql.types import StructField, IntegerType, StringType, StructType, TimestampType, FloatType
-
-from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core import get_spark_session
 from spark_expectations.notifications.push.alert import SparkExpectationsAlert
 from pyspark.sql.types import StructType, StructField, StringType
@@ -17,7 +15,6 @@ alert = SparkExpectationsAlert(context)
 @pytest.fixture(scope="module")
 def test_prep_report_data():
     default_template = """
-
 <style>
     table {
         border-collapse: collapse;
@@ -336,7 +333,14 @@ def test_specific_html_elements(test_prep_report_data):
     assert "<style" in html_data, "HTML data should contain a style element"
 
 
+@pytest.mark.usefixtures("test_prep_report_data")
+def test_email_subject_and_body_formatting(test_prep_report_data):
+    html_data, mail_subject, mail_receivers_list = test_prep_report_data
+    expected_subject = "test_mail_subject"
+    expected_content_snippet = "Summary by product ID for the run_id"
 
+    assert mail_subject == expected_subject, f"Expected subject: {expected_subject}, but got: {mail_subject}"
+    assert expected_content_snippet in html_data, f"Expected content snippet not found in HTML data"
 
 
 
