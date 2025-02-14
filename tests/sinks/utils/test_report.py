@@ -6,6 +6,7 @@ from pyspark.sql.types import StructField, IntegerType, StringType, StructType, 
 import pytest
 spark = get_spark_session()
 
+
 @pytest.fixture(scope="module")
 def test_dq_obs_report_data_insert():
     schema = StructType([
@@ -42,14 +43,46 @@ def test_dq_obs_report_data_insert():
 
     # Create data
     data = [
-        ("your_product_1aacbbd4-e7de-11ef-bac4-4240eb7a97f9", "your_product", "dq_spark_dev.customer_order", "query_dq",
-         "product_missing_count_threshold", "testing_sample",
-         "((select count(*) from (SELECT DISTINCT product_id, order_id, order_date, COUNT(*) AS count FROM order_source GROUP BY product_id, order_id, order_date) a) - (select count(*) from (SELECT DISTINCT product_id, order_id, order_date, COUNT(*) AS count FROM order_target GROUP BY product_id, order_id, order_date) b) ) > 3",
-         "validity", "row count threshold", "fail", "1", ">3", None, 8, 8, "2025-02-11 00:07:39", "2025-02-11 00:07:40",
-         None, None, None, None, None, None, None, None,None, "2025-02-10", "2025-02-11 00:07:46",
-         "{'job': 'na_CORL_DIGITAL_source_to_o9', 'Region': 'NA', 'env': 'dev', 'Snapshot': '2024-04-15', 'data_object_name ': 'customer_order'}")
+        (
+            "your_product_1aacbbd4-e7de-11ef-bac4-4240eb7a97f9",
+            "your_product",
+            "dq_spark_dev.customer_order",
+            "query_dq",
+            "product_missing_count_threshold",
+            "testing_sample",
+            (
+                "((select count(*) from (SELECT DISTINCT product_id, order_id, order_date, COUNT(*) AS count "
+                "FROM order_source GROUP BY product_id, order_id, order_date) a) - (select count(*) from "
+                "(SELECT DISTINCT product_id, order_id, order_date, COUNT(*) AS count FROM order_target GROUP BY "
+                "product_id, order_id, order_date) b) ) > 3"
+            ),
+            "validity",
+            "row count threshold",
+            "fail",
+            "1",
+            ">3",
+            None,
+            8,
+            8,
+            "2025-02-11 00:07:39",
+            "2025-02-11 00:07:40",
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            None,
+            "2025-02-10",
+            "2025-02-11 00:07:46",
+            (
+                "{'job': 'na_CORL_DIGITAL_source_to_o9', 'Region': 'NA', 'env': 'dev', 'Snapshot': '2024-04-15', "
+                "'data_object_name ': 'customer_order'}"
+            )
+        )
     ]
-
     # Create DataFrame
     df_detailed_table_test = spark.createDataFrame(data, schema)
 
@@ -68,15 +101,46 @@ def test_dq_obs_report_data_insert():
 
     # Create data
     data_1 = [
-        ("your_product_a67e4db2-e7de-11ef-bb70-4240eb7a97f9", "your_product", "dq_spark_dev.customer_order",
-         "product_missing_count_threshold", "testing_sample", "source_f1", "_source_dq",
-         '{source_f1=[{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156","order_date":"11/8/2016","count":1}, {"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688","order_date":"6/12/2016","count":1}, {"product_id":"FUR-TA-10000577","order_id":"US-2015-108966","order_date":"10/11/2015","count":1}, {"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156","order_date":"11/8/2016","count":1}, {"product_id":"OFF-ST-10000760","order_id":"US-2015-108966","order_date":"10/11/2015","count":1}]}',
-         '{target_f1=[{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156","order_date":"11/8/2016","count":2}, {"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688","order_date":"6/12/2016","count":2}, {"product_id":"FUR-TA-10000577","order_id":"US-2015-108966","order_date":"10/11/2015","count":2}, {"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156","order_date":"11/8/2016","count":2}]}',
-         "2025-02-11 00:11:41"),
-        ("your_product_a67e4db2-e7de-11ef-bb70-4240eb7a97f9", "your_product", "dq_spark_dev.customer_order",
-         "product_missing_count_threshold", "testing_sample", "target_f1", "_source_dq",
-         '{target_f1=[{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156","order_date":"11/8/2016","count":2}, {"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688","order_date":"6/12/2016","count":2}, {"product_id":"FUR-TA-10000577","order_id":"US-2015-108966","order_date":"10/11/2015","count":2}, {"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156","order_date":"11/8/2016","count":2}]}',
-         "NULL", "2025-02-11 00:11:41")
+        (
+            "your_product_a67e4db2-e7de-11ef-bb70-4240eb7a97f9",
+            "your_product",
+            "dq_spark_dev.customer_order",
+            "product_missing_count_threshold",
+            "testing_sample",
+            "source_f1",
+            "_source_dq",
+            (
+                '{source_f1=[{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156","order_date":"11/8/2016","count":1}, '
+                '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688","order_date":"6/12/2016","count":1}, '
+                '{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966","order_date":"10/11/2015","count":1}, '
+                '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156","order_date":"11/8/2016","count":1}, '
+                '{"product_id":"OFF-ST-10000760","order_id":"US-2015-108966","order_date":"10/11/2015","count":1}]}'
+            ),
+            (
+                '{target_f1=[{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156","order_date":"11/8/2016","count":2}, '
+                '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688","order_date":"6/12/2016","count":2}, '
+                '{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966","order_date":"10/11/2015","count":2}, '
+                '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156","order_date":"11/8/2016","count":2}]}'
+            ),
+            "2025-02-11 00:11:41"
+        ),
+        (
+            "your_product_a67e4db2-e7de-11ef-bb70-4240eb7a97f9",
+            "your_product",
+            "dq_spark_dev.customer_order",
+            "product_missing_count_threshold",
+            "testing_sample",
+            "target_f1",
+            "_source_dq",
+            (
+                '{target_f1=[{"product_id":"FUR-BO-10001798","order_id":"CA-2016-152156","order_date":"11/8/2016","count":2}, '
+                '{"product_id":"OFF-LA-10000240","order_id":"CA-2016-138688","order_date":"6/12/2016","count":2}, '
+                '{"product_id":"FUR-TA-10000577","order_id":"US-2015-108966","order_date":"10/11/2015","count":2}, '
+                '{"product_id":"FUR-CH-10000454","order_id":"CA-2016-152156","order_date":"11/8/2016","count":2}]}'
+            ),
+            "NULL",
+            "2025-02-11 00:11:41"
+        )
     ]
 
     # Create DataFrame
