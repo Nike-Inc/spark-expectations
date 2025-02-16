@@ -277,10 +277,10 @@ def test_prep_report_data():
 
     context.set_mail_subject("test_mail_subject")
     context.set_to_mail("abcd@se.com")
-    context.set_service_account_password("password")
+    context.set_mail_smtp_password("password")
     context.set_mail_smtp_server("smtp.office365.com")
     context.set_mail_smtp_port(587)
-    context.set_service_account_email("a.dsm.pss.obs@nike.com")
+    context.set_mail_from("a.dsm.pss.obs@nike.com")
     context.set_df_dq_obs_report_dataframe(df_report_table_test)
 
     html_data, mail_subject, mail_receivers_list = alert.prep_report_data()
