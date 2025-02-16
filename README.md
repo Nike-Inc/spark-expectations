@@ -170,3 +170,21 @@ def build_new() -> DataFrame:
 
     return _df_order 
 ```
+
+3. Spark_expectation observability enablement
+
+
+ ```python
+    user_config.se_enable_obs_dq_report_result: True,
+    user_config.se_dq_obs_alert_flag: True,
+    user_config.se_dq_obs_default_email_template: "",
+    #for alert make sure to provide all the detailes related to SMTP for sending mail,else it will throw an error.
+    user_config.se_notifications_email_smtp_host: "mailhost.nike.com",
+    user_config.se_notifications_email_smtp_port: 25,
+    user_config.se_notifications_smtp_password: "************"
+    user_config.se_notifications_email_smtp_host: "smtp.se.com"
+    
+
+   
+```
+   
