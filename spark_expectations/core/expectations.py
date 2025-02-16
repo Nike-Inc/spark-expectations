@@ -193,7 +193,7 @@ class SparkExpectations:
                 str, Union[str, int, bool, Dict[str, str], None]
             ] = {
                 user_config.se_notifications_on_start: False,
-                user_config.se_notifications_on_completion: False,
+                user_config.se_notifications_on_completion: True,
                 user_config.se_notifications_on_fail: True,
                 user_config.se_notifications_on_error_drop_exceeds_threshold_breach: False,
                 user_config.se_notifications_on_rules_action_if_failed_set_ignore: False,
@@ -358,7 +358,12 @@ class SparkExpectations:
                 else False
             )
 
-            _job_metadata: str = user_config.se_job_metadata
+            # _job_metadata: str = user_config.se_job_metadata
+            _job_metadata: str = (
+                str(_notification_dict[user_config.se_job_metadata])
+                if isinstance(_notification_dict[user_config.se_job_metadata], str)
+                else None
+            )
 
             notifications_on_error_drop_threshold = _notification_dict.get(
                 user_config.se_notifications_on_error_drop_threshold, 100
@@ -396,11 +401,11 @@ class SparkExpectations:
                     _error_count: int = 0
                     _source_dq_df: Optional[DataFrame] = None
                     _source_query_dq_df: Optional[DataFrame] = None
+                    failed_ignored_row_dq_res: List[Dict[str, str]] = []
                     _row_dq_df: DataFrame = _df
                     _final_dq_df: Optional[DataFrame] = None
                     _final_query_dq_df: Optional[DataFrame] = None
                     _ignore_rules_result: List[Optional[List[Dict[str, str]]]] = []
-                    failed_ignored_row_dq_res: List[Dict[str, str]] = []
 
                     # initialize variable with default values through set
                     self._context.set_dq_run_status()
@@ -565,7 +570,8 @@ class SparkExpectations:
 
                             if (
                                 _notifications_on_rules_action_if_failed_set_ignore
-                                and isinstance(
+                                is True
+                                and                                 isinstance(
                                     self._context.get_error_percentage, (int, float)
                                 )
                                 and self._context.get_error_percentage
@@ -574,10 +580,10 @@ class SparkExpectations:
                                 failed_ignored_row_dq_res = [
                                     rule
                                     for rule in self._context.get_summarized_row_dq_res
-                                    or []
+                                                or []
                                     if rule["action_if_failed"] == "ignore"
-                                    and isinstance(rule["failed_row_count"], int)
-                                    and rule["failed_row_count"] > 0
+                                                and isinstance(rule["failed_row_count"], int)
+                                                and rule["failed_row_count"] > 0
                                 ]
                                 # raise SparkExpectationsErrorThresholdExceedsException(
                                 #     "An error has taken place because"
@@ -746,6 +752,7 @@ class WrappedDataFrameWriter:
     """
 
     def __init__(self) -> None:
+
         self._mode: Optional[str] = None
         self._format: Optional[str] = None
         self._partition_by: list = []

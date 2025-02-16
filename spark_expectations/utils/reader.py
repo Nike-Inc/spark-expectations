@@ -12,7 +12,6 @@ from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException,
 )
 
-
 @dataclass
 class SparkExpectationsReader:
     """
