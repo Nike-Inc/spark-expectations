@@ -14,17 +14,28 @@ class Constants:
     cbs_smtp_password = "spark.expectations.notifications.cerberus.smtp.password"
     dbx_smtp_password = "spark.expectations.notifications.dbx.smtp.password"
 
-
-    se_user_defined_custom_dataframe = "spark.expectations.user.defined.custom.dataframe"
-    se_notifications_enable_custom_dataframe = "spark.expectations.notifications.enable.custom.dataframe"
-    se_dq_obs_default_email_template = "spark.expectations.dq.obs.default.email.template"
-    se_dq_obs_mode_of_communication="spark.expectations.dq.obs.mode.of.communication"
-    se_notifications_service_account_email="spark.expectations.notifications.service.account.email"
-    se_dq_obs_alert_flag="spark.expectations.notifications.alert.flag.disable"
-    se_notifications_service_account_password="spark.expectations.notifications.service.account.password"
+    se_user_defined_custom_dataframe = (
+        "spark.expectations.user.defined.custom.dataframe"
+    )
+    se_notifications_enable_custom_dataframe = (
+        "spark.expectations.notifications.enable.custom.dataframe"
+    )
+    se_dq_obs_default_email_template = (
+        "spark.expectations.dq.obs.default.email.template"
+    )
+    se_dq_obs_mode_of_communication = "spark.expectations.dq.obs.mode.of.communication"
+    se_notifications_service_account_email = (
+        "spark.expectations.notifications.service.account.email"
+    )
+    se_dq_obs_alert_flag = "spark.expectations.notifications.alert.flag.disable"
+    se_notifications_service_account_password = (
+        "spark.expectations.notifications.service.account.password"
+    )
     se_notifications_smtp_user_name = "spark.expectations.notifications.smtp.user.name"
     se_notifications_enable_email = "spark.expectations.notifications.email.enabled"
-    se_enable_obs_dq_report_result = "spark.expectations.notifications.observability.enabled"
+    se_enable_obs_dq_report_result = (
+        "spark.expectations.notifications.observability.enabled"
+    )
     se_notifications_enable_custom_email_body = (
         "spark.expectations.notifications.enable.custom.email.body"
     )
@@ -36,7 +47,7 @@ class Constants:
     )
     se_notifications_email_from = "spark.expectations.notifications.email.from"
     se_notifications_email_to_other_mail_id = (
-        'spark.expectations.notifications.email.to.other.mail.com'
+        "spark.expectations.notifications.email.to.other.mail.com"
     )
     se_notifications_email_subject = "spark.expectations.notifications.email.subject"
     se_notifications_email_custom_body = (

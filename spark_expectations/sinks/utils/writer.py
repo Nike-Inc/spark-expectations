@@ -178,7 +178,6 @@ class SparkExpectationsWriter:
                 for _rowdq_rule in _row_dq_expectations:
                     # if _rowdq_rule["rule"] in _dq_res:
 
-
                     failed_row_count = _dq_res[_rowdq_rule["rule"]]
                     _row_dq_result.append(
                         (
@@ -364,7 +363,6 @@ class SparkExpectationsWriter:
             + "and source.alias_comp=target.alias_comp "
             + "and source.compare = 'source' and target.compare = 'target' "
         )
-
 
         _df_custom_detailed_stats_source = _df_custom_detailed_stats_source.withColumn(
             "dq_time", lit(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
@@ -599,21 +597,23 @@ class SparkExpectationsWriter:
             context.set_stats_detailed_dataframe(_df_detailed_stats)
             context.set_custom_detailed_dataframe(_df_custom_detailed_stats_source)
             from spark_expectations.sinks.utils.report import SparkExpectationsReport
+
             report = SparkExpectationsReport(_context=context)
             _log.info("report being called")
-            dq_obs_rpt_gen_status_flag,df_report_table= report.dq_obs_report_data_insert()
+            (
+                dq_obs_rpt_gen_status_flag,
+                df_report_table,
+            ) = report.dq_obs_report_data_insert()
             df_report_table.show(truncate=False)
             if dq_obs_rpt_gen_status_flag is True:
-              context.set_dq_obs_rpt_gen_status_flag(True)
+                context.set_dq_obs_rpt_gen_status_flag(True)
             _log.info("set_dq_obs_rpt_gen_status_flag")
             context.set_df_dq_obs_report_dataframe(df_report_table)
-       # calling only alert
+        # calling only alert
         if self._context.get_se_dq_obs_alert_flag is True:
             _log.info("alert being called")
             alert = SparkExpectationsAlert(self._context)
             alert.prep_report_data()
-
-
 
     def write_error_stats(self) -> None:
         """

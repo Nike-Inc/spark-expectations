@@ -1,4 +1,3 @@
-
 from typing import Dict, Union, Optional
 import smtplib
 from email.mime.text import MIMEText
@@ -114,7 +113,7 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
                 mail_content = f"""{_config_args.get("message")}"""
 
                 # Check if the content is HTML
-                if re.search(r'<[a-z][\s\S]*>', mail_content, re.IGNORECASE):
+                if re.search(r"<[a-z][\s\S]*>", mail_content, re.IGNORECASE):
                     content_type = "html"
                 else:
                     content_type = "plain"

@@ -571,7 +571,7 @@ class SparkExpectations:
                             if (
                                 _notifications_on_rules_action_if_failed_set_ignore
                                 is True
-                                and                                 isinstance(
+                                and isinstance(
                                     self._context.get_error_percentage, (int, float)
                                 )
                                 and self._context.get_error_percentage
@@ -580,10 +580,10 @@ class SparkExpectations:
                                 failed_ignored_row_dq_res = [
                                     rule
                                     for rule in self._context.get_summarized_row_dq_res
-                                                or []
+                                    or []
                                     if rule["action_if_failed"] == "ignore"
-                                                and isinstance(rule["failed_row_count"], int)
-                                                and rule["failed_row_count"] > 0
+                                    and isinstance(rule["failed_row_count"], int)
+                                    and rule["failed_row_count"] > 0
                                 ]
                                 # raise SparkExpectationsErrorThresholdExceedsException(
                                 #     "An error has taken place because"
@@ -752,7 +752,6 @@ class WrappedDataFrameWriter:
     """
 
     def __init__(self) -> None:
-
         self._mode: Optional[str] = None
         self._format: Optional[str] = None
         self._partition_by: list = []

@@ -12,6 +12,7 @@ from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException,
 )
 
+
 @dataclass
 class SparkExpectationsReader:
     """
@@ -57,22 +58,35 @@ class SparkExpectationsReader:
                 else _default_spark_conf
             )
             if (
-                    _notification_dict.get(user_config.se_enable_obs_dq_report_result)
-                    is True
+                _notification_dict.get(user_config.se_enable_obs_dq_report_result)
+                is True
             ):
                 self._context.set_enable_obs_dq_report_result(True)
-                if (
-                        _notification_dict.get(user_config.se_dq_obs_alert_flag)
-                        is True
-                ):
+                if _notification_dict.get(user_config.se_dq_obs_alert_flag) is True:
                     self._context.set_se_dq_obs_alert_flag(True)
-                    self._context.set_mail_smtp_port(_notification_dict[user_config.se_notifications_email_smtp_port])
-                    self._context.set_mail_subject(_notification_dict[user_config.se_notifications_email_subject])
-                    self._context.set_mail_smtp_password(_notification_dict[user_config.se_notifications_smtp_password])
-                    self._context.set_mail_from(_notification_dict[user_config.se_notifications_email_from])
-                    self._context.set_to_mail(_notification_dict[user_config.se_notifications_email_to_other_mail_id])
-                    self._context.set_mail_smtp_server(_notification_dict[user_config.se_notifications_email_smtp_host])
-                    self._context.set_default_template(_notification_dict[user_config.se_dq_obs_default_email_template])
+                    self._context.set_mail_smtp_port(
+                        _notification_dict[user_config.se_notifications_email_smtp_port]
+                    )
+                    self._context.set_mail_subject(
+                        _notification_dict[user_config.se_notifications_email_subject]
+                    )
+                    self._context.set_mail_smtp_password(
+                        _notification_dict[user_config.se_notifications_smtp_password]
+                    )
+                    self._context.set_mail_from(
+                        _notification_dict[user_config.se_notifications_email_from]
+                    )
+                    self._context.set_to_mail(
+                        _notification_dict[
+                            user_config.se_notifications_email_to_other_mail_id
+                        ]
+                    )
+                    self._context.set_mail_smtp_server(
+                        _notification_dict[user_config.se_notifications_email_smtp_host]
+                    )
+                    self._context.set_default_template(
+                        _notification_dict[user_config.se_dq_obs_default_email_template]
+                    )
                 else:
                     self._context.set_se_dq_obs_alert_flag(False)
                     raise SparkExpectationsMiscException(
