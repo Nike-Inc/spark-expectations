@@ -2,6 +2,11 @@ from spark_expectations.config.user_config import Constants as user_config
 
 
 def test_constants():
+
+    assert user_config.se_dq_obs_alert_flag=="spark.expectations.notifications.alert.flag.disable"
+
+    assert user_config.se_notifications_email_smtp_port == "spark.expectations.notifications.email.smtp_port"
+
     assert user_config.se_notifications_email_smtp_port == "spark.expectations.notifications.email.smtp_port"
 
     assert user_config.se_notifications_email_from == "spark.expectations.notifications.email.from"

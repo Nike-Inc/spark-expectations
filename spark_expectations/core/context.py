@@ -23,6 +23,14 @@ class SparkExpectationsContext:
 
     def __post_init__(self) -> None:
         self._run_id: str = f"{self.product_id}_{uuid1()}"
+        self._enable_obs_dq_report_result: bool = False
+        self._df_dq_obs_report_dataframe: DataFrame = None
+        self._default_template: str
+        self._dq_obs_rpt_gen_status_flag: bool = False
+        self._dataframe: DataFrame = None
+        self._report_table_name: DataFrame = None
+        self._custom_dataframe: DataFrame = None
+        self._se_dq_obs_alert_flag: bool = False
         self._run_date: str = self.set_run_date()
         self._dq_stats_table_name: Optional[str] = None
         self._dq_detailed_stats_table_name: Optional[str] = None
@@ -2107,3 +2115,113 @@ class SparkExpectationsContext:
             Optional[List[Dict[str, Any]]]: Returns the stats_dict if it exists, otherwise None
         """
         return self._stats_dict if hasattr(self, "_stats_dict") else None
+
+    def set_enable_obs_dq_report_result(
+        self, enable_obs_dq_report_result: bool
+    ) -> None:
+        """
+        This function is used to set the enable_obs_dq_report_result
+
+        Returns:
+            None
+
+        """
+        self._enable_obs_dq_report_result = enable_obs_dq_report_result
+
+    @property
+    def get_enable_obs_dq_report_result(self) -> bool:
+        """
+        This function is used to get the enable_obs_dq_report_result
+
+        Returns:
+            bool: Returns the enable_obs_dq_report_result
+        """
+        return self._enable_obs_dq_report_result
+
+    def set_se_dq_obs_alert_flag(self, se_dq_obs_alert_flag: bool) -> None:
+        """
+        This function is used to set the se_dq_obs_alert_flag
+
+        Returns:
+            None
+
+        """
+        self._se_dq_obs_alert_flag = se_dq_obs_alert_flag
+
+    @property
+    def get_se_dq_obs_alert_flag(self) -> bool:
+        """
+        This function is used to get the se_dq_obs_alert_flag
+
+        Returns:
+            bool: Returns the se_dq_obs_alert_flag
+        """
+        return self._se_dq_obs_alert_flag
+
+    def set_default_template(self, default_template: str) -> None:
+        """
+        This function is used to set the default_template
+
+        Returns:
+            None
+
+        """
+        self._default_template = default_template
+
+    @property
+    def get_default_template(self) -> str:
+        """
+        This function is used to get the default_template
+
+        Returns:
+            str: Returns the default_template
+        """
+        return self._default_template
+
+    def set_stats_detailed_dataframe(self, dataframe: DataFrame) -> None:
+        self._dataframe = dataframe
+
+    @property
+    def get_stats_detailed_dataframe(self) -> DataFrame:
+        return self._dataframe
+
+    def set_custom_detailed_dataframe(self, dataframe: DataFrame) -> None:
+        self._custom_dataframe = dataframe
+
+    @property
+    def get_custom_detailed_dataframe(self) -> DataFrame:
+        return self._custom_dataframe
+
+    def set_report_table_name(self, report_table_name: str) -> None:
+        self._report_table_name = report_table_name
+
+    @property
+    def get_report_table_name(self) -> str:
+        return self._report_table_name
+
+    def set_dq_obs_rpt_gen_status_flag(self, dq_obs_rpt_gen_status_flag: bool) -> None:
+        """
+        This function is used to set the dq_obs_rpt_gen_status_flag
+
+        Returns:
+            None
+
+        """
+        self._dq_obs_rpt_gen_status_flag = dq_obs_rpt_gen_status_flag
+
+    @property
+    def get_dq_obs_rpt_gen_status_flag(self) -> bool:
+        """
+        This function is used to get the dq_obs_rpt_gen_status_flag
+
+        Returns:
+            bool: Returns the dq_obs_rpt_gen_status_flag
+        """
+        return self._dq_obs_rpt_gen_status_flag
+
+    def set_df_dq_obs_report_dataframe(self, dataframe: DataFrame) -> None:
+        self._df_dq_obs_report_dataframe = dataframe
+
+    @property
+    def get_df_dq_obs_report_dataframe(self) -> DataFrame:
+        return self._df_dq_obs_report_dataframe

@@ -1,0 +1,52 @@
+
+<style>
+    table {
+        border-collapse: collapse;
+        width: 60%; /* Reduced width from 100% to 80% */
+        font-family: Arial, sans-serif;
+        border: 2px solid black; /* Added black border for the table */
+    }
+    th, td {
+        border: 1px solid black; /* Changed to black border */
+        text-align: left;
+        padding: 4px; /* Reduced padding from 8px to 6px */
+    }
+    th {
+        background-color: #add8e6; /* Changed to light blue */
+    }
+    tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+    .fail {
+        background-color: orange; /* Changed to orange */
+        color: black;
+    }
+</style>
+
+{% macro render_table(headers, rows) %}
+<table border=1>
+    <thead>
+        <tr>
+            {% for header in headers %}
+                <th>{{ header }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in rows %}
+            <tr>
+                {% for cell in row %}
+                    {% if cell == 'fail' or cell == 'FAIL' %}
+                        <td class="fail">{{ cell }}</td>
+                    {% else %}
+                        <td>{{ cell }}</td>
+                    {% endif %}
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endmacro %}
+
+<h2>{{ title }}</h2>
+{{ render_table(headers, rows) }}

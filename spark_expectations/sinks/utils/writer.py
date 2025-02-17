@@ -23,6 +23,7 @@ from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException,
 )
 from spark_expectations.secrets import SparkExpectationsSecretsBackend
+from spark_expectations.notifications.push.alert import SparkExpectationsAlert
 from spark_expectations.utils.udf import remove_empty_maps
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.sinks import _sink_hook
@@ -135,6 +136,7 @@ class SparkExpectationsWriter:
             str,
             str,
             str,
+            str,
             None,
             None,
             int,
@@ -184,6 +186,7 @@ class SparkExpectationsWriter:
                             _table_name,
                             _rowdq_rule["rule_type"],
                             _rowdq_rule["rule"],
+                            _rowdq_rule["column_name"],
                             _rowdq_rule["expectation"],
                             _rowdq_rule["tag"],
                             _rowdq_rule["description"],
@@ -322,6 +325,7 @@ class SparkExpectationsWriter:
                 "product_id",
                 "table_name",
                 "rule",
+                "column_name",
                 "alias",
                 "dq_type",
                 "source_dq",
@@ -350,11 +354,12 @@ class SparkExpectationsWriter:
 
         _df_custom_detailed_stats_source = self._context.spark.sql(
             "select distinct source.run_id,source.product_id, source.table_name,"
-            + "source.rule,source.alias,source.dq_type,source.source_dq as source_output,"
+            + "source.rule,source.column_name,source.alias,source.dq_type,source.source_dq as source_output,"
             + "target.source_dq as target_output from _df_custom_detailed_stats_source as source "
             + "left outer join _df_custom_detailed_stats_source as target "
             + "on source.run_id=target.run_id and source.product_id=target.product_id and "
-            + "source.table_name=target.table_name and source.rule=target.rule  "
+            + "source.table_name=target.table_name and source.rule=target.rule and  "
+            + "source.column_name = target.column_name and source.dq_type = target.dq_type "
             + "and source.alias_comp=target.alias_comp "
             + "and source.compare = 'source' and target.compare = 'target' "
         )
@@ -395,6 +400,7 @@ class SparkExpectationsWriter:
                 "table_name",
                 "rule_type",
                 "rule",
+                "column_name",
                 "source_expectations",
                 "tag",
                 "description",
@@ -415,6 +421,7 @@ class SparkExpectationsWriter:
                 "table_name",
                 "rule_type",
                 "rule",
+                "column_name",
                 "target_expectations",
                 "tag",
                 "description",
@@ -483,7 +490,7 @@ class SparkExpectationsWriter:
 
         _df_detailed_stats = _df_source_aggquery_detailed_stats.join(
             _df_target_aggquery_detailed_stats,
-            ["run_id", "product_id", "table_name", "rule_type", "rule"],
+            ["run_id", "product_id", "table_name", "rule_type", "rule", "column_name"],
             "full_outer",
         )
 
@@ -580,11 +587,33 @@ class SparkExpectationsWriter:
                 "Writing metrics to the output custom table: %s, ended",
                 self._context.get_query_dq_output_custom_table_name,
             )
-
         except Exception as e:
             raise SparkExpectationsMiscException(
                 f"error occurred while saving the data into the stats table {e}"
             )
+
+        if self._context.get_enable_obs_dq_report_result is True:
+            context = self._context
+            context.set_stats_detailed_dataframe(_df_detailed_stats)
+            context.set_custom_detailed_dataframe(_df_custom_detailed_stats_source)
+            from spark_expectations.sinks.utils.report import SparkExpectationsReport
+
+            report = SparkExpectationsReport(_context=context)
+            _log.info("report being called")
+            (
+                dq_obs_rpt_gen_status_flag,
+                df_report_table,
+            ) = report.dq_obs_report_data_insert()
+            df_report_table.show(truncate=False)
+            if dq_obs_rpt_gen_status_flag is True:
+                context.set_dq_obs_rpt_gen_status_flag(True)
+            _log.info("set_dq_obs_rpt_gen_status_flag")
+            context.set_df_dq_obs_report_dataframe(df_report_table)
+        # calling only alert
+        if self._context.get_se_dq_obs_alert_flag is True:
+            _log.info("alert being called")
+            alert = SparkExpectationsAlert(self._context)
+            alert.prep_report_data()
 
     def write_error_stats(self) -> None:
         """
@@ -605,6 +634,7 @@ class SparkExpectationsWriter:
             input_count: int = self._context.get_input_count
             error_count: int = self._context.get_error_count
             output_count: int = self._context.get_output_count
+
             source_agg_dq_result: Optional[
                 List[Dict[str, str]]
             ] = self._context.get_source_agg_dq_result
@@ -760,8 +790,6 @@ class SparkExpectationsWriter:
                 .withColumn("success_percentage", sql_round(df.success_percentage, 2))
                 .withColumn("error_percentage", sql_round(df.error_percentage, 2))
             )
-
-            self._context.set_stats_dict(df)
             _log.info(
                 "Writing metrics to the stats table: %s, started",
                 self._context.get_dq_stats_table_name,

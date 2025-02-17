@@ -11,6 +11,7 @@ from spark_expectations.core.exceptions import SparkExpectationsEmailException
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.secrets import SparkExpectationsSecretsBackend
 from spark_expectations.config.user_config import Constants as user_config
+import re
 
 
 # Create the email plugin
@@ -110,7 +111,14 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
 
                 # body = _config_args.get('mail_body')
                 mail_content = f"""{_config_args.get("message")}"""
-                msg.attach(MIMEText(mail_content, "plain"))
+
+                # Check if the content is HTML
+                if re.search(r"<[a-z][\s\S]*>", mail_content, re.IGNORECASE):
+                    content_type = "html"
+                else:
+                    content_type = "plain"
+
+                msg.attach(MIMEText(mail_content, content_type))
 
                 # mailhost.com
                 server = smtplib.SMTP(
