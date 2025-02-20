@@ -42,18 +42,18 @@ se: SparkExpectations = SparkExpectations(
 
 
 user_conf = {
-user_config.se_notifications_smtp_password: "w*******",
-    user_config.se_notifications_smtp_creds_dict: {
-        user_config.secret_type: "cerberus",
-        user_config.cbs_url: "https://prod.cerberus.nikecloud.com",
-        user_config.cbs_sdb_path: "your_sdb_path",
-        user_config.cbs_smtp_password: "your_smtp_password",
-    },
+# user_config.se_notifications_smtp_password: "w*******",
+#     user_config.se_notifications_smtp_creds_dict: {
+#         user_config.secret_type: "cerberus",
+#         user_config.cbs_url: "https://prod.cerberus.nikecloud.com",
+#         user_config.cbs_sdb_path: "your_sdb_path",
+#         user_config.cbs_smtp_password: "your_smtp_password",
+#     },
     user_config.se_notifications_enable_smtp_server_auth: True,
     user_config.se_enable_obs_dq_report_result: False,
     user_config.se_dq_obs_alert_flag: False,
     user_config.se_dq_obs_default_email_template: "",
-    user_config.se_notifications_enable_email: True,
+    user_config.se_notifications_enable_email: False,
     user_config.se_notifications_enable_custom_email_body: False,
     user_config.se_notifications_email_smtp_host: "smtp.office365.com",
     user_config.se_notifications_email_smtp_port: 587,
