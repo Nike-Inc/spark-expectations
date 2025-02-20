@@ -36,54 +36,13 @@ se: SparkExpectations = SparkExpectations(
     debugger=False,
     # stats_streaming_options={user_config.se_enable_streaming: False},
 )
-schema = StructType([
-    StructField("id", IntegerType(), True),
-    StructField("name", StringType(), True),
-    StructField("age", IntegerType(), True)
-])
-
-# Create a list of sample data
-data = [
-    (1, "Alice", 30),
-    (2, "Bob", 25),
-    (3, "Cathy", 28)
-]
-default_df = spark.createDataFrame(data, schema)
 
 
-
-# Define the schema with more columns
-schema = StructType([
-    StructField("id", IntegerType(), True),
-    StructField("name", StringType(), True),
-    StructField("age", IntegerType(), True),
-    StructField("city", StringType(), True),
-    StructField("country", StringType(), True)
-])
-
-
-data = [
-    (1, "Alice", 30, "New York", "USA"),
-    (2, "Bob", 25, "Los Angeles", "USA"),
-    (3, "Cathy", 28, "Chicago", "USA"),
-    (4, "David", 35, "Houston", "USA"),
-    (5, "Eva", 22, "Phoenix", "USA"),
-    (6, "Frank", 40, "Philadelphia", "USA"),
-    (7, "Grace", 29, "San Antonio", "USA"),
-    (8, "Hank", 33, "San Diego", "USA"),
-    (9, "Ivy", 27, "Dallas", "USA"),
-    (10, "Jack", 31, "San Jose", "USA")
-]
-
-#
-large_df = spark.createDataFrame(data, schema)
-
-# Show the DataFrame
 
 
 
 user_conf = {
-user_config.se_notifications_smtp_password: "wp=Wq$37#UI?Ijy7_HNU",
+user_config.se_notifications_smtp_password: "w*******",
     user_config.se_notifications_smtp_creds_dict: {
         user_config.secret_type: "cerberus",
         user_config.cbs_url: "https://prod.cerberus.nikecloud.com",
@@ -91,18 +50,21 @@ user_config.se_notifications_smtp_password: "wp=Wq$37#UI?Ijy7_HNU",
         user_config.cbs_smtp_password: "your_smtp_password",
     },
     user_config.se_notifications_enable_smtp_server_auth: True,
-    user_config.se_enable_obs_dq_report_result: True,
-    user_config.se_dq_obs_alert_flag: True,
+    user_config.se_enable_obs_dq_report_result: False,
+    user_config.se_dq_obs_alert_flag: False,
     user_config.se_dq_obs_default_email_template: "",
     user_config.se_notifications_enable_email: True,
     user_config.se_notifications_enable_custom_email_body: False,
     user_config.se_notifications_email_smtp_host: "smtp.office365.com",
     user_config.se_notifications_email_smtp_port: 587,
-    user_config.se_notifications_email_from: "a.dsm.pss.obs@nike.com",
-    user_config.se_notifications_email_to_other_mail_id: "sudeepta.pal@nike.com",
+    user_config.se_notifications_email_from: "a.dsm.*****.com",
+    user_config.se_notifications_email_to_other_mail_id: "abc@mail.com",
     user_config.se_notifications_email_subject: "spark expectations - data quality - notifications",
     user_config.se_notifications_email_custom_body: """Spark Expectations Statistics for this dq run:
-    """,
+    'product_id': {},
+    'table_name': {},
+    'source_agg_dq_results': {}',
+    'dq_status': {}""",
     user_config.se_notifications_enable_slack: False,
     user_config.se_notifications_slack_webhook_url: "",
     user_config.se_notifications_on_start: False,
