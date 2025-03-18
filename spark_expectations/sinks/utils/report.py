@@ -1,37 +1,38 @@
 from dataclasses import dataclass
+
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import *
-from spark_expectations.core.context import SparkExpectationsContext
-from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from pyspark.sql.functions import (
+    abs,
+    coalesce,
     col,
+    concat_ws,
+    explode,
+    expr,
+    filter,
     lit,
-    split,
     regexp_extract,
     regexp_replace,
     round,
-    explode,
-    expr,
-    trim,
-    coalesce,
-    when,
     size,
-    concat_ws,
-    abs,
-    filter,
-    regexp_replace,
+    split,
+    trim,
+    when,
 )
 from pyspark.sql.types import (
     DateType,
-    StringType,
-    TimestampType,
-    DoubleType,
     DecimalType,
-    StructField,
+    DoubleType,
     IntegerType,
+    StringType,
+    StructField,
+    TimestampType,
 )
-from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
+
 from spark_expectations import _log
+from spark_expectations.core.context import SparkExpectationsContext
+from spark_expectations.core.exceptions import SparkExpectationsMiscException
+from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
 
 
 @dataclass
@@ -46,25 +47,25 @@ class SparkExpectationsReport:
         try:
             context = self._context
 
-            schema = StructType(
-                [
-                    StructField("rule", StringType(), True),
-                    StructField("column_name", StringType(), True),
-                    StructField("dq_time", TimestampType(), True),
-                    StructField("product_id", StringType(), True),
-                    StructField("table_name", StringType(), True),
-                    StructField("status", StringType(), True),
-                    StructField("total_records", StringType(), True),
-                    StructField("failed_records", IntegerType(), True),
-                    StructField("valid_records", StringType(), True),
-                    StructField("success_percentage", DoubleType(), True),
-                    StructField("run_id", StringType(), True),
-                    StructField("job", StringType(), True),
-                    StructField("Region", StringType(), True),
-                    StructField("Snapshot", StringType(), True),
-                    StructField("data_object_name", StringType(), True),
-                ]
-            )
+            # schema = StructType(
+            #     [
+            #         StructField("rule", StringType(), True),
+            #         StructField("column_name", StringType(), True),
+            #         StructField("dq_time", TimestampType(), True),
+            #         StructField("product_id", StringType(), True),
+            #         StructField("table_name", StringType(), True),
+            #         StructField("status", StringType(), True),
+            #         StructField("total_records", StringType(), True),
+            #         StructField("failed_records", IntegerType(), True),
+            #         StructField("valid_records", StringType(), True),
+            #         StructField("success_percentage", DoubleType(), True),
+            #         StructField("run_id", StringType(), True),
+            #         StructField("job", StringType(), True),
+            #         StructField("Region", StringType(), True),
+            #         StructField("Snapshot", StringType(), True),
+            #         StructField("data_object_name", StringType(), True),
+            #     ]
+            # )
 
             print("dq_obs_report_data_insert method called stats_detailed table")
             df_stats_detailed = context.get_stats_detailed_dataframe
@@ -72,9 +73,7 @@ class SparkExpectationsReport:
             df = df_custom_detailed
             dq_status_calculation_attribute = "success_percentage"
             source_zero_and_target_zero_is = "pass"
-            df = df.filter(
-                (df.source_output.isNotNull()) & (df.target_output.isNotNull())
-            )
+            df = df.filter((df.source_output.isNotNull()) & (df.target_output.isNotNull()))
             df = (
                 df.withColumn("success_percentage", lit(None).cast(DoubleType()))
                 .withColumn("failed_records", lit(0))
@@ -97,18 +96,14 @@ class SparkExpectationsReport:
                     "total_records_dict_split",
                     split(regexp_replace(col("total_records_dict"), "[}{]", ""), ","),
                 )
-                .withColumn(
-                    "total_records", expr("element_at(total_records_dict_split, -1)")
-                )
+                .withColumn("total_records", expr("element_at(total_records_dict_split, -1)"))
                 .withColumn(
                     "column_name",
                     when(
                         size(col("total_records_dict_split")) > 1,
                         concat_ws(
                             ",",
-                            expr(
-                                "slice(total_records_dict_split, 1, size(total_records_dict_split)-1)"
-                            ),
+                            expr("slice(total_records_dict_split, 1, size(total_records_dict_split)-1)"),
                         ),
                     ).otherwise(col("column_name")),
                 )
@@ -128,14 +123,8 @@ class SparkExpectationsReport:
                 "run_id": StringType(),
             }
             dq_column_list = [col_name for col_name in data_types.keys()]
-            src_dq_column_list = [
-                col_name
-                for col_name in dq_column_list
-                if col_name not in ["valid_records"]
-            ]
-            only_querydq_src_final_df = only_querydq_src_df.selectExpr(
-                *src_dq_column_list
-            )
+            src_dq_column_list = [col_name for col_name in dq_column_list if col_name not in ["valid_records"]]
+            only_querydq_src_final_df = only_querydq_src_df.selectExpr(*src_dq_column_list)
             only_querydq_tgt_base_df = df
             only_querydq_tgt_df = (
                 only_querydq_tgt_base_df.withColumn(
@@ -150,47 +139,33 @@ class SparkExpectationsReport:
                     "total_valid_dict_split",
                     split(regexp_replace(col("valid_records_dict"), "[}{]", ""), ","),
                 )
-                .withColumn(
-                    "valid_records", expr("element_at(total_valid_dict_split, -1)")
-                )
+                .withColumn("valid_records", expr("element_at(total_valid_dict_split, -1)"))
                 .withColumn(
                     "column_name",
                     when(
                         size(col("total_valid_dict_split")) > 1,
                         concat_ws(
                             ",",
-                            expr(
-                                "slice(total_valid_dict_split, 1, size(total_valid_dict_split)-1)"
-                            ),
+                            expr("slice(total_valid_dict_split, 1, size(total_valid_dict_split)-1)"),
                         ),
                     ).otherwise(col("column_name")),
                 )
             )
 
-            tgt_dq_column_list = [
-                col_name
-                for col_name in dq_column_list
-                if col_name not in ["total_records"]
-            ]
-            only_querydq_tgt_final_df = only_querydq_tgt_df.selectExpr(
-                *tgt_dq_column_list
-            )
+            tgt_dq_column_list = [col_name for col_name in dq_column_list if col_name not in ["total_records"]]
+            only_querydq_tgt_final_df = only_querydq_tgt_df.selectExpr(*tgt_dq_column_list)
 
             ignore_colums = ["valid_records", "total_records"]
             only_querydq_src_final_df = only_querydq_src_final_df.select(
                 [
-                    col(c).alias("src_" + c)
-                    if c not in ignore_colums
-                    else col(c).alias(c)
+                    col(c).alias("src_" + c) if c not in ignore_colums else col(c).alias(c)
                     for c in only_querydq_src_final_df.columns
                 ]
             )
             only_querydq_src_final_df.createOrReplaceTempView("src_df")
             only_querydq_tgt_final_df = only_querydq_tgt_final_df.select(
                 [
-                    col(c).alias("tgt_" + c)
-                    if c not in ignore_colums
-                    else col(c).alias(c)
+                    col(c).alias("tgt_" + c) if c not in ignore_colums else col(c).alias(c)
                     for c in only_querydq_tgt_final_df.columns
                 ]
             )
@@ -232,18 +207,15 @@ class SparkExpectationsReport:
                 .withColumn(
                     "success_percentage",
                     when(
-                        (col("total_records_only_nbr") == "")
-                        & (col("valid_records_only_nbr").isNull()),
+                        (col("total_records_only_nbr") == "") & (col("valid_records_only_nbr").isNull()),
                         lit(100),
                     )
                     .when(
-                        (col("total_records_only_nbr") == "")
-                        & (col("valid_records_only_nbr") == ""),
+                        (col("total_records_only_nbr") == "") & (col("valid_records_only_nbr") == ""),
                         lit(100),
                     )
                     .when(
-                        (col("total_records_only_nbr") != "")
-                        & (col("valid_records_only_nbr").isNull()),
+                        (col("total_records_only_nbr") != "") & (col("valid_records_only_nbr").isNull()),
                         lit(0),
                     )
                     .otherwise(
@@ -266,18 +238,15 @@ class SparkExpectationsReport:
                 .withColumn(
                     "failed_rec_perc_variance",
                     when(
-                        (col("total_records_only_nbr") == "")
-                        & (col("valid_records_only_nbr").isNull()),
+                        (col("total_records_only_nbr") == "") & (col("valid_records_only_nbr").isNull()),
                         lit(0),
                     )
                     .when(
-                        (col("total_records_only_nbr") == "")
-                        & (col("valid_records_only_nbr") == ""),
+                        (col("total_records_only_nbr") == "") & (col("valid_records_only_nbr") == ""),
                         lit(0),
                     )
                     .when(
-                        (col("total_records_only_nbr") != "")
-                        & (col("valid_records_only_nbr").isNull()),
+                        (col("total_records_only_nbr") != "") & (col("valid_records_only_nbr").isNull()),
                         lit(100),
                     )
                     .when(
@@ -286,10 +255,7 @@ class SparkExpectationsReport:
                         coalesce(
                             round(
                                 (
-                                    (
-                                        col("total_records_only_nbr")
-                                        - col("valid_records_only_nbr")
-                                    )
+                                    (col("total_records_only_nbr") - col("valid_records_only_nbr"))
                                     / col("total_records_only_nbr")
                                 )
                                 * 100,
@@ -325,8 +291,7 @@ class SparkExpectationsReport:
                         "PASS",
                     )
                     .when(
-                        (lit(dq_status_calculation_attribute) == "failed_records")
-                        & (col("failed_records") != lit(0)),
+                        (lit(dq_status_calculation_attribute) == "failed_records") & (col("failed_records") != lit(0)),
                         "PASS",
                     )
                     .when(
@@ -334,8 +299,7 @@ class SparkExpectationsReport:
                         "PASS",
                     )
                     .when(
-                        (coalesce(col("total_records"), lit(0)) == 0)
-                        & (coalesce(col("valid_records"), lit(0)) == 0),
+                        (coalesce(col("total_records"), lit(0)) == 0) & (coalesce(col("valid_records"), lit(0)) == 0),
                         "PASS",
                     )
                     .when(
@@ -379,9 +343,7 @@ class SparkExpectationsReport:
             df_stats_detailed = df_stats_detailed.drop(*columns_to_remove)
 
             df_stats_detailed = (
-                df_stats_detailed.withColumnRenamed(
-                    "source_dq_row_count", "total_records"
-                )
+                df_stats_detailed.withColumnRenamed("source_dq_row_count", "total_records")
                 .withColumnRenamed("source_dq_status", "status")
                 .withColumnRenamed("source_dq_actual_row_count", "valid_records")
                 .withColumnRenamed("source_dq_error_row_count", "failed_records")
@@ -391,9 +353,7 @@ class SparkExpectationsReport:
                 )
             )
 
-            df_report_table = only_querydq_final_after_join_df.unionByName(
-                df_stats_detailed
-            )
+            df_report_table = only_querydq_final_after_join_df.unionByName(df_stats_detailed)
             df_report_table = (
                 df_report_table.withColumn(
                     "job",
@@ -401,21 +361,15 @@ class SparkExpectationsReport:
                 )
                 .withColumn(
                     "Region",
-                    get_json_object(
-                        df_report_table["dq_job_metadata_info"], "$.Region"
-                    ),
+                    get_json_object(df_report_table["dq_job_metadata_info"], "$.Region"),
                 )
                 .withColumn(
                     "Snapshot",
-                    get_json_object(
-                        df_report_table["dq_job_metadata_info"], "$.Snapshot"
-                    ),
+                    get_json_object(df_report_table["dq_job_metadata_info"], "$.Snapshot"),
                 )
                 .withColumn(
                     "data_object_name",
-                    get_json_object(
-                        df_report_table["dq_job_metadata_info"], "$.data_object_name"
-                    ),
+                    get_json_object(df_report_table["dq_job_metadata_info"], "$.data_object_name"),
                 )
             )
             df_report_table = df_report_table.drop("dq_job_metadata_info")
@@ -423,9 +377,7 @@ class SparkExpectationsReport:
 
             return True, df_report_table
         except Exception as e:
-            raise SparkExpectationsMiscException(
-                f"An error occurred in dq_obs_report_data_insert: {e}"
-            )
+            raise SparkExpectationsMiscException(f"An error occurred in dq_obs_report_data_insert: {e}")
 
     # function to save the report table
     def save_report_table(self, df_report_table):

@@ -1,13 +1,13 @@
 from typing import Dict, Union
+
 import pluggy
+
 from spark_expectations.core.context import SparkExpectationsContext
 
 SPARK_EXPECTATIONS_NOTIFICATION_PLUGIN = "spark_expectations_notification_plugins"
 
 notification_plugin_spec = pluggy.HookspecMarker(SPARK_EXPECTATIONS_NOTIFICATION_PLUGIN)
-spark_expectations_notification_impl = pluggy.HookimplMarker(
-    SPARK_EXPECTATIONS_NOTIFICATION_PLUGIN
-)
+spark_expectations_notification_impl = pluggy.HookimplMarker(SPARK_EXPECTATIONS_NOTIFICATION_PLUGIN)
 
 
 class SparkExpectationsNotification:

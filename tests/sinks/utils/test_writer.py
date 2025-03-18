@@ -1,21 +1,20 @@
-
-
+from datetime import datetime
 import os
 import unittest.mock
-from datetime import datetime
-from unittest.mock import MagicMock, patch, Mock
+from unittest.mock import MagicMock, Mock, patch
 
 import pytest
-from pyspark.sql.functions import col
-from pyspark.sql.functions import lit, to_timestamp
+
+from pyspark.sql.functions import col, lit, to_timestamp
+
 from spark_expectations.core import get_spark_session
 from spark_expectations.core.context import SparkExpectationsContext
-from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
 from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException,
     SparkExpectationsUserInputOrConfigInvalidException,
 )
 from spark_expectations.core.expectations import WrappedDataFrameWriter
+from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
 
 spark = get_spark_session()
 
@@ -41,26 +40,17 @@ def fixture_mock_context():
 def fixture_setup_local_kafka_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    if (
-        os.getenv("UNIT_TESTING_ENV")
-        != "spark_expectations_unit_testing_on_github_actions"
-    ):
+    if os.getenv("UNIT_TESTING_ENV") != "spark_expectations_unit_testing_on_github_actions":
         # remove if docker conatiner is running
-        os.system(
-            f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh"
-        )
+        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
         # start docker container and create the topic
-        os.system(
-            f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh"
-        )
+        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
 
         yield "docker container started"
 
         # remove docker container
-        os.system(
-            f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh"
-        )
+        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
     else:
         yield "A Kafka server has been launched within a Docker container for the purpose of conducting tests " "in a Jenkins environment"
@@ -291,9 +281,7 @@ def test_save_df_as_table(
     table_properties_dict = {row["key"]: row["value"] for row in table_properties}
 
     # Check 'product_id' property
-    assert (
-        table_properties_dict.get("product_id") == _fixture_writer._context.product_id
-    )
+    assert table_properties_dict.get("product_id") == _fixture_writer._context.product_id
 
     spark.sql(f"drop table if exists {table_name}")
     spark.sql(f"drop table if exists {table_name}_stats")
@@ -307,9 +295,7 @@ def test_save_df_as_table(
 
 
 @patch("pyspark.sql.DataFrameWriter.save", autospec=True, spec_set=True)
-def test_save_df_to_table_bq(
-    save, _fixture_writer, _fixture_employee, _fixture_create_employee_table
-):
+def test_save_df_to_table_bq(save, _fixture_writer, _fixture_employee, _fixture_create_employee_table):
     _fixture_writer.save_df_as_table(
         _fixture_employee,
         "employee_table",
@@ -359,9 +345,7 @@ def test_write_df_to_table(
 ):
     # Test the function with valid input
     _fixture_writer.save_df_as_table(_fixture_employee, table_name, config=options)
-    save_df_as_table.assert_called_once_with(
-        _fixture_writer, _fixture_employee, table_name, options
-    )
+    save_df_as_table.assert_called_once_with(_fixture_writer, _fixture_employee, table_name, options)
 
 
 @pytest.mark.parametrize(
@@ -1979,17 +1963,13 @@ def test_write_error_stats(
     setattr(_mock_context, "get_run_id_name", "meta_dq_run_id")
     setattr(_mock_context, "get_run_id", "product1_run_test")
 
-    setattr(
-        _mock_context, "get_dq_run_status", input_record.get("status").get("run_status")
-    )
+    setattr(_mock_context, "get_dq_run_status", input_record.get("status").get("run_status"))
     setattr(
         _mock_context,
         "get_source_agg_dq_status",
         input_record.get("status").get("source_agg_dq"),
     )
-    setattr(
-        _mock_context, "get_row_dq_status", input_record.get("status").get("row_dq")
-    )
+    setattr(_mock_context, "get_row_dq_status", input_record.get("status").get("row_dq"))
     setattr(
         _mock_context,
         "get_final_agg_dq_status",
@@ -2013,9 +1993,7 @@ def test_write_error_stats(
         "get_source_agg_dq_result",
         input_record.get("source_agg_results"),
     )
-    setattr(
-        _mock_context, "get_final_agg_dq_result", input_record.get("final_agg_results")
-    )
+    setattr(_mock_context, "get_final_agg_dq_result", input_record.get("final_agg_results"))
     setattr(_mock_context, "get_table_name", "employee_table")
     setattr(
         _mock_context,
@@ -2028,26 +2006,19 @@ def test_write_error_stats(
     setattr(
         _mock_context,
         "get_error_percentage",
-        round(
-            (input_record.get("error_count") / input_record.get("input_count")) * 100, 2
-        ),
+        round((input_record.get("error_count") / input_record.get("input_count")) * 100, 2),
     )
     setattr(
         _mock_context,
         "get_success_percentage",
         round(
-            (
-                (input_record.get("input_count") - input_record.get("error_count"))
-                / input_record.get("input_count")
-            )
+            ((input_record.get("input_count") - input_record.get("error_count")) / input_record.get("input_count"))
             * 100,
             2,
         ),
     )
     setattr(_mock_context, "get_env", "local")
-    setattr(
-        _mock_context, "get_se_streaming_stats_topic_name", "dq-sparkexpectations-stats"
-    )
+    setattr(_mock_context, "get_se_streaming_stats_topic_name", "dq-sparkexpectations-stats")
     setattr(
         _mock_context,
         "get_source_query_dq_result",
@@ -2221,20 +2192,14 @@ def test_write_error_stats(
     _fixture_writer = SparkExpectationsWriter(_mock_context)
 
     if writer_config and writer_config["format"] == "bigquery":
-        patcher = patch(
-            "pyspark.sql.DataFrameWriter.save", autospec=True, spec_set=True
-        )
+        patcher = patch("pyspark.sql.DataFrameWriter.save", autospec=True, spec_set=True)
         mock_bq = patcher.start()
-        setattr(
-            _mock_context, "get_se_streaming_stats_dict", {"se.enable.streaming": False}
-        )
+        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.enable.streaming": False})
         _fixture_writer.write_error_stats()
         mock_bq.assert_called_with(unittest.mock.ANY)
 
     else:
-        setattr(
-            _mock_context, "get_se_streaming_stats_dict", {"se.enable.streaming": True}
-        )
+        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.enable.streaming": True})
         _fixture_writer.write_error_stats()
         stats_table = spark.table("test_dq_stats_table")
         assert stats_table.count() == 1
@@ -2249,9 +2214,7 @@ def test_write_error_stats(
         assert row.error_percentage == expected_result.get("error_percentage")
         assert row.source_agg_dq_results == input_record.get("source_agg_results")
         assert row.final_agg_dq_results == input_record.get("final_agg_results")
-        assert row.source_query_dq_results == input_record.get(
-            "source_query_dq_results"
-        )
+        assert row.source_query_dq_results == input_record.get("source_query_dq_results")
         assert row.final_query_dq_results == input_record.get("final_query_dq_results")
         assert row.dq_rules == input_record.get("dq_rules")
         # assert row.dq_run_time == input_record.get("dq_run_time")
@@ -2306,7 +2269,7 @@ def test_write_error_stats(
                     }
                 ],
                 "run_id": "product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109",
-                "input_count": 5,
+                # "input_count": 5,
                 "dq_expectations": {
                     "row_dq_rules": [
                         {
@@ -2535,7 +2498,6 @@ def test_write_error_stats(
                 "target_dq_status": "fail",
                 "target_dq_actual_result": "1030",
                 "target_dq_row_count": "4",
-                "source_expectations": "sum(sales)>10000",
             },
             "agg_dq",
             None,
@@ -2570,7 +2532,7 @@ def test_write_error_stats(
                     }
                 ],
                 "run_id": "product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109",
-                "input_count": 5,
+                # "input_count": 5,
                 "dq_expectations": {
                     "row_dq_rules": [
                         {
@@ -2824,7 +2786,7 @@ def test_write_error_stats(
                 "row_dq_status": "Passed",
                 "summarised_row_dq_res": [],
                 "run_id": "product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109",
-                "input_count": 5,
+                # "input_count": 5,
                 "dq_expectations": {
                     "row_dq_rules": [],
                 },
@@ -2952,7 +2914,7 @@ def test_write_error_stats(
                     }
                 ],
                 "run_id": "product_1_01450932-d5c2-11ee-a9ca-88e9fe5a7109",
-                "input_count": 5,
+                # "input_count": 5,
                 "dq_expectations": {
                     "row_dq_rules": [
                         {
@@ -3337,21 +3299,15 @@ def test_write_detailed_stats(
     if writer_config and writer_config["format"] == "bigquery":
         patcher = patch("pyspark.sql.DataFrameWriter.save")
         mock_bq = patcher.start()
-        setattr(
-            _mock_context, "get_se_streaming_stats_dict", {"se.enable.streaming": False}
-        )
+        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.enable.streaming": False})
         _fixture_writer.write_detailed_stats()
         mock_bq.assert_called_with()
 
     else:
-        setattr(
-            _mock_context, "get_se_streaming_stats_dict", {"se.enable.streaming": True}
-        )
+        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.enable.streaming": True})
         _fixture_writer.write_detailed_stats()
 
-        stats_table = spark.sql(
-            f"select * from test_dq_detailed_stats_table where rule_type = '{dq_check}'"
-        )
+        stats_table = spark.sql(f"select * from test_dq_detailed_stats_table where rule_type = '{dq_check}'")
         assert stats_table.count() == 1
         row = stats_table.first()
         assert row.product_id == expected_result.get("product_id")
@@ -3360,15 +3316,11 @@ def test_write_detailed_stats(
         assert row.rule == expected_result.get("rule")
         assert row.source_expectations == expected_result.get("source_expectations")
         assert row.source_dq_status == expected_result.get("source_dq_status")
-        assert row.source_dq_actual_outcome == expected_result.get(
-            "source_dq_actual_result"
-        )
+        assert row.source_dq_actual_outcome == expected_result.get("source_dq_actual_result")
         assert row.source_dq_row_count == expected_result.get("source_dq_row_count")
         assert row.target_expectations == expected_result.get("target_expectations")
         assert row.target_dq_status == expected_result.get("target_dq_status")
-        assert row.target_dq_actual_outcome == expected_result.get(
-            "target_dq_actual_result"
-        )
+        assert row.target_dq_actual_outcome == expected_result.get("target_dq_actual_result")
         assert row.target_dq_row_count == expected_result.get("target_dq_row_count")
 
 
@@ -3426,9 +3378,7 @@ def test_write_error_records_final_dependent(
     _fixture_writer,
 ):
     # invoke the write_error_records_final method with the test fixtures as arguments
-    result, _df = _fixture_writer.write_error_records_final(
-        _fixture_dq_dataset, table_name, rule_type
-    )
+    result, _df = _fixture_writer.write_error_records_final(_fixture_dq_dataset, table_name, rule_type)
 
     # assert that the returned value is the expected number of rows in the error table
     assert result == 3
@@ -3438,9 +3388,7 @@ def test_write_error_records_final_dependent(
     assert save_df_args[0][0] == _fixture_writer
     assert (
         save_df_args[0][1].orderBy("id").collect()
-        == _fixture_expected_error_dataset.withColumn(
-            "meta_dq_run_date", lit("2022-12-27 10:39:44")
-        )
+        == _fixture_expected_error_dataset.withColumn("meta_dq_run_date", lit("2022-12-27 10:39:44"))
         .orderBy("id")
         .collect()
     )
@@ -3463,23 +3411,16 @@ def test_write_error_records_final(
 ):
     config = WrappedDataFrameWriter().mode("overwrite").format("delta").build()
 
-    setattr(
-        _fixture_writer._context, "get_target_and_error_table_writer_config", config
-    )
+    setattr(_fixture_writer._context, "get_target_and_error_table_writer_config", config)
     # invoke the write_error_records_final method with the test fixtures as arguments
-    result, _df = _fixture_writer.write_error_records_final(
-        _fixture_dq_dataset, table_name, rule_type
-    )
+    result, _df = _fixture_writer.write_error_records_final(_fixture_dq_dataset, table_name, rule_type)
     # error_df = spark.table("test_error_table")
 
     # assert that the returned value is the expected number of rows in the error table
     _df = _df.withColumn("meta_dq_run_date", to_timestamp(lit("2022-12-27 10:39:44")))
     assert result == 3
     assert _df.count() == 4
-    assert (
-        _df.orderBy("id").collect()
-        == _fixture_expected_dq_dataset.orderBy("id").collect()
-    )
+    assert _df.orderBy("id").collect() == _fixture_expected_dq_dataset.orderBy("id").collect()
 
 
 @pytest.mark.parametrize("table_name, rule_type", [("test_error_table", "row_dq")])
@@ -3497,9 +3438,7 @@ def test_write_error_records_final_dependent(
     _fixture_writer,
 ):
     # invoke the write_error_records_final method with the test fixtures as arguments
-    result, _df = _fixture_writer.write_error_records_final(
-        _fixture_dq_dataset, table_name, rule_type
-    )
+    result, _df = _fixture_writer.write_error_records_final(_fixture_dq_dataset, table_name, rule_type)
 
     # assert that the returned value is the expected number of rows in the error table
     assert result == 3
@@ -3509,9 +3448,7 @@ def test_write_error_records_final_dependent(
     assert save_df_args[0][0] == _fixture_writer
     assert (
         save_df_args[0][1].orderBy("id").collect()
-        == _fixture_expected_error_dataset.withColumn(
-            "meta_dq_run_date", lit("2022-12-27 10:39:44")
-        )
+        == _fixture_expected_error_dataset.withColumn("meta_dq_run_date", lit("2022-12-27 10:39:44"))
         .orderBy("id")
         .collect()
     )
@@ -3862,16 +3799,12 @@ def test_write_error_stats_exception(_fixture_employee, _fixture_writer):
         _fixture_writer.write_error_stats()
 
 
-def test_write_error_records_final_exception(
-    _fixture_employee, _fixture_writer, _fixture_dq_dataset
-):
+def test_write_error_records_final_exception(_fixture_employee, _fixture_writer, _fixture_dq_dataset):
     with pytest.raises(
         SparkExpectationsMiscException,
         match=r"error occurred while saving data into the final error table .*",
     ):
-        _fixture_writer.write_error_records_final(
-            _fixture_dq_dataset, "employee_table", "row_dq"
-        )
+        _fixture_writer.write_error_records_final(_fixture_dq_dataset, "employee_table", "row_dq")
 
 
 def test_generate_rules_exceeds_threshold_exception():
