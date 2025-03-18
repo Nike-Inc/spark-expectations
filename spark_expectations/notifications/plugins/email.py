@@ -1,17 +1,18 @@
-from typing import Dict, Union, Optional
-import smtplib
-from email.mime.text import MIMEText
+from typing import Dict, Optional, Union
 from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import re
+import smtplib
+
 from spark_expectations import _log
+from spark_expectations.config.user_config import Constants as user_config
+from spark_expectations.core.context import SparkExpectationsContext
+from spark_expectations.core.exceptions import SparkExpectationsEmailException
 from spark_expectations.notifications.plugins.base_notification import (
     SparkExpectationsNotification,
     spark_expectations_notification_impl,
 )
-from spark_expectations.core.exceptions import SparkExpectationsEmailException
-from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.secrets import SparkExpectationsSecretsBackend
-from spark_expectations.config.user_config import Constants as user_config
-import re
 
 
 # Create the email plugin
@@ -51,9 +52,7 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
             return self._get_databricks_password(secret_handler, smtp_secret_dict)
         return None
 
-    def _get_smtp_password(
-        self, _context: SparkExpectationsContext, server: smtplib.SMTP
-    ) -> None:
+    def _get_smtp_password(self, _context: SparkExpectationsContext, server: smtplib.SMTP) -> None:
         """
         Retrieves the SMTP password from secret and logs in to the server.
         Args:
@@ -65,23 +64,15 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
 
         if not password:
             smtp_secret_dict = _context.get_smtp_creds_dict
-            secret_handler = SparkExpectationsSecretsBackend(
-                secret_dict=smtp_secret_dict
-            )
+            secret_handler = SparkExpectationsSecretsBackend(secret_dict=smtp_secret_dict)
             secret_type = smtp_secret_dict.get(user_config.secret_type)
             if secret_type:
                 try:
-                    password = self._retrieve_password(
-                        secret_handler, secret_type, smtp_secret_dict
-                    )
+                    password = self._retrieve_password(secret_handler, secret_type, smtp_secret_dict)
                 except KeyError:
-                    raise SparkExpectationsEmailException(
-                        "SMTP password key is missing in the secret."
-                    )
+                    raise SparkExpectationsEmailException("SMTP password key is missing in the secret.")
                 except Exception as e:
-                    raise SparkExpectationsEmailException(
-                        "   Failed to retrieve SMTP password."
-                    ) from e
+                    raise SparkExpectationsEmailException("   Failed to retrieve SMTP password.") from e
 
         if password is None:
             raise SparkExpectationsEmailException("SMTP password is not set.")
@@ -121,9 +112,7 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
                 msg.attach(MIMEText(mail_content, content_type))
 
                 # mailhost.com
-                server = smtplib.SMTP(
-                    _context.get_mail_smtp_server, _context.get_mail_smtp_port
-                )
+                server = smtplib.SMTP(_context.get_mail_smtp_server, _context.get_mail_smtp_port)
                 server.starttls()
                 if _context.get_enable_smtp_server_auth:
                     self._get_smtp_password(_context, server)

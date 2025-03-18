@@ -1,14 +1,16 @@
 from typing import Dict, Union
+
 import requests
+
 from spark_expectations import _log
+from spark_expectations.core.context import SparkExpectationsContext
+from spark_expectations.core.exceptions import (
+    SparkExpectationsZoomNotificationException,
+)
 from spark_expectations.notifications.plugins.base_notification import (
     SparkExpectationsNotification,
     spark_expectations_notification_impl,
 )
-from spark_expectations.core.exceptions import (
-    SparkExpectationsZoomNotificationException,
-)
-from spark_expectations.core.context import SparkExpectationsContext
 
 
 class SparkExpectationsZoomPluginImpl(SparkExpectationsNotification):

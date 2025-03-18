@@ -1,16 +1,19 @@
-import os
-import smtplib
-import traceback
 from dataclasses import dataclass
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from jinja2 import Environment, FileSystemLoader, BaseLoader
+import os
+import smtplib
+import traceback
+
+from jinja2 import BaseLoader, Environment, FileSystemLoader
+
 from pyspark import Row
-from spark_expectations import _log
-from spark_expectations.notifications import SparkExpectationsEmailPluginImpl
 from pyspark.sql import DataFrame
-from pyspark.sql.types import StructType, StructField, StringType
+from pyspark.sql.types import StringType, StructField, StructType
+
+from spark_expectations import _log
 from spark_expectations.core.context import SparkExpectationsContext
+from spark_expectations.notifications import SparkExpectationsEmailPluginImpl
 
 
 @dataclass
@@ -31,22 +34,21 @@ class SparkExpectationsAlert:
         try:
             from spark_expectations.sinks.utils.report import SparkExpectationsReport
 
-            report = SparkExpectationsReport(self._context)
             df = self._context.get_df_dq_obs_report_dataframe
             df.createOrReplaceTempView("temp_dq_obs_report")
 
             queries = {
-                "header": f"""SELECT  dq_time AS snapshot_date, product_id,job,
+                "header": """SELECT  dq_time AS snapshot_date, product_id,job,
                           CASE WHEN (SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END)) >= 1 THEN 'FAIL' ELSE 'PASS' END AS status
                           FROM temp_dq_obs_report
                           GROUP BY  dq_time, product_id,job""",
-                "summary": f"""SELECT product_id, rule, COUNT(rule) AS no_of_rules_executed,
+                "summary": """SELECT product_id, rule, COUNT(rule) AS no_of_rules_executed,
                            'Completed' AS Execution_Status,
                            CASE WHEN (SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END)) >= 1 THEN 'FAIL' ELSE 'PASS' END AS Overall_status,
                            CONCAT('Pass:', SUM(CASE WHEN status = 'pass' THEN 1 ELSE 0 END), ' / Fail:', SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END)) AS status_summary
                            FROM temp_dq_obs_report
                            GROUP BY product_id,rule""",
-                "detailed": f"""SELECT DISTINCT rule, rule AS rule_description,
+                "detailed": """SELECT DISTINCT rule, rule AS rule_description,
                             column_name, 'Completed' AS Execution_Status, status AS Validation_Status, total_records,
                             failed_records, valid_records, success_percentage
                             FROM temp_dq_obs_report
@@ -98,16 +100,12 @@ class SparkExpectationsAlert:
             if not self._context.get_default_template:
                 template_dir = "../../spark_expectations/config/templates"
                 env_loader = Environment(loader=FileSystemLoader(template_dir))
-                template = env_loader.get_template(
-                    "advanced_email_alert_template.jinja"
-                )
+                template = env_loader.get_template("advanced_email_alert_template.jinja")
             else:
                 template_dir = self._context.get_default_template
                 template = Environment(loader=BaseLoader).from_string(template_dir)
 
-            header_columns, header_data, header_format_col_idx = self.get_report_data(
-                "header"
-            )
+            header_columns, header_data, header_format_col_idx = self.get_report_data("header")
             (
                 summary_columns,
                 summary_data,
@@ -121,7 +119,7 @@ class SparkExpectationsAlert:
 
             data_dicts = [
                 {
-                    "title": f"Summary by product ID for the run_id ",
+                    "title": "Summary by product ID for the run_id ",
                     "headers": header_columns,
                     "rows": header_data,
                 },
@@ -137,12 +135,7 @@ class SparkExpectationsAlert:
                 },
             ]
             html_data = "<br>".join(
-                [
-                    template.render(
-                        render_table=template.module.render_table, **data_dict
-                    )
-                    for data_dict in data_dicts
-                ]
+                [template.render(render_table=template.module.render_table, **data_dict) for data_dict in data_dicts]
             )
             html_data = f"<h2>{mail_subject}</h2>" + html_data
 

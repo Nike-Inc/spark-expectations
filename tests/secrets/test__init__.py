@@ -1,13 +1,16 @@
-import pluggy
 from unittest import mock
-import pytest
 from unittest.mock import patch
-from spark_expectations.secrets import (
-    get_spark_expectations_tasks_hook,
-    SparkExpectationsSecretPluginSpec,
-    CerberusSparkExpectationsSecretPluginImpl,
-    SparkExpectationsSecretsBackend)
+
+import pluggy
+import pytest
+
 from spark_expectations.config.user_config import Constants as UserConfig
+from spark_expectations.secrets import (
+    CerberusSparkExpectationsSecretPluginImpl,
+    SparkExpectationsSecretPluginSpec,
+    SparkExpectationsSecretsBackend,
+    get_spark_expectations_tasks_hook,
+)
 
 
 def test_get_secret_value(mocker):
@@ -120,7 +123,8 @@ def test_get_secret_with_invalid_key(mock_hook):
 
 def test_get_secret_exception():
     # Create an instance of the class under test
-    secret_manager = SparkExpectationsSecretsBackend(secret_dict={"my_secret_key": "my_secret",
-                                                                  UserConfig.secret_type: "databricks"})
+    secret_manager = SparkExpectationsSecretsBackend(
+        secret_dict={"my_secret_key": "my_secret", UserConfig.secret_type: "databricks"}
+    )
     with pytest.raises(Exception):
         secret_manager.get_secret("my_secret_key")

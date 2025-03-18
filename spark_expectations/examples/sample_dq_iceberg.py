@@ -2,13 +2,14 @@
 import os
 
 from pyspark.sql import DataFrame
+
 from spark_expectations import _log
-from spark_expectations.examples.base_setup import set_up_iceberg
+from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.expectations import (
     SparkExpectations,
     WrappedDataFrameWriter,
 )
-from spark_expectations.config.user_config import Constants as user_config
+from spark_expectations.examples.base_setup import set_up_iceberg
 
 writer = WrappedDataFrameWriter().mode("append").format("iceberg")
 dic_job_info = {
@@ -115,24 +116,16 @@ if __name__ == "__main__":
     spark.sql("use dq_spark_local")
     spark.sql("select * from dq_spark_local.dq_stats").show(truncate=False)
     spark.sql("select * from dq_spark_local.dq_stats_detailed").show(truncate=False)
-    spark.sql("select * from dq_spark_local.dq_stats_querydq_output").show(
-        truncate=False
-    )
+    spark.sql("select * from dq_spark_local.dq_stats_querydq_output").show(truncate=False)
     spark.sql("select * from dq_spark_local.dq_stats").printSchema()
     spark.sql("select * from dq_spark_local.customer_order").show(truncate=False)
-    spark.sql("select count(*) from dq_spark_local.customer_order_error ").show(
-        truncate=False
-    )
+    spark.sql("select count(*) from dq_spark_local.customer_order_error ").show(truncate=False)
 
     _log.info("stats data in the kafka topic")
     # display posted statistics from the kafka topic
-    spark.read.format("kafka").option(
-        "kafka.bootstrap.servers", "localhost:9092"
-    ).option("subscribe", "dq-sparkexpectations-stats").option(
-        "startingOffsets", "earliest"
-    ).option(
-        "endingOffsets", "latest"
-    ).load().selectExpr(
+    spark.read.format("kafka").option("kafka.bootstrap.servers", "localhost:9092").option(
+        "subscribe", "dq-sparkexpectations-stats"
+    ).option("startingOffsets", "earliest").option("endingOffsets", "latest").load().selectExpr(
         "cast(value as string) as stats_records"
     ).show(
         truncate=False

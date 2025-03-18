@@ -1,11 +1,12 @@
 # pylint: disable=too-many-lines
-import os
-from datetime import timezone
-from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 from dataclasses import dataclass
+from datetime import datetime, timezone
+import os
 from uuid import uuid1
-from typing import Dict, Optional, List, Tuple, Any
+
 from pyspark.sql import DataFrame, SparkSession
+
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
 
@@ -84,9 +85,7 @@ class SparkExpectationsContext:
         self._env: Optional[str] = None
 
         self._se_streaming_stats_topic_name: str = "dq-sparkexpectations-stats"
-        self._se_streaming_row_dq_res_topic_name: str = (
-            "dq-sparkexpectations-row-dq-results"
-        )
+        self._se_streaming_row_dq_res_topic_name: str = "dq-sparkexpectations-row-dq-results"
 
         self._source_agg_dq_result: Optional[List[Dict[str, str]]] = None
         self._final_agg_dq_result: Optional[List[Dict[str, str]]] = None
@@ -107,9 +106,7 @@ class SparkExpectationsContext:
 
         self._cerberus_url: str = "your_cerberus_url"
         self._cerberus_cred_path: str = "your_cerberus_sdb_path"
-        self._cerberus_token: Optional[str] = os.environ.get(
-            "DQ_SPARK_EXPECTATIONS_CERBERUS_TOKEN"
-        )
+        self._cerberus_token: Optional[str] = os.environ.get("DQ_SPARK_EXPECTATIONS_CERBERUS_TOKEN")
 
         self._se_streaming_stats_dict: Dict[str, str]
         self._enable_se_streaming: bool = False
@@ -272,9 +269,7 @@ class SparkExpectationsContext:
 
         """
         current_datetime: datetime = datetime.now(timezone.utc)
-        return current_datetime.replace(tzinfo=timezone.utc).strftime(
-            "%Y-%m-%d %H:%M:%S"
-        )
+        return current_datetime.replace(tzinfo=timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
 
     @property
     def get_row_dq_rule_type_name(self) -> str:
@@ -381,9 +376,7 @@ class SparkExpectationsContext:
             accessing it"""
         )
 
-    def set_source_query_dq_status(
-        self, source_query_dq_status: str = "Skipped"
-    ) -> None:
+    def set_source_query_dq_status(self, source_query_dq_status: str = "Skipped") -> None:
         self._source_query_dq_status = source_query_dq_status
 
     @property
@@ -839,9 +832,7 @@ class SparkExpectationsContext:
         """
         return self._output_count
 
-    def set_source_agg_dq_result(
-        self, source_agg_dq_result: Optional[List[Dict[str, str]]] = None
-    ) -> None:
+    def set_source_agg_dq_result(self, source_agg_dq_result: Optional[List[Dict[str, str]]] = None) -> None:
         self._source_agg_dq_result = source_agg_dq_result
 
     @property
@@ -855,9 +846,7 @@ class SparkExpectationsContext:
 
         return self._source_agg_dq_result
 
-    def set_final_agg_dq_result(
-        self, final_agg_dq_result: Optional[List[Dict[str, str]]] = None
-    ) -> None:
+    def set_final_agg_dq_result(self, final_agg_dq_result: Optional[List[Dict[str, str]]] = None) -> None:
         self._final_agg_dq_result = final_agg_dq_result
 
     @property
@@ -870,9 +859,7 @@ class SparkExpectationsContext:
         """
         return self._final_agg_dq_result
 
-    def set_source_query_dq_result(
-        self, source_query_dq_result: Optional[List[Dict[str, str]]] = None
-    ) -> None:
+    def set_source_query_dq_result(self, source_query_dq_result: Optional[List[Dict[str, str]]] = None) -> None:
         self._source_query_dq_result = source_query_dq_result
 
     @property
@@ -885,9 +872,7 @@ class SparkExpectationsContext:
         """
         return self._source_query_dq_result
 
-    def set_final_query_dq_result(
-        self, final_query_dq_result: Optional[List[Dict[str, str]]] = None
-    ) -> None:
+    def set_final_query_dq_result(self, final_query_dq_result: Optional[List[Dict[str, str]]] = None) -> None:
         self._final_query_dq_result = final_query_dq_result
 
     @property
@@ -992,8 +977,7 @@ class SparkExpectationsContext:
         """
         if self._input_count > 0:
             return round(
-                ((self.get_input_count - self.get_error_count) / self.get_input_count)
-                * 100,
+                ((self.get_input_count - self.get_error_count) / self.get_input_count) * 100,
                 2,
             )
         return 0.0
@@ -1008,8 +992,7 @@ class SparkExpectationsContext:
         """
         if self._input_count > 0:
             return round(
-                ((self.get_input_count - self.get_output_count) / self.get_input_count)
-                * 100,
+                ((self.get_input_count - self.get_output_count) / self.get_input_count) * 100,
                 2,
             )
         return 0.0
@@ -1073,9 +1056,7 @@ class SparkExpectationsContext:
             accessing it"""
         )
 
-    def set_se_streaming_stats_dict(
-        self, se_streaming_stats_dict: Dict[str, str]
-    ) -> None:
+    def set_se_streaming_stats_dict(self, se_streaming_stats_dict: Dict[str, str]) -> None:
         """
         This function helps to set secret keys dict"""
         self._se_streaming_stats_dict = se_streaming_stats_dict
@@ -1203,9 +1184,7 @@ class SparkExpectationsContext:
             accessing it"""
         )
 
-    def set_se_streaming_stats_topic_name(
-        self, se_streaming_stats_topic_name: str
-    ) -> None:
+    def set_se_streaming_stats_topic_name(self, se_streaming_stats_topic_name: str) -> None:
         self._se_streaming_stats_topic_name = se_streaming_stats_topic_name
 
     @property
@@ -1253,11 +1232,7 @@ class SparkExpectationsContext:
 
     def set_supported_df_query_dq(self) -> DataFrame:
         return self.spark.createDataFrame(
-            [
-                {
-                    "spark_expectations_query_check": "supported_place_holder_dataset_to_run_query_check"
-                }
-            ]
+            [{"spark_expectations_query_check": "supported_place_holder_dataset_to_run_query_check"}]
         )
 
     @property
@@ -1411,9 +1386,7 @@ class SparkExpectationsContext:
         """
         if self._source_agg_dq_start_time and self._source_agg_dq_end_time is None:
             self.set_source_agg_dq_end_time()
-        elif (
-            self._source_query_dq_start_time and self._source_query_dq_end_time is None
-        ):
+        elif self._source_query_dq_start_time and self._source_query_dq_end_time is None:
             self.set_source_query_dq_end_time()
         elif self._row_dq_start_time and self._row_dq_end_time is None:
             self.set_row_dq_end_time()
@@ -1422,9 +1395,7 @@ class SparkExpectationsContext:
         elif self._final_query_dq_start_time and self._final_query_dq_end_time is None:
             self.set_final_query_dq_end_time()
 
-    def get_time_diff(
-        self, start_time: Optional[datetime], end_time: Optional[datetime]
-    ) -> float:
+    def get_time_diff(self, start_time: Optional[datetime], end_time: Optional[datetime]) -> float:
         """
         This function implements time diff
         Args:
@@ -1449,9 +1420,7 @@ class SparkExpectationsContext:
              float: time in float
 
         """
-        return self.get_time_diff(
-            self._source_agg_dq_start_time, self._source_agg_dq_end_time
-        )
+        return self.get_time_diff(self._source_agg_dq_start_time, self._source_agg_dq_end_time)
 
     @property
     def get_final_agg_dq_run_time(self) -> float:
@@ -1461,9 +1430,7 @@ class SparkExpectationsContext:
              float: time in float
 
         """
-        return self.get_time_diff(
-            self._final_agg_dq_start_time, self._final_agg_dq_end_time
-        )
+        return self.get_time_diff(self._final_agg_dq_start_time, self._final_agg_dq_end_time)
 
     @property
     def get_source_query_dq_run_time(self) -> float:
@@ -1472,9 +1439,7 @@ class SparkExpectationsContext:
         Returns:
             float: time in float
         """
-        return self.get_time_diff(
-            self._source_query_dq_start_time, self._source_query_dq_end_time
-        )
+        return self.get_time_diff(self._source_query_dq_start_time, self._source_query_dq_end_time)
 
     @property
     def get_final_query_dq_run_time(self) -> float:
@@ -1483,9 +1448,7 @@ class SparkExpectationsContext:
         Returns:
             float: time in float
         """
-        return self.get_time_diff(
-            self._final_query_dq_start_time, self._final_query_dq_end_time
-        )
+        return self.get_time_diff(self._final_query_dq_start_time, self._final_query_dq_end_time)
 
     @property
     def get_row_dq_run_time(self) -> float:
@@ -1605,9 +1568,7 @@ class SparkExpectationsContext:
         self._num_row_dq_rules += 1
         self._num_dq_rules += 1
 
-    def set_num_agg_dq_rules(
-        self, source_agg_enabled: bool = False, final_agg_enabled: bool = False
-    ) -> None:
+    def set_num_agg_dq_rules(self, source_agg_enabled: bool = False, final_agg_enabled: bool = False) -> None:
         """
         This function sets number of applied agg dq rules for batch run
         source_agg_enabled: Marked True when agg rules set for source, by default False
@@ -1624,9 +1585,7 @@ class SparkExpectationsContext:
         if final_agg_enabled:
             self._num_agg_dq_rules["num_final_agg_dq_rules"] += 1
 
-    def set_num_query_dq_rules(
-        self, source_query_enabled: bool = False, final_query_enabled: bool = False
-    ) -> None:
+    def set_num_query_dq_rules(self, source_query_enabled: bool = False, final_query_enabled: bool = False) -> None:
         """
         This function sets number of applied query dq rules for batch run
         source_query_enabled: Marked True when query rules set for source, by default False
@@ -1703,9 +1662,7 @@ class SparkExpectationsContext:
             accessing it"""
         )
 
-    def set_summarized_row_dq_res(
-        self, summarized_row_dq_res: Optional[List[Dict[str, str]]] = None
-    ) -> None:
+    def set_summarized_row_dq_res(self, summarized_row_dq_res: Optional[List[Dict[str, str]]] = None) -> None:
         """
         This function implements or supports to set row dq summarized res
         Args:
@@ -1777,9 +1734,7 @@ class SparkExpectationsContext:
         """
         return self._stats_table_writer_config
 
-    def set_agg_dq_detailed_stats_status(
-        self, agg_dq_detailed_result_status: bool
-    ) -> None:
+    def set_agg_dq_detailed_stats_status(self, agg_dq_detailed_result_status: bool) -> None:
         """
         Args:
             _enable_agg_dq_detailed_result:
@@ -1796,9 +1751,7 @@ class SparkExpectationsContext:
 
         return self._enable_agg_dq_detailed_result
 
-    def set_query_dq_detailed_stats_status(
-        self, query_dq_detailed_result_status: bool
-    ) -> None:
+    def set_query_dq_detailed_stats_status(self, query_dq_detailed_result_status: bool) -> None:
         """
         Args:
             _enable_query_dq_detailed_result:
@@ -1815,9 +1768,7 @@ class SparkExpectationsContext:
 
         return self._enable_query_dq_detailed_result
 
-    def set_source_agg_dq_detailed_stats(
-        self, source_agg_dq_detailed_stats: Optional[List[Tuple]] = None
-    ) -> None:
+    def set_source_agg_dq_detailed_stats(self, source_agg_dq_detailed_stats: Optional[List[Tuple]] = None) -> None:
         """
         Args:
             _source_agg_dq_detailed_stats:
@@ -1834,9 +1785,7 @@ class SparkExpectationsContext:
 
         return self._source_agg_dq_detailed_stats
 
-    def set_source_query_dq_detailed_stats(
-        self, source_query_dq_detailed_stats: Optional[List[Tuple]] = None
-    ) -> None:
+    def set_source_query_dq_detailed_stats(self, source_query_dq_detailed_stats: Optional[List[Tuple]] = None) -> None:
         """
         Args:
             _source_query_dq_detailed_stats:
@@ -1853,9 +1802,7 @@ class SparkExpectationsContext:
 
         return self._source_query_dq_detailed_stats
 
-    def set_target_agg_dq_detailed_stats(
-        self, target_agg_dq_detailed_stats: Optional[List[Tuple]] = None
-    ) -> None:
+    def set_target_agg_dq_detailed_stats(self, target_agg_dq_detailed_stats: Optional[List[Tuple]] = None) -> None:
         """
         Args:
             _target_agg_dq_detailed_stats:
@@ -1872,9 +1819,7 @@ class SparkExpectationsContext:
 
         return self._target_agg_dq_detailed_stats
 
-    def set_target_query_dq_detailed_stats(
-        self, target_query_dq_detailed_stats: Optional[List[Tuple]] = None
-    ) -> None:
+    def set_target_query_dq_detailed_stats(self, target_query_dq_detailed_stats: Optional[List[Tuple]] = None) -> None:
         """
         Args:
             _target_query_dq_detailed_stats:
@@ -1891,9 +1836,7 @@ class SparkExpectationsContext:
 
         return self._target_query_dq_detailed_stats
 
-    def set_dq_detailed_stats_table_name(
-        self, dq_detailed_stats_table_name: str
-    ) -> None:
+    def set_dq_detailed_stats_table_name(self, dq_detailed_stats_table_name: str) -> None:
         self._dq_detailed_stats_table_name = dq_detailed_stats_table_name
 
     @property
@@ -1905,8 +1848,7 @@ class SparkExpectationsContext:
             str: returns the dq_stats_table_name
         """
         if (
-            self.get_agg_dq_detailed_stats_status
-            or self.get_query_dq_detailed_stats_status
+            self.get_agg_dq_detailed_stats_status or self.get_query_dq_detailed_stats_status
         ) and self._dq_detailed_stats_table_name:
             return self._dq_detailed_stats_table_name
         raise SparkExpectationsMiscException(
@@ -1915,9 +1857,7 @@ class SparkExpectationsContext:
             accessing it"""
         )
 
-    def set_query_dq_output_custom_table_name(
-        self, query_dq_output_custom_table_name: str
-    ) -> None:
+    def set_query_dq_output_custom_table_name(self, query_dq_output_custom_table_name: str) -> None:
         self._query_dq_output_custom_table_name = query_dq_output_custom_table_name
 
     @property
@@ -1928,10 +1868,7 @@ class SparkExpectationsContext:
         Returns:
             str: returns the query_dq_output_custom_table_name
         """
-        if (
-            self.get_query_dq_detailed_stats_status
-            and self._dq_detailed_stats_table_name
-        ):
+        if self.get_query_dq_detailed_stats_status and self._dq_detailed_stats_table_name:
             return self._query_dq_output_custom_table_name
         raise SparkExpectationsMiscException(
             """The spark expectations context is not set completely, please assign 
@@ -1993,9 +1930,7 @@ class SparkExpectationsContext:
         """
         return self._querydq_secondary_queries
 
-    def set_source_query_dq_output(
-        self, source_query_dq_output: Optional[List[dict]] = None
-    ) -> None:
+    def set_source_query_dq_output(self, source_query_dq_output: Optional[List[dict]] = None) -> None:
         """
         This function sets row dq secondary queries
         Args:
@@ -2013,9 +1948,7 @@ class SparkExpectationsContext:
         """
         return self._source_query_dq_output
 
-    def set_target_query_dq_output(
-        self, target_query_dq_output: Optional[List[dict]] = None
-    ) -> None:
+    def set_target_query_dq_output(self, target_query_dq_output: Optional[List[dict]] = None) -> None:
         """
         This function sets row dq secondary queries
         Args:
@@ -2116,9 +2049,7 @@ class SparkExpectationsContext:
         """
         return self._stats_dict if hasattr(self, "_stats_dict") else None
 
-    def set_enable_obs_dq_report_result(
-        self, enable_obs_dq_report_result: bool
-    ) -> None:
+    def set_enable_obs_dq_report_result(self, enable_obs_dq_report_result: bool) -> None:
         """
         This function is used to set the enable_obs_dq_report_result
 

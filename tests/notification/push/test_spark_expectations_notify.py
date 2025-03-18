@@ -1,11 +1,12 @@
-from unittest.mock import patch
+from unittest.mock import Mock, patch
+
 import pytest
+
+from spark_expectations.core.context import SparkExpectationsContext
+from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from spark_expectations.notifications.push.spark_expectations_notify import (
     SparkExpectationsNotify,
 )
-from spark_expectations.core.exceptions import SparkExpectationsMiscException
-from spark_expectations.core.context import SparkExpectationsContext
-from unittest.mock import Mock
 
 
 @pytest.fixture(name="_fixture_mock_context")
@@ -81,7 +82,6 @@ def fixture_notify_error_threshold_expected_result():
     )
 
 
-
 @pytest.fixture(name="_fixture_notify_on_ignore_rules_expected_result")
 def fixture_notify_on_ignore_rules_expected_result(_fixture_mock_context):
     return (
@@ -101,30 +101,30 @@ def fixture_notify_on_ignore_rules_expected_result(_fixture_mock_context):
                         "description": "count of value positive value must be greater than 10",
                         "rule_type": "query_dq",
                         "tag": "strict",
-                        "action_if_failed": "ignore"
+                        "action_if_failed": "ignore",
                     },
                     {
                         "rule": "sum_of_value_should_be_less_than_60",
                         "description": "desc_sum_of_value_should_be_less_than_60",
                         "rule_type": "agg_dq",
                         "tag": "strict",
-                        "action_if_failed": "ignore"
+                        "action_if_failed": "ignore",
                     },
                     {
                         "rule": "value_positive_threshold",
                         "description": "count of value positive value must be greater than 10",
                         "rule_type": "query_dq",
                         "tag": "strict",
-                        "action_if_failed": "ignore"
+                        "action_if_failed": "ignore",
                     },
                     {
                         "rule": "sum_of_value_should_be_less_than_60",
                         "description": "desc_sum_of_value_should_be_less_than_60",
                         "rule_type": "agg_dq",
                         "tag": "strict",
-                        "action_if_failed": "ignore"
-                    }
-                ]
+                        "action_if_failed": "ignore",
+                    },
+                ],
             )
         )
     )
@@ -183,7 +183,6 @@ def test_notify_on_start(
     _fixture_mock_context,
     _fixture_notify_start_expected_result,
 ):
-
     notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Call the function to be tested
@@ -206,7 +205,6 @@ def test_notify_on_completion(
     _fixture_mock_context,
     _fixture_notify_completion_expected_result,
 ):
-
     notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Call the function to be tested
@@ -229,7 +227,6 @@ def test_notify_on_exceeds_of_error_threshold(
     _fixture_mock_context,
     _fixture_notify_error_threshold_expected_result,
 ):
-
     notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Call the function to be tested
@@ -252,7 +249,6 @@ def test_notify_on_ignore_rules(
     _fixture_mock_context,
     _fixture_notify_on_ignore_rules_expected_result,
 ):
-
     notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     ignored_rules_run_results = (
@@ -263,30 +259,30 @@ def test_notify_on_ignore_rules(
                 "description": "count of value positive value must be greater than 10",
                 "rule_type": "query_dq",
                 "tag": "strict",
-                "action_if_failed": "ignore"
+                "action_if_failed": "ignore",
             },
             {
                 "rule": "sum_of_value_should_be_less_than_60",
                 "description": "desc_sum_of_value_should_be_less_than_60",
                 "rule_type": "agg_dq",
                 "tag": "strict",
-                "action_if_failed": "ignore"
+                "action_if_failed": "ignore",
             },
             {
                 "rule": "value_positive_threshold",
                 "description": "count of value positive value must be greater than 10",
                 "rule_type": "query_dq",
                 "tag": "strict",
-                "action_if_failed": "ignore"
+                "action_if_failed": "ignore",
             },
             {
                 "rule": "sum_of_value_should_be_less_than_60",
                 "description": "desc_sum_of_value_should_be_less_than_60",
                 "rule_type": "agg_dq",
                 "tag": "strict",
-                "action_if_failed": "ignore"
-            }
-        ]
+                "action_if_failed": "ignore",
+            },
+        ],
     )
 
     # Call the function to be tested
@@ -304,10 +300,7 @@ def test_notify_on_ignore_rules(
     autospec=True,
     spec_set=True,
 )
-def test_notify_on_failure(
-    _mock_notification_hook, _fixture_mock_context, _fixture_notify_fail_expected_result
-):
-
+def test_notify_on_failure(_mock_notification_hook, _fixture_mock_context, _fixture_notify_fail_expected_result):
     notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Call the function to be tested
@@ -485,9 +478,7 @@ def test_construct_message_for_each_rules(_fixture_mock_context):
     autospec=True,
     spec_set=True,
 )
-def test_notify_on_exceeds_of_error_threshold_each_rules(
-    _notification_hook, _fixture_mock_context
-):
+def test_notify_on_exceeds_of_error_threshold_each_rules(_notification_hook, _fixture_mock_context):
     from unittest import mock
 
     notify_handler = SparkExpectationsNotify(_fixture_mock_context)
@@ -537,9 +528,7 @@ def test_notify_rules_exceeds_threshold(
     _fixture_mock_context.get_input_count = 10
     # _fixture_mock_context._row_dq_rule_type_name = "row_dq"
 
-    _fixture_mock_context.get_summarized_row_dq_res = [
-        {"rule": "rule1", "failed_row_count": failed_row_count}
-    ]
+    _fixture_mock_context.get_summarized_row_dq_res = [{"rule": "rule1", "failed_row_count": failed_row_count}]
 
     notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
@@ -585,14 +574,12 @@ def test_notify_rules_exceeds_threshold_return_none(
     notify_handler = SparkExpectationsNotify(_fixture_mock_context)
 
     # Call the function to test
-    assert notify_handler.notify_rules_exceeds_threshold({}) == None
+    assert notify_handler.notify_rules_exceeds_threshold({}) is None
 
 
 def test_notify_rules_exceeds_threshold_exception(_fixture_mock_context):
     # Simulate the case where get_summarized_row_dq_res is None
-    _fixture_mock_context.get_summarized_row_dq_res = [
-        {"rule": "rule1", "failed_row_count": 10}
-    ]
+    _fixture_mock_context.get_summarized_row_dq_res = [{"rule": "rule1", "failed_row_count": 10}]
 
     rules = {
         "dq_rules": [
@@ -608,54 +595,43 @@ def test_notify_rules_exceeds_threshold_exception(_fixture_mock_context):
     # Expecting a SparkExpectationsMiscException to be raised
     with pytest.raises(
         SparkExpectationsMiscException,
-        match="An error occurred while sending notification "
-        r"when the error threshold is breached: *",
+        match="An error occurred while sending notification " r"when the error threshold is breached: *",
     ):
         notify_handler.notify_rules_exceeds_threshold(rules)
 
 
 def test_get_custom_notification(_fixture_mock_context):
-    _fixture_mock_context.get_email_custom_body = '''Custom statistics for dq run:
+    _fixture_mock_context.get_email_custom_body = """Custom statistics for dq run:
     'product_id': {},
-    'table_name': {}'''
+    'table_name': {}"""
     _fixture_mock_context.get_stats_dict = [{"product_id": "product_id1", "table_name": "test_table", "input_count": 5}]
 
     result = SparkExpectationsNotify(_fixture_mock_context).get_custom_notification()
-    expected_result = (
-    '''Custom statistics for dq run:
+    expected_result = """Custom statistics for dq run:
     'product_id': product_id1,
-    'table_name': test_table'''
-    )
+    'table_name': test_table"""
     assert result == expected_result
 
+
 def test_get_custom_notification_no_dict_exception(_fixture_mock_context):
-    _fixture_mock_context.get_email_custom_body = '''Custom statistics for dq run:
+    _fixture_mock_context.get_email_custom_body = """Custom statistics for dq run:
         'product_id': {},
-        'table_name': {}'''
+        'table_name': {}"""
     _fixture_mock_context.get_stats_dict = None
 
-    with pytest.raises(
-            SparkExpectationsMiscException,
-            match="Stats dictionary list is not available or not a list."
-    ):
+    with pytest.raises(SparkExpectationsMiscException, match="Stats dictionary list is not available or not a list."):
         SparkExpectationsNotify(_fixture_mock_context).get_custom_notification()
+
 
 def test_get_custom_notification_no_keys_exception(_fixture_mock_context):
-    _fixture_mock_context.get_email_custom_body = '''Custom statistics for dq run:
+    _fixture_mock_context.get_email_custom_body = """Custom statistics for dq run:
         'product_id': ,
-        'table_name': '''
+        'table_name': """
     _fixture_mock_context.get_stats_dict = [{"product_id": "product_id1", "table_name": "test_table", "input_count": 5}]
 
-    with pytest.raises(
-            SparkExpectationsMiscException,
-            match="No key words for statistics were provided."
-    ):
+    with pytest.raises(SparkExpectationsMiscException, match="No key words for statistics were provided."):
         SparkExpectationsNotify(_fixture_mock_context).get_custom_notification()
 
-import pytest
-from unittest.mock import Mock
-from spark_expectations.core.exceptions import SparkExpectationsMiscException
-from spark_expectations.notifications.push.spark_expectations_notify import SparkExpectationsNotify
 
 def test_get_custom_notification_exception(_fixture_mock_context):
     _fixture_mock_context.get_stats_dict = "Not a list"
@@ -665,7 +641,10 @@ def test_get_custom_notification_exception(_fixture_mock_context):
     notify = SparkExpectationsNotify(_context=_fixture_mock_context)
 
     # Assert that the exception is raised with the correct message
-    with pytest.raises(SparkExpectationsMiscException, match=r"An error occurred while getting dictionary list with stats from dq run: Stats dictionary list is not available or not a list."):
+    with pytest.raises(
+        SparkExpectationsMiscException,
+        match=r"An error occurred while getting dictionary list with stats from dq run: Stats dictionary list is not available or not a list.",
+    ):
         notify.get_custom_notification()
 
 
@@ -674,13 +653,12 @@ def test_get_custom_notification_exception(_fixture_mock_context):
     autospec=True,
     spec_set=True,
 )
-@patch.object(SparkExpectationsNotify, 'get_custom_notification', return_value="Custom notification message")
+@patch.object(SparkExpectationsNotify, "get_custom_notification", return_value="Custom notification message")
 def test_notify_on_completion_with_custom_email_body(
     mock_get_custom_notification,
     _mock_notification_hook,
     _fixture_mock_context,
 ):
-
     _fixture_mock_context.get_enable_custom_email_body = True
 
     notify_handler = SparkExpectationsNotify(_fixture_mock_context)
@@ -694,18 +672,18 @@ def test_notify_on_completion_with_custom_email_body(
         _config_args={"message": "Custom notification message"},
     )
 
+
 @patch(
     "spark_expectations.notifications.push.spark_expectations_notify._notification_hook",
     autospec=True,
     spec_set=True,
 )
-@patch.object(SparkExpectationsNotify, 'get_custom_notification', return_value="Custom notification message")
+@patch.object(SparkExpectationsNotify, "get_custom_notification", return_value="Custom notification message")
 def test_notify_on_failure_with_custom_email_body(
     mock_get_custom_notification,
     _mock_notification_hook,
     _fixture_mock_context,
 ):
-
     _fixture_mock_context.get_enable_custom_email_body = True
 
     notify_handler = SparkExpectationsNotify(_fixture_mock_context)

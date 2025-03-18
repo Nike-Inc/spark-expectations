@@ -1,14 +1,13 @@
-import sys
-import logging
 from typing import Optional
+import logging
+import sys
 
 
 def get_default_log_handler(pkg_name: str = "spark_expectations") -> logging.Handler:
     logger_handler = logging.StreamHandler(stream=sys.stdout)
     logger_handler.setFormatter(
         logging.Formatter(
-            f"[%(asctime)s] [%(levelname)s] [{pkg_name}] "
-            "{%(module)s.py:%(funcName)s:%(lineno)d} - %(message)s"
+            f"[%(asctime)s] [%(levelname)s] [{pkg_name}] " "{%(module)s.py:%(funcName)s:%(lineno)d} - %(message)s"
         )
     )
     return logger_handler

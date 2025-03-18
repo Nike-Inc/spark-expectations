@@ -1,14 +1,16 @@
 from typing import Dict, Union
+
 import requests
+
 from spark_expectations import _log
+from spark_expectations.core.context import SparkExpectationsContext
+from spark_expectations.core.exceptions import (
+    SparkExpectationsTeamsNotificationException,
+)
 from spark_expectations.notifications.plugins.base_notification import (
     SparkExpectationsNotification,
     spark_expectations_notification_impl,
 )
-from spark_expectations.core.exceptions import (
-    SparkExpectationsTeamsNotificationException,
-)
-from spark_expectations.core.context import SparkExpectationsContext
 
 
 class SparkExpectationsTeamsPluginImpl(SparkExpectationsNotification):
@@ -47,9 +49,7 @@ class SparkExpectationsTeamsPluginImpl(SparkExpectationsNotification):
                     "text": message,
                 }
 
-                response = requests.post(
-                    _context.get_teams_webhook_url, json=payload, timeout=10
-                )
+                response = requests.post(_context.get_teams_webhook_url, json=payload, timeout=10)
 
                 # Check the response for success or failure
                 if response.status_code == 200:
