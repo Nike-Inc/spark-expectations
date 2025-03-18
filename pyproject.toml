@@ -49,7 +49,7 @@ requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
 build-backend = "poetry_dynamic_versioning.backend"
 
 [tool.black]
-line-length = 88
+line-length = 120
 target-version = ['py39']
 include = '\.pyi?$'
 exclude = '''
@@ -77,6 +77,17 @@ exclude = '''
 #replace = '__version__ = "{new_version}"'
 
 [tool.mypy]
+python_version = "3.10"
+files = ["spark_expectations/**/*.py"]
+disable_error_code = ["attr-defined", "return-value", "union-attr", "override"]
+# plugins = ["pydantic.mypy"]  # TODO: enable once we move to pydantic
+allow_untyped_globals = true
+check_untyped_defs = false
+disallow_untyped_calls = false
 disallow_untyped_defs = true
-ignore_missing_imports = true
 follow_imports = "skip"
+ignore_missing_imports = true
+implicit_optional = true
+pretty = true
+warn_no_return = false
+warn_unused_configs = true
