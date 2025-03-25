@@ -361,8 +361,8 @@ class SparkExpectations:
             # _job_metadata: str = user_config.se_job_metadata
             _job_metadata: str = (
                 str(_notification_dict[user_config.se_job_metadata])
-                if isinstance(_notification_dict[user_config.se_job_metadata], str)
-                else None
+                if _notification_dict[user_config.se_job_metadata] is not None
+                else ""
             )
 
             notifications_on_error_drop_threshold = _notification_dict.get(

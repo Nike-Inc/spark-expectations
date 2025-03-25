@@ -1,3 +1,4 @@
+import re
 from typing import Dict, Union, Optional
 import smtplib
 from email.mime.text import MIMEText
@@ -11,7 +12,6 @@ from spark_expectations.core.exceptions import SparkExpectationsEmailException
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.secrets import SparkExpectationsSecretsBackend
 from spark_expectations.config.user_config import Constants as user_config
-import re
 
 
 # Create the email plugin

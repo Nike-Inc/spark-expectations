@@ -785,10 +785,16 @@ class SparkExpectationsWriter:
             df = self.spark.createDataFrame(error_stats_data, schema=error_stats_schema)
             self._context.print_dataframe_with_debugger(df)
 
+            # get env from user config
+            dq_env = ""
+            if "env" in self._context.get_dq_rules_params:
+                dq_env = self._context.get_dq_rules_params["env"]
+
             df = (
                 df.withColumn("output_percentage", sql_round(df.output_percentage, 2))
                 .withColumn("success_percentage", sql_round(df.success_percentage, 2))
                 .withColumn("error_percentage", sql_round(df.error_percentage, 2))
+                .withColumn("dq_env", lit(dq_env))
             )
 
             self._context.set_stats_dict(df)
