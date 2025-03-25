@@ -1,429 +1,160 @@
+import traceback
 from dataclasses import dataclass
-
-from pyspark.sql import DataFrame
-from pyspark.sql.functions import (
-    col,
-    split,
-    regexp_extract,
-    regexp_replace,
-    round,
-    explode,
-    expr,
-    coalesce,
-    when,
-    size,
-    concat_ws,
-    abs,
-    least,
-    greatest,
-    get_json_object,
-    lit,
-    trim,
-)
-from pyspark.sql.types import DoubleType, StringType, DecimalType, TimestampType
-
+from jinja2 import Environment, FileSystemLoader, BaseLoader
+from pyspark import Row
 from spark_expectations import _log
+from spark_expectations.notifications import SparkExpectationsEmailPluginImpl
 from spark_expectations.core.context import SparkExpectationsContext
-from spark_expectations.core.exceptions import SparkExpectationsMiscException
-from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
 
 
 @dataclass
-class SparkExpectationsReport:
+class SparkExpectationsAlert:
+    """
+    This class implements the alert  functionality.
+    """
+
     _context: SparkExpectationsContext
 
     def __post_init__(self) -> None:
-        self.spark = self._context.spark
-        self._context.set_report_table_name("dq_stats_rpt")
+        self.spark = self._context.spark  # Initialize the attribute
 
-    def dq_obs_report_data_insert(self) -> tuple[bool, DataFrame]:
-        try:
-            context = self._context
-
-            print("dq_obs_report_data_insert method called stats_detailed table")
-            df_stats_detailed = context.get_stats_detailed_dataframe
-            df_custom_detailed = context.get_custom_detailed_dataframe
-            df = df_custom_detailed
-            dq_status_calculation_attribute = "success_percentage"
-            source_zero_and_target_zero_is = "pass"
-            df = df.filter(
-                (df.source_output.isNotNull()) & (df.target_output.isNotNull())
-            )
-            df = (
-                df.withColumn("success_percentage", lit(None).cast(DoubleType()))
-                .withColumn("failed_records", lit(0))
-                .withColumn("status", lit(None).cast(StringType()))
-                .withColumnRenamed("source_output", "total_records")
-                .withColumnRenamed("target_output", "valid_records")
-            )
-            join_columns = ["run_id", "product_id", "table_name", "column_name", "rule"]
-            only_querydq_src_base_df = df
-            only_querydq_src_df = (
-                only_querydq_src_base_df.withColumn(
-                    "extracted_total_records_data",
-                    split(regexp_extract("total_records", r"=\[(.*)\]", 1), "},"),
-                )
-                .select(
-                    "*",
-                    explode("extracted_total_records_data").alias("total_records_dict"),
-                )
-                .withColumn(
-                    "total_records_dict_split",
-                    split(regexp_replace(col("total_records_dict"), "[}{]", ""), ","),
-                )
-                .withColumn(
-                    "total_records", expr("element_at(total_records_dict_split, -1)")
-                )
-                .withColumn(
-                    "column_name",
-                    when(
-                        size(col("total_records_dict_split")) > 1,
-                        concat_ws(
-                            ",",
-                            expr(
-                                "slice(total_records_dict_split, 1, size(total_records_dict_split)-1)"
-                            ),
-                        ),
-                    ).otherwise(col("column_name")),
-                )
-            )
-
-            data_types = {
-                "rule": StringType(),
-                "column_name": StringType(),
-                "dq_time": TimestampType(),
-                "product_id": StringType(),
-                "table_name": StringType(),
-                "status": StringType(),
-                "total_records": StringType(),
-                "failed_records": StringType(),
-                "valid_records": StringType(),
-                "success_percentage": StringType(),
-                "run_id": StringType(),
-            }
-            dq_column_list = list(data_types.keys())
-            src_dq_column_list = [
-                col_name
-                for col_name in dq_column_list
-                if col_name not in ["valid_records"]
-            ]
-            only_querydq_src_final_df = only_querydq_src_df.selectExpr(
-                *src_dq_column_list
-            )
-            only_querydq_tgt_base_df = df
-            only_querydq_tgt_df = (
-                only_querydq_tgt_base_df.withColumn(
-                    "extracted_valid_records_data",
-                    split(regexp_extract("valid_records", r"=\[(.*)\]", 1), "},"),
-                )
-                .select(
-                    "*",
-                    explode("extracted_valid_records_data").alias("valid_records_dict"),
-                )
-                .withColumn(
-                    "total_valid_dict_split",
-                    split(regexp_replace(col("valid_records_dict"), "[}{]", ""), ","),
-                )
-                .withColumn(
-                    "valid_records", expr("element_at(total_valid_dict_split, -1)")
-                )
-                .withColumn(
-                    "column_name",
-                    when(
-                        size(col("total_valid_dict_split")) > 1,
-                        concat_ws(
-                            ",",
-                            expr(
-                                "slice(total_valid_dict_split, 1, size(total_valid_dict_split)-1)"
-                            ),
-                        ),
-                    ).otherwise(col("column_name")),
-                )
-            )
-
-            tgt_dq_column_list = [
-                col_name
-                for col_name in dq_column_list
-                if col_name not in ["total_records"]
-            ]
-            only_querydq_tgt_final_df = only_querydq_tgt_df.selectExpr(
-                *tgt_dq_column_list
-            )
-
-            ignore_colums = ["valid_records", "total_records"]
-            only_querydq_src_final_df = only_querydq_src_final_df.select(
-                [
-                    col(c).alias("src_" + c)
-                    if c not in ignore_colums
-                    else col(c).alias(c)
-                    for c in only_querydq_src_final_df.columns
-                ]
-            )
-            only_querydq_src_final_df.createOrReplaceTempView("src_df")
-            only_querydq_tgt_final_df = only_querydq_tgt_final_df.select(
-                [
-                    col(c).alias("tgt_" + c)
-                    if c not in ignore_colums
-                    else col(c).alias(c)
-                    for c in only_querydq_tgt_final_df.columns
-                ]
-            )
-            only_querydq_tgt_final_df.createOrReplaceTempView("tgt_df")
-
-            # trim_col_list = 'column_name'
-            sql_query = (
-                "SELECT "
-                + ", ".join(
-                    [
-                        f"COALESCE(src_df.src_{col}, tgt_df.tgt_{col}) AS {col}"
-                        if col not in ignore_colums
-                        else f"{col}"
-                        for col in dq_column_list
-                    ]
-                )
-                + " FROM src_df FULL JOIN tgt_df ON "
-                + " AND ".join(
-                    [
-                        f"REGEXP_REPLACE(REGEXP_REPLACE(lower(src_df.src_{col}), '\"', ''), ' ', '') \
-                        = REGEXP_REPLACE(REGEXP_REPLACE(lower(tgt_df.tgt_{col}), '\"', ''), ' ', '')"
-                        if col not in ignore_colums
-                        else f"src_df.{col} = tgt_df.{col} "
-                        for col in join_columns
-                    ]
-                )
-            )
-            # Execute the SQL query
-            only_querydq_final_after_join_df = self.spark.sql(sql_query)
-
-            only_querydq_final_after_join_df = (
-                only_querydq_final_after_join_df.withColumn(
-                    "total_records_only_nbr",
-                    regexp_extract(col("total_records"), r"\d+", 0).cast("bigint"),
-                )
-                .withColumn(
-                    "valid_records_only_nbr",
-                    regexp_extract(col("valid_records"), r"\d+", 0).cast("bigint"),
-                )
-                .withColumn(
-                    "success_percentage",
-                    when(
-                        (col("total_records_only_nbr") == "")
-                        & (col("valid_records_only_nbr").isNull()),
-                        lit(100),
-                    )
-                    .when(
-                        (col("total_records_only_nbr") == "")
-                        & (col("valid_records_only_nbr") == ""),
-                        lit(100),
-                    )
-                    .when(
-                        (col("total_records_only_nbr") != "")
-                        & (col("valid_records_only_nbr").isNull()),
-                        lit(0),
-                    )
-                    .otherwise(
-                        coalesce(
-                            (
-                                100
-                                * least(
-                                    abs(trim(col("valid_records_only_nbr"))),
-                                    abs(trim(col("total_records_only_nbr"))),
-                                )
-                                / greatest(
-                                    abs(trim(col("valid_records_only_nbr"))),
-                                    abs(trim(col("total_records_only_nbr"))),
-                                )
-                            ).cast(DecimalType(20, 2)),
-                            lit(0),
-                        )
-                    ),
-                )
-                .withColumn(
-                    "failed_rec_perc_variance",
-                    when(
-                        (col("total_records_only_nbr") == "")
-                        & (col("valid_records_only_nbr").isNull()),
-                        lit(0),
-                    )
-                    .when(
-                        (col("total_records_only_nbr") == "")
-                        & (col("valid_records_only_nbr") == ""),
-                        lit(0),
-                    )
-                    .when(
-                        (col("total_records_only_nbr") != "")
-                        & (col("valid_records_only_nbr").isNull()),
-                        lit(100),
-                    )
-                    .when(
-                        (coalesce(col("total_records_only_nbr"), lit(0)) != 0)
-                        & (coalesce(col("valid_records_only_nbr"), lit(0)) != 0),
-                        coalesce(
-                            round(
-                                (
-                                    (
-                                        col("total_records_only_nbr")
-                                        - col("valid_records_only_nbr")
-                                    )
-                                    / col("total_records_only_nbr")
-                                )
-                                * 100,
-                                2,
-                            ),
-                            lit(0),
-                        ),
-                    )
-                    .otherwise(100),
-                )
-                .withColumn(
-                    "failed_records",
-                    abs(
-                        coalesce(
-                            coalesce(
-                                trim(col("total_records_only_nbr")).cast("bigint"),
-                                lit(0),
-                            )
-                            - coalesce(
-                                trim(col("valid_records_only_nbr")).cast("bigint"),
-                                lit(0),
-                            ),
-                            lit(0),
-                        )
-                    ),
-                )
-                .withColumn(
-                    "dq_status",
-                    when(
-                        (col("total_records") == lit(0))
-                        & (col("valid_records") == lit(0))
-                        & (lit(source_zero_and_target_zero_is) == "pass"),
-                        "PASS",
-                    )
-                    .when(
-                        (lit(dq_status_calculation_attribute) == "failed_records")
-                        & (col("failed_records") != lit(0)),
-                        "PASS",
-                    )
-                    .when(
-                        (col("total_records") == "") & (col("valid_records") == ""),
-                        "PASS",
-                    )
-                    .when(
-                        (coalesce(col("total_records"), lit(0)) == 0)
-                        & (coalesce(col("valid_records"), lit(0)) == 0),
-                        "PASS",
-                    )
-                    .when(
-                        (lit(dq_status_calculation_attribute) != "failed_records")
-                        & (col("success_percentage") == lit(100.00)),
-                        "PASS",
-                    ),
-                )
-                .drop(
-                    "total_records_only_nbr",
-                    "valid_records_only_nbr",
-                    "failed_rec_perc_variance",
-                    "dq_status",
-                )
-                .withColumn(
-                    "dq_job_metadata_info",
-                    lit(self._context.get_job_metadata).cast("string"),
-                )
-            )
-
-            columns_to_remove = [
-                "target_dq_status",
-                "source_expectations",
-                "source_dq_actual_outcome",
-                "source_dq_expected_outcome",
-                "source_dq_start_time",
-                "source_dq_end_time",
-                "target_expectations",
-                "target_dq_actual_outcome",
-                "target_dq_expected_outcome",
-                "target_dq_actual_row_count",
-                "target_dq_error_row_count",
-                "target_dq_row_count",
-                "target_dq_start_time",
-                "target_dq_end_time",
-                "rule_type",
-                "description",
-                "tag",
-                "dq_date",
-            ]
-            df_stats_detailed = df_stats_detailed.drop(*columns_to_remove)
-
-            df_stats_detailed = (
-                df_stats_detailed.withColumnRenamed(
-                    "source_dq_row_count", "total_records"
-                )
-                .withColumnRenamed("source_dq_status", "status")
-                .withColumnRenamed("source_dq_actual_row_count", "valid_records")
-                .withColumnRenamed("source_dq_error_row_count", "failed_records")
-                .withColumn(
-                    "success_percentage",
-                    (col("valid_records") / col("total_records")) * 100,
-                )
-            )
-
-            df_report_table = only_querydq_final_after_join_df.unionByName(
-                df_stats_detailed
-            )
-            df_report_table = (
-                df_report_table.withColumn(
-                    "job",
-                    get_json_object(df_report_table["dq_job_metadata_info"], "$.job"),
-                )
-                .withColumn(
-                    "Region",
-                    get_json_object(
-                        df_report_table["dq_job_metadata_info"], "$.Region"
-                    ),
-                )
-                .withColumn(
-                    "Snapshot",
-                    get_json_object(
-                        df_report_table["dq_job_metadata_info"], "$.Snapshot"
-                    ),
-                )
-                .withColumn(
-                    "data_object_name",
-                    get_json_object(
-                        df_report_table["dq_job_metadata_info"], "$.data_object_name"
-                    ),
-                )
-            )
-            df_report_table = df_report_table.drop("dq_job_metadata_info")
-            _log.info("below is the report table")
-
-            return True, df_report_table
-        except Exception as e:
-            raise SparkExpectationsMiscException(
-                f"An error occurred in dq_obs_report_data_insert: {e}"
-            )
-
-    def save_report_table(self, df_report_table: DataFrame) -> None:
+    def get_report_data(self, report_type: str) -> tuple[list[str], list[Row], int]:
         """
-        Saves the report table to the specified location.
+        This function calls the dq_obs_report_data_insert method from SparkExpectationsReport.
+        """
+        try:
+            from spark_expectations.sinks.utils.report import SparkExpectationsReport
 
-        Args:
-            df_report_table (DataFrame): The PySpark DataFrame containing the report data to be saved.
+            SparkExpectationsReport(self._context)
+            df = self._context.get_df_dq_obs_report_dataframe
+            df.createOrReplaceTempView("temp_dq_obs_report")
+
+            queries = {
+                "header": """SELECT  dq_time AS snapshot_date, product_id,job,
+                          CASE WHEN (SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END)) >= 1 THEN 'FAIL' ELSE 'PASS' END AS status
+                          FROM temp_dq_obs_report
+                          GROUP BY  dq_time, product_id,job""",
+                "summary": """SELECT product_id, rule, COUNT(rule) AS no_of_rules_executed,
+                           'Completed' AS Execution_Status,
+                           CASE WHEN (SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END)) >= 1 THEN 'FAIL' ELSE 'PASS' END AS Overall_status,
+                           CONCAT('Pass:', SUM(CASE WHEN status = 'pass' THEN 1 ELSE 0 END), ' / Fail:', SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END)) AS status_summary
+                           FROM temp_dq_obs_report
+                           GROUP BY product_id,rule""",
+                "detailed": """SELECT DISTINCT rule, rule AS rule_description,
+                            column_name, 'Completed' AS Execution_Status, status AS Validation_Status, total_records,
+                            failed_records, valid_records, success_percentage
+                            FROM temp_dq_obs_report
+                            ORDER BY  rule""",
+            }
+
+            format_col_lists = {
+                "header": ["status"],
+                "summary": ["status_summary"],
+                "detailed": ["Validation_Status"],
+            }
+
+            query = queries[report_type]
+            df = self.spark.sql(query)
+            format_col_list = format_col_lists[report_type]
+
+            columns = df.columns
+            data = df.collect()
+            format_col_idx = columns.index(format_col_list[0])
+
+            return columns, data, format_col_idx
+        except Exception as e:
+            _log.info("Error in get_report_data: %s", e)
+            traceback.print_exc()
+            # Return default values in case of an error
+            return [], [], -1
+
+    def prep_report_data(self) -> tuple[str, str, str]:
+        """
+        Prepares the report data and sends it via email.
+
+        This method generates the report data based on the context and sends it
+        to the specified email recipients. It uses a Jinja2 template to format
+        the report data into HTML.
+
+        The method performs the following steps:
+        1. Retrieves the email subject and recipient list from the context.
+        2. Loads the email template from the specified directory or context either custom or default
+        3. Checks if a custom DataFrame is provided and the report generation status flag is set.
+        4. If no custom DataFrame is provided, generates the report data for header, summary, and detailed sections.
+        5. Renders the report data into HTML using the Jinja2 template.
+        6. Sends the formatted HTML report via email.
 
         Returns:
-            None
+        tuple[str, str, str]: A tuple containing the HTML data, email subject, and recipient list.
+
+        Raises:
+            Exception: If an error occurs during the report preparation or email sending process.
         """
-        context = self._context
-        save_df_report_table = SparkExpectationsWriter(_context=context)
-        save_df_report_table.save_df_as_table(
-            df_report_table,
-            context.get_report_table_name,
-            {
-                "mode": "append",
-                "format": "delta",
-                "partitionBy": ["product_id", "meta_dq_run_datetime"],
-                "sortBy": None,
-                "bucketBy": None,
-                "options": None,
-            },
-            stats_table=False,
-        )
+        try:
+            context = self._context
+            mail_subject = self._context.get_mail_subject
+            mail_receivers_list = self._context.get_to_mail
+            if not self._context.get_default_template:
+                template_dir = "../../spark_expectations/config/templates"
+                env_loader = Environment(loader=FileSystemLoader(template_dir))
+                template = env_loader.get_template(
+                    "advanced_email_alert_template.jinja"
+                )
+            else:
+                template_dir = self._context.get_default_template
+                template = Environment(loader=BaseLoader).from_string(template_dir)
+
+            header_columns, header_data, _ = self.get_report_data("header")
+            (
+                summary_columns,
+                summary_data,
+                _,
+            ) = self.get_report_data("summary")
+            (
+                detailed_columns,
+                detailed_data,
+                _,
+            ) = self.get_report_data("detailed")
+
+            data_dicts = [
+                {
+                    "title": "Summary by product ID for the run_id ",
+                    "headers": header_columns,
+                    "rows": header_data,
+                },
+                {
+                    "title": "Summary by Scenario :",
+                    "headers": summary_columns,
+                    "rows": summary_data,
+                },
+                {
+                    "title": "Summary by data_rule:",
+                    "headers": detailed_columns,
+                    "rows": detailed_data,
+                },
+            ]
+            html_data = "<br>".join(
+                [
+                    template.render(
+                        render_table=template.module.render_table, **data_dict
+                    )
+                    for data_dict in data_dicts
+                ]
+            )
+            html_data = f"<h2>{mail_subject}</h2>" + html_data
+
+            config_args = {
+                "receiver_mail": context.get_to_mail,
+                "subject": context.get_mail_subject,
+                "message": str(html_data),
+            }
+            # calling the email_plugin of Spark expectation
+            email_plugin = SparkExpectationsEmailPluginImpl()
+            email_plugin.send_notification(context, config_args)
+
+            return html_data, mail_subject, mail_receivers_list
+        except Exception as e:
+            print(f"Error in prep_report_data: {e}")
+            traceback.print_exc()
+            # Return default values in case of an error
+            return "", "", ""
