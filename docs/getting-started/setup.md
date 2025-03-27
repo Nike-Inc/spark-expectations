@@ -118,7 +118,7 @@ create table if not exists `catalog`.`schema`.`dq_stats` (
     meta_dq_run_id STRING,  -- (18)!
     meta_dq_run_date DATE,  -- (19)!
     meta_dq_run_datetime TIMESTAMP,  -- (20)!
-    dq_env STRING, -- (21)!
+    dq_env STRING,  -- (21)!
 );
 ```
 
