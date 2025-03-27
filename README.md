@@ -118,6 +118,8 @@ se_user_conf = {
     #user_config.se_notifications_email_custom_body: "Custom statistics: 'product_id': {}",
     #Below parameter is optional and needs to be enabled in case authorization is required to access smtp server.
     #user_config.se_notifications_email_smtp_auth: True,
+    #Below parameter is optional and used to specify environment value.
+    #user_config.se_dq_rules_params: {"env": "prod/dev/local" }
 }
 ```
 

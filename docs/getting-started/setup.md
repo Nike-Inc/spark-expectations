@@ -118,6 +118,7 @@ create table if not exists `catalog`.`schema`.`dq_stats` (
     meta_dq_run_id STRING,  -- (18)!
     meta_dq_run_date DATE,  -- (19)!
     meta_dq_run_datetime TIMESTAMP,  -- (20)!
+    dq_env STRING, -- (21)!
 );
 ```
 
@@ -141,6 +142,7 @@ create table if not exists `catalog`.`schema`.`dq_stats` (
 18. `meta_dq_run_id` unique id generated for this run
 19. `meta_dq_run_date` date on which rule is executed
 20. `meta_dq_run_datetime` date and time on which rule is executed
+21. `dq_env` environment value passed from the user_config.se_dq_rules_params
 
 ### DQ Detailed Stats Table
 

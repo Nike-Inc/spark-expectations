@@ -786,9 +786,11 @@ class SparkExpectationsWriter:
             self._context.print_dataframe_with_debugger(df)
 
             # get env from user config
-            dq_env = ""
-            if "env" in self._context.get_dq_rules_params:
-                dq_env = self._context.get_dq_rules_params["env"]
+            dq_env = (
+                None
+                if "env" not in self._context.get_dq_rules_params
+                else self._context.get_dq_rules_params["env"]
+            )
 
             df = (
                 df.withColumn("output_percentage", sql_round(df.output_percentage, 2))
