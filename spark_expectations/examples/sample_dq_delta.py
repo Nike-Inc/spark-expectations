@@ -1,4 +1,5 @@
 # Define the product_id
+# mypy: ignore-errors
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType
 import os
 from spark_expectations.utils.reader import SparkExpectationsReader
@@ -14,7 +15,6 @@ from spark_expectations.core.expectations import (
     WrappedDataFrameWriter,
 )
 from spark_expectations.config.user_config import Constants as user_config
-from typing import cast, Dict, Union
 
 
 writer = WrappedDataFrameWriter().mode("append").format("delta")
@@ -41,14 +41,12 @@ se: SparkExpectations = SparkExpectations(
 
 user_conf = {
     user_config.se_notifications_smtp_password: "w*******",
-    user_config.se_notifications_smtp_creds_dict: str(
-        {
-            user_config.secret_type: "cerberus",
-            user_config.cbs_url: "https://cerberus.example.com",
-            user_config.cbs_sdb_path: "your_sdb_path",
-            user_config.cbs_smtp_password: "your_smtp_password",
-        }
-    ),  # Convert nested dictionary to string
+    user_config.se_notifications_smtp_creds_dict: {
+        user_config.secret_type: "cerberus",
+        user_config.cbs_url: "https://prod.cerberus.nikecloud.com",
+        user_config.cbs_sdb_path: "your_sdb_path",
+        user_config.cbs_smtp_password: "your_smtp_password",
+    },
     user_config.se_notifications_enable_smtp_server_auth: False,
     user_config.se_enable_obs_dq_report_result: False,
     user_config.se_dq_obs_alert_flag: False,
@@ -75,15 +73,13 @@ user_conf = {
     user_config.se_enable_query_dq_detailed_result: True,
     user_config.se_enable_agg_dq_detailed_result: True,
     user_config.se_enable_error_table: True,
-    user_config.se_dq_rules_params: str(
-        {
-            "env": "dev",
-            "table": "product",
-            "data_object_name": "customer_order",
-            "data_source": "customer_source",
-            "data_layer": "Integrated",
-        }
-    ),  # Convert nested dictionary to string
+    user_config.se_dq_rules_params: {
+        "env": "dev",
+        "table": "product",
+        "data_object_name": "customer_order",
+        "data_source": "customer_source",
+        "data_layer": "Integrated",
+    },
     user_config.se_job_metadata: job_info,
 }
 
@@ -91,7 +87,7 @@ user_conf = {
 @se.with_expectations(
     target_table="dq_spark_dev.customer_order",
     write_to_table=True,
-    user_conf=cast(Dict[str, Union[str, int, bool]], user_conf),
+    user_conf=user_conf,
     target_table_view="order",
 )
 def build_new() -> DataFrame:
