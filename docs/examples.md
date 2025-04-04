@@ -15,7 +15,7 @@ se_user_conf = {
     user_config.se_notifications_smtp_password: "your_password",# (6)!
     # user_config.se_notifications_smtp_creds_dict: {
     #     user_config.secret_type: "cerberus",
-    #     user_config.cbs_url: "https://prod.cerberus.nikecloud.com",
+    #     user_config.cbs_url: "https://cerberus.example.com",
     #     user_config.cbs_sdb_path: "your_sdb_path",
     #     user_config.cbs_smtp_password: "your_smtp_password",
     # }, # (7)!
@@ -75,7 +75,7 @@ from spark_expectations.config.user_config import Constants as user_config
 
 smtp_creds_dict = {
     user_config.secret_type: "cerberus", # (1)!
-    user_config.cbs_url: "https://prod.cerberus.nikecloud.com", # (2)!
+    user_config.cbs_url: "https://.example.com", # (2)!
     user_config.cbs_sdb_path: "your_sdb_path", # (3)!
     user_config.cbs_smtp_password: "your_smtp_password", # (4)!
     }

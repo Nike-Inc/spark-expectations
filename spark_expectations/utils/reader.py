@@ -65,27 +65,49 @@ class SparkExpectationsReader:
                 if _notification_dict.get(user_config.se_dq_obs_alert_flag) is True:
                     self._context.set_se_dq_obs_alert_flag(True)
                     self._context.set_mail_smtp_port(
-                        int(_notification_dict[user_config.se_notifications_email_smtp_port])
+                        int(
+                            _notification_dict[
+                                user_config.se_notifications_email_smtp_port
+                            ]
+                        )
                     )
                     self._context.set_mail_subject(
-                        str(_notification_dict[user_config.se_notifications_email_subject])
+                        str(
+                            _notification_dict[
+                                user_config.se_notifications_email_subject
+                            ]
+                        )
                     )
                     self._context.set_mail_smtp_password(
-                        str(_notification_dict[user_config.se_notifications_smtp_password])
+                        str(
+                            _notification_dict[
+                                user_config.se_notifications_smtp_password
+                            ]
+                        )
                     )
                     self._context.set_mail_from(
                         str(_notification_dict[user_config.se_notifications_email_from])
                     )
                     self._context.set_to_mail(
-                        str(_notification_dict[
-                            user_config.se_notifications_email_to_other_mail_id
-                        ])
+                        str(
+                            _notification_dict[
+                                user_config.se_notifications_email_to_other_mail_id
+                            ]
+                        )
                     )
                     self._context.set_mail_smtp_server(
-                        str(_notification_dict[user_config.se_notifications_email_smtp_host])
+                        str(
+                            _notification_dict[
+                                user_config.se_notifications_email_smtp_host
+                            ]
+                        )
                     )
                     self._context.set_default_template(
-                        str(_notification_dict[user_config.se_dq_obs_default_email_template])
+                        str(
+                            _notification_dict[
+                                user_config.se_dq_obs_default_email_template
+                            ]
+                        )
                     )
                 else:
                     self._context.set_se_dq_obs_alert_flag(False)

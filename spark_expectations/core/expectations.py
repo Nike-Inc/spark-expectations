@@ -359,7 +359,7 @@ class SparkExpectations:
             )
 
             # _job_metadata: str = user_config.se_job_metadata
-            _job_metadata: str = (
+            _job_metadata: Optional[str] = (
                 str(_notification_dict[user_config.se_job_metadata])
                 if isinstance(_notification_dict[user_config.se_job_metadata], str)
                 else None

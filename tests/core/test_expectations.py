@@ -2840,7 +2840,7 @@ def test_with_expectations(
         "dq_spark.test_final_table",
         user_conf={
             user_config.se_notifications_on_fail: False,
-            user_config.se_dq_rules_params: {"table": "test_table"},
+            user_config.se_dq_rules_params: {"table": "test_table","env" :"local"},
         },
         write_to_table=write_to_table,
         write_to_temp_table=write_to_temp_table,
@@ -2906,7 +2906,8 @@ def test_with_expectations(
     assert row.meta_dq_run_id == "product1_run_test"
     assert row.meta_dq_run_date == datetime.date(2022, 12, 27)
     assert row.meta_dq_run_datetime == datetime.datetime(2022, 12, 27, 10, 00, 00)
-    assert len(stats_table.columns) == 20
+    assert row.dq_env == "local"
+    assert len(stats_table.columns) == 21
 
     assert (
         spark.read.format("kafka")
@@ -3602,3 +3603,5 @@ def test_get_spark_minor_version():
     """Test that get_spark_minor_version returns the correctly formatted version."""
     with patch("spark_expectations.core.expectations.spark_version", "9.9.42"):
         assert get_spark_minor_version() == 9.9
+
+

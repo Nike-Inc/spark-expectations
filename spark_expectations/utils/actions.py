@@ -329,7 +329,9 @@ class SparkExpectationsActions:
                     )
                 ):
                     for _key, _querydq_query in sub_key_value.items():
-                        _querydq_df = _context.spark.sql(_dq_rule["expectation" + "_" + _key])
+                        _querydq_df = _context.spark.sql(
+                            _dq_rule["expectation" + "_" + _key]
+                        )
                         querydq_output.append(
                             (
                                 _context.get_run_id,
@@ -343,7 +345,10 @@ class SparkExpectationsActions:
                                     [
                                         (
                                             _key,
-                                            [row.asDict() for row in _querydq_df.collect()],
+                                            [
+                                                row.asDict()
+                                                for row in _querydq_df.collect()
+                                            ],
                                         )
                                     ]
                                 ),

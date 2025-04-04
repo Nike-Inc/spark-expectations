@@ -1,4 +1,5 @@
 # Define the product_id
+# mypy: ignore-errors
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType
 import os
 from spark_expectations.utils.reader import SparkExpectationsReader
@@ -38,14 +39,11 @@ se: SparkExpectations = SparkExpectations(
 )
 
 
-
-
-
 user_conf = {
-user_config.se_notifications_smtp_password: "w*******",
+    user_config.se_notifications_smtp_password: "w*******",
     user_config.se_notifications_smtp_creds_dict: {
         user_config.secret_type: "cerberus",
-        user_config.cbs_url: "https://prod.cerberus.nikecloud.com",
+        user_config.cbs_url: "https://cerberus.example.com",
         user_config.cbs_sdb_path: "your_sdb_path",
         user_config.cbs_smtp_password: "your_smtp_password",
     },
@@ -80,9 +78,12 @@ user_config.se_notifications_smtp_password: "w*******",
         "table": "product",
         "data_object_name": "customer_order",
         "data_source": "customer_source",
-        "data_layer": "Integrated"
+        "data_layer": "Integrated",
     },
-    user_config.se_job_metadata: job_info,}
+    user_config.se_job_metadata: job_info,
+}
+
+
 @se.with_expectations(
     target_table="dq_spark_dev.customer_order",
     write_to_table=True,

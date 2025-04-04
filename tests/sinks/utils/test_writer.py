@@ -180,7 +180,8 @@ def fixture_create_stats_table():
     dq_rules map<string, map<string,int>>,
     meta_dq_run_id STRING,
     meta_dq_run_date DATE,
-    meta_dq_run_datetime TIMESTAMP
+    meta_dq_run_datetime TIMESTAMP,
+    dq_env STRING
     )
     USING delta
     """
@@ -390,6 +391,7 @@ def test_write_df_to_table(
 )
 def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
     _mock_context = Mock(spec=SparkExpectationsContext)
+    _mock_context.get_dq_rules_params = {"env": "test_env"}
     setattr(_mock_context, "get_dq_expectations", input_record.get("row_dq_rules"))
     _mock_context.spark = spark
     _fixture_writer = SparkExpectationsWriter(_mock_context)
@@ -1972,6 +1974,7 @@ def test_write_error_stats(
 ):
     # create mock _context object
     _mock_context = Mock(spec=SparkExpectationsContext)
+    _mock_context.get_dq_rules_params = {"env": "test_env"}
     setattr(_mock_context, "get_dq_stats_table_name", "test_dq_stats_table")
     setattr(_mock_context, "get_run_date_name", "meta_dq_run_date")
     setattr(_mock_context, "get_run_date_time_name", "meta_dq_run_datetime")
@@ -3206,6 +3209,8 @@ def test_write_detailed_stats(
 
     """
     _mock_context = Mock(spec=SparkExpectationsContext)
+    _mock_context.get_dq_rules_params = {"env": "test_env"}
+    
     setattr(
         _mock_context,
         "get_rules_execution_settings_config",
@@ -3385,6 +3390,7 @@ def test_write_detailed_stats_exception() -> None:
 
     """
     _mock_context = Mock(spec=SparkExpectationsContext)
+    _mock_context.get_dq_rules_params = {"env": "test_env"}
     setattr(
         _mock_context,
         "get_rules_execution_settings_config",

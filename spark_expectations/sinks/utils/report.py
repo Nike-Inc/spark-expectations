@@ -1,37 +1,31 @@
 from dataclasses import dataclass
+
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import *
-from spark_expectations.core.context import SparkExpectationsContext
-from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from pyspark.sql.functions import (
     col,
-    lit,
     split,
     regexp_extract,
     regexp_replace,
     round,
     explode,
     expr,
-    trim,
     coalesce,
     when,
     size,
     concat_ws,
     abs,
-    filter,
-    regexp_replace,
+    least,
+    greatest,
+    get_json_object,
+    lit,
+    trim,
 )
-from pyspark.sql.types import (
-    DateType,
-    StringType,
-    TimestampType,
-    DoubleType,
-    DecimalType,
-    StructField,
-    IntegerType,
-)
-from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
+from pyspark.sql.types import DoubleType, StringType, DecimalType, TimestampType
+
 from spark_expectations import _log
+from spark_expectations.core.context import SparkExpectationsContext
+from spark_expectations.core.exceptions import SparkExpectationsMiscException
+from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
 
 
 @dataclass
@@ -45,26 +39,6 @@ class SparkExpectationsReport:
     def dq_obs_report_data_insert(self) -> tuple[bool, DataFrame]:
         try:
             context = self._context
-
-            schema = StructType(
-                [
-                    StructField("rule", StringType(), True),
-                    StructField("column_name", StringType(), True),
-                    StructField("dq_time", TimestampType(), True),
-                    StructField("product_id", StringType(), True),
-                    StructField("table_name", StringType(), True),
-                    StructField("status", StringType(), True),
-                    StructField("total_records", StringType(), True),
-                    StructField("failed_records", IntegerType(), True),
-                    StructField("valid_records", StringType(), True),
-                    StructField("success_percentage", DoubleType(), True),
-                    StructField("run_id", StringType(), True),
-                    StructField("job", StringType(), True),
-                    StructField("Region", StringType(), True),
-                    StructField("Snapshot", StringType(), True),
-                    StructField("data_object_name", StringType(), True),
-                ]
-            )
 
             print("dq_obs_report_data_insert method called stats_detailed table")
             df_stats_detailed = context.get_stats_detailed_dataframe
@@ -127,7 +101,7 @@ class SparkExpectationsReport:
                 "success_percentage": StringType(),
                 "run_id": StringType(),
             }
-            dq_column_list = [col_name for col_name in data_types.keys()]
+            dq_column_list = list(data_types.keys())
             src_dq_column_list = [
                 col_name
                 for col_name in dq_column_list
@@ -210,7 +184,8 @@ class SparkExpectationsReport:
                 + " FROM src_df FULL JOIN tgt_df ON "
                 + " AND ".join(
                     [
-                        f"REGEXP_REPLACE(REGEXP_REPLACE(lower(src_df.src_{col}), '\"', ''), ' ', '') = REGEXP_REPLACE(REGEXP_REPLACE(lower(tgt_df.tgt_{col}), '\"', ''), ' ', '')"
+                        f"REGEXP_REPLACE(REGEXP_REPLACE(lower(src_df.src_{col}), '\"', ''), ' ', '') \
+                        = REGEXP_REPLACE(REGEXP_REPLACE(lower(tgt_df.tgt_{col}), '\"', ''), ' ', '')"
                         if col not in ignore_colums
                         else f"src_df.{col} = tgt_df.{col} "
                         for col in join_columns
@@ -427,8 +402,16 @@ class SparkExpectationsReport:
                 f"An error occurred in dq_obs_report_data_insert: {e}"
             )
 
-    # function to save the report table
-    def save_report_table(self, df_report_table):
+    def save_report_table(self, df_report_table: DataFrame) -> None:
+        """
+        Saves the report table to the specified location.
+
+        Args:
+            df_report_table (DataFrame): The PySpark DataFrame containing the report data to be saved.
+
+        Returns:
+            None
+        """
         context = self._context
         save_df_report_table = SparkExpectationsWriter(_context=context)
         save_df_report_table.save_df_as_table(

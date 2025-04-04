@@ -1,15 +1,9 @@
-import os
-import smtplib
 import traceback
 from dataclasses import dataclass
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 from jinja2 import Environment, FileSystemLoader, BaseLoader
 from pyspark import Row
 from spark_expectations import _log
 from spark_expectations.notifications import SparkExpectationsEmailPluginImpl
-from pyspark.sql import DataFrame
-from pyspark.sql.types import StructType, StructField, StringType
 from spark_expectations.core.context import SparkExpectationsContext
 
 
@@ -31,22 +25,22 @@ class SparkExpectationsAlert:
         try:
             from spark_expectations.sinks.utils.report import SparkExpectationsReport
 
-            report = SparkExpectationsReport(self._context)
+            SparkExpectationsReport(self._context)
             df = self._context.get_df_dq_obs_report_dataframe
             df.createOrReplaceTempView("temp_dq_obs_report")
 
             queries = {
-                "header": f"""SELECT  dq_time AS snapshot_date, product_id,job,
+                "header": """SELECT  dq_time AS snapshot_date, product_id,job,
                           CASE WHEN (SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END)) >= 1 THEN 'FAIL' ELSE 'PASS' END AS status
                           FROM temp_dq_obs_report
                           GROUP BY  dq_time, product_id,job""",
-                "summary": f"""SELECT product_id, rule, COUNT(rule) AS no_of_rules_executed,
+                "summary": """SELECT product_id, rule, COUNT(rule) AS no_of_rules_executed,
                            'Completed' AS Execution_Status,
                            CASE WHEN (SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END)) >= 1 THEN 'FAIL' ELSE 'PASS' END AS Overall_status,
                            CONCAT('Pass:', SUM(CASE WHEN status = 'pass' THEN 1 ELSE 0 END), ' / Fail:', SUM(CASE WHEN status = 'fail' THEN 1 ELSE 0 END)) AS status_summary
                            FROM temp_dq_obs_report
                            GROUP BY product_id,rule""",
-                "detailed": f"""SELECT DISTINCT rule, rule AS rule_description,
+                "detailed": """SELECT DISTINCT rule, rule AS rule_description,
                             column_name, 'Completed' AS Execution_Status, status AS Validation_Status, total_records,
                             failed_records, valid_records, success_percentage
                             FROM temp_dq_obs_report
@@ -69,10 +63,12 @@ class SparkExpectationsAlert:
 
             return columns, data, format_col_idx
         except Exception as e:
-            _log.info(f"Error in get_report_data: {e}")
+            _log.info("Error in get_report_data: %s", e)
             traceback.print_exc()
+            # Return default values in case of an error
+            return [], [], -1
 
-    def prep_report_data(self):
+    def prep_report_data(self) -> tuple[str, str, str]:
         """
         Prepares the report data and sends it via email.
 
@@ -87,6 +83,9 @@ class SparkExpectationsAlert:
         4. If no custom DataFrame is provided, generates the report data for header, summary, and detailed sections.
         5. Renders the report data into HTML using the Jinja2 template.
         6. Sends the formatted HTML report via email.
+
+        Returns:
+        tuple[str, str, str]: A tuple containing the HTML data, email subject, and recipient list.
 
         Raises:
             Exception: If an error occurs during the report preparation or email sending process.
@@ -105,23 +104,21 @@ class SparkExpectationsAlert:
                 template_dir = self._context.get_default_template
                 template = Environment(loader=BaseLoader).from_string(template_dir)
 
-            header_columns, header_data, header_format_col_idx = self.get_report_data(
-                "header"
-            )
+            header_columns, header_data, _ = self.get_report_data("header")
             (
                 summary_columns,
                 summary_data,
-                summary_format_col_idx,
+                _,
             ) = self.get_report_data("summary")
             (
                 detailed_columns,
                 detailed_data,
-                detailed_format_col_idx,
+                _,
             ) = self.get_report_data("detailed")
 
             data_dicts = [
                 {
-                    "title": f"Summary by product ID for the run_id ",
+                    "title": "Summary by product ID for the run_id ",
                     "headers": header_columns,
                     "rows": header_data,
                 },
@@ -159,3 +156,5 @@ class SparkExpectationsAlert:
         except Exception as e:
             print(f"Error in prep_report_data: {e}")
             traceback.print_exc()
+            # Return default values in case of an error
+            return "", "", ""
