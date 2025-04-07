@@ -164,7 +164,7 @@ class SparkExpectations:
         target_table: str,
         write_to_table: bool = False,
         write_to_temp_table: bool = False,
-        user_conf: Optional[Dict[str, Union[str, int, bool]]] = None,
+        user_conf: Optional[Dict[str, Union[str, int, bool, Dict[str, str]]]] = None,
         target_table_view: Optional[str] = None,
         target_and_error_table_writer: Optional["WrappedDataFrameWriter"] = None,
     ) -> Any:

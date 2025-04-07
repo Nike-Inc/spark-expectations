@@ -1,5 +1,5 @@
-# mypy: ignore-errors
 import os
+from typing import Dict, Union
 
 from pyspark.sql import DataFrame
 from spark_expectations import _log
@@ -31,7 +31,7 @@ se: SparkExpectations = SparkExpectations(
     stats_streaming_options={user_config.se_enable_streaming: False},
 )
 
-user_conf = {
+user_conf: Dict[str, Union[str, int, bool, Dict[str, str]]] = {
     user_config.se_notifications_enable_email: False,
     user_config.se_notifications_email_smtp_host: "mailhost.com",
     user_config.se_notifications_email_smtp_port: 25,
