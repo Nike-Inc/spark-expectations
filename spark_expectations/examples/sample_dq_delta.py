@@ -1,11 +1,11 @@
 # Define the product_id
 from typing import Dict, Union
+
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType
 import os
 from spark_expectations.utils.reader import SparkExpectationsReader
 from spark_expectations.notifications.push.alert import SparkExpectationsAlert
 from spark_expectations.core.context import SparkExpectationsContext
-
 
 from pyspark.sql import DataFrame
 from spark_expectations import _log

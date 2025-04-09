@@ -65,6 +65,7 @@ class SparkExpectationsReader:
                 self._context.set_enable_obs_dq_report_result(True)
                 if _notification_dict.get(user_config.se_dq_obs_alert_flag) is True:
                     self._context.set_se_dq_obs_alert_flag(True)
+
                     smtp_port = _notification_dict.get(
                         user_config.se_notifications_email_smtp_port, 25
                     )
