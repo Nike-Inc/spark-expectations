@@ -5,14 +5,11 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 def get_spark_session() -> SparkSession:
-    if (
-        os.environ.get("UNIT_TESTING_ENV")
-        == "spark_expectations_unit_testing_on_github_actions"
-    ) or (os.environ.get("SPARKEXPECTATIONS_ENV") == "local"):
+    if (os.environ.get("UNIT_TESTING_ENV") == "spark_expectations_unit_testing_on_github_actions") or (
+        os.environ.get("SPARKEXPECTATIONS_ENV") == "local"
+    ):
         builder = (
-            SparkSession.builder.config(
-                "spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension"
-            )
+            SparkSession.builder.config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
             .config("spark.jars.packages", "io.delta:delta-spark_2.12:3.0.0")
             .config(
                 "spark.sql.catalog.spark_catalog",

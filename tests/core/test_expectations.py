@@ -36,29 +36,23 @@ spark = get_spark_session()
 def fixture_setup_local_kafka_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    if (
-        os.getenv("UNIT_TESTING_ENV")
-        != "spark_expectations_unit_testing_on_github_actions"
-    ):
+    if os.getenv("UNIT_TESTING_ENV") != "spark_expectations_unit_testing_on_github_actions":
         # remove if docker container is running
-        os.system(
-            f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh"
-        )
+        os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
         # start docker container and create the topic
-        os.system(
-            f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh"
-        )
+        os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
 
         yield "docker container started"
 
         # remove docker container
-        os.system(
-            f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh"
-        )
+        os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
     else:
-        yield "A Kafka server has been launched within a Docker container for the purpose of conducting tests in " "a Jenkins environment"
+        yield (
+            "A Kafka server has been launched within a Docker container for the purpose of conducting tests in "
+            "a Jenkins environment"
+        )
 
 
 @pytest.fixture(name="_fixture_df")
@@ -216,12 +210,8 @@ def fixture_spark_expectations(_fixture_rules_df):
 
 def test_spark_session_initialization():
     # Test if spark session is initialized even if dataframe.sparkSession is not accessible
-    with patch.object(
-        DataFrame, "sparkSession", new_callable=PropertyMock
-    ) as mock_sparkSession:
-        mock_sparkSession.side_effect = AttributeError(
-            "The 'sparkSession' attribute is not accessible"
-        )
+    with patch.object(DataFrame, "sparkSession", new_callable=PropertyMock) as mock_sparkSession:
+        mock_sparkSession.side_effect = AttributeError("The 'sparkSession' attribute is not accessible")
 
         rules_df = spark.createDataFrame([("Alice", 32)], ["name", "age"])
 
@@ -237,12 +227,8 @@ def test_spark_session_initialization():
         assert type(se.spark) == SparkSession
 
     # Test if exception is raised if sparkSession.getActiveSession() returns None
-    with patch.object(
-        DataFrame, "sparkSession", new_callable=PropertyMock
-    ) as mock_sparkSession:
-        mock_sparkSession.side_effect = AttributeError(
-            "The 'sparkSession' attribute is not accessible"
-        )
+    with patch.object(DataFrame, "sparkSession", new_callable=PropertyMock) as mock_sparkSession:
+        mock_sparkSession.side_effect = AttributeError("The 'sparkSession' attribute is not accessible")
         with patch.object(SparkSession, "getActiveSession", return_value=None):
             rules_df = spark.createDataFrame([("Alice", 32)], ["name", "age"])
 
@@ -2814,9 +2800,7 @@ def test_with_expectations(
 
     spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
 
-    rules_df = (
-        spark.createDataFrame(expectations) if len(expectations) > 0 else expectations
-    )
+    rules_df = spark.createDataFrame(expectations) if len(expectations) > 0 else expectations
     rules_df.show(truncate=False) if len(expectations) > 0 else None
 
     writer = WrappedDataFrameWriter().mode("append").format("parquet")
@@ -2840,7 +2824,7 @@ def test_with_expectations(
         "dq_spark.test_final_table",
         user_conf={
             user_config.se_notifications_on_fail: False,
-            user_config.se_dq_rules_params: {"table": "test_table","env" :"local"},
+            user_config.se_dq_rules_params: {"table": "test_table", "env": "local"},
         },
         write_to_table=write_to_table,
         write_to_temp_table=write_to_temp_table,
@@ -2857,10 +2841,7 @@ def test_with_expectations(
         ):
             get_dataset()  # decorated_func()
 
-        if (
-            status.get("final_agg_dq_status") == "Failed"
-            or status.get("final_query_dq_status") == "Failed"
-        ):
+        if status.get("final_agg_dq_status") == "Failed" or status.get("final_query_dq_status") == "Failed":
             try:
                 spark.table("dq_spark.test_final_table")
                 assert False
@@ -2871,15 +2852,12 @@ def test_with_expectations(
         get_dataset()  # decorated_func()
 
         if write_to_table is True:
-            expected_output_df = expected_output.withColumn(
-                "run_id", lit("product1_run_test")
-            ).withColumn("run_date", to_timestamp(lit("2022-12-27 10:00:00")))
+            expected_output_df = expected_output.withColumn("run_id", lit("product1_run_test")).withColumn(
+                "run_date", to_timestamp(lit("2022-12-27 10:00:00"))
+            )
 
             result_df = spark.table("dq_spark.test_final_table")
-            assert (
-                result_df.orderBy("col2").collect()
-                == expected_output_df.orderBy("col2").collect()
-            )
+            assert result_df.orderBy("col2").collect() == expected_output_df.orderBy("col2").collect()
 
             if spark.catalog.tableExists("dq_spark.test_final_table_error"):
                 error_table = spark.table("dq_spark.test_final_table_error")
@@ -2970,10 +2948,7 @@ def test_with_expectations_overwrite_writers(
         target_and_error_table_writer=modified_writer,
     )(Mock(return_value=_fixture_df))
 
-    assert (
-        _fixture_spark_expectations._context.get_target_and_error_table_writer_config
-        == modified_writer.build()
-    )
+    assert _fixture_spark_expectations._context.get_target_and_error_table_writer_config == modified_writer.build()
 
 
 def test_with_expectations_dataframe_not_returned_exception(
@@ -3006,9 +2981,7 @@ def test_with_expectations_dataframe_not_returned_exception(
     spark.sql("CLEAR CACHE")
 
 
-def test_with_expectations_exception(
-    _fixture_create_database, _fixture_spark_expectations, _fixture_local_kafka_topic
-):
+def test_with_expectations_exception(_fixture_create_database, _fixture_spark_expectations, _fixture_local_kafka_topic):
     rules_dict = [
         {
             "product_id": "product1",
@@ -3218,7 +3191,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
             ("2", "product2", 20),
             ("3", "product3", 30),
         ],
-        ["id", "product", "value"]
+        ["id", "product", "value"],
     )
     input_df.createOrReplaceTempView("test_table")
 
@@ -3302,10 +3275,10 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
     }
 
     with patch(
-            "spark_expectations.notifications.push.spark_expectations_notify.SparkExpectationsNotify"
-            ".notify_on_ignore_rules",
-            autospec=True,
-            spec_set=True,
+        "spark_expectations.notifications.push.spark_expectations_notify.SparkExpectationsNotify"
+        ".notify_on_ignore_rules",
+        autospec=True,
+        spec_set=True,
     ) as _mock_notification_hook:
         se = SparkExpectations(
             product_id="product1",
@@ -3331,42 +3304,42 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
             SparkExpectationsNotify(se._context),
             [
                 {
-                 'rule_type': 'row_dq',
-                 'rule': 'value_must_be_greater_than_10',
-                 'description': 'value must be greater than 10',
-                 'tag': 'strict',
-                 'action_if_failed': 'ignore',
-                 'failed_row_count': 1
+                    "rule_type": "row_dq",
+                    "rule": "value_must_be_greater_than_10",
+                    "description": "value must be greater than 10",
+                    "tag": "strict",
+                    "action_if_failed": "ignore",
+                    "failed_row_count": 1,
                 },
                 {
                     "rule": "count_of_records_must_be_greater_than_10",
                     "description": "count of records must be greater than 10",
                     "rule_type": "query_dq",
                     "tag": "strict",
-                    "action_if_failed": "ignore"
+                    "action_if_failed": "ignore",
                 },
                 {
                     "rule": "sum_of_value_should_be_less_than_60",
                     "description": "desc_sum_of_value_should_be_less_than_60",
                     "rule_type": "agg_dq",
                     "tag": "strict",
-                    "action_if_failed": "ignore"
+                    "action_if_failed": "ignore",
                 },
                 {
                     "rule": "count_of_records_must_be_greater_than_10",
                     "description": "count of records must be greater than 10",
                     "rule_type": "query_dq",
                     "tag": "strict",
-                    "action_if_failed": "ignore"
+                    "action_if_failed": "ignore",
                 },
                 {
                     "rule": "sum_of_value_should_be_less_than_60",
                     "description": "desc_sum_of_value_should_be_less_than_60",
                     "rule_type": "agg_dq",
                     "tag": "strict",
-                    "action_if_failed": "ignore"
-                }
-            ]
+                    "action_if_failed": "ignore",
+                },
+            ],
         )
 
         _mock_notification_hook.assert_called_once_with(*expected_call)
@@ -3377,9 +3350,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
     spark.sql("CLEAR CACHE")
 
 
-def test_target_table_view_exception(
-    _fixture_create_database, _fixture_local_kafka_topic
-):
+def test_target_table_view_exception(_fixture_create_database, _fixture_local_kafka_topic):
     rules = [
         {
             "product_id": "product1",
@@ -3465,9 +3436,7 @@ def test_target_table_view_exception(
 
 def test_spark_expectations_exception():
     writer = WrappedDataFrameWriter().mode("append").format("parquet")
-    with pytest.raises(
-        SparkExpectationsMiscException, match=r"Input rules_df is not of dataframe type"
-    ):
+    with pytest.raises(SparkExpectationsMiscException, match=r"Input rules_df is not of dataframe type"):
         SparkExpectations(
             product_id="product1",
             rules_df=[],
@@ -3507,15 +3476,14 @@ def test_partitionBy():
 
 
 def test_option():
-    assert WrappedDataFrameWriter().option("compression", "gzip")._options == {
-        "compression": "gzip"
-    }
+    assert WrappedDataFrameWriter().option("compression", "gzip")._options == {"compression": "gzip"}
 
 
 def test_options():
-    assert WrappedDataFrameWriter().options(
-        path="/path/to/output", inferSchema="true"
-    )._options == {"path": "/path/to/output", "inferSchema": "true"}
+    assert WrappedDataFrameWriter().options(path="/path/to/output", inferSchema="true")._options == {
+        "path": "/path/to/output",
+        "inferSchema": "true",
+    }
 
 
 def test_bucketBy():
@@ -3566,9 +3534,7 @@ def test_build_some_values():
 
 
 def test_delta_bucketby_exception():
-    writer = (
-        WrappedDataFrameWriter().mode("append").format("delta").bucketBy(10, "a", "b")
-    )
+    writer = WrappedDataFrameWriter().mode("append").format("delta").bucketBy(10, "a", "b")
     with pytest.raises(
         SparkExpectationsMiscException,
         match=r"Bucketing is not supported for delta tables yet",
@@ -3603,5 +3569,3 @@ def test_get_spark_minor_version():
     """Test that get_spark_minor_version returns the correctly formatted version."""
     with patch("spark_expectations.core.expectations.spark_version", "9.9.42"):
         assert get_spark_minor_version() == 9.9
-
-

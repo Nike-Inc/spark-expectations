@@ -30,15 +30,9 @@ def get_notifications_hook() -> pluggy.PluginManager:
     """
     pm = pluggy.PluginManager(SPARK_EXPECTATIONS_NOTIFICATION_PLUGIN)
     pm.add_hookspecs(SparkExpectationsNotification)
-    pm.register(
-        SparkExpectationsEmailPluginImpl(), "spark_expectations_email_notification"
-    )
-    pm.register(
-        SparkExpectationsSlackPluginImpl(), "spark_expectations_slack_notification"
-    )
-    pm.register(
-        SparkExpectationsTeamsPluginImpl(), "spark_expectations_teams_notification"
-    )
+    pm.register(SparkExpectationsEmailPluginImpl(), "spark_expectations_email_notification")
+    pm.register(SparkExpectationsSlackPluginImpl(), "spark_expectations_slack_notification")
+    pm.register(SparkExpectationsTeamsPluginImpl(), "spark_expectations_teams_notification")
     pm.register(
         SparkExpectationsZoomPluginImpl(),
         "spark_expectations_zoom_notification",  # Register Zoom plugin

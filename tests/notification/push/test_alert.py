@@ -5,11 +5,10 @@ from pyspark.sql.types import StructType, StructField, StringType
 from spark_expectations.core.context import SparkExpectationsContext
 import pytest
 import re
+
 spark = get_spark_session()
 context = SparkExpectationsContext("product_id", spark)
 alert = SparkExpectationsAlert(context)
-
-
 
 
 @pytest.fixture(scope="module")
@@ -69,25 +68,27 @@ def test_prep_report_data():
     """
 
     # Define schema
-    schema = StructType([
-        StructField("rule", StringType(), True),
-        StructField("column_name", StringType(), True),
-        StructField("dq_time", StringType(), True),
-        StructField("product_id", StringType(), True),
-        StructField("table_name", StringType(), True),
-        StructField("status", StringType(), True),
-        StructField("total_records", StringType(), True),
-        StructField("failed_records", IntegerType(), True),
-        StructField("valid_records", StringType(), True),
-        StructField("success_percentage", StringType(), True),
-        StructField("run_id", StringType(), True),
-        StructField("job", StringType(), True),
-        StructField("Region", StringType(), True),
-        StructField("Snapshot", StringType(), True),
-        StructField("data_object_name", StringType(), True),
-        StructField("meta_dq_run_id", StringType(), True),
-        StructField("meta_dq_run_datetime", StringType(), True)
-    ])
+    schema = StructType(
+        [
+            StructField("rule", StringType(), True),
+            StructField("column_name", StringType(), True),
+            StructField("dq_time", StringType(), True),
+            StructField("product_id", StringType(), True),
+            StructField("table_name", StringType(), True),
+            StructField("status", StringType(), True),
+            StructField("total_records", StringType(), True),
+            StructField("failed_records", IntegerType(), True),
+            StructField("valid_records", StringType(), True),
+            StructField("success_percentage", StringType(), True),
+            StructField("run_id", StringType(), True),
+            StructField("job", StringType(), True),
+            StructField("Region", StringType(), True),
+            StructField("Snapshot", StringType(), True),
+            StructField("data_object_name", StringType(), True),
+            StructField("meta_dq_run_id", StringType(), True),
+            StructField("meta_dq_run_datetime", StringType(), True),
+        ]
+    )
     data = [
         (
             "product_missing_count_threshold",
@@ -106,7 +107,7 @@ def test_prep_report_data():
             "2024-04-15",
             "NULL",
             "your_product_d9927e12-e7cf-11ef-877c-4240eb7a97f9",
-            "2025-02-10 16:55:36"
+            "2025-02-10 16:55:36",
         ),
         (
             "product_missing_count_threshold",
@@ -125,7 +126,7 @@ def test_prep_report_data():
             "2024-04-15",
             "NULL",
             "your_product_d9927e12-e7cf-11ef-877c-4240eb7a97f9",
-            "2025-02-10 16:55:36"
+            "2025-02-10 16:55:36",
         ),
         (
             "product_missing_count_threshold",
@@ -144,7 +145,7 @@ def test_prep_report_data():
             "2024-04-15",
             "NULL",
             "your_product_d9927e12-e7cf-11ef-877c-4240eb7a97f9",
-            "2025-02-10 16:55:36"
+            "2025-02-10 16:55:36",
         ),
         (
             "product_missing_count_threshold",
@@ -163,7 +164,7 @@ def test_prep_report_data():
             "2024-04-15",
             "NULL",
             "your_product_d9927e12-e7cf-11ef-877c-4240eb7a97f9",
-            "2025-02-10 16:55:36"
+            "2025-02-10 16:55:36",
         ),
         (
             "product_missing_count_threshold",
@@ -182,7 +183,7 @@ def test_prep_report_data():
             "2024-04-15",
             "NULL",
             "your_product_d9927e12-e7cf-11ef-877c-4240eb7a97f9",
-            "2025-02-10 16:55:36"
+            "2025-02-10 16:55:36",
         ),
         (
             "product_missing_count_threshold",
@@ -201,7 +202,7 @@ def test_prep_report_data():
             "2024-04-15",
             "NULL",
             "your_product_d9927e12-e7cf-11ef-877c-4240eb7a97f9",
-            "2025-02-10 16:55:36"
+            "2025-02-10 16:55:36",
         ),
         (
             "ship_mode_in_set",
@@ -220,7 +221,7 @@ def test_prep_report_data():
             "2024-04-15",
             "NULL",
             "your_product_d9927e12-e7cf-11ef-877c-4240eb7a97f9",
-            "2025-02-10 16:55:36"
+            "2025-02-10 16:55:36",
         ),
         (
             "sales_greater_than_zero",
@@ -239,7 +240,7 @@ def test_prep_report_data():
             "2024-04-15",
             "NULL",
             "your_product_d9927e12-e7cf-11ef-877c-4240eb7a97f9",
-            "2025-02-10 16:55:36"
+            "2025-02-10 16:55:36",
         ),
         (
             "discount_threshold",
@@ -258,11 +259,9 @@ def test_prep_report_data():
             "2024-04-15",
             "NULL",
             "your_product_d9927e12-e7cf-11ef-877c-4240eb7a97f9",
-            "2025-02-10 16:55:36"
-        )
+            "2025-02-10 16:55:36",
+        ),
     ]
-
-
 
     # Create DataFrame
 
@@ -273,7 +272,6 @@ def test_prep_report_data():
     # template = env_loader.get_template('advanced_email_alert_template.jinja')
 
     context.set_default_template(default_template)
-
 
     context.set_mail_subject("test_mail_subject")
     context.set_to_mail("abcd@se.com")
@@ -306,17 +304,35 @@ def test_prep_report_data_value(test_prep_report_data):
 @pytest.mark.usefixtures("test_prep_report_data")
 def test_prep_report_data_html_content(test_prep_report_data):
     html_data, mail_subject, mail_receivers_list = test_prep_report_data
-    assert any(tag in html_data for tag in
-               ["<html>", "<head>", "<body>", "<div>", "<span>", "<p>", "<a>", "<table>", "<tr>", "<td>", "<th>",
-                "<h1>", "<h2>", "<h3>", "<h4>", "<h5>", "<h6>"]), "The string does not contain HTML content"
+    assert any(
+        tag in html_data
+        for tag in [
+            "<html>",
+            "<head>",
+            "<body>",
+            "<div>",
+            "<span>",
+            "<p>",
+            "<a>",
+            "<table>",
+            "<tr>",
+            "<td>",
+            "<th>",
+            "<h1>",
+            "<h2>",
+            "<h3>",
+            "<h4>",
+            "<h5>",
+            "<h6>",
+        ]
+    ), "The string does not contain HTML content"
+
 
 @pytest.mark.usefixtures("test_prep_report_data")
 def test_data_not_empty(test_prep_report_data):
     html_data, mail_subject, mail_receivers_list = test_prep_report_data
     assert html_data.strip() != "", "HTML data should not be empty"
     assert mail_subject.strip() != "", "Mail subject should not be empty"
-
-
 
 
 @pytest.mark.usefixtures("test_prep_report_data")
@@ -341,6 +357,3 @@ def test_email_subject_and_body_formatting(test_prep_report_data):
 
     assert mail_subject == expected_subject, f"Expected subject: {expected_subject}, but got: {mail_subject}"
     assert expected_content_snippet in html_data, f"Expected content snippet not found in HTML data"
-
-
-

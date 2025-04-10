@@ -35,9 +35,7 @@ class SparkExpectationsSlackPluginImpl(SparkExpectationsNotification):
             if _context.get_enable_slack is True:
                 # payload = {"token": "{token}", "channel": kwargs['channel'], "text": kwargs['message']}
                 payload = {"text": _config_args.get("message")}
-                response = requests.post(
-                    _context.get_slack_webhook_url, json=payload, timeout=10
-                )
+                response = requests.post(_context.get_slack_webhook_url, json=payload, timeout=10)
 
                 # Check the response for success or failure
                 if response.status_code == 200:

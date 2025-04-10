@@ -89,30 +89,22 @@ class SparkExpectationsRegulateFlow:
                     )
                 )
 
-                _log.info(
-                    "The data quality dataframe is getting created for expectations"
-                )
+                _log.info("The data quality dataframe is getting created for expectations")
 
                 _df_dq: DataFrame = _actions.run_dq_rules(
                     _context,
                     df,
                     expectations,
                     _running_rule_type_name,
-                    _source_dq_enabled=(
-                        source_query_dq_flag is True or source_agg_dq_flag is True
-                    ),
-                    _target_dq_enabled=(
-                        final_query_dq_flag is True or final_agg_dq_flag is True
-                    ),
+                    _source_dq_enabled=(source_query_dq_flag is True or source_agg_dq_flag is True),
+                    _target_dq_enabled=(final_query_dq_flag is True or final_agg_dq_flag is True),
                 )
 
                 _log.info("The data quality dataframe is created for expectations")
                 _context.print_dataframe_with_debugger(_df_dq)
 
                 agg_dq_res = (
-                    _actions.create_agg_dq_results(
-                        _context, _df_dq, _running_rule_type_name
-                    )
+                    _actions.create_agg_dq_results(_context, _df_dq, _running_rule_type_name)
                     if row_dq_flag is False
                     else None
                 )
@@ -162,8 +154,6 @@ class SparkExpectationsRegulateFlow:
                 return df, agg_dq_res, _error_count, "Passed"
 
             except Exception as e:
-                raise SparkExpectationsMiscException(
-                    f"error occurred while executing func_process {e}"
-                )
+                raise SparkExpectationsMiscException(f"error occurred while executing func_process {e}")
 
         return func_process

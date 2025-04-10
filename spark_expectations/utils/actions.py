@@ -112,9 +112,7 @@ class SparkExpectationsActions:
                 if not _parentheses_branch_check:
                     return False
                 _parentheses_branch_check.pop()
-        return (
-            not _parentheses_branch_check
-        )  # return True if no unmatched left parentheses remain
+        return not _parentheses_branch_check  # return True if no unmatched left parentheses remain
 
     @staticmethod
     def agg_query_dq_detailed_result(
@@ -160,38 +158,24 @@ class SparkExpectationsActions:
                 _dq_rule["rule_type"] == _context.get_agg_dq_rule_type_name
                 and _context.get_agg_dq_detailed_stats_status is True
             ):
-                if not (
-                    ">" in _dq_rule["expectation"] and "<" in _dq_rule["expectation"]
-                ):
+                if not (">" in _dq_rule["expectation"] and "<" in _dq_rule["expectation"]):
                     _pattern = rf"{constant_config.se_agg_dq_expectation_regex_pattern}"
                     _re_compile = re.compile(_pattern)
-                    _agg_dq_expectation_match = re.match(
-                        _re_compile, _dq_rule["expectation"]
-                    )
+                    _agg_dq_expectation_match = re.match(_re_compile, _dq_rule["expectation"])
                     _agg_dq_expectation_expr = None
                     if _agg_dq_expectation_match:
-                        _agg_dq_expectation_aggstring = _agg_dq_expectation_match.group(
-                            1
-                        )
+                        _agg_dq_expectation_aggstring = _agg_dq_expectation_match.group(1)
                         _agg_dq_expectation_expr = _agg_dq_expectation_match.group(2)
-                        _agg_dq_expectation_cond_expr = expr(
-                            _agg_dq_expectation_aggstring
-                        )
+                        _agg_dq_expectation_cond_expr = expr(_agg_dq_expectation_aggstring)
 
-                        _agg_dq_actual_count_value = int(
-                            df.agg(_agg_dq_expectation_cond_expr).collect()[0][0]
-                        )
+                        _agg_dq_actual_count_value = int(df.agg(_agg_dq_expectation_cond_expr).collect()[0][0])
 
-                        _agg_dq_expression_str = (
-                            str(_agg_dq_actual_count_value) + _agg_dq_expectation_expr
-                        )
+                        _agg_dq_expression_str = str(_agg_dq_actual_count_value) + _agg_dq_expectation_expr
 
                         _agg_dq_expr_condition = []
 
                         _agg_dq_expr_condition.append(
-                            when(expr(_agg_dq_expression_str), True)
-                            .otherwise(False)
-                            .alias("agg_dq_aggregation_check")
+                            when(expr(_agg_dq_expression_str), True).otherwise(False).alias("agg_dq_aggregation_check")
                         )
 
                         _df_agg_dq_expr_result = df.select(*_agg_dq_expr_condition)
@@ -200,9 +184,7 @@ class SparkExpectationsActions:
 
                         status = (
                             "pass"
-                            if _df_agg_dq_expr_result.filter(
-                                _df_agg_dq_expr_result["agg_dq_aggregation_check"]
-                            ).count()
+                            if _df_agg_dq_expr_result.filter(_df_agg_dq_expr_result["agg_dq_aggregation_check"]).count()
                             > 0
                             else "fail"
                         )
@@ -218,19 +200,13 @@ class SparkExpectationsActions:
                         error_row_count = 0 if status == "pass" else row_count
 
                         actual_outcome = (
-                            _agg_dq_actual_count_value
-                            if (_agg_dq_actual_count_value is not None)
-                            else None
+                            _agg_dq_actual_count_value if (_agg_dq_actual_count_value is not None) else None
                         )
                         expected_outcome = (
-                            str(_agg_dq_expectation_expr)
-                            if (_agg_dq_expectation_expr is not None)
-                            else None
+                            str(_agg_dq_expectation_expr) if (_agg_dq_expectation_expr is not None) else None
                         )
                 else:
-                    pattern = (
-                        rf"{constant_config.se_agg_dq_expectation_range_regex_pattern}"
-                    )
+                    pattern = rf"{constant_config.se_agg_dq_expectation_range_regex_pattern}"
                     matches = re.match(pattern, _dq_rule["expectation"])
                     result = None
                     if matches:
@@ -239,45 +215,33 @@ class SparkExpectationsActions:
                         _agg_dq_expectation_expr_lowerbound = result[1]
                         _agg_dq_expectation_expr_upperbound = result[4]
 
-                        _agg_dq_expectation_cond_expr = expr(
-                            _agg_dq_expectation_aggstring
-                        )
+                        _agg_dq_expectation_cond_expr = expr(_agg_dq_expectation_aggstring)
 
-                        _agg_dq_actual_count_value = int(
-                            df.agg(_agg_dq_expectation_cond_expr).collect()[0][0]
-                        )
+                        _agg_dq_actual_count_value = int(df.agg(_agg_dq_expectation_cond_expr).collect()[0][0])
 
                         _agg_dq_expression_str_lower = (
-                            str(_agg_dq_actual_count_value)
-                            + _agg_dq_expectation_expr_lowerbound
+                            str(_agg_dq_actual_count_value) + _agg_dq_expectation_expr_lowerbound
                         )
 
                         _agg_dq_expression_str_upper = (
-                            str(_agg_dq_actual_count_value)
-                            + _agg_dq_expectation_expr_upperbound
+                            str(_agg_dq_actual_count_value) + _agg_dq_expectation_expr_upperbound
                         )
 
                         _agg_dq_expr_condition = []
 
                         _agg_dq_expression_str = (
-                            f"{str(_agg_dq_expression_str_lower)}"
-                            " and "
-                            f"{str(_agg_dq_expression_str_upper)}"
+                            f"{str(_agg_dq_expression_str_lower)}" " and " f"{str(_agg_dq_expression_str_upper)}"
                         )
 
                         _agg_dq_expr_condition.append(
-                            when(expr(_agg_dq_expression_str), True)
-                            .otherwise(False)
-                            .alias("agg_dq_aggregation_check")
+                            when(expr(_agg_dq_expression_str), True).otherwise(False).alias("agg_dq_aggregation_check")
                         )
 
                         _df_agg_dq_expr_result = df.select(*_agg_dq_expr_condition)
 
                         status = (
                             "pass"
-                            if _df_agg_dq_expr_result.filter(
-                                _df_agg_dq_expr_result["agg_dq_aggregation_check"]
-                            ).count()
+                            if _df_agg_dq_expr_result.filter(_df_agg_dq_expr_result["agg_dq_aggregation_check"]).count()
                             > 0
                             else "fail"
                         )
@@ -292,17 +256,12 @@ class SparkExpectationsActions:
                         error_row_count = 0 if status == "pass" else row_count
 
                         actual_outcome = (
-                            _agg_dq_actual_count_value
-                            if (_agg_dq_actual_count_value is not None)
-                            else None
+                            _agg_dq_actual_count_value if (_agg_dq_actual_count_value is not None) else None
                         )
 
                         expected_outcome = (
                             _agg_dq_expression_str
-                            if (
-                                _agg_dq_expression_str_lower is not None
-                                and _agg_dq_expression_str_upper is not None
-                            )
+                            if (_agg_dq_expression_str_lower is not None and _agg_dq_expression_str_upper is not None)
                             else None
                         )
             elif (
@@ -320,18 +279,12 @@ class SparkExpectationsActions:
 
                 if (_dq_rule["enable_querydq_custom_output"]) and (
                     sub_key_value := _querydq_secondary_query.get(
-                        _dq_rule["product_id"]
-                        + "|"
-                        + _dq_rule["table_name"]
-                        + "|"
-                        + _dq_rule["rule"],
+                        _dq_rule["product_id"] + "|" + _dq_rule["table_name"] + "|" + _dq_rule["rule"],
                         {},
                     )
                 ):
                     for _key, _querydq_query in sub_key_value.items():
-                        _querydq_df = _context.spark.sql(
-                            _dq_rule["expectation" + "_" + _key]
-                        )
+                        _querydq_df = _context.spark.sql(_dq_rule["expectation" + "_" + _key])
                         querydq_output.append(
                             (
                                 _context.get_run_id,
@@ -345,10 +298,7 @@ class SparkExpectationsActions:
                                     [
                                         (
                                             _key,
-                                            [
-                                                row.asDict()
-                                                for row in _querydq_df.collect()
-                                            ],
+                                            [row.asDict() for row in _querydq_df.collect()],
                                         )
                                     ]
                                 ),
@@ -361,24 +311,14 @@ class SparkExpectationsActions:
                     match = re.search(pattern, _dq_rule["expectation"])
                     if match:
                         # function to execute SQL and get the result
-                        def execute_sql_and_get_result(
-                            _se_context: SparkExpectationsContext, query: str
-                        ) -> int:
-                            return (
-                                _se_context.spark.sql(
-                                    f"SELECT ({query}) AS OUTPUT"
-                                ).collect()[0][0]
-                                if query
-                                else 0
-                            )
+                        def execute_sql_and_get_result(_se_context: SparkExpectationsContext, query: str) -> int:
+                            return _se_context.spark.sql(f"SELECT ({query}) AS OUTPUT").collect()[0][0] if query else 0
 
                         # function to get the query outputs
-                        _querydq_source_query_output = execute_sql_and_get_result(
-                            _context, match.group(1)
+                        _querydq_source_query_output = execute_sql_and_get_result(_context, match.group(1))
+                        _querydq_target_query_output = match.group(4) or execute_sql_and_get_result(
+                            _context, match.group(5)
                         )
-                        _querydq_target_query_output = match.group(
-                            4
-                        ) or execute_sql_and_get_result(_context, match.group(5))
 
                         # assignment of actual_outcome and expected_outcome
                         actual_outcome = _querydq_source_query_output
@@ -393,13 +333,9 @@ class SparkExpectationsActions:
                         """Sql query is invalid. Parentheses are missing in the sql query."""
                     )
 
-                _querydq_status_query = (
-                    "SELECT (" + str(_dq_rule["expectation"]) + ") AS OUTPUT"
-                )
+                _querydq_status_query = "SELECT (" + str(_dq_rule["expectation"]) + ") AS OUTPUT"
 
-                _query_dq_result = int(
-                    _context.spark.sql(_querydq_status_query).collect()[0][0]
-                )
+                _query_dq_result = int(_context.spark.sql(_querydq_status_query).collect()[0][0])
 
                 status = "pass" if _query_dq_result else "fail"
 
@@ -440,9 +376,7 @@ class SparkExpectationsActions:
                 row_count,
             )
         except Exception as e:
-            raise SparkExpectationsMiscException(
-                f"error occurred while running agg_query_dq_detailed_result {e}"
-            )
+            raise SparkExpectationsMiscException(f"error occurred while running agg_query_dq_detailed_result {e}")
 
     @staticmethod
     def create_agg_dq_results(
@@ -462,18 +396,13 @@ class SparkExpectationsActions:
         """
         try:
             first_row = _df.first()
-            if (
-                first_row is not None
-                and f"meta_{_rule_type_name}_results" in _df.columns
-            ):
+            if first_row is not None and f"meta_{_rule_type_name}_results" in _df.columns:
                 meta_results = first_row[f"meta_{_rule_type_name}_results"]
                 if meta_results is not None and len(meta_results) > 0:
                     return meta_results
             return None
         except Exception as e:
-            raise SparkExpectationsMiscException(
-                f"error occurred while running create agg dq results {e}"
-            )
+            raise SparkExpectationsMiscException(f"error occurred while running create agg dq results {e}")
 
     @staticmethod
     def run_dq_rules(
@@ -506,10 +435,7 @@ class SparkExpectationsActions:
             if len(expectations) <= 0:
                 raise SparkExpectationsMiscException("no rules found to process")
 
-            if (
-                f"{rule_type}_rules" not in expectations
-                or len(expectations[f"{rule_type}_rules"]) <= 0
-            ):
+            if f"{rule_type}_rules" not in expectations or len(expectations[f"{rule_type}_rules"]) <= 0:
                 raise SparkExpectationsMiscException(
                     f"zero expectations to process for {rule_type}_rules from the `dq_rules` table, "
                     f"please configure rules or avoid this error by setting {rule_type} to False"
@@ -528,11 +454,7 @@ class SparkExpectationsActions:
                     column = f"{rule_type}_{rule['rule']}"
                     condition_expressions.append(
                         when(expr(rule["expectation"]), create_map())
-                        .otherwise(
-                            map_from_entries(
-                                SparkExpectationsActions.create_rules_map(rule)
-                            )
-                        )
+                        .otherwise(map_from_entries(SparkExpectationsActions.create_rules_map(rule)))
                         .alias(column)
                     )
                     if (
@@ -546,9 +468,7 @@ class SparkExpectationsActions:
                         or _context.get_query_dq_detailed_stats_status is True
                     ):
                         current_date = datetime.now()
-                        dq_start_time = datetime.strftime(
-                            current_date, "%Y-%m-%d %H:%M:%S"
-                        )
+                        dq_start_time = datetime.strftime(current_date, "%Y-%m-%d %H:%M:%S")
 
                         (
                             _querydq_output_list,
@@ -562,9 +482,7 @@ class SparkExpectationsActions:
                             _target_dq_status=_target_dq_enabled,
                         )
                         current_date = datetime.now()
-                        dq_end_time = datetime.strftime(
-                            current_date, "%Y-%m-%d %H:%M:%S"
-                        )
+                        dq_end_time = datetime.strftime(current_date, "%Y-%m-%d %H:%M:%S")
                         _agg_query_dq_output_list = list(_agg_query_dq_output_tuple)
                         _agg_query_dq_output_list.extend([dq_start_time, dq_end_time])
                         _agg_query_dq_output_tuple = tuple(_agg_query_dq_output_list)
@@ -607,28 +525,16 @@ class SparkExpectationsActions:
                     _context.get_query_dq_rule_type_name,
                     _context.get_agg_dq_rule_type_name,
                 ]:
-                    df = (
-                        df
-                        if rule_type == _context.get_agg_dq_rule_type_name
-                        else _context.get_supported_df_query_dq
-                    )
+                    df = df if rule_type == _context.get_agg_dq_rule_type_name else _context.get_supported_df_query_dq
 
                     df = df.select(*condition_expressions)
 
-                    df = df.withColumn(
-                        f"meta_{rule_type}_results", array(*list(df.columns))
-                    )
+                    df = df.withColumn(f"meta_{rule_type}_results", array(*list(df.columns)))
 
                     df = df.withColumn(
                         f"meta_{rule_type}_results",
                         remove_empty_maps(df[f"meta_{rule_type}_results"]),
-                    ).drop(
-                        *[
-                            _col
-                            for _col in df.columns
-                            if _col != f"meta_{rule_type}_results"
-                        ]
-                    )
+                    ).drop(*[_col for _col in df.columns if _col != f"meta_{rule_type}_results"])
 
                     _context.print_dataframe_with_debugger(df)
 
@@ -645,9 +551,7 @@ class SparkExpectationsActions:
             return df
 
         except Exception as e:
-            raise SparkExpectationsMiscException(
-                f"error occurred while running expectations {e}"
-            )
+            raise SparkExpectationsMiscException(f"error occurred while running expectations {e}")
 
     @staticmethod
     def action_on_rules(
@@ -688,16 +592,11 @@ class SparkExpectationsActions:
                 if (dq_column.startswith(f"meta_{_rule_type}_results")) is False
             ]
             _df_dq_columns.append("action_if_failed")
-            _df_dq = _df_dq.withColumn(
-                "action_if_failed", get_actions_list(col(f"meta_{_rule_type}_results"))
-            ).select(_df_dq_columns)
+            _df_dq = _df_dq.withColumn("action_if_failed", get_actions_list(col(f"meta_{_rule_type}_results"))).select(
+                _df_dq_columns
+            )
 
-            if (
-                not _df_dq.filter(
-                    array_contains(_df_dq.action_if_failed, "fail")
-                ).count()
-                > 0
-            ):
+            if not _df_dq.filter(array_contains(_df_dq.action_if_failed, "fail")).count() > 0:
                 _df_dq = _df_dq.filter(~array_contains(_df_dq.action_if_failed, "drop"))
             else:
                 if _row_dq_flag:
@@ -719,6 +618,4 @@ class SparkExpectationsActions:
             return _df_dq.select(_df_dq_columns[:-1])
 
         except Exception as e:
-            raise SparkExpectationsMiscException(
-                f"error occurred while taking action on given rules {e}"
-            )
+            raise SparkExpectationsMiscException(f"error occurred while taking action on given rules {e}")
