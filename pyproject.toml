@@ -224,3 +224,102 @@ implicit_optional = true
 pretty = true
 warn_no_return = false
 warn_unused_configs = true
+
+[tool.pylint.main]
+fail-under = 9.5
+py-version = "3.10"
+
+[tool.pylint.basic]
+# require docstrings for all functions except magic methods (those starting and ending with __) and test methods (those starting with test_).
+no-docstring-rgx = "__.*__|test_.*"
+
+[tool.pylint.classes]
+exclude-protected = [
+  "_asdict",
+  "_fields",
+  "_replace",
+  "_source",
+  "_make",
+  "os._exit",
+  "_jsc",
+]
+
+[tool.pylint.design]
+max-attributes = 25
+max-bool-expr = 5
+max-locals = 16
+max-parents = 25
+min-public-methods = 1
+
+[tool.pylint.format]
+# Same as Black.
+max-line-length = 120
+# Maximum number of lines in a module.
+max-module-lines = 1200
+# Allow the body of a class to be on the same line as the declaration if body contains single statement.
+single-line-class-stmt = true
+# Allow the body of an if to be on the same line as the test if there is no else.
+single-line-if-stmt = true
+
+[tool.pylint.logging]
+# The type of string formatting that logging methods do. old means using % formatting, new is for {} formatting.
+logging-format-style = "new"
+
+[tool.pylint."messages control"]
+confidence = [
+  "HIGH",
+  "CONTROL_FLOW",
+  "INFERENCE",
+  "INFERENCE_FAILURE",
+  "UNDEFINED",
+]
+disable = [
+  "arguments-differ",
+  "bad-inline-option",
+  "broad-except",
+  "consider-using-set-comprehension",
+  "deprecated-pragma",
+  "duplicate-code",
+  "file-ignored",
+  "import-outside-toplevel",
+  "inconsistent-return-statements",
+  "invalid-name",
+  "len-as-condition",
+  "line-too-long",
+  "locally-disabled",
+  "logging-fstring-interpolation",
+  "no-else-return",
+  "no-member",
+  "no-self-argument",
+  "no-self-use",
+  "possibly-used-before-assignment",
+  "protected-access",
+  "raise-missing-from",
+  "raw-checker-failed",
+  "suppressed-message",
+  "too-few-public-methods",
+  "too-many-arguments",
+  "too-many-branches",
+  "too-many-boolean-expressions",
+  "too-many-instance-attributes",
+  "too-many-lines",
+  "too-many-locals",
+  "too-many-positional-arguments",
+  "too-many-statements",
+  "unnecessary-ellipsis",
+  "unnecessary-pass",
+  "use-implicit-booleaness-not-comparison-to-string",
+  "use-implicit-booleaness-not-comparison-to-zero",
+  "use-symbolic-message-instead",
+  "used-before-assignment",
+  "useless-object-inheritance",
+  "useless-suppression",
+  "W0622",
+]
+enable = ["logging-not-lazy", "c-extension-no-member"]
+
+[tool.pylint.miscellaneous]
+notes = ["FIXME", "TODO"]
+
+[tool.pylint.refactoring]
+max-nested-blocks = 3

@@ -14,34 +14,6 @@ ignore-paths:
 
 max-line-length: 120
 
-pylint:
-  disable:
-    - too-many-lines
-    - too-many-branches
-    - too-many-statements
-    - too-many-instance-attributes
-    - cyclic-import
-    - len-as-condition
-    - invalid-name
-    - no-else-return
-    - no-self-use
-    - possibly-used-before-assignment
-    - protected-access
-    - too-many-arguments
-    - too-many-boolean-expressions
-    - too-many-locals
-    - too-many-positional-arguments
-    - inconsistent-return-statements
-    - import-outside-toplevel
-    - consider-using-set-comprehension
-    - used-before-assignment
-    - useless-object-inheritance
-    - unnecessary-pass
-    - raise-missing-from
-    - broad-except
-    - arguments-differ
-    - W0622 # getting error - built-in is being redefined: Redefining built-in 'round' (redefined-builtin).
-
 pycodestyle:
   # W293: disabled because we have newlines in docstrings
   # E203: disabled because pep8 and black disagree on whitespace before colon in some cases
