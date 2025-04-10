@@ -2,8 +2,7 @@ from spark_expectations.config.user_config import Constants as user_config
 
 
 def test_constants():
-
-    assert user_config.se_dq_obs_alert_flag=="spark.expectations.notifications.alert.flag.disable"
+    assert user_config.se_dq_obs_alert_flag == "spark.expectations.notifications.alert.flag.disable"
 
     assert user_config.se_notifications_email_smtp_port == "spark.expectations.notifications.email.smtp_port"
 
@@ -11,8 +10,10 @@ def test_constants():
 
     assert user_config.se_notifications_email_from == "spark.expectations.notifications.email.from"
 
-    assert user_config.se_notifications_email_to_other_mail_id == "spark.expectations.notifications.email." \
-                                                                  "to.other.mail.com"
+    assert (
+        user_config.se_notifications_email_to_other_mail_id == "spark.expectations.notifications.email."
+        "to.other.mail.com"
+    )
 
     assert user_config.se_notifications_email_subject == "spark.expectations.notifications.email.subject"
 
@@ -32,12 +33,16 @@ def test_constants():
 
     assert user_config.se_notifications_on_fail == "spark.expectations.notifications.on.fail"
 
-    assert user_config.se_notifications_on_error_drop_exceeds_threshold_breach == "spark.expectations." \
-                                                                                  "notifications.on.error.drop." \
-                                                                                  "exceeds.threshold.breach"
+    assert (
+        user_config.se_notifications_on_error_drop_exceeds_threshold_breach == "spark.expectations."
+        "notifications.on.error.drop."
+        "exceeds.threshold.breach"
+    )
 
-    assert user_config.se_notifications_on_error_drop_threshold == "spark.expectations.notifications." \
-                                                                   "error.drop.threshold"
+    assert (
+        user_config.se_notifications_on_error_drop_threshold == "spark.expectations.notifications."
+        "error.drop.threshold"
+    )
 
     assert user_config.se_enable_streaming == "se.enable.streaming"
 

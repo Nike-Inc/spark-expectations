@@ -92,9 +92,7 @@ def set_up_iceberg() -> SparkSession:
 
     spark.sql("drop table if exists dq_spark_local.dq_rules")
 
-    spark.sql(
-        f" CREATE TABLE dq_spark_local.dq_rules {RULES_TABLE_SCHEMA} USING ICEBERG"
-    )
+    spark.sql(f" CREATE TABLE dq_spark_local.dq_rules {RULES_TABLE_SCHEMA} USING ICEBERG")
     spark.sql(f" INSERT INTO dq_spark_local.dq_rules  values {RULES_DATA} ")
 
     spark.sql("select * from dq_spark_local.dq_rules").show(truncate=False)
@@ -109,9 +107,7 @@ def set_up_bigquery(materialization_dataset: str) -> SparkSession:
             "com.google.cloud.spark:spark-bigquery-with-dependencies_2.12:0.30.0",
         )
     ).getOrCreate()
-    spark._jsc.hadoopConfiguration().set(
-        "fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem"
-    )
+    spark._jsc.hadoopConfiguration().set("fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem")
     spark.conf.set("viewsEnabled", "true")
     spark.conf.set("materializationDataset", materialization_dataset)
 
@@ -123,9 +119,7 @@ def set_up_delta() -> SparkSession:
     set_up_kafka()
 
     builder = add_kafka_jars(
-        SparkSession.builder.config(
-            "spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension"
-        )
+        SparkSession.builder.config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
         .config("spark.jars.packages", "io.delta:delta-spark_2.12:3.0.0")
         .config(
             "spark.sql.catalog.spark_catalog",
