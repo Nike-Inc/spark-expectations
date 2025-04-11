@@ -18,6 +18,7 @@ Thanks to the contributors who helped on this project apart from the authors
 * [Sudeepta pal](https://www.linkedin.com/in/sudeepta-pal-98b393217/)
 * [Mallikarjunudu Tirumalasetti](https://www.linkedin.com/in/mtirumal/)
 * [Tadakala sai vamsi goud](https://www.linkedin.com/in/sai-vamsi-goud-455737169/)
+* [Lior Zadok](https://www.linkedin.com/in/lior-zadok-24ab5a7/)
 
 # Honorary Mentions
 Thanks to the team below for invaluable insights and support throughout the initial release of this project

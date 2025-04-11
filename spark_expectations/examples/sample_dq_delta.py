@@ -1,11 +1,11 @@
 # Define the product_id
-# mypy: ignore-errors
+from typing import Dict, Union
+
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType
 import os
 from spark_expectations.utils.reader import SparkExpectationsReader
 from spark_expectations.notifications.push.alert import SparkExpectationsAlert
 from spark_expectations.core.context import SparkExpectationsContext
-
 
 from pyspark.sql import DataFrame
 from spark_expectations import _log
@@ -39,7 +39,7 @@ se: SparkExpectations = SparkExpectations(
 )
 
 
-user_conf = {
+user_conf: Dict[str, Union[str, int, bool, Dict[str, str]]] = {
     user_config.se_notifications_smtp_password: "w*******",
     user_config.se_notifications_smtp_creds_dict: {
         user_config.secret_type: "cerberus",
