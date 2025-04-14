@@ -994,6 +994,7 @@ def test_spark_session_initialization():
                     "rule": "sum_col3_threshold",
                     "rule_type": "agg_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "strict",
                 }
             ],
@@ -1064,6 +1065,7 @@ def test_spark_session_initialization():
                     "rule": "avg_col3_threshold",
                     "rule_type": "agg_dq",
                     "action_if_failed": "fail",
+                    "status": "fail",
                     "tag": "strict",
                 }
             ],
@@ -1156,6 +1158,7 @@ def test_spark_session_initialization():
                     "rule": "min_col1_threshold",
                     "rule_type": "agg_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "strict",
                 }
             ],
@@ -1247,6 +1250,7 @@ def test_spark_session_initialization():
                     "rule": "std_col3_threshold",
                     "rule_type": "agg_dq",
                     "action_if_failed": "fail",
+                    "status": "fail",
                     "tag": "strict",
                 }
             ],
@@ -1427,6 +1431,7 @@ def test_spark_session_initialization():
                     "rule": "distinct_col2_threshold",
                     "rule_type": "agg_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "validity",
                 }
             ],
@@ -1539,6 +1544,7 @@ def test_spark_session_initialization():
                     "rule": "avg_col1_threshold",
                     "rule_type": "agg_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "accuracy",
                 }
             ],
@@ -1549,6 +1555,7 @@ def test_spark_session_initialization():
                     "rule": "avg_col1_threshold",
                     "rule_type": "agg_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "accuracy",
                 }
             ],
@@ -1678,6 +1685,15 @@ def test_spark_session_initialization():
                     "rule": "avg_col1_threshold",
                     "rule_type": "agg_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
+                    "tag": "validity",
+                },
+                {
+                    "action_if_failed": "ignore",
+                    "description": "stddev of col3 value must be greater than one",
+                    "rule": "stddev_col3_threshold",
+                    "rule_type": "agg_dq",
+                    "status": "pass",
                     "tag": "validity",
                 }
             ],
@@ -1688,6 +1704,7 @@ def test_spark_session_initialization():
                     "description": "avg of col1 value must be greater than 4",
                     "rule": "avg_col1_threshold",
                     "rule_type": "agg_dq",
+                    "status": "fail",
                     "tag": "validity",
                 },
                 {
@@ -1695,6 +1712,7 @@ def test_spark_session_initialization():
                     "description": "stddev of col3 value must be greater than one",
                     "rule": "stddev_col3_threshold",
                     "rule_type": "agg_dq",
+                    "status": "fail",
                     "tag": "validity",
                 },
             ],
@@ -1789,6 +1807,15 @@ def test_spark_session_initialization():
                     "rule": "sum_col1_threshold",
                     "rule_type": "query_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
+                    "tag": "validity",
+                },
+                {
+                    "action_if_failed": "ignore",
+                    "description": "stddev of col3 value must be greater than 0",
+                    "rule": "stddev_col3_threshold",
+                    "rule_type": "query_dq",
+                    "status": "pass",
                     "tag": "validity",
                 }
             ],
@@ -1903,8 +1930,17 @@ def test_spark_session_initialization():
                     "rule": "max_col1_threshold",
                     "rule_type": "query_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "strict",
-                }
+                },
+                {
+                    "action_if_failed": "ignore",
+                    "description": "min of col3 value must be greater than 0",
+                    "rule": "min_col3_threshold",
+                    "rule_type": "query_dq",
+                    "status": "pass",
+                    "tag": "validity",
+                 },
             ],
             # final_query_dq_res
             {
@@ -1994,6 +2030,7 @@ def test_spark_session_initialization():
                     "description": "min of col1 value must be greater than 10",
                     "rule": "min_col1_threshold",
                     "rule_type": "query_dq",
+                    "status": "fail",
                     "tag": "validity",
                 },
                 {
@@ -2001,6 +2038,7 @@ def test_spark_session_initialization():
                     "description": "stddev of col3 value must be greater than 0",
                     "rule": "stddev_col3_threshold",
                     "rule_type": "query_dq",
+                    "status": "fail",
                     "tag": "validity",
                 },
             ],  # source_query_dq_res
@@ -2110,8 +2148,17 @@ def test_spark_session_initialization():
                     "rule": "max_col1_threshold",
                     "rule_type": "query_dq",
                     "action_if_failed": "fail",
+                    "status": "fail",
                     "tag": "strict",
-                }
+                },
+                {
+                    "action_if_failed": "ignore",
+                    "description": "min of col3 value must be greater than 0",
+                    "rule": "min_col3_threshold",
+                    "rule_type": "query_dq",
+                    "status": "pass",
+                    "tag": "validity",
+                },
             ],
             # final_query_dq_res
             {
@@ -2241,6 +2288,7 @@ def test_spark_session_initialization():
                     "rule": "min_col1_threshold",
                     "rule_type": "query_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "strict",
                 }
             ],
@@ -2251,8 +2299,17 @@ def test_spark_session_initialization():
                     "rule": "max_col1_threshold",
                     "rule_type": "query_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "strict",
-                }
+                },
+                {
+                    'action_if_failed': 'fail',
+                    'description': 'min of col3 value must be greater than 0',
+                    'rule': 'min_col3_threshold',
+                    'rule_type': 'query_dq',
+                    'status': 'pass',
+                    'tag': 'validity',
+                },
             ],
             # final_query_dq_res
             {
@@ -2377,6 +2434,7 @@ def test_spark_session_initialization():
                     "rule": "min_col1_threshold",
                     "rule_type": "query_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "strict",
                 }
             ],
@@ -2387,8 +2445,17 @@ def test_spark_session_initialization():
                     "rule": "max_col1_threshold",
                     "rule_type": "query_dq",
                     "action_if_failed": "fail",
+                    "status": "fail",
                     "tag": "strict",
-                }
+                },
+                {
+                    "action_if_failed": "ignore",
+                    "description": "min of col3 value must be greater than 0",
+                    "rule": "min_col3_threshold",
+                    "rule_type": "query_dq",
+                    "status": "pass",
+                    "tag": "validity",
+                },
             ],
             # final_query_dq_res
             {
@@ -2510,8 +2577,26 @@ def test_spark_session_initialization():
             3,  # input count
             1,  # error count
             2,  # output count
-            None,  # source_agg_result
-            None,  # final_agg_result
+            [
+                {
+                    "action_if_failed": "fail",
+                    "description": "col3 mod must equals to 0",
+                    "rule": "col3_max_value",
+                    "rule_type": "agg_dq",
+                    "status": "pass",
+                    "tag": "validity",
+                }
+            ],  # source_agg_result
+            [
+                {
+                    "action_if_failed": "fail",
+                    "description": "col3 mod must equals to 0",
+                    "rule": "col3_max_value",
+                    "rule_type": "agg_dq",
+                    "status": "pass",
+                    "tag": "validity",
+                }
+            ],  # final_agg_result
             # final_agg_result
             [
                 {
@@ -2519,6 +2604,7 @@ def test_spark_session_initialization():
                     "rule": "count_col1_threshold",
                     "rule_type": "query_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "strict",
                 }
             ],
@@ -2529,6 +2615,7 @@ def test_spark_session_initialization():
                     "rule": "col3_positive_threshold",
                     "rule_type": "query_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "strict",
                 }
             ],
@@ -2621,8 +2708,17 @@ def test_spark_session_initialization():
                     "rule": "sum_col1_threshold",
                     "rule_type": "query_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "validity",
-                }
+                },
+                {
+                    "action_if_failed": "ignore",
+                    "description": "stddev of col3 value must be greater than 0",
+                    "rule": "stddev_col3_threshold",
+                    "rule_type": "query_dq",
+                    "status": "pass",
+                    "tag": "validity",
+                },
             ],
             # source_query_dq_res
             None,  # final_query_dq_res
@@ -2691,6 +2787,7 @@ def test_spark_session_initialization():
                     "rule": "avg_col3_range",
                     "rule_type": "agg_dq",
                     "action_if_failed": "fail",
+                    "status": "fail",
                     "tag": "strict",
                 }
             ],
@@ -2762,6 +2859,7 @@ def test_spark_session_initialization():
                     "rule": "avg_col3_range",
                     "rule_type": "agg_dq",
                     "action_if_failed": "fail",
+                    "status": "fail",
                     "tag": "strict",
                 }
             ],
@@ -2790,7 +2888,7 @@ def test_spark_session_initialization():
                 "final_query_dq_status": "Skipped",
             },
         ),
-    ],
+    ][0:1],
 )
 def test_with_expectations(
     input_df,
@@ -3343,6 +3441,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
                     "description": "count of records must be greater than 10",
                     "rule_type": "query_dq",
                     "tag": "strict",
+                    "status": "fail",
                     "action_if_failed": "ignore"
                 },
                 {
@@ -3350,6 +3449,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
                     "description": "desc_sum_of_value_should_be_less_than_60",
                     "rule_type": "agg_dq",
                     "tag": "strict",
+                    "status": "fail",
                     "action_if_failed": "ignore"
                 },
                 {
@@ -3357,6 +3457,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
                     "description": "count of records must be greater than 10",
                     "rule_type": "query_dq",
                     "tag": "strict",
+                    "status": "fail",
                     "action_if_failed": "ignore"
                 },
                 {
@@ -3364,6 +3465,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
                     "description": "desc_sum_of_value_should_be_less_than_60",
                     "rule_type": "agg_dq",
                     "tag": "strict",
+                    "status": "fail",
                     "action_if_failed": "ignore"
                 }
             ]

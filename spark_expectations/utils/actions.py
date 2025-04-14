@@ -5,6 +5,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import (
     array,
+    array_append,
     array_contains,
     col,
     create_map,
@@ -525,12 +526,22 @@ class SparkExpectationsActions:
                 )
 
                 if _rule_is_active or rule_type == _context.get_row_dq_rule_type_name:
+                    rules_map = SparkExpectationsActions.create_rules_map(rule)
                     column = f"{rule_type}_{rule['rule']}"
                     condition_expressions.append(
-                        when(expr(rule["expectation"]), create_map())
+                        when(
+                            expr(rule["expectation"]),
+                            map_from_entries(
+                                array_append(
+                                    rules_map, struct(lit("status"), lit("pass"))
+                                )
+                            ),
+                        )
                         .otherwise(
                             map_from_entries(
-                                SparkExpectationsActions.create_rules_map(rule)
+                                array_append(
+                                    rules_map, struct(lit("status"), lit("fail"))
+                                )
                             )
                         )
                         .alias(column)

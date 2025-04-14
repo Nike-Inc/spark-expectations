@@ -609,7 +609,16 @@ def fixture_create_stats_table():
                                      True,  # write to table
                                      # expected df
                                      spark.createDataFrame([{"col1": 1}]).drop("col1"),
-                                     None,  # expected agg dq result
+                                     [
+                                         {
+                                            "action_if_failed": "ignore",
+                                            "description": "sum of col3 value must be greater than 1",
+                                            "rule": "sum_col3_threshold",
+                                            "rule_type": "agg_dq",
+                                            "status": "pass",
+                                            "tag": "validity",
+                                        },
+                                     ],  # expected agg dq result
                                      # status at different stages for given input
                                      {"row_dq_status": "Skipped", "source_agg_dq_status": "Passed",
                                       "final_agg_dq_status": "Skipped", "run_status": "Passed",
@@ -706,7 +715,7 @@ def fixture_create_stats_table():
                                      # expected agg dq result
                                      [{"description": "distinct of col2 value must be greater than 4",
                                        "rule": "distinct_col2_threshold",
-                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "tag": "validity"}],
+                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "status": "fail", "tag": "validity"}],
                                      # status at different stages for given input
                                      {"row_dq_status": "Skipped", "source_agg_dq_status": "Passed",
                                       "final_agg_dq_status": "Skipped", "run_status": "Passed",
@@ -752,7 +761,16 @@ def fixture_create_stats_table():
                                      0,  # output count
                                      True,  # write to table
                                      None,  # expected res df
-                                     None,  # expected agg dq result
+                                     [
+                                        {
+                                            "action_if_failed": "ignore",
+                                            "description": "min of col3 value must be greater than 1",
+                                            "rule": "min_col3_threshold",
+                                            "rule_type": "agg_dq",
+                                            "status": "pass",
+                                            "tag": "validity",
+                                        },
+                                     ],  # expected agg dq result
                                      # status at different stages for given input
                                      {"row_dq_status": "Skipped", "source_agg_dq_status": "Passed",
                                       "final_agg_dq_status": "Passed", "run_status": "Passed",
@@ -844,7 +862,7 @@ def fixture_create_stats_table():
                                      # expected agg dq result
                                      [{"description": "average of col1 value must be greater than 25",
                                        "rule": "avg_col2_threshold",
-                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "tag": "validity"}],
+                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "status": "fail", "tag": "validity"}],
                                      # status at different stages for given input
                                      {"row_dq_status": "Skipped", "source_agg_dq_status": "Skipped",
                                       "final_agg_dq_status": "Passed", "run_status": "Passed",
@@ -922,13 +940,13 @@ def fixture_create_stats_table():
                                      # expected agg dq result
                                      [{"description": "average of col1 value must be greater than 25",
                                        "rule": "avg_col1_threshold",
-                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "tag": "validity"},
+                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "status": "fail", "tag": "validity"},
                                       {"description": "min of col3 value must be greater than 15",
                                        "rule": "min_col3_threshold",
-                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "tag": "accuracy"},
+                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "status": "fail", "tag": "accuracy"},
                                       {"description": "distinct count of col2 value must be greater than 5",
                                        "rule": "count_col2_threshold",
-                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "tag": "validity"}
+                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "status": "fail", "tag": "validity"}
                                       ],
                                      # status at different stages for given input
                                      {"row_dq_status": "Skipped", "source_agg_dq_status": "Passed",
@@ -1006,13 +1024,13 @@ def fixture_create_stats_table():
                                      # expected agg dq result
                                      [{"description": "average of col1 value must be greater than 25",
                                        "rule": "avg_col1_threshold",
-                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "tag": "validity"},
+                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "status": "fail", "tag": "validity"},
                                       {"description": "min of col3 value must be greater than 15",
                                        "rule": "min_col3_threshold",
-                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "tag": "validity"},
+                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "status": "fail", "tag": "validity"},
                                       {"description": "distinct count of col2 value must be greater than 5",
                                        "rule": "count_col2_threshold",
-                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "tag": "accuracy"}
+                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "status": "fail", "tag": "accuracy"}
                                       ],
                                      # status at different stages for given input
                                      {"row_dq_status": "Skipped", "source_agg_dq_status": "Passed",
@@ -1090,10 +1108,10 @@ def fixture_create_stats_table():
                                      # expected agg dq result
                                      [{"description": "average of col1 value must be greater than 25",
                                        "rule": "avg_col1_threshold",
-                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "tag": "validity"},
+                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "status": "fail", "tag": "validity"},
                                       {"description": "min of col3 value must be greater than 15",
                                        "rule": "min_col3_threshold",
-                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "tag": "validity"}
+                                       "rule_type": "agg_dq", "action_if_failed": "ignore", "status": "fail", "tag": "validity"}
                                       ],
                                      # status at different stages for given input
                                      {"row_dq_status": "Skipped", "source_agg_dq_status": "Failed",
@@ -1167,7 +1185,32 @@ def fixture_create_stats_table():
                                      3,  # output count
                                      True,  # write to table
                                      None,  # expected res
-                                     None,  # expected agg dq result
+                                     [
+                                        {
+                                            "action_if_failed": "fail",
+                                            "description": "average of col1 value must be less than 25",
+                                            "rule": "avg_col1_threshold",
+                                            "rule_type": "agg_dq",
+                                            "status": "pass",
+                                            "tag": "validity",
+                                        },
+                                        {
+                                            "action_if_failed": "ignore",
+                                            "description": "min of col3 value must be less than 15",
+                                            "rule": "min_col3_threshold",
+                                            "rule_type": "agg_dq",
+                                            "status": "pass",
+                                            "tag": "validity",
+                                        },
+                                        {
+                                            "action_if_failed": "fail",
+                                            "description": "distinct count of col2 value must be greater than 2",
+                                            "rule": "count_col2_threshold",
+                                            "rule_type": "agg_dq",
+                                            "status": "pass",
+                                            "tag": "validity",
+                                        },
+                                    ],  # expected agg dq result
                                      # status at different stages for given input
                                      {"row_dq_status": "Skipped", "source_agg_dq_status": "Skipped",
                                       "final_agg_dq_status": "Passed", "run_status": "Passed"}

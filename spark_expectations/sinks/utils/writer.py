@@ -24,7 +24,7 @@ from spark_expectations.core.exceptions import (
 )
 from spark_expectations.secrets import SparkExpectationsSecretsBackend
 from spark_expectations.notifications.push.alert import SparkExpectationsAlert
-from spark_expectations.utils.udf import remove_empty_maps
+from spark_expectations.utils.udf import remove_passing_status_maps
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.sinks import _sink_hook
 from spark_expectations.config.user_config import Constants as user_config
@@ -920,7 +920,7 @@ class SparkExpectationsWriter:
             df = (
                 df.withColumn(
                     f"meta_{rule_type}_results",
-                    remove_empty_maps(df[f"meta_{rule_type}_results"]),
+                    remove_passing_status_maps(df[f"meta_{rule_type}_results"]),
                 )
                 .withColumn(
                     self._context.get_run_id_name, lit(self._context.get_run_id)
