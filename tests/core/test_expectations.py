@@ -2888,7 +2888,7 @@ def test_spark_session_initialization():
                 "final_query_dq_status": "Skipped",
             },
         ),
-    ][0:1],
+    ],
 )
 def test_with_expectations(
     input_df,
