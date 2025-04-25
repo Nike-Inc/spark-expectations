@@ -27,12 +27,12 @@ def test_remove_empty_maps():
 def test_get_actions_list():
     # Create a test DataFrame
     data = [
-        (1, [{"action_if_failed": "drop", "other_key": "value1"},
-             {"action_if_failed": "ignore", "other_key": "value2"}]),
-        (2, [{"action_if_failed": "ignore", "other_key": "value3"}]),
+        (1, [{"action_if_failed": "drop", "status": "fail", "other_key": "value1"},
+             {"action_if_failed": "ignore", "status": "fail", "other_key": "value2"}]),
+        (2, [{"action_if_failed": "ignore", "status": "fail", "other_key": "value3"}]),
         (3, []),
-        (4, [{"action_if_failed": "ignore", "other_key": "value4"},
-             {"action_if_failed": "fail", "other_key": "value5"}])
+        (4, [{"action_if_failed": "ignore", "status": "fail", "other_key": "value4"},
+             {"action_if_failed": "fail", "status": "fail", "other_key": "value5"}])
     ]
     df = spark.createDataFrame(data, ["id", "dq_res"])
 

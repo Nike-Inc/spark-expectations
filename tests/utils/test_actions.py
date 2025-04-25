@@ -335,37 +335,82 @@ def fixture_row_dq_expected_result():
     return {
         "result": [
             {
-                "row_dq_col1_gt_eq_1": {},
+                "row_dq_col1_gt_eq_1": {
+                    "action_if_failed": "ignore",
+                    "description": "col1 gt or eq 1",
+                    "rule": "col1_gt_eq_1",
+                    "rule_type": "row_dq",
+                    "status": "pass",
+                    "tag": "validity",
+                },
                 "row_dq_col1_gt_eq_2": {
                     "rule_type": "row_dq",
                     "rule": "col1_gt_eq_2",
                     "action_if_failed": "drop",
+                    "status": "fail",
                     "tag": "accuracy",
                     "description": "col1 gt or eq 2"
                 },
                 "row_dq_col1_gt_eq_3": {"rule_type": "row_dq",
                                         "rule": "col1_gt_eq_3",
                                         "action_if_failed": "fail",
+                                        "status": "fail",
                                         "tag": "completeness",
                                         "description": "col1 gt or eq 3"
                                         }
             },
 
             {
-                "row_dq_col1_gt_eq_1": {},
-                "row_dq_col1_gt_eq_2": {},
+                "row_dq_col1_gt_eq_1": {
+                    "action_if_failed": "ignore",
+                    "description": "col1 gt or eq 1",
+                    "rule": "col1_gt_eq_1",
+                    "rule_type": "row_dq",
+                    "status": "pass",
+                    "tag": "validity",
+                },
+                "row_dq_col1_gt_eq_2": {
+                    "rule_type": "row_dq",
+                    "rule": "col1_gt_eq_2",
+                    "action_if_failed": "drop",
+                    "status": "pass",
+                    "tag": "accuracy",
+                    "description": "col1 gt or eq 2"
+                },
                 "row_dq_col1_gt_eq_3": {"rule_type": "row_dq",
                                         "rule": "col1_gt_eq_3",
                                         "action_if_failed": "fail",
+                                        "status": "fail",
                                         "tag": "completeness",
                                         "description": "col1 gt or eq 3"
                                         }
             },
 
             {
-                "row_dq_col1_gt_eq_1": {},
-                "row_dq_col1_gt_eq_2": {},
-                "row_dq_col1_gt_eq_3": {}
+                "row_dq_col1_gt_eq_1": {
+                    "action_if_failed": "ignore",
+                    "description": "col1 gt or eq 1",
+                    "rule": "col1_gt_eq_1",
+                    "rule_type": "row_dq",
+                    "status": "pass",
+                    "tag": "validity",
+                },
+                "row_dq_col1_gt_eq_2": {
+                    "rule_type": "row_dq",
+                    "rule": "col1_gt_eq_2",
+                    "action_if_failed": "drop",
+                    "status": "pass",
+                    "tag": "accuracy",
+                    "description": "col1 gt or eq 2"
+                },
+                "row_dq_col1_gt_eq_3": {
+                    "rule_type": "row_dq",
+                    "rule": "col1_gt_eq_3",
+                    "action_if_failed": "fail",
+                    "status": "pass",
+                    "tag": "completeness",
+                    "description": "col1 gt or eq 3"
+                }
             }
 
         ]}
@@ -376,17 +421,28 @@ def fixture_agg_dq_expected_result():
     # define the expected result for agg dq operations
     return {
         "result":
-            [{
-                "rule_type": "agg_dq",
-                "rule": "col2_unique_value_gt_3",
-                "action_if_failed": "fail",
-                "tag": "accuracy",
-                "description": "col2 unique value grater than 3"
-            },
+            [
+                {
+                    "action_if_failed": "ignore",
+                    "description": "col1 sum gt 1",
+                    "rule": "col1_sum_gt_eq_6",
+                    "rule_type": "agg_dq",
+                    "status": "pass",
+                    "tag": "validity",
+                },
+                {
+                    "rule_type": "agg_dq",
+                    "rule": "col2_unique_value_gt_3",
+                    "action_if_failed": "fail",
+                    "status": "fail",
+                    "tag": "accuracy",
+                    "description": "col2 unique value grater than 3"
+                },
                 {
                     "rule_type": "agg_dq",
                     "rule": "col1_sum_gt_6_and_lt_10",
                     "action_if_failed": "fail",
+                    "status": "fail",
                     "tag": "accuracy",
                     "description": "sum of col1 value grater than 6 and less than 10"
                 }
@@ -404,6 +460,7 @@ def fixture_query_dq_expected_result():
                     'rule': 'table_row_count_gt_1',
                     'description': 'table count should be greater than 1',
                     'rule_type': 'query_dq',
+                    "status": "fail",
                     'tag': 'validity',
                     'action_if_failed': 'ignore'
                 },
@@ -411,6 +468,7 @@ def fixture_query_dq_expected_result():
                     'rule': 'table_distinct_count',
                     'description': 'table distinct row count should be greater than 3',
                     'rule_type': 'query_dq',
+                    "status": "fail",
                     'tag': 'accuracy',
                     'action_if_failed': 'fail'
                 }
@@ -912,12 +970,12 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 # function should return dataframe with all the rows
                 spark.createDataFrame(
                     [  # drop & log into error
-                        {"col1": 1, "col2": "a", "meta_row_dq_results": [{"action_if_failed": "drop"},
-                                                                         {"action_if_failed": "drop"},
-                                                                         {"action_if_failed": "drop"}]},
+                        {"col1": 1, "col2": "a", "meta_row_dq_results": [{"action_if_failed": "drop", "status": "fail"},
+                                                                         {"action_if_failed": "drop", "status": "fail"},
+                                                                         {"action_if_failed": "drop", "status": "fail"}]},
                         # drop & log into error
                         {"col1": 2, "col2": "b", "meta_row_dq_results": [
-                            {"action_if_failed": "drop"}]},
+                            {"action_if_failed": "drop", "status": "fail"}]},
                         # log into final
                         {"col1": 3, "col2": "c", "meta_row_dq_results": []}
                     ]
@@ -944,9 +1002,9 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 # spark expectations expected to fail
                 spark.createDataFrame(
                     [  # log into error and raise error
-                        {"col1": 1, "col2": "a", "meta_row_dq_results": [{"action_if_failed": "fail"},
-                                                                         {"action_if_failed": "fail"},
-                                                                         {"action_if_failed": "fail"}]},
+                        {"col1": 1, "col2": "a", "meta_row_dq_results": [{"action_if_failed": "fail", "status": "fail"},
+                                                                         {"action_if_failed": "fail", "status": "fail"},
+                                                                         {"action_if_failed": "fail", "status": "fail"}]},
                         {"col1": 2, "col2": "b", "meta_row_dq_results": []},
                         {"col1": 3, "col2": "c", "meta_row_dq_results": []}
                     ]
@@ -970,14 +1028,14 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 spark.createDataFrame(
                     [
                         # drop, log into error
-                        {"col1": 1, "col2": "a", "meta_row_dq_results": [{"action_if_failed": "ignore"},
-                                                                         {"action_if_failed": "ignore"},
-                                                                         {"action_if_failed": "drop"}]},
+                        {"col1": 1, "col2": "a", "meta_row_dq_results": [{"action_if_failed": "ignore", "status": "fail"},
+                                                                         {"action_if_failed": "ignore", "status": "fail"},
+                                                                         {"action_if_failed": "drop", "status": "fail"}]},
                         # log into error and final
-                        {"col1": 2, "col2": "b", "meta_row_dq_results": [{"action_if_failed": "ignore"}]},
+                        {"col1": 2, "col2": "b", "meta_row_dq_results": [{"action_if_failed": "ignore", "status": "fail"}]},
                         # log into error and final
                         {"col1": 2, "col2": "c", "meta_row_dq_results": [
-                            {"action_if_failed": "ignore"}]}
+                            {"action_if_failed": "ignore", "status": "fail"}]}
                     ]
                 ),
                 'test_dq_stats_table',  # table name
@@ -1004,12 +1062,12 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 spark.createDataFrame(
                     [
                         # log into to error & fail program
-                        {"col1": 1, "col2": "a", "meta_row_dq_results": [{"action_if_failed": "ignore"},
-                                                                         {"action_if_failed": "ignore"}
-                            , {"action_if_failed": "fail"}]},
+                        {"col1": 1, "col2": "a", "meta_row_dq_results": [{"action_if_failed": "ignore", "status": "fail"},
+                                                                         {"action_if_failed": "ignore", "status": "fail"}
+                            , {"action_if_failed": "fail", "status": "fail"}]},
                         # log into error
                         {"col1": 2, "col2": "b",
-                         "meta_row_dq_results": [{"action_if_failed": "ignore"}]},
+                         "meta_row_dq_results": [{"action_if_failed": "ignore", "status": "fail"}]},
                         {"col1": 3, "col2": "c", "meta_row_dq_results": []}
                     ]
                 ),
@@ -1031,11 +1089,11 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
         (spark.createDataFrame(
             [
                 # log into error & fail
-                {"col1": 1, "col2": "a", "meta_row_dq_results": [{"action_if_failed": "drop"},
-                                                                 {"action_if_failed": "drop"},
-                                                                 {"action_if_failed": "fail"}]},
+                {"col1": 1, "col2": "a", "meta_row_dq_results": [{"action_if_failed": "drop", "status": "fail"},
+                                                                 {"action_if_failed": "drop", "status": "fail"},
+                                                                 {"action_if_failed": "fail", "status": "fail"}]},
                 # log into error & drop
-                {"col1": 2, "col2": "b", "meta_row_dq_results": [{"action_if_failed": "drop"}]},
+                {"col1": 2, "col2": "b", "meta_row_dq_results": [{"action_if_failed": "drop", "status": "fail"}]},
                 {"col1": 3, "col2": "c", "meta_row_dq_results": []}
             ]
         ),
@@ -1059,12 +1117,12 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 spark.createDataFrame(
                     [
                         # drop and log into error
-                        {"col1": 1, "col2": "a", "meta_row_dq_results": [{"action_if_failed": "drop"},
-                                                                         {"action_if_failed": "ignore"},
-                                                                         {"action_if_failed": "ignore"}]},
+                        {"col1": 1, "col2": "a", "meta_row_dq_results": [{"action_if_failed": "drop", "status": "fail"},
+                                                                         {"action_if_failed": "ignore", "status": "fail"},
+                                                                         {"action_if_failed": "ignore", "status": "fail"}]},
                         # log into final
                         {"col1": 2, "col2": "b", "meta_row_dq_results":
-                            [{"action_if_failed": "test"}]},
+                            [{"action_if_failed": "test", "status": "fail"}]},
                         # log into final
                         {"col1": 3, "col2": "c", "meta_row_dq_results": []}
                     ]
@@ -1111,7 +1169,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 # function returns empty dataframe
                 spark.createDataFrame(
                     [
-                        {"meta_agg_dq_results": [{"action_if_failed": "ignore"}]},
+                        {"meta_agg_dq_results": [{"action_if_failed": "ignore", "status": "fail"}]},
                     ]
                 ),
                 'test_dq_stats_table',  # table name
@@ -1125,7 +1183,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 False,  # source_query_dq_flag
                 False,  # final_query_dq_flag
                 # expected df
-                spark.createDataFrame([{"meta_agg_dq_results": [{"action_if_failed": "ignore"}]}]).drop(
+                spark.createDataFrame([{"meta_agg_dq_results": [{"action_if_failed": "ignore", "status": "fail"}]}]).drop(
                     "meta_agg_dq_results")
         ),
         (
@@ -1134,7 +1192,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 # function returns empty dataframe
                 spark.createDataFrame(
                     [
-                        {"meta_agg_dq_results": [{"action_if_failed": "fail"}]},
+                        {"meta_agg_dq_results": [{"action_if_failed": "fail", "status": "fail"}]},
                     ]
                 ),
                 'test_dq_stats_table',  # table name
@@ -1155,7 +1213,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 # function returns empty dataframe
                 spark.createDataFrame(
                     [
-                        {"meta_agg_dq_results": [{"action_if_failed": "ignore"}]},
+                        {"meta_agg_dq_results": [{"action_if_failed": "ignore", "status": "fail"}]},
                     ]
                 ),
                 'test_dq_stats_table',  # table name
@@ -1171,7 +1229,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 # expected df
                 spark.createDataFrame(
                     [
-                        {"meta_agg_dq_results": [{"action_if_failed": "ignore"}]},
+                        {"meta_agg_dq_results": [{"action_if_failed": "ignore", "status": "fail"}]},
                     ]
                 ).drop("meta_agg_dq_results")
         ),
@@ -1181,7 +1239,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 # spark expectations set to fail for agg_dq on final_agg-dq
                 spark.createDataFrame(
                     [
-                        {"meta_agg_dq_results": [{"action_if_failed": "fail"}]},
+                        {"meta_agg_dq_results": [{"action_if_failed": "fail", "status": "fail"}]},
                     ]
                 ),
                 'test_dq_stats_table',  # table name
@@ -1203,7 +1261,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 # spark expectations set to fail for agg_dq on final_agg_dq
                 spark.createDataFrame(
                     [
-                        {"meta_agg_dq_results": [{"action_if_failed": "fail"}]},
+                        {"meta_agg_dq_results": [{"action_if_failed": "fail", "status": "fail"}]},
                     ]
                 ),
                 'test_dq_stats_table',  # table name
@@ -1225,8 +1283,8 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 # spark expectations set to fail for agg_dq on final_agg_dq
                 spark.createDataFrame(
                     [
-                        {"meta_agg_dq_results": [{"action_if_failed": "ignore"},
-                                                 {"action_if_failed": "fail"}]},
+                        {"meta_agg_dq_results": [{"action_if_failed": "ignore", "status": "fail"},
+                                                 {"action_if_failed": "fail", "status": "fail"}]},
                     ]
                 ),
                 'test_dq_stats_table',  # table name
@@ -1248,8 +1306,8 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 # function returns a empty datatset
                 spark.createDataFrame(
                     [
-                        {"meta_agg_dq_results": [{"action_if_failed": "ignore"},
-                                                 {"action_if_failed": "ignore"}]},
+                        {"meta_agg_dq_results": [{"action_if_failed": "ignore", "status": "fail"},
+                                                 {"action_if_failed": "ignore", "status": "fail"}]},
                     ]
                 ),
                 'test_dq_stats_table',  # table name
@@ -1264,7 +1322,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 False,  # final_query_dq_flag
                 spark.createDataFrame(
                     [
-                        {"meta_agg_dq_results": [{"action_if_failed": "ignore"}]},
+                        {"meta_agg_dq_results": [{"action_if_failed": "ignore", "status": "fail"}]},
                     ]
                 ).drop("meta_agg_dq_results")  # expected df
         ),
@@ -1275,9 +1333,9 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 # function returns a empty datatset
                 spark.createDataFrame(
                     [
-                        {"meta_agg_dq_results": [{"action_if_failed": "ignore"},
-                                                 {"action_if_failed": "ignore"},
-                                                 {"action_if_failed": "ignore"}]},
+                        {"meta_agg_dq_results": [{"action_if_failed": "ignore", "status": "fail"},
+                                                 {"action_if_failed": "ignore", "status": "fail"},
+                                                 {"action_if_failed": "ignore", "status": "fail"}]},
                     ]
                 ),
                 'test_dq_stats_table',  # table name
@@ -1292,7 +1350,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 False,  # final_query_dq_flag
                 spark.createDataFrame(
                     [
-                        {"meta_agg_dq_results": [{"action_if_failed": "ignore"}]},
+                        {"meta_agg_dq_results": [{"action_if_failed": "ignore", "status": "fail"}]},
                     ]
                 ).drop("meta_agg_dq_results")  # expected df
         ),
@@ -1302,9 +1360,9 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 # function returns a empty datatset
                 spark.createDataFrame(
                     [
-                        {"meta_query_dq_results": [{"action_if_failed": "ignore"},
-                                                   {"action_if_failed": "ignore"},
-                                                   {"action_if_failed": "ignore"}]},
+                        {"meta_query_dq_results": [{"action_if_failed": "ignore", "status": "fail"},
+                                                   {"action_if_failed": "ignore", "status": "fail"},
+                                                   {"action_if_failed": "ignore", "status": "fail"}]},
                     ]
                 ),
                 'test_dq_stats_table',  # table name
@@ -1319,7 +1377,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 False,  # final_query_dq_flag
                 spark.createDataFrame(
                     [
-                        {"meta_query_dq_results": [{"action_if_failed": "ignore"}]},
+                        {"meta_query_dq_results": [{"action_if_failed": "ignore", "status": "fail"}]},
                     ]
                 ).drop("meta_query_dq_results")  # expected df
         ),
@@ -1329,11 +1387,11 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 # function set to fail with exceptions
                 spark.createDataFrame(
                     [
-                        {"meta_query_dq_results": [{"action_if_failed": "ignore"},
-                                                   {"action_if_failed": "fail"},
-                                                   {"action_if_failed": "ignore"},
-                                                   {"action_if_failed": "ignore"},
-                                                   {"action_if_failed": "ignore"}
+                        {"meta_query_dq_results": [{"action_if_failed": "ignore", "status": "fail"},
+                                                   {"action_if_failed": "fail", "status": "fail"},
+                                                   {"action_if_failed": "ignore", "status": "fail"},
+                                                   {"action_if_failed": "ignore", "status": "fail"},
+                                                   {"action_if_failed": "ignore", "status": "fail"}
 
                                                    ]},
                     ]
@@ -1357,7 +1415,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 spark.createDataFrame(
                     [
                         {"meta_query_dq_results": [
-                            {"action_if_failed": "fail"},
+                            {"action_if_failed": "fail", "status": "fail"},
                         ]},
                     ]
                 ),
@@ -1380,7 +1438,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 spark.createDataFrame(
                     [
                         {"meta_query_dq_results": [
-                            {"action_if_failed": "ignore"},
+                            {"action_if_failed": "ignore", "status": "fail"},
                         ]},
                     ]
                 ),
@@ -1396,7 +1454,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 True,  # final_query_dq_flag
                 spark.createDataFrame(
                     [
-                        {"meta_query_dq_results": [{"action_if_failed": "ignore"}]},
+                        {"meta_query_dq_results": [{"action_if_failed": "ignore", "status": "fail"}]},
                     ]
                 ).drop("meta_query_dq_results")  # expected df
         ),
@@ -1407,12 +1465,12 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 spark.createDataFrame(
                     [
                         {"meta_query_dq_results": [
-                            {"action_if_failed": "ignore"},
-                            {"action_if_failed": "ignore"},
-                            {"action_if_failed": "ignore"},
-                            {"action_if_failed": "ignore"},
-                            {"action_if_failed": "ignore"},
-                            {"action_if_failed": "ignore"}
+                            {"action_if_failed": "ignore", "status": "fail"},
+                            {"action_if_failed": "ignore", "status": "fail"},
+                            {"action_if_failed": "ignore", "status": "fail"},
+                            {"action_if_failed": "ignore", "status": "fail"},
+                            {"action_if_failed": "ignore", "status": "fail"},
+                            {"action_if_failed": "ignore", "status": "fail"}
                         ]},
                     ]
                 ),
@@ -1428,7 +1486,7 @@ def test_run_dq_rules_negative_case(_fixture_df, _fixture_mock_context):
                 True,  # final_query_dq_flag
                 spark.createDataFrame(
                     [
-                        {"meta_query_dq_results": [{"action_if_failed": "ignore"}]},
+                        {"meta_query_dq_results": [{"action_if_failed": "ignore", "status": "fail"}]},
                     ]
                 ).drop("meta_query_dq_results")  # expected df
         )
