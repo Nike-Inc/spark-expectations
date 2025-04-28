@@ -29,7 +29,8 @@ def remove_passing_status_maps(column: Column) -> Column:
 
 def get_actions_list(column: Column) -> Column:
     """
-    This function takes column of type array(map(str,str)) and creates list by picking action_if_failed from dict of failed expectations rules.
+    This function takes column of type array(map(str,str)) and creates list by picking action_if_failed
+    from dict of failed expectations rules.
     Args:
         column: Provide a column of type array(map(str,str))
 

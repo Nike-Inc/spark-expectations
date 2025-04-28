@@ -9,8 +9,11 @@ packages = [{ include = "spark_expectations" }]
 [tool.poetry.dependencies]
 python = "^3.9,<3.13"
 pluggy = ">=1"
-pyspark = ">=3.0.0,<4.0.0"
 requests = ">=2.28.1"
+pyspark = { version = ">=3.0.0,<4.0.0", optional = true }
+
+[tool.poetry.extras]
+pyspark = ["pyspark"]
 
 [tool.poetry.group.dev.dependencies]
 black = "23.3.0"
@@ -32,7 +35,6 @@ numpy = "1.26.4"
 pandas = "^2.2.3"
 pre-commit = "3.3.1"
 prospector = "^1.12.1"
-pyspark = {version=">=3.4.0, <4.0.0", extras=["connect"]}
 pytest = "^8.3.3"
 pytest-mock = "^3.14.0"
 types-requests = "2.28.11.16"

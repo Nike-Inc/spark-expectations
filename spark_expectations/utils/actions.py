@@ -8,7 +8,6 @@ from pyspark.sql.functions import (
     array_append,
     array_contains,
     col,
-    create_map,
     expr,
     lit,
     map_from_entries,
