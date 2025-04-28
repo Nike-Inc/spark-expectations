@@ -1,7 +1,7 @@
 import functools
 import importlib
 from dataclasses import dataclass
-from typing import Dict, Optional, Any, Union, List
+from typing import Dict, Optional, Any, Union, List, TypeAlias
 
 from pyspark.version import __version__ as spark_version
 from pyspark import StorageLevel
@@ -61,12 +61,8 @@ if check_if_pyspark_connect_is_supported():
     from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
     from pyspark.sql.connect.session import SparkSession as ConnectSparkSession
 
-    DataFrame = Union[sql.DataFrame, ConnectDataFrame]  # type: ignore
-    SparkSession = Union[sql.SparkSession, ConnectSparkSession]  # type: ignore
-else:
-    # Otherwise, use the default PySpark classes
-    from pyspark.sql.dataframe import DataFrame  # type: ignore
-    from pyspark.sql.session import SparkSession  # type: ignore
+DataFrame: TypeAlias = Union[sql.DataFrame, ConnectDataFrame]  # type: ignore
+SparkSession: TypeAlias = Union[sql.SparkSession, ConnectSparkSession]  # type: ignore
 
 
 __all__ = [
@@ -90,13 +86,13 @@ class SparkExpectations:
     """
 
     product_id: str
-    rules_df: DataFrame
+    rules_df: "DataFrame"
     stats_table: str
     target_and_error_table_writer: "WrappedDataFrameWriter"
     stats_table_writer: "WrappedDataFrameWriter"
     debugger: bool = False
     stats_streaming_options: Optional[Dict[str, Union[str, bool]]] = None
-    spark: Optional[SparkSession] = None
+    # spark: Optional["SparkSession"] = None
 
     def __post_init__(self) -> None:
         if isinstance(self.rules_df, DataFrame):  # type: ignore

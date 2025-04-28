@@ -10,7 +10,7 @@ packages = [{ include = "spark_expectations" }]
 python = "^3.9,<3.13"
 pluggy = ">=1"
 requests = ">=2.28.1"
-pyspark = { version = ">=3.0.0,<4.0.0", optional = true }
+pyspark = { version = ">=3.0.0,<4.0.0", extras = ["connect"], optional = true }
 
 [tool.poetry.extras]
 pyspark = ["pyspark"]
