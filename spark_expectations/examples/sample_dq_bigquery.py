@@ -1,5 +1,5 @@
-# mypy: ignore-errors
 import os
+from typing import Dict, Union
 from pyspark.sql import DataFrame
 from spark_expectations import _log
 from spark_expectations.core.expectations import (
@@ -9,9 +9,9 @@ from spark_expectations.core.expectations import (
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.examples.base_setup import set_up_bigquery
 
-os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = (
-    "path_to_your_json_credential_file"  # This is needed for spark write to bigquery
-)
+os.environ[
+    "GOOGLE_APPLICATION_CREDENTIALS"
+] = "path_to_your_json_credential_file"  # This is needed for spark write to bigquery
 writer = (
     WrappedDataFrameWriter()
     .mode("overwrite")
@@ -46,7 +46,7 @@ se: SparkExpectations = SparkExpectations(
     debugger=False,
 )
 
-user_conf = {
+user_conf: Dict[str, Union[str, int, bool, Dict[str, str]]] = {
     user_config.se_notifications_enable_email: False,
     user_config.se_notifications_email_smtp_host: "mailhost.com",
     user_config.se_notifications_email_smtp_port: 25,

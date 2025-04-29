@@ -192,10 +192,10 @@ def fixture_create_stats_table():
 def fixture_dq_dataset():
     return spark.createDataFrame(
         [
-            (1, "a", {"id": "1", "rule": "rule1"}, {}),
+            (1, "a", {"id": "1", "rule": "rule1", "status": "fail"}, {}),
             (2, "b", {}, {}),
-            (3, "c", {"id": "3", "rule": "rule1"}, {"name": "c", "rule": "rule2"}),
-            (4, "d", {}, {"name": "d", "rule": "rule2"}),
+            (3, "c", {"id": "3", "rule": "rule1", "status": "fail"}, {"name": "c", "rule": "rule2", "status": "fail"}),
+            (4, "d", {}, {"name": "d", "rule": "rule2", "status": "fail"}),
         ],
         ["id", "name", "row_dq_id", "row_dq_name"],
     )
@@ -206,14 +206,14 @@ def fixture_expected_error_dataset():
     spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
     return spark.createDataFrame(
         [
-            (1, "a", [{"id": "1", "rule": "rule1"}], "product1_run_test"),
+            (1, "a", [{"id": "1", "rule": "rule1", "status": "fail"}], "product1_run_test"),
             (
                 3,
                 "c",
-                [{"id": "3", "rule": "rule1"}, {"name": "c", "rule": "rule2"}],
+                [{"id": "3", "rule": "rule1", "status": "fail"}, {"name": "c", "rule": "rule2", "status": "fail"}],
                 "product1_run_test",
             ),
-            (4, "d", [{"name": "d", "rule": "rule2"}], "product1_run_test"),
+            (4, "d", [{"name": "d", "rule": "rule2", "status": "fail"}], "product1_run_test"),
         ],
         ["id", "name", "meta_row_dq_results", "run_id"],
     ).withColumn("meta_dq_run_date", to_timestamp(lit("2022-12-27 10:39:44")))
@@ -224,15 +224,15 @@ def fixture_expected_dq_dataset():
     spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
     return spark.createDataFrame(
         [
-            (1, "a", [{"id": "1", "rule": "rule1"}], "product1_run_test"),
+            (1, "a", [{"id": "1", "rule": "rule1", "status": "fail"}], "product1_run_test"),
             (2, "b", [], "product1_run_test"),
             (
                 3,
                 "c",
-                [{"id": "3", "rule": "rule1"}, {"name": "c", "rule": "rule2"}],
+                [{"id": "3", "rule": "rule1", "status": "fail"}, {"name": "c", "rule": "rule2", "status": "fail"}],
                 "product1_run_test",
             ),
-            (4, "d", [{"name": "d", "rule": "rule2"}], "product1_run_test"),
+            (4, "d", [{"name": "d", "rule": "rule2", "status": "fail"}], "product1_run_test"),
         ],
         ["id", "name", "meta_row_dq_results", "meta_dq_run_id"],
     ).withColumn("meta_dq_run_date", to_timestamp(lit("2022-12-27 10:39:44")))

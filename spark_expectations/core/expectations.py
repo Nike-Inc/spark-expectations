@@ -151,7 +151,7 @@ class SparkExpectations:
         target_table: str,
         write_to_table: bool = False,
         write_to_temp_table: bool = False,
-        user_conf: Optional[Dict[str, Union[str, int, bool]]] = None,
+        user_conf: Optional[Dict[str, Union[str, int, bool, Dict[str, str]]]] = None,
         target_table_view: Optional[str] = None,
         target_and_error_table_writer: Optional["WrappedDataFrameWriter"] = None,
     ) -> Any:
@@ -710,9 +710,7 @@ class WrappedDataFrameWriter:
         self._options.update(options)
         return self
 
-    def bucketBy(  # noqa: N802
-        self, num_buckets: int, *columns: str
-    ) -> "WrappedDataFrameWriter":
+    def bucketBy(self, num_buckets: int, *columns: str) -> "WrappedDataFrameWriter":  # noqa: N802
         """Set the configuration for bucketing."""
         self._bucket_by["num_buckets"] = num_buckets
         self._bucket_by["columns"] = columns

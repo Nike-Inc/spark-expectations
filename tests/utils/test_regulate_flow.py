@@ -658,7 +658,16 @@ def fixture_create_stats_table():
             True,  # write to table
             # expected df
             spark.createDataFrame([{"col1": 1}]).drop("col1"),
-            None,  # expected agg dq result
+            [
+                {
+                    "action_if_failed": "ignore",
+                    "description": "sum of col3 value must be greater than 1",
+                    "rule": "sum_col3_threshold",
+                    "rule_type": "agg_dq",
+                    "status": "pass",
+                    "tag": "validity",
+                },
+            ],  # expected agg dq result
             # status at different stages for given input
             {
                 "row_dq_status": "Skipped",
@@ -772,6 +781,7 @@ def fixture_create_stats_table():
                     "rule": "distinct_col2_threshold",
                     "rule_type": "agg_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "validity",
                 }
             ],
@@ -827,7 +837,16 @@ def fixture_create_stats_table():
             0,  # output count
             True,  # write to table
             None,  # expected res df
-            None,  # expected agg dq result
+            [
+                {
+                    "action_if_failed": "ignore",
+                    "description": "min of col3 value must be greater than 1",
+                    "rule": "min_col3_threshold",
+                    "rule_type": "agg_dq",
+                    "status": "pass",
+                    "tag": "validity",
+                },
+            ],  # expected agg dq result
             # status at different stages for given input
             {
                 "row_dq_status": "Skipped",
@@ -936,6 +955,7 @@ def fixture_create_stats_table():
                     "rule": "avg_col2_threshold",
                     "rule_type": "agg_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "validity",
                 }
             ],
@@ -1026,6 +1046,7 @@ def fixture_create_stats_table():
                     "rule": "avg_col1_threshold",
                     "rule_type": "agg_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "validity",
                 },
                 {
@@ -1033,6 +1054,7 @@ def fixture_create_stats_table():
                     "rule": "min_col3_threshold",
                     "rule_type": "agg_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "accuracy",
                 },
                 {
@@ -1040,6 +1062,7 @@ def fixture_create_stats_table():
                     "rule": "count_col2_threshold",
                     "rule_type": "agg_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "validity",
                 },
             ],
@@ -1130,6 +1153,7 @@ def fixture_create_stats_table():
                     "rule": "avg_col1_threshold",
                     "rule_type": "agg_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "validity",
                 },
                 {
@@ -1137,6 +1161,7 @@ def fixture_create_stats_table():
                     "rule": "min_col3_threshold",
                     "rule_type": "agg_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "validity",
                 },
                 {
@@ -1144,6 +1169,7 @@ def fixture_create_stats_table():
                     "rule": "count_col2_threshold",
                     "rule_type": "agg_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "accuracy",
                 },
             ],
@@ -1234,6 +1260,7 @@ def fixture_create_stats_table():
                     "rule": "avg_col1_threshold",
                     "rule_type": "agg_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "validity",
                 },
                 {
@@ -1241,6 +1268,7 @@ def fixture_create_stats_table():
                     "rule": "min_col3_threshold",
                     "rule_type": "agg_dq",
                     "action_if_failed": "ignore",
+                    "status": "fail",
                     "tag": "validity",
                 },
             ],
@@ -1323,7 +1351,32 @@ def fixture_create_stats_table():
             3,  # output count
             True,  # write to table
             None,  # expected res
-            None,  # expected agg dq result
+            [
+                {
+                    "action_if_failed": "fail",
+                    "description": "average of col1 value must be less than 25",
+                    "rule": "avg_col1_threshold",
+                    "rule_type": "agg_dq",
+                    "status": "pass",
+                    "tag": "validity",
+                },
+                {
+                    "action_if_failed": "ignore",
+                    "description": "min of col3 value must be less than 15",
+                    "rule": "min_col3_threshold",
+                    "rule_type": "agg_dq",
+                    "status": "pass",
+                    "tag": "validity",
+                },
+                {
+                    "action_if_failed": "fail",
+                    "description": "distinct count of col2 value must be greater than 2",
+                    "rule": "count_col2_threshold",
+                    "rule_type": "agg_dq",
+                    "status": "pass",
+                    "tag": "validity",
+                },
+            ],  # expected agg dq result
             # status at different stages for given input
             {
                 "row_dq_status": "Skipped",

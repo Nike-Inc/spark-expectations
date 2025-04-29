@@ -24,14 +24,17 @@ class SparkExpectationsReader:
     def __post_init__(self) -> None:
         self.spark = self._context.spark
 
-    def set_notification_param(self, notification: Optional[Dict[str, Union[int, str, bool]]] = None) -> None:
+    def set_notification_param(
+        self,
+        notification: Optional[Dict[str, Union[int, str, bool, Dict[str, str]]]] = None,
+    ) -> None:
         """
         This function supports to read notifications configurations
         Returns: None
 
         """
         try:
-            _default_spark_conf: Dict[str, Union[str, int, bool]] = {
+            _default_spark_conf: Dict[str, Union[str, int, bool, Dict[str, str]]] = {
                 user_config.se_notifications_enable_email: False,
                 user_config.se_notifications_enable_smtp_server_auth: False,
                 user_config.se_notifications_enable_custom_email_body: False,
@@ -50,16 +53,16 @@ class SparkExpectationsReader:
                 user_config.se_notifications_zoom_token: "",
             }
 
-            _notification_dict: Dict[str, Union[str, int, bool]] = (
+            _notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = (
                 {**_default_spark_conf, **notification} if notification else _default_spark_conf
             )
             if _notification_dict.get(user_config.se_enable_obs_dq_report_result) is True:
                 self._context.set_enable_obs_dq_report_result(True)
                 if _notification_dict.get(user_config.se_dq_obs_alert_flag) is True:
                     self._context.set_se_dq_obs_alert_flag(True)
-                    self._context.set_mail_smtp_port(
-                        int(_notification_dict[user_config.se_notifications_email_smtp_port])
-                    )
+
+                    smtp_port = _notification_dict.get(user_config.se_notifications_email_smtp_port, 25)
+                    self._context.set_mail_smtp_port(int(smtp_port) if isinstance(smtp_port, (str, int)) else 25)
                     self._context.set_mail_subject(str(_notification_dict[user_config.se_notifications_email_subject]))
                     self._context.set_mail_smtp_password(
                         str(_notification_dict[user_config.se_notifications_smtp_password])
@@ -95,9 +98,8 @@ class SparkExpectationsReader:
                     self._context.set_mail_smtp_server(
                         str(_notification_dict[user_config.se_notifications_email_smtp_host])
                     )
-                    self._context.set_mail_smtp_port(
-                        int(_notification_dict[user_config.se_notifications_email_smtp_port])
-                    )
+                    smtp_port = _notification_dict.get(user_config.se_notifications_email_smtp_port, 25)
+                    self._context.set_mail_smtp_port(int(smtp_port) if isinstance(smtp_port, (str, int)) else 25)
 
                     self._context.set_mail_from(str(_notification_dict[user_config.se_notifications_email_from]))
                 else:
