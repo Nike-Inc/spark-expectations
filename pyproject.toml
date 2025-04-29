@@ -48,8 +48,144 @@ style = "semver"
 requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
 build-backend = "poetry_dynamic_versioning.backend"
 
+
+###  ~~~~~~~~~~~~~~~~~~  ###
+#  Code Quality and Style  #
+###  ~~~~~~~~~~~~~~~~~~  ###
+#
+
+[tool.ruff]
+# https://docs.astral.sh/ruff/configuration/#using-pyprojecttoml
+# https://docs.astral.sh/ruff/settings/
+target-version = "py310"
+line-length = 120 # Same as Black.
+exclude = [
+  # Exclude a variety of commonly ignored directories.
+  ".bzr",
+  ".direnv",
+  ".eggs",
+  ".git",
+  ".hg",
+  ".mypy_cache",
+  ".pants.d",
+  ".pytype",
+  ".ruff_cache",
+  ".svn",
+  ".venv",
+  ".venvs",
+  "__pypackages__",
+  "__notebooks__",
+  "__research__",
+  "_build",
+  "buck-out",
+  "build",
+  "dist",
+  "node_modules",
+  "venv",
+]
+
+[tool.ruff.format]
+# https://docs.astral.sh/ruff/formatter/#docstring-formatting
+docstring-code-format = true
+docstring-code-line-length = 70
+
+[tool.ruff.lint]
+select = [
+  ## pycodestyle
+  "E",
+  ## Pyflakes
+  "F",
+  ## flake8-bugbear
+  # "B",
+  ## flake8-annotations
+  # "ANN",
+  ## pyupgrade
+  # "UP",
+  ## flake8-simplify
+  # "SIM",
+  ## pep8-naming
+  # "N",
+  ## isort
+  "I",
+]
+ignore = [
+  "F405", # To avoid errors like '`ConfigDict` may be undefined, or defined from star imports: `pydantic`'
+  "E501", # To avoid errors like 'line too long (120 > 79 characters)' -> let Black handle this instead
+  "F401", # To avoid errors like 'module imported but unused' -> there are too many false positives
+  "F403", # To avoid errors like 'import * used; unable to detect undefined names' -> leads to false positives
+]
+# Unlike Flake8, default to a complexity level of 10.
+mccabe.max-complexity = 10
+# Allow autofix for all enabled rules (when `--fix` is provided).
+fixable = [
+  "A",
+  "B",
+  "C",
+  "D",
+  "E",
+  "F",
+  "G",
+  "I",
+  "N",
+  "Q",
+  "S",
+  "T",
+  "W",
+  "ANN",
+  "ARG",
+  "BLE",
+  "COM",
+  "DJ",
+  "DTZ",
+  "EM",
+  "ERA",
+  "EXE",
+  "FBT",
+  "ICN",
+  "INP",
+  "ISC",
+  "NPY",
+  "PD",
+  "PGH",
+  "PIE",
+  "PL",
+  "PT",
+  "PTH",
+  "PYI",
+  "RET",
+  "RSE",
+  "RUF",
+  "SIM",
+  "SLF",
+  "TCH",
+  "TID",
+  "TRY",
+  "UP",
+  "YTT",
+]
+unfixable = []
+
+# Allow unused variables when underscore-prefixed.
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+
+[tool.ruff.lint.isort]
+force-to-top = ["__future__", "typing"]
+section-order = [
+  "future",
+  "standard-library",
+  "third-party",
+  "pydantic",
+  "pyspark",
+  "first-party",
+  "local-folder",
+]
+sections.pydantic = ["pydantic"]
+sections.pyspark = ["pyspark"]
+detect-same-package = true
+force-sort-within-sections = true
+
 [tool.black]
-line-length = 88
+line-length = 120
 target-version = ['py39']
 include = '\.pyi?$'
 exclude = '''
@@ -72,11 +208,118 @@ exclude = '''
 )
 '''
 
-#[tool.poetry_bumpversion.file."spark_expectations/__init__.py"]
-#search = '__version__ = "{current_version}"'
-#replace = '__version__ = "{new_version}"'
-
 [tool.mypy]
+python_version = "3.10"
+files = ["spark_expectations/**/*.py"]
+disable_error_code = ["attr-defined", "return-value", "union-attr", "override"]
+# plugins = ["pydantic.mypy"]  # TODO: enable once we move to pydantic
+allow_untyped_globals = true
+check_untyped_defs = false
+disallow_untyped_calls = false
 disallow_untyped_defs = true
-ignore_missing_imports = true
+
 follow_imports = "skip"
+ignore_missing_imports = true
+implicit_optional = true
+pretty = true
+warn_no_return = false
+warn_unused_configs = true
+
+[tool.pylint.main]
+fail-under = 9.5
+py-version = "3.10"
+
+[tool.pylint.basic]
+# require docstrings for all functions except magic methods (those starting and ending with __) and test methods (those starting with test_).
+no-docstring-rgx = "__.*__|test_.*"
+
+[tool.pylint.classes]
+exclude-protected = [
+  "_asdict",
+  "_fields",
+  "_replace",
+  "_source",
+  "_make",
+  "os._exit",
+  "_jsc",
+]
+
+[tool.pylint.design]
+max-attributes = 25
+max-bool-expr = 5
+max-locals = 16
+max-parents = 25
+min-public-methods = 1
+
+[tool.pylint.format]
+# Same as Black.
+max-line-length = 120
+# Maximum number of lines in a module.
+max-module-lines = 1200
+# Allow the body of a class to be on the same line as the declaration if body contains single statement.
+single-line-class-stmt = true
+# Allow the body of an if to be on the same line as the test if there is no else.
+single-line-if-stmt = true
+
+[tool.pylint.logging]
+# The type of string formatting that logging methods do. old means using % formatting, new is for {} formatting.
+logging-format-style = "new"
+
+[tool.pylint."messages control"]
+confidence = [
+  "HIGH",
+  "CONTROL_FLOW",
+  "INFERENCE",
+  "INFERENCE_FAILURE",
+  "UNDEFINED",
+]
+disable = [
+  "arguments-differ",
+  "bad-inline-option",
+  "broad-except",
+  "consider-using-set-comprehension",
+  "deprecated-pragma",
+  "duplicate-code",
+  "file-ignored",
+  "import-outside-toplevel",
+  "inconsistent-return-statements",
+  "invalid-name",
+  "len-as-condition",
+  "line-too-long",
+  "locally-disabled",
+  "logging-fstring-interpolation",
+  "no-else-return",
+  "no-member",
+  "no-self-argument",
+  "no-self-use",
+  "possibly-used-before-assignment",
+  "protected-access",
+  "raise-missing-from",
+  "raw-checker-failed",
+  "suppressed-message",
+  "too-few-public-methods",
+  "too-many-arguments",
+  "too-many-branches",
+  "too-many-boolean-expressions",
+  "too-many-instance-attributes",
+  "too-many-lines",
+  "too-many-locals",
+  "too-many-positional-arguments",
+  "too-many-statements",
+  "unnecessary-ellipsis",
+  "unnecessary-pass",
+  "use-implicit-booleaness-not-comparison-to-string",
+  "use-implicit-booleaness-not-comparison-to-zero",
+  "use-symbolic-message-instead",
+  "used-before-assignment",
+  "useless-object-inheritance",
+  "useless-suppression",
+  "W0622",
+]
+enable = ["logging-not-lazy", "c-extension-no-member"]
+
+[tool.pylint.miscellaneous]
+notes = ["FIXME", "TODO"]
+
+[tool.pylint.refactoring]
+max-nested-blocks = 3

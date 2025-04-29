@@ -5,7 +5,7 @@ from spark_expectations.core.exceptions import SparkExpectationsZoomNotification
 from spark_expectations.notifications.plugins.zoom import SparkExpectationsZoomPluginImpl
 
 
-@patch('spark_expectations.notifications.plugins.zoom.SparkExpectationsContext', autospec=True, spec_set=True)
+@patch("spark_expectations.notifications.plugins.zoom.SparkExpectationsContext", autospec=True, spec_set=True)
 def test_send_notification_success(_mock_context):
     # Arrange
     zoom_handler = SparkExpectationsZoomPluginImpl()
@@ -13,9 +13,7 @@ def test_send_notification_success(_mock_context):
     _mock_context.get_zoom_webhook_url = "http://test_webhook_url"
     _mock_context.get_zoom_token = "abcdefghi"
 
-    _config_args = {
-        "title": "SE Notification",
-        "themeColor": "008000", "message": "test message"}
+    _config_args = {"title": "SE Notification", "themeColor": "008000", "message": "test message"}
 
     # Mock requests.post to return a response with status code 200
     with patch.object(requests, "post") as mock_post:
@@ -27,13 +25,15 @@ def test_send_notification_success(_mock_context):
         zoom_handler.send_notification(_context=_mock_context, _config_args=_config_args)
 
         # Assert
-        mock_post.assert_called_once_with(_mock_context.get_zoom_webhook_url, json={
-            "title": "SE Notification",
-            "themeColor": "008000", "text": "test message"}, headers={"Authorization": "Bearer abcdefghi", "Content-Type": "application/json"}, timeout=10)
+        mock_post.assert_called_once_with(
+            _mock_context.get_zoom_webhook_url,
+            json={"title": "SE Notification", "themeColor": "008000", "text": "test message"},
+            headers={"Authorization": "Bearer abcdefghi", "Content-Type": "application/json"},
+            timeout=10,
+        )
 
 
-
-@patch('spark_expectations.notifications.plugins.zoom.SparkExpectationsContext', autospec=True, spec_set=True)
+@patch("spark_expectations.notifications.plugins.zoom.SparkExpectationsContext", autospec=True, spec_set=True)
 def test_send_notification_exception(_mock_context):
     # Arrange
     zoom_handler = SparkExpectationsZoomPluginImpl()
@@ -53,7 +53,7 @@ def test_send_notification_exception(_mock_context):
             zoom_handler.send_notification(_context=_mock_context, _config_args=_config_args)
 
 
-@patch('spark_expectations.notifications.plugins.zoom.SparkExpectationsContext', autospec=True, spec_set=True)
+@patch("spark_expectations.notifications.plugins.zoom.SparkExpectationsContext", autospec=True, spec_set=True)
 def test_send_notification_zoom_disabled(_mock_context):
     # Arrange
     zoom_handler = SparkExpectationsZoomPluginImpl()

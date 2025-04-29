@@ -47,9 +47,7 @@ class SparkExpectationsTeamsPluginImpl(SparkExpectationsNotification):
                     "text": message,
                 }
 
-                response = requests.post(
-                    _context.get_teams_webhook_url, json=payload, timeout=10
-                )
+                response = requests.post(_context.get_teams_webhook_url, json=payload, timeout=10)
 
                 # Check the response for success or failure
                 if response.status_code == 200:

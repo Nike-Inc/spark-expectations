@@ -97,9 +97,7 @@ class SparkExpectationsAlert:
             if not self._context.get_default_template:
                 template_dir = "../../spark_expectations/config/templates"
                 env_loader = Environment(loader=FileSystemLoader(template_dir))
-                template = env_loader.get_template(
-                    "advanced_email_alert_template.jinja"
-                )
+                template = env_loader.get_template("advanced_email_alert_template.jinja")
             else:
                 template_dir = self._context.get_default_template
                 template = Environment(loader=BaseLoader).from_string(template_dir)
@@ -134,12 +132,7 @@ class SparkExpectationsAlert:
                 },
             ]
             html_data = "<br>".join(
-                [
-                    template.render(
-                        render_table=template.module.render_table, **data_dict
-                    )
-                    for data_dict in data_dicts
-                ]
+                [template.render(render_table=template.module.render_table, **data_dict) for data_dict in data_dicts]
             )
             html_data = f"<h2>{mail_subject}</h2>" + html_data
 

@@ -1,4 +1,3 @@
-
 # pylint: disable=pointless-statement
 from datetime import datetime, timedelta
 from unittest.mock import patch
@@ -57,7 +56,7 @@ def test_context_properties():
         "se.streaming.secret.type": "cerberus",
         "se.streaming.cerberus.url": "https://xyz.com",
         "se.streaming.cerberus.sdb.path": "abc",
-        "spark.expectations.notifications.cerberus.smtp.password": "def"
+        "spark.expectations.notifications.cerberus.smtp.password": "def",
     }
     context._enable_mail = True
     context._enable_smtp_server_auth = True
@@ -122,11 +121,7 @@ def test_context_properties():
     context._debugger_mode = False
 
     context._supported_df_query_dq = spark.createDataFrame(
-        [
-            {
-                "spark_expectations_query_check": "supported_place_holder_dataset_to_run_query_check"
-            }
-        ]
+        [{"spark_expectations_query_check": "supported_place_holder_dataset_to_run_query_check"}]
     ).collect()
 
     datetime_now = datetime.now()
@@ -190,7 +185,7 @@ def test_context_properties():
         "se.streaming.secret.type": "cerberus",
         "se.streaming.cerberus.url": "https://xyz.com",
         "se.streaming.cerberus.sdb.path": "abc",
-        "spark.expectations.notifications.cerberus.smtp.password": "def"
+        "spark.expectations.notifications.cerberus.smtp.password": "def",
     }
     assert context._enable_mail is True
     assert context._enable_smtp_server_auth is True
@@ -252,11 +247,7 @@ def test_context_properties():
     assert (
         context._supported_df_query_dq
         == spark.createDataFrame(
-            [
-                {
-                    "spark_expectations_query_check": "supported_place_holder_dataset_to_run_query_check"
-                }
-            ]
+            [{"spark_expectations_query_check": "supported_place_holder_dataset_to_run_query_check"}]
         ).collect()
     )
 
@@ -550,24 +541,25 @@ def test_set_smtp_creds_dict():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_smtp_creds_dict(
         {
-        "se.streaming.secret.type": "cerberus",
-        "se.streaming.cerberus.url": "https://xyz.com",
-        "se.streaming.cerberus.sdb.path": "abc",
-        "spark.expectations.notifications.cerberus.smtp.password": "def"
-    }
+            "se.streaming.secret.type": "cerberus",
+            "se.streaming.cerberus.url": "https://xyz.com",
+            "se.streaming.cerberus.sdb.path": "abc",
+            "spark.expectations.notifications.cerberus.smtp.password": "def",
+        }
     )
     assert context._smtp_creds_dict == {
         "se.streaming.secret.type": "cerberus",
         "se.streaming.cerberus.url": "https://xyz.com",
         "se.streaming.cerberus.sdb.path": "abc",
-        "spark.expectations.notifications.cerberus.smtp.password": "def"
+        "spark.expectations.notifications.cerberus.smtp.password": "def",
     }
     assert context.get_smtp_creds_dict == {
         "se.streaming.secret.type": "cerberus",
         "se.streaming.cerberus.url": "https://xyz.com",
         "se.streaming.cerberus.sdb.path": "abc",
-        "spark.expectations.notifications.cerberus.smtp.password": "def"
+        "spark.expectations.notifications.cerberus.smtp.password": "def",
     }
+
 
 def test_set_to_mail():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
@@ -596,15 +588,17 @@ def test_set_email_custom_body():
     assert context._email_custom_body == "test email custom body"
     assert context.get_email_custom_body == "test email custom body"
 
+
 def test_get_email_custom_body_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._email_custom_body = None
     with pytest.raises(
-            SparkExpectationsMiscException,
-            match="""The spark expectations context is not set completely, please assign '_email_custom_body' before 
-            accessing it"""
+        SparkExpectationsMiscException,
+        match="""The spark expectations context is not set completely, please assign '_email_custom_body' before 
+            accessing it""",
     ):
         context.get_email_custom_body
+
 
 def test_set_enable_slack():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
@@ -839,9 +833,9 @@ def test_get_zoom_webhook_url_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._zoom_webhook_url = False
     with pytest.raises(
-            SparkExpectationsMiscException,
-            match="The spark expectations context is not set completely, please assign "
-                  "'_zoom_webhook_url' before \n            accessing it",
+        SparkExpectationsMiscException,
+        match="The spark expectations context is not set completely, please assign "
+        "'_zoom_webhook_url' before \n            accessing it",
     ):
         context.get_zoom_webhook_url
 
@@ -850,9 +844,9 @@ def test_get_zoom_token():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context._zoom_token = False
     with pytest.raises(
-            SparkExpectationsMiscException,
-            match="The spark expectations context is not set completely, please assign "
-                  "'_zoom_token' before \n            accessing it",
+        SparkExpectationsMiscException,
+        match="The spark expectations context is not set completely, please assign "
+        "'_zoom_token' before \n            accessing it",
     ):
         context.get_zoom_token
 
@@ -1401,13 +1395,7 @@ def test_set_supported_df_query_dq():
     assert (
         context.get_supported_df_query_dq.collect()
         == get_spark_session()
-        .createDataFrame(
-            [
-                {
-                    "spark_expectations_query_check": "supported_place_holder_dataset_to_run_query_check"
-                }
-            ]
-        )
+        .createDataFrame([{"spark_expectations_query_check": "supported_place_holder_dataset_to_run_query_check"}])
         .collect()
     )
 
@@ -1551,6 +1539,7 @@ def test_set_stats_dict():
         }
     ]
 
+
 def test_get_secret_type():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_se_streaming_stats_dict({user_config.secret_type: "a"})
@@ -1573,9 +1562,7 @@ def test_get_secret_type_exception():
 
 def test_get_server_url_key():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_kafka_server_url: "b", user_config.secret_type: "databricks"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_kafka_server_url: "b", user_config.secret_type: "databricks"})
 
     assert context.get_server_url_key == "b"
 
@@ -1591,9 +1578,7 @@ def test_get_server_url_key():
 
 def test_get_server_url_key_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_kafka_server_url: "b", user_config.secret_type: "cerberus"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_kafka_server_url: "b", user_config.secret_type: "cerberus"})
 
     with pytest.raises(
         SparkExpectationsMiscException,
@@ -1606,9 +1591,7 @@ def test_get_server_url_key_exception():
 
 def test_get_token_endpoint_url():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_secret_token_url: "d", user_config.secret_type: "databricks"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_secret_token_url: "d", user_config.secret_type: "databricks"})
 
     assert context.get_token_endpoint_url == "d"
 
@@ -1624,9 +1607,7 @@ def test_get_token_endpoint_url():
 
 def test_get_token_endpoint_url_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_secret_token_url: "d", user_config.secret_type: "cerberus"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_secret_token_url: "d", user_config.secret_type: "cerberus"})
 
     with pytest.raises(
         SparkExpectationsMiscException,
@@ -1639,9 +1620,7 @@ def test_get_token_endpoint_url_exception():
 
 def test_get_token():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_secret_token: "g", user_config.secret_type: "databricks"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_secret_token: "g", user_config.secret_type: "databricks"})
 
     assert context.get_token == "g"
 
@@ -1657,9 +1636,7 @@ def test_get_token():
 
 def test_get_token_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_secret_token_url: "g", user_config.secret_type: "cerberus"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_secret_token_url: "g", user_config.secret_type: "cerberus"})
 
     with pytest.raises(
         SparkExpectationsMiscException,
@@ -1672,9 +1649,7 @@ def test_get_token_exception():
 
 def test_get_client_id():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_secret_app_name: "i", user_config.secret_type: "databricks"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_secret_app_name: "i", user_config.secret_type: "databricks"})
 
     assert context.get_client_id == "i"
 
@@ -1690,9 +1665,7 @@ def test_get_client_id():
 
 def test_get_client_id_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_secret_app_name: "g", user_config.secret_type: "cerberus"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_secret_app_name: "g", user_config.secret_type: "cerberus"})
 
     with pytest.raises(
         SparkExpectationsMiscException,
@@ -1705,9 +1678,7 @@ def test_get_client_id_exception():
 
 def test_get_topic_name():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_topic_name: "k", user_config.secret_type: "databricks"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_topic_name: "k", user_config.secret_type: "databricks"})
 
     assert context.get_topic_name == "k"
 
@@ -1723,9 +1694,7 @@ def test_get_topic_name():
 
 def test_get_topic_name_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_dict(
-        {user_config.dbx_topic_name: "k", user_config.secret_type: "cerberus"}
-    )
+    context.set_se_streaming_stats_dict({user_config.dbx_topic_name: "k", user_config.secret_type: "cerberus"})
 
     with pytest.raises(
         SparkExpectationsMiscException,
@@ -1747,10 +1716,7 @@ def test_get_se_streaming_stats_topic_name():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_se_streaming_stats_topic_name("test_topic")
 
-    assert (
-        context.get_se_streaming_stats_topic_name
-        == context.get_se_streaming_stats_topic_name
-    )
+    assert context.get_se_streaming_stats_topic_name == context.get_se_streaming_stats_topic_name
 
 
 def test_get_se_streaming_stats_topic_name_exception():
@@ -2182,11 +2148,11 @@ def test_get_job_metadata():
     assert context.get_job_metadata is None
 
 
-
 def test_set_enable_obs_dq_report_result():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
     context.set_enable_obs_dq_report_result(True)
     assert context.get_enable_obs_dq_report_result is True
+
 
 def test_get_enable_obs_dq_report_result():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
@@ -2196,6 +2162,7 @@ def test_get_enable_obs_dq_report_result():
     # testing for None condition
     context._enable_obs_dq_report_result = None
     assert context.get_enable_obs_dq_report_result is None
+
 
 def test_set_se_dq_obs_alert_flag():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
@@ -2236,6 +2203,7 @@ def test_set_stats_detailed_dataframe():
     df = spark.createDataFrame(data, columns)
     context.set_stats_detailed_dataframe(df)
 
+
 def test_get_stats_detailed_dataframe():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
     data = [("test_product_id", "test_schema.table1", 5)]
@@ -2249,13 +2217,13 @@ def test_get_stats_detailed_dataframe():
         assert context.get_stats_detailed_dataframe.collect() == df.collect()
 
 
-
 def test_set_custom_detailed_dataframe():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
     data = [("test_product_id", "test_schema.table1", 5)]
     columns = ["product_id", "table_name", "error_count"]
     df = spark.createDataFrame(data, columns)
     context.set_custom_detailed_dataframe(df)
+
 
 def test_get_custom_detailed_dataframe():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
@@ -2302,7 +2270,6 @@ def test_get_dq_obs_rpt_gen_status_flag():
     assert context.get_dq_obs_rpt_gen_status_flag is None
 
 
-
 def test_set_df_dq_obs_report_dataframe():
     #
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
@@ -2310,6 +2277,7 @@ def test_set_df_dq_obs_report_dataframe():
     columns = ["product_id", "table_name", "error_count"]
     df = spark.createDataFrame(data, columns)
     context.set_df_dq_obs_report_dataframe(df)
+
 
 def test_get_df_dq_obs_report_dataframe():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)

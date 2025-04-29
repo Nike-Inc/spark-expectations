@@ -39,9 +39,7 @@ spark = set_up_bigquery("<temp_dataset>")
 
 se: SparkExpectations = SparkExpectations(
     product_id="your_product",
-    rules_df=spark.read.format("bigquery").load(
-        "<project_id>.<dataset_id>.<rules_table>"
-    ),
+    rules_df=spark.read.format("bigquery").load("<project_id>.<dataset_id>.<rules_table>"),
     stats_table="<project_id>.<dataset_id>.<stats_table>",
     stats_table_writer=writer,
     target_and_error_table_writer=writer,
@@ -111,9 +109,7 @@ if __name__ == "__main__":
     spark.sql("select * from dq_spark_local.dq_stats").show(truncate=False)
     spark.sql("select * from dq_spark_local.dq_stats").printSchema()
     spark.sql("select * from dq_spark_local.customer_order").show(truncate=False)
-    spark.sql("select count(*) from dq_spark_local.customer_order_error").show(
-        truncate=False
-    )
+    spark.sql("select count(*) from dq_spark_local.customer_order_error").show(truncate=False)
 
     _log.info("stats data in the kafka topic")
     # display posted statistics from the kafka topic

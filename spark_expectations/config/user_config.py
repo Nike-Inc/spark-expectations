@@ -4,73 +4,41 @@ from dataclasses import dataclass
 @dataclass
 class Constants:
     # declare const user config variables for email notification
-    se_notifications_enable_smtp_server_auth = (
-        "spark.expectations.notifications.email.smtp_server_auth"
-    )
+    se_notifications_enable_smtp_server_auth = "spark.expectations.notifications.email.smtp_server_auth"
     se_notifications_smtp_password = "spark.expectations.notifications.smtp.password"
-    se_notifications_smtp_creds_dict = (
-        "spark.expectations.notifications.smtp.creds.dict"
-    )
+    se_notifications_smtp_creds_dict = "spark.expectations.notifications.smtp.creds.dict"
     cbs_smtp_password = "spark.expectations.notifications.cerberus.smtp.password"
     dbx_smtp_password = "spark.expectations.notifications.dbx.smtp.password"
 
-    se_user_defined_custom_dataframe = (
-        "spark.expectations.user.defined.custom.dataframe"
-    )
-    se_notifications_enable_custom_dataframe = (
-        "spark.expectations.notifications.enable.custom.dataframe"
-    )
-    se_dq_obs_default_email_template = (
-        "spark.expectations.dq.obs.default.email.template"
-    )
+    se_user_defined_custom_dataframe = "spark.expectations.user.defined.custom.dataframe"
+    se_notifications_enable_custom_dataframe = "spark.expectations.notifications.enable.custom.dataframe"
+    se_dq_obs_default_email_template = "spark.expectations.dq.obs.default.email.template"
     se_dq_obs_mode_of_communication = "spark.expectations.dq.obs.mode.of.communication"
-    se_notifications_service_account_email = (
-        "spark.expectations.notifications.service.account.email"
-    )
+    se_notifications_service_account_email = "spark.expectations.notifications.service.account.email"
     se_dq_obs_alert_flag = "spark.expectations.notifications.alert.flag.disable"
-    se_notifications_service_account_password = (
-        "spark.expectations.notifications.service.account.password"
-    )
+    se_notifications_service_account_password = "spark.expectations.notifications.service.account.password"
     se_notifications_smtp_user_name = "spark.expectations.notifications.smtp.user.name"
     se_notifications_enable_email = "spark.expectations.notifications.email.enabled"
-    se_enable_obs_dq_report_result = (
-        "spark.expectations.notifications.observability.enabled"
-    )
-    se_notifications_enable_custom_email_body = (
-        "spark.expectations.notifications.enable.custom.email.body"
-    )
-    se_notifications_email_smtp_host = (
-        "spark.expectations.notifications.email.smtp_host"
-    )
-    se_notifications_email_smtp_port = (
-        "spark.expectations.notifications.email.smtp_port"
-    )
+    se_enable_obs_dq_report_result = "spark.expectations.notifications.observability.enabled"
+    se_notifications_enable_custom_email_body = "spark.expectations.notifications.enable.custom.email.body"
+    se_notifications_email_smtp_host = "spark.expectations.notifications.email.smtp_host"
+    se_notifications_email_smtp_port = "spark.expectations.notifications.email.smtp_port"
     se_notifications_email_from = "spark.expectations.notifications.email.from"
-    se_notifications_email_to_other_mail_id = (
-        "spark.expectations.notifications.email.to.other.mail.com"
-    )
+    se_notifications_email_to_other_mail_id = "spark.expectations.notifications.email.to.other.mail.com"
     se_notifications_email_subject = "spark.expectations.notifications.email.subject"
-    se_notifications_email_custom_body = (
-        "spark.expectations.notifications.email.custom.body"
-    )
+    se_notifications_email_custom_body = "spark.expectations.notifications.email.custom.body"
 
     # declare const user config variables for slack notification
     se_notifications_enable_slack = "spark.expectations.notifications.slack.enabled"
-    se_notifications_slack_webhook_url = (
-        "spark.expectations.notifications.slack.webhook_url"
-    )
+    se_notifications_slack_webhook_url = "spark.expectations.notifications.slack.webhook_url"
 
     # declare const user config variables for teams notification
     se_notifications_enable_teams = "spark.expectations.notifications.teams.enabled"
-    se_notifications_teams_webhook_url = (
-        "spark.expectations.notifications.teams.webhook_url"
-    )
+    se_notifications_teams_webhook_url = "spark.expectations.notifications.teams.webhook_url"
 
     # declare const user config variables for zoom notification
     se_notifications_enable_zoom = "spark.expectations.notifications.zoom.enabled"
-    se_notifications_zoom_webhook_url = (
-        "spark.expectations.notifications.zoom.webhook_url"
-    )
+    se_notifications_zoom_webhook_url = "spark.expectations.notifications.zoom.webhook_url"
     se_notifications_zoom_token = "spark.expectations.notifications.zoom.token"
 
     se_notifications_on_start = "spark.expectations.notifications.on_start"
@@ -82,9 +50,7 @@ class Constants:
     se_notifications_on_rules_action_if_failed_set_ignore = (
         "spark.expectations.notifications.on.rules.action.if.failed.set.ignore"
     )
-    se_notifications_on_error_drop_threshold = (
-        "spark.expectations.notifications.error.drop.threshold"
-    )
+    se_notifications_on_error_drop_threshold = "spark.expectations.notifications.error.drop.threshold"
 
     se_enable_streaming = "se.enable.streaming"
     se_enable_error_table = "se.enable.error.table"
@@ -117,9 +83,7 @@ class Constants:
 
     # declare const variable for agg query dq detailed stats
 
-    se_agg_dq_expectation_regex_pattern = (
-        r"(\(.+?\)|\w+\(.+?\))(\s*[<>!=]+\s*.+|\s*between\s*.+)$"
-    )
+    se_agg_dq_expectation_regex_pattern = r"(\(.+?\)|\w+\(.+?\))(\s*[<>!=]+\s*.+|\s*between\s*.+)$"
     # declare const variable for range in agg query dq detailed stats
     se_agg_dq_expectation_range_regex_pattern = (
         r"(\w+\(\w+\)|\w+)(\s*[><]\s*\d+)\s+(and)\s+(\w+\(\w+\)|\w+)(\s*[><]\s*\d+)"
