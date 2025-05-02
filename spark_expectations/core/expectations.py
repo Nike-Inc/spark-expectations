@@ -402,7 +402,7 @@ class SparkExpectations:
                     _df: DataFrame = func(*args, **kwargs)
                     table_name: str = self._context.get_table_name
 
-                    _input_count = _df.count()
+                    _input_count = _df.count() if not _df.isStreaming else 0
                     _log.info("data frame input record count: %s", _input_count)
                     _output_count: int = 0
                     _error_count: int = 0
@@ -561,7 +561,7 @@ class SparkExpectations:
 
                             _row_dq_df.createOrReplaceTempView(_target_table_view)
 
-                            _output_count = _row_dq_df.count() if _row_dq_df else 0
+                            _output_count = _row_dq_df.count() if not _row_dq_df.isStreaming else 0
                             self._context.set_output_count(_output_count)
 
                             self._context.set_row_dq_status(status)

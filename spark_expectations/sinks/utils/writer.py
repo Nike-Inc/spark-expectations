@@ -969,7 +969,7 @@ class SparkExpectationsWriter:
                     self._context.get_target_and_error_table_writer_config,
                 )
 
-            _error_count = error_df.count()
+            _error_count = error_df.count() if not error_df.isStreaming else 0
             # if _error_count > 0:
             self.generate_summarized_row_dq_res(error_df, rule_type)
 
@@ -1006,7 +1006,7 @@ class SparkExpectationsWriter:
                 .groupBy("rule_type", "rule", "description", "tag", "action_if_failed")
                 .count()
                 .withColumnRenamed("count", "failed_row_count")
-            )
+            ) 
             summarized_row_dq_list = [
                 {
                     "rule_type": row.rule_type,
