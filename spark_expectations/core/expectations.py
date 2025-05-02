@@ -160,7 +160,7 @@ class SparkExpectations:
         self._context.set_debugger_mode(self.debugger)
         self._context.set_dq_stats_table_name(self.stats_table)
         self._context.set_dq_detailed_stats_table_name(f"{self.stats_table}_detailed")
-        self.rules_df = self.rules_df.persist(StorageLevel.MEMORY_AND_DISK)
+        # self.rules_df = self.rules_df.persist(StorageLevel.MEMORY_AND_DISK)
 
     # TODO Add target_error_table_writer and stats_table_writer as parameters to this function so this takes precedence
     #  if user provides it
@@ -171,7 +171,7 @@ class SparkExpectations:
         write_to_temp_table: bool = False,
         user_conf: Optional[Dict[str, Union[str, int, bool, Dict[str, str]]]] = None,
         target_table_view: Optional[str] = None,
-        target_and_error_table_writer: Optional["WrappedDataFrameWriter"] = None,
+        target_and_error_table_writer: Optional[Union["WrappedDataFrameWriter", "WrappedDataFrameStreamWriter"]] = None,
     ) -> Any:
         """
         This decorator helps to wrap a function which returns dataframe and apply dataframe rules on it
