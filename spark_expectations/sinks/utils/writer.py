@@ -70,7 +70,7 @@ class SparkExpectationsWriter:
                 )
             _log.info("_save_df_as_table started")
 
-            if self._context._target_and_error_table_writer_type == "streaming":
+            if df.isStreaming:
                 _df_stream_writer: "DataStreamWriter" = df.writeStream
                 if config["outputMode"] is not None:
                     _df_stream_writer = _df_stream_writer.outputMode(
