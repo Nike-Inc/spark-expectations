@@ -166,15 +166,12 @@ class SparkExpectationsContext:
         self._stats_dict: List[dict] = []
 
     @property
-    def get_runtime_env(self) -> str:
+    def get_dbr_version(self) -> Optional[float]:
         """
-        This function is used to get the runtime environment of the current Spark session.
+        This function is used to get the dbr version.
         """
-        if os.environ.get("DATABRICKS_RUNTIME_VERSION", None):
-            if float(os.environ.get("DATABRICKS_RUNTIME_VERSION", 13)) >= 13.3:
-                return "databricks_newer_version"
-            return "databricks_older_version"
-        return "not_databricks"
+        runtime_version = os.environ.get("DATABRICKS_RUNTIME_VERSION")
+        return float(runtime_version) if runtime_version is not None else None
 
     @property
     def get_run_id(self) -> str:

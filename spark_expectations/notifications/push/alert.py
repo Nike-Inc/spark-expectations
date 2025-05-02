@@ -1,7 +1,7 @@
 import traceback
 from dataclasses import dataclass
 from jinja2 import Environment, FileSystemLoader, BaseLoader
-from pyspark import Row
+from pyspark.sql import Row
 from spark_expectations import _log
 from spark_expectations.notifications import SparkExpectationsEmailPluginImpl
 from spark_expectations.core.context import SparkExpectationsContext
@@ -63,7 +63,7 @@ class SparkExpectationsAlert:
 
             return columns, data, format_col_idx
         except Exception as e:
-            _log.info("Error in get_report_data: %s", e)
+            _log.info(f"Error in get_report_data: {e}")
             traceback.print_exc()
             # Return default values in case of an error
             return [], [], -1

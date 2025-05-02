@@ -29,11 +29,7 @@ def get_spark_expectations_tasks_hook() -> SparkExpectationsSecretPluginSpec:
     pm.register(CerberusSparkExpectationsSecretPluginImpl())
     pm.register(DatabricksSecretsSparkExpectationsSecretPluginImpl())
     for name, plugin_instance in pm.list_name_plugin():
-        _log.info(
-            "Loaded plugin with name: %s and class: %s",
-            name,
-            plugin_instance.__class__.__name__,
-        )
+        _log.info(f"Loaded plugin with name: {name} and class: {plugin_instance.__class__.__name__}")
     return pm.hook
 
 

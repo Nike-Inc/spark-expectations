@@ -3831,10 +3831,10 @@ def test_generate_rules_exceeds_threshold_exception():
 
 
 @pytest.mark.parametrize(
-    "runtime_env,env,expected_options",
+    "dbr_version,env,expected_options",
     [
         (
-            "databricks_newer_version",
+            13.3,
             "prod",
             {
                 "kafka.bootstrap.servers": "test-server-url",
@@ -3847,7 +3847,7 @@ def test_generate_rules_exceeds_threshold_exception():
             },
         ),
         (
-            "not_databricks",
+            12,
             "local",
             {
                 "kafka.bootstrap.servers": "localhost:9092",
@@ -3856,7 +3856,7 @@ def test_generate_rules_exceeds_threshold_exception():
             },
         ),
         (
-            "not_databricks",
+            12,
             "prod",
             {
                 "kafka.bootstrap.servers": "test-server-url",
@@ -3869,7 +3869,7 @@ def test_generate_rules_exceeds_threshold_exception():
         ),
     ],
 )
-def test_get_kafka_write_options(runtime_env, env, expected_options):
+def test_get_kafka_write_options(dbr_version, env, expected_options):
     """Test the Kafka write options generation for different environments and configurations"""
     context = SparkExpectationsContext("product1", spark)
     context._env = env
@@ -3877,8 +3877,8 @@ def test_get_kafka_write_options(runtime_env, env, expected_options):
     # Mock runtime environment check and secrets handler
     with (
         patch(
-            "spark_expectations.core.context.SparkExpectationsContext.get_runtime_env",
-            new_callable=Mock(return_value=runtime_env),
+            "spark_expectations.core.context.SparkExpectationsContext.get_dbr_version",
+            new_callable=Mock(return_value=dbr_version),
         ),
         patch(
             "spark_expectations.secrets.SparkExpectationsSecretsBackend.get_secret"

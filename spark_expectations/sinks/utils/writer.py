@@ -79,13 +79,13 @@ class SparkExpectationsWriter:
             if config["options"] is not None and config["options"] != {}:
                 _df_writer = _df_writer.options(**config["options"])
 
-            _log.info("Writing records to table: %s", table_name)
+            _log.info(f"Writing records to table: {table_name}")
 
             if config["format"] == "bigquery":
                 _df_writer.option("table", table_name).save()
             else:
                 _df_writer.saveAsTable(name=table_name)
-                _log.info("finished writing records to table: %s,", table_name)
+                _log.info(f"finished writing records to table: {table_name}")
                 if not stats_table:
                     # Fetch table properties
                     table_properties = self.spark.sql(f"SHOW TBLPROPERTIES {table_name}").collect()
@@ -96,10 +96,7 @@ class SparkExpectationsWriter:
                         table_properties_dict.get("product_id") is None
                         or table_properties_dict.get("product_id") != self._context.product_id
                     ):
-                        _log.info(
-                            "product_id is not set for table %s in tableproperties, setting it now",
-                            table_name,
-                        )
+                        _log.info(f"product_id is not set for table {table_name} in tableproperties, setting it now")
                         self.spark.sql(
                             f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = "
                             f"'{self._context.product_id}')"
@@ -488,8 +485,7 @@ class SparkExpectationsWriter:
             self._context.print_dataframe_with_debugger(_df_detailed_stats)
 
             _log.info(
-                "Writing metrics to the detailed stats table: %s, started",
-                self._context.get_dq_detailed_stats_table_name,
+                "Writing metrics to the detailed stats table: {self._context.get_dq_detailed_stats_table_name}, started"
             )
 
             self.save_df_as_table(
@@ -500,16 +496,14 @@ class SparkExpectationsWriter:
             )
 
             _log.info(
-                "Writing metrics to the detailed stats table: %s, ended",
-                self._context.get_dq_detailed_stats_table_name,
+                f"Writing metrics to the detailed stats table: {self._context.get_dq_detailed_stats_table_name}, ended"
             )
 
             # TODO Create a separate function for writing the custom query dq stats
             _df_custom_detailed_stats_source = self._prep_secondary_query_output()
 
             _log.info(
-                "Writing metrics to the output custom table: %s, started",
-                self._context.get_query_dq_output_custom_table_name,
+                "Writing metrics to the output custom table: {self._context.get_query_dq_output_custom_table_name}, started"
             )
 
             self.save_df_as_table(
@@ -520,8 +514,7 @@ class SparkExpectationsWriter:
             )
 
             _log.info(
-                "Writing metrics to the output custom table: %s, ended",
-                self._context.get_query_dq_output_custom_table_name,
+                "Writing metrics to the output custom table: {self._context.get_query_dq_output_custom_table_name}, ended"
             )
         except Exception as e:
             raise SparkExpectationsMiscException(f"error occurred while saving the data into the stats table {e}")
@@ -551,7 +544,6 @@ class SparkExpectationsWriter:
 
     def get_kafka_write_options(self, se_stats_dict: dict) -> dict:
         """Gets Kafka write configuration options based on runtime environment and config settings"""
-        runtime_env = self._context.get_runtime_env
 
         if self._context.get_env == "local":
             return {
@@ -562,7 +554,7 @@ class SparkExpectationsWriter:
 
         secret_handler = SparkExpectationsSecretsBackend(se_stats_dict)
 
-        if runtime_env == "databricks_newer_version":
+        if self._context.get_dbr_version and self._context.get_dbr_version >= 13.3:
             options = {
                 "kafka.bootstrap.servers": f"{secret_handler.get_secret(self._context.get_server_url_key)}",
                 "kafka.security.protocol": "SASL_SSL",
@@ -573,7 +565,6 @@ class SparkExpectationsWriter:
                 "topic": f"{secret_handler.get_secret(self._context.get_topic_name)}",
             }
         else:
-            # For non-Databricks production environment
             options = {
                 "kafka.bootstrap.servers": f"{secret_handler.get_secret(self._context.get_server_url_key)}",
                 "kafka.security.protocol": "SASL_SSL",
@@ -740,10 +731,7 @@ class SparkExpectationsWriter:
             )
 
             self._context.set_stats_dict(df)
-            _log.info(
-                "Writing metrics to the stats table: %s, started",
-                self._context.get_dq_stats_table_name,
-            )
+            _log.info("Writing metrics to the stats table: {self._context.get_dq_stats_table_name}, started")
             if self._context.get_stats_table_writer_config["format"] == "bigquery":
                 df = df.withColumn("dq_rules", to_json(df["dq_rules"]))
 
@@ -754,10 +742,7 @@ class SparkExpectationsWriter:
                 stats_table=True,
             )
 
-            _log.info(
-                "Writing metrics to the stats table: %s, ended",
-                self._context.get_dq_stats_table_name,
-            )
+            _log.info("Writing metrics to the stats table: {self._context.get_dq_stats_table_name}, ended")
 
             if (
                 self._context.get_agg_dq_detailed_stats_status is True

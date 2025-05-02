@@ -51,8 +51,8 @@ test: kafka-cluster-start
 build:
 	@poetry build
 
-poetry-lock-no-update:
-	@poetry lock --no-update
+poetry-check:
+	@poetry check --lock
 
 poetry-lock:
 	@poetry lock

@@ -1191,17 +1191,17 @@ def test_get_dq_run_time():
     assert context.get_dq_run_time == 2.0
 
 
-def test_get_runtime_env():
+def test_get_dbr_version():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     os.environ["DATABRICKS_RUNTIME_VERSION"] = "13"
-    assert context.get_runtime_env == "databricks_older_version"
+    assert context.get_dbr_version == 13
 
     os.environ["DATABRICKS_RUNTIME_VERSION"] = "13.3"
-    assert context.get_runtime_env == "databricks_newer_version"
+    assert context.get_dbr_version == 13.3
 
     # Remove the mock to test non-Databricks environment
     del os.environ["DATABRICKS_RUNTIME_VERSION"]
-    assert context.get_runtime_env == "not_databricks"
+    assert context.get_dbr_version == None
 
 
 def test_get_run_id_name():
