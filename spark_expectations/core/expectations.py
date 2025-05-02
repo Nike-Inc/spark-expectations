@@ -1,7 +1,7 @@
 import functools
 import importlib
 from dataclasses import dataclass
-from typing import Dict, Optional, Any, Union, List, TypeAlias
+from typing import Dict, Optional, Any, Union, List, TypeAlias, overload
 
 from pyspark.version import __version__ as spark_version
 from pyspark import StorageLevel
@@ -68,6 +68,7 @@ SparkSession: TypeAlias = Union[sql.SparkSession, ConnectSparkSession]  # type: 
 __all__ = [
     "SparkExpectations",
     "WrappedDataFrameWriter",
+    "WrappedDataFrameStreamWriter",
 ]
 
 
@@ -88,8 +89,10 @@ class SparkExpectations:
     product_id: str
     rules_df: "DataFrame"
     stats_table: str
-    target_and_error_table_writer: "WrappedDataFrameWriter"
-    stats_table_writer: "WrappedDataFrameWriter"
+    target_and_error_table_writer: Union[
+        "WrappedDataFrameWriter", "WrappedDataFrameStreamWriter"
+    ]
+    stats_table_writer: Union["WrappedDataFrameWriter", "WrappedDataFrameStreamWriter"]
     debugger: bool = False
     stats_streaming_options: Optional[Dict[str, Union[str, bool]]] = None
     # spark: Optional["SparkSession"] = None
@@ -140,6 +143,12 @@ class SparkExpectations:
             _writer=self._writer,
         )
         self.reader = SparkExpectationsReader(_context=self._context)
+
+        if isinstance(self.target_and_error_table_writer, WrappedDataFrameStreamWriter):
+            self._context.set_target_and_error_table_writer_type("streaming")
+
+        if isinstance(self.stats_table_writer, WrappedDataFrameStreamWriter):
+            self._context.set_stats_table_writer_type("streaming")
 
         self._context.set_target_and_error_table_writer_config(
             self.target_and_error_table_writer.build()
@@ -826,3 +835,158 @@ class WrappedDataFrameWriter:
         #     config["sortBy"] = cls._sort_by
         #
         # return config
+
+
+class WrappedDataFrameStreamWriter:
+    """
+    A builder pattern class for configuring streaming write options,
+    mimicking the API of PySpark's DataStreamWriter.
+
+    Example usage:
+    --------------
+    writer = (
+        WrappedDataFrameStreamWriter()
+        .outputMode("append")
+        .format("parquet")
+        .partitionBy("date", "country")
+        .clusterBy("id", "name")
+        .option("checkpointLocation", "/path/to/checkpoint")
+        .options(path="/path/to/output", inferSchema="true")
+        .trigger(processingTime="10 seconds")
+        .queryName("my_query")
+    )
+    config = writer.build()
+    print(config)
+
+    Attributes:
+    -----------
+    _output_mode : str
+        The output mode for streaming (e.g., "append", "complete", "update").
+    _format : str
+        The format for writing (e.g., "parquet", "json").
+    _options : dict
+        Additional options for streaming writes.
+    _trigger : Optional[dict]
+        Streaming trigger configuration.
+    _query_name : Optional[str]
+        Name of the query for identification.
+    _partition_by : list
+        Columns by which the data should be partitioned.
+    _cluster_by : list
+        Columns by which the data should be clustered.
+    """
+
+    def __init__(self) -> None:
+        self._output_mode: Optional[str] = None
+        self._format: Optional[str] = None
+        self._options: dict[str, str] = {}
+        self._trigger: Optional[dict[str, str]] = None
+        self._query_name: Optional[str] = None
+        self._partition_by: list = []
+        self._cluster_by: list = []
+
+    def outputMode(
+        self, output_mode: str
+    ) -> "WrappedDataFrameStreamWriter":  # noqa: N802
+        """Set the output mode for streaming."""
+        self._output_mode = output_mode
+        return self
+
+    def format(self, source: str) -> "WrappedDataFrameStreamWriter":
+        """Set the format for writing."""
+        self._format = source
+        return self
+
+    def option(self, key: str, value: str) -> "WrappedDataFrameStreamWriter":
+        """Set a single option for writing."""
+        self._options[key] = value
+        return self
+
+    def options(self, **options: str) -> "WrappedDataFrameStreamWriter":
+        """Set multiple options for writing."""
+        self._options.update(options)
+        return self
+
+    def trigger(self, **options: str) -> "WrappedDataFrameStreamWriter":
+        """Set the trigger for streaming."""
+        self._trigger = options
+        return self
+
+    def queryName(self, name: str) -> "WrappedDataFrameStreamWriter":  # noqa: N802
+        """Set the name of the query."""
+        self._query_name = name
+        return self
+
+    @overload
+    def partitionBy(self, *cols: str) -> "WrappedDataFrameStreamWriter":
+        ...
+
+    @overload
+    def partitionBy(self, __cols: List[str]) -> "WrappedDataFrameStreamWriter":
+        ...
+
+    def partitionBy(
+        self, *cols: Union[str, List[str]]
+    ) -> "WrappedDataFrameStreamWriter":  # noqa: N802
+        """
+        Sets the partitioning columns for the streaming write.
+
+        Args:
+            *cols: Column names as variable arguments or a list of column names.
+
+        Returns:
+            WrappedDataFrameStreamWriter: The current writer instance.
+
+        Examples:
+            >>> writer.partitionBy("col1", "col2")
+            >>> writer.partitionBy(["col1", "col2"])
+        """
+        if len(cols) == 1 and isinstance(cols[0], list):
+            self._partition_by.extend(cols[0])
+        else:
+            self._partition_by.extend(str(c) for c in cols)
+        return self
+
+    @overload
+    def clusterBy(self, *cols: str) -> "WrappedDataFrameStreamWriter":
+        ...
+
+    @overload
+    def clusterBy(self, __cols: List[str]) -> "WrappedDataFrameStreamWriter":
+        ...
+
+    def clusterBy(
+        self, *cols: Union[str, List[str]]
+    ) -> "WrappedDataFrameStreamWriter":  # noqa: N802
+        """
+        Sets the clustering columns for the streaming write.
+
+        Args:
+            *cols: Column names as variable arguments or a list of column names.
+
+        Returns:
+            WrappedDataFrameStreamWriter: The current writer instance.
+
+        Examples:
+            >>> writer.clusterBy("col1", "col2")
+            >>> writer.clusterBy(["col1", "col2"])
+        """
+        if len(cols) == 1 and isinstance(cols[0], list):
+            self._cluster_by.extend(cols[0])
+        else:
+            self._cluster_by.extend(str(c) for c in cols)
+        return self
+
+    def build(self) -> Dict[str, Union[str, dict, list, None]]:
+        """
+        Return the collected streaming writer configuration.
+        """
+        return {
+            "outputMode": self._output_mode,
+            "format": self._format,
+            "options": self._options,
+            "trigger": self._trigger,
+            "queryName": self._query_name,
+            "partitionBy": self._partition_by,
+            "clusterBy": self._cluster_by,
+        }

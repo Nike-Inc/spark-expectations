@@ -151,6 +151,8 @@ class SparkExpectationsContext:
         self._summarized_row_dq_res: Optional[List[Dict[str, str]]] = None
         self._rules_error_per: Optional[List[dict]] = None
 
+        self._target_and_error_table_writer_type: str = "batch"
+        self._stats_table_writer_type: str = "batch"
         self._target_and_error_table_writer_config: dict = {}
         self._stats_table_writer_config: dict = {}
 
@@ -1776,6 +1778,48 @@ class SparkExpectationsContext:
             dict: Returns stats_table_writer_config which in dict
         """
         return self._stats_table_writer_config
+
+    def set_target_and_error_table_writer_type(self, writer_type: str) -> None:
+        """
+        This function returns target and error table writer type
+        Args:
+            writer_type: str
+        Returns:
+            str: Returns target_and_error_table_writer_type which in str
+
+        """
+        self._target_and_error_table_writer_type = writer_type
+
+    @property
+    def get_target_and_error_table_writer_type(self) -> str:
+        """
+        This function returns target and error table writer type
+        Returns:
+            str: Returns target_and_error_table_writer_type which in str
+
+        """
+        return self._target_and_error_table_writer_type
+
+    def set_stats_table_writer_type(self, writer_type: str) -> None:
+        """
+        This function returns stats table writer type
+        Args:
+            writer_type: str
+        Returns:
+            str: Returns stats_table_writer_type which in str
+
+        """
+        self._stats_table_writer_type = writer_type
+
+    @property
+    def get_stats_table_writer_type(self) -> str:
+        """
+        This function returns stats table writer type
+        Returns:
+            str: Returns stats_table_writer_type which in str
+
+        """
+        return self._stats_table_writer_type
 
     def set_agg_dq_detailed_stats_status(
         self, agg_dq_detailed_result_status: bool
