@@ -4,6 +4,7 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch, Mock
 
 import pytest
+from unittest.mock import Mock, patch
 from pyspark.sql.functions import col
 from pyspark.sql.functions import lit, to_timestamp
 from spark_expectations.core import get_spark_session
@@ -3827,3 +3828,87 @@ def test_generate_rules_exceeds_threshold_exception():
         match=r"An error occurred while creating error threshold list : .*",
     ):
         _writer.generate_rules_exceeds_threshold(None)
+
+
+@pytest.mark.parametrize(
+    "dbr_version,env,expected_options",
+    [
+        (
+            13.3,
+            "prod",
+            {
+                "kafka.bootstrap.servers": "test-server-url",
+                "kafka.security.protocol": "SASL_SSL",
+                "kafka.sasl.mechanism": "OAUTHBEARER",
+                "kafka.sasl.jaas.config": """kafkashaded.org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="test-client-id" clientSecret="test-token";""",
+                "kafka.sasl.oauthbearer.token.endpoint.url": "test-endpoint",
+                "kafka.sasl.login.callback.handler.class": "kafkashaded.org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler",
+                "topic": "test-topic",
+            },
+        ),
+        (
+            12,
+            "local",
+            {
+                "kafka.bootstrap.servers": "localhost:9092",
+                "topic": "dq-sparkexpectations-stats",
+                "failOnDataLoss": "true",
+            },
+        ),
+        (
+            12,
+            "prod",
+            {
+                "kafka.bootstrap.servers": "test-server-url",
+                "kafka.security.protocol": "SASL_SSL",
+                "kafka.sasl.mechanism": "OAUTHBEARER",
+                "kafka.sasl.jaas.config": """kafkashaded.org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required oauth.client.id='test-client-id'  oauth.client.secret='test-token' oauth.token.endpoint.uri='test-endpoint'; """,
+                "kafka.sasl.login.callback.handler.class": "io.strimzi.kafka.oauth.client.JaasClientOauthLoginCallbackHandler",
+                "topic": "test-topic",
+            },
+        ),
+    ],
+)
+def test_get_kafka_write_options(dbr_version, env, expected_options):
+    """Test the Kafka write options generation for different environments and configurations"""
+    context = SparkExpectationsContext("product1", spark)
+    context._env = env
+
+    # Mock runtime environment check and secrets handler
+    with (
+        patch(
+            "spark_expectations.core.context.SparkExpectationsContext.get_dbr_version",
+            new_callable=Mock(return_value=dbr_version),
+        ),
+        patch(
+            "spark_expectations.secrets.SparkExpectationsSecretsBackend.get_secret"
+        ) as mock_get_secret,
+        patch(
+            "spark_expectations.core.context.SparkExpectationsContext.get_server_url_key",
+            new_callable=Mock(return_value="test-server-url"),
+        ),
+        patch(
+            "spark_expectations.core.context.SparkExpectationsContext.get_client_id",
+            new_callable=Mock(return_value="test-client-id"),
+        ),
+        patch(
+            "spark_expectations.core.context.SparkExpectationsContext.get_token",
+            new_callable=Mock(return_value="test-token"),
+        ),
+        patch(
+            "spark_expectations.core.context.SparkExpectationsContext.get_token_endpoint_url",
+            new_callable=Mock(return_value="test-endpoint"),
+        ),
+        patch(
+            "spark_expectations.core.context.SparkExpectationsContext.get_topic_name",
+            new_callable=Mock(return_value="test-topic"),
+        ),
+    ):
+        # Configure mock to return the value passed to get_secret
+        mock_get_secret.side_effect = lambda x: x
+
+        writer = SparkExpectationsWriter(context)
+        actual_options = writer.get_kafka_write_options(
+            {}
+        )  # Empty dict since we mock everything
+        assert actual_options == expected_options

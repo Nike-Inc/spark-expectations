@@ -79,13 +79,13 @@ class SparkExpectationsWriter:
             if config["options"] is not None and config["options"] != {}:
                 _df_writer = _df_writer.options(**config["options"])
 
-            _log.info("Writing records to table: %s", table_name)
+            _log.info(f"Writing records to table: {table_name}")
 
             if config["format"] == "bigquery":
                 _df_writer.option("table", table_name).save()
             else:
                 _df_writer.saveAsTable(name=table_name)
-                _log.info("finished writing records to table: %s,", table_name)
+                _log.info(f"finished writing records to table: {table_name}")
                 if not stats_table:
                     # Fetch table properties
                     table_properties = self.spark.sql(f"SHOW TBLPROPERTIES {table_name}").collect()
@@ -96,10 +96,7 @@ class SparkExpectationsWriter:
                         table_properties_dict.get("product_id") is None
                         or table_properties_dict.get("product_id") != self._context.product_id
                     ):
-                        _log.info(
-                            "product_id is not set for table %s in tableproperties, setting it now",
-                            table_name,
-                        )
+                        _log.info(f"product_id is not set for table {table_name} in tableproperties, setting it now")
                         self.spark.sql(
                             f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = "
                             f"'{self._context.product_id}')"
@@ -488,8 +485,7 @@ class SparkExpectationsWriter:
             self._context.print_dataframe_with_debugger(_df_detailed_stats)
 
             _log.info(
-                "Writing metrics to the detailed stats table: %s, started",
-                self._context.get_dq_detailed_stats_table_name,
+                "Writing metrics to the detailed stats table: {self._context.get_dq_detailed_stats_table_name}, started"
             )
 
             self.save_df_as_table(
@@ -500,16 +496,14 @@ class SparkExpectationsWriter:
             )
 
             _log.info(
-                "Writing metrics to the detailed stats table: %s, ended",
-                self._context.get_dq_detailed_stats_table_name,
+                f"Writing metrics to the detailed stats table: {self._context.get_dq_detailed_stats_table_name}, ended"
             )
 
             # TODO Create a separate function for writing the custom query dq stats
             _df_custom_detailed_stats_source = self._prep_secondary_query_output()
 
             _log.info(
-                "Writing metrics to the output custom table: %s, started",
-                self._context.get_query_dq_output_custom_table_name,
+                "Writing metrics to the output custom table: {self._context.get_query_dq_output_custom_table_name}, started"
             )
 
             self.save_df_as_table(
@@ -520,8 +514,7 @@ class SparkExpectationsWriter:
             )
 
             _log.info(
-                "Writing metrics to the output custom table: %s, ended",
-                self._context.get_query_dq_output_custom_table_name,
+                "Writing metrics to the output custom table: {self._context.get_query_dq_output_custom_table_name}, ended"
             )
         except Exception as e:
             raise SparkExpectationsMiscException(f"error occurred while saving the data into the stats table {e}")
@@ -548,6 +541,40 @@ class SparkExpectationsWriter:
             _log.info("alert being called")
             alert = SparkExpectationsAlert(self._context)
             alert.prep_report_data()
+
+    def get_kafka_write_options(self, se_stats_dict: dict) -> dict:
+        """Gets Kafka write configuration options based on runtime environment and config settings"""
+
+        if self._context.get_env == "local":
+            return {
+                "kafka.bootstrap.servers": "localhost:9092",
+                "topic": "dq-sparkexpectations-stats",
+                "failOnDataLoss": "true",
+            }
+
+        secret_handler = SparkExpectationsSecretsBackend(se_stats_dict)
+
+        if self._context.get_dbr_version and self._context.get_dbr_version >= 13.3:
+            options = {
+                "kafka.bootstrap.servers": f"{secret_handler.get_secret(self._context.get_server_url_key)}",
+                "kafka.security.protocol": "SASL_SSL",
+                "kafka.sasl.mechanism": "OAUTHBEARER",
+                "kafka.sasl.jaas.config": f"""kafkashaded.org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="{secret_handler.get_secret(self._context.get_client_id)}" clientSecret="{secret_handler.get_secret(self._context.get_token)}";""",
+                "kafka.sasl.oauthbearer.token.endpoint.url": f"{secret_handler.get_secret(self._context.get_token_endpoint_url)}",
+                "kafka.sasl.login.callback.handler.class": "kafkashaded.org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler",
+                "topic": f"{secret_handler.get_secret(self._context.get_topic_name)}",
+            }
+        else:
+            options = {
+                "kafka.bootstrap.servers": f"{secret_handler.get_secret(self._context.get_server_url_key)}",
+                "kafka.security.protocol": "SASL_SSL",
+                "kafka.sasl.mechanism": "OAUTHBEARER",
+                "kafka.sasl.jaas.config": f"""kafkashaded.org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required oauth.client.id='{secret_handler.get_secret(self._context.get_client_id)}'  oauth.client.secret='{secret_handler.get_secret(self._context.get_token)}' oauth.token.endpoint.uri='{secret_handler.get_secret(self._context.get_token_endpoint_url)}'; """,
+                "kafka.sasl.login.callback.handler.class": "io.strimzi.kafka.oauth.client.JaasClientOauthLoginCallbackHandler",
+                "topic": f"{secret_handler.get_secret(self._context.get_topic_name)}",
+            }
+
+        return options
 
     def write_error_stats(self) -> None:
         """
@@ -704,10 +731,7 @@ class SparkExpectationsWriter:
             )
 
             self._context.set_stats_dict(df)
-            _log.info(
-                "Writing metrics to the stats table: %s, started",
-                self._context.get_dq_stats_table_name,
-            )
+            _log.info("Writing metrics to the stats table: {self._context.get_dq_stats_table_name}, started")
             if self._context.get_stats_table_writer_config["format"] == "bigquery":
                 df = df.withColumn("dq_rules", to_json(df["dq_rules"]))
 
@@ -718,10 +742,7 @@ class SparkExpectationsWriter:
                 stats_table=True,
             )
 
-            _log.info(
-                "Writing metrics to the stats table: %s, ended",
-                self._context.get_dq_stats_table_name,
-            )
+            _log.info("Writing metrics to the stats table: {self._context.get_dq_stats_table_name}, ended")
 
             if (
                 self._context.get_agg_dq_detailed_stats_status is True
@@ -737,36 +758,7 @@ class SparkExpectationsWriter:
 
             _se_stats_dict = self._context.get_se_streaming_stats_dict
             if _se_stats_dict["se.enable.streaming"]:
-                secret_handler = SparkExpectationsSecretsBackend(secret_dict=_se_stats_dict)
-                kafka_write_options: dict = (
-                    {
-                        "kafka.bootstrap.servers": "localhost:9092",
-                        "topic": self._context.get_se_streaming_stats_topic_name,
-                        "failOnDataLoss": "true",
-                    }
-                    if self._context.get_env == "local"
-                    else (
-                        {
-                            "kafka.bootstrap.servers": f"{secret_handler.get_secret(self._context.get_server_url_key)}",
-                            "kafka.security.protocol": "SASL_SSL",
-                            "kafka.sasl.mechanism": "OAUTHBEARER",
-                            "kafka.sasl.jaas.config": "kafkashaded.org.apache.kafka.common.security.oauthbearer."
-                            "OAuthBearerLoginModule required oauth.client.id="
-                            f"'{secret_handler.get_secret(self._context.get_client_id)}'  " + "oauth.client.secret="
-                            f"'{secret_handler.get_secret(self._context.get_token)}' "
-                            "oauth.token.endpoint.uri="
-                            f"'{secret_handler.get_secret(self._context.get_token_endpoint_url)}'; ",
-                            "kafka.sasl.login.callback.handler.class": "io.strimzi.kafka.oauth.client"
-                            ".JaasClientOauthLoginCallbackHandler",
-                            "topic": (
-                                self._context.get_se_streaming_stats_topic_name
-                                if self._context.get_env == "local"
-                                else secret_handler.get_secret(self._context.get_topic_name)
-                            ),
-                        }
-                    )
-                )
-
+                kafka_write_options: dict = self.get_kafka_write_options(_se_stats_dict)
                 _sink_hook.writer(
                     _write_args={
                         "product_id": self._context.product_id,

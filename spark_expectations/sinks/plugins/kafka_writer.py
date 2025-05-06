@@ -31,6 +31,8 @@ class SparkExpectationsKafkaWritePluginImpl(SparkExpectationsSinkWriter):
             #     "failOnDataLoss": "true",
             # }
 
+            _log.debug(f"_write_args: {_write_args}")
+
             if _write_args.pop("enable_se_streaming"):
                 _log.info("started write stats data into kafka stats topic")
 

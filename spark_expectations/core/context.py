@@ -166,6 +166,14 @@ class SparkExpectationsContext:
         self._stats_dict: List[dict] = []
 
     @property
+    def get_dbr_version(self) -> Optional[float]:
+        """
+        This function is used to get the dbr version.
+        """
+        runtime_version = os.environ.get("DATABRICKS_RUNTIME_VERSION")
+        return float(runtime_version) if runtime_version is not None else None
+
+    @property
     def get_run_id(self) -> str:
         """
         Get run_id for the instance of spark-expectations class
