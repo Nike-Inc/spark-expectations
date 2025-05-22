@@ -1,14 +1,23 @@
+export HATCH_DATA_DIR=.venv
+DEFAULT_HATCH_ENV=dev.py3.12
+GIT_REMOTE=upstream
+HATCH_FEATURES=$(shell hatch env show dev --json | jq -r '.["dev.py3.12"].features | join(",")')
+
 black-check:
-	@poetry run black --check spark_expectations
+	@hatch run $(DEFAULT_HATCH_ENV):fmt-check
 
 fmt:
-	@poetry run black spark_expectations/
+	@hatch run $(DEFAULT_HATCH_ENV):fmt
 
 check: black-check mypy
-	@poetry run prospector --no-autodetect --profile prospector.yaml
+	@hatch run $(DEFAULT_HATCH_ENV):analysis
 
 mypy:
-	@poetry run mypy -p spark_expectations --exclude venv --exclude dist --exclude .idea
+	hatch run $(DEFAULT_HATCH_ENV):type-check
+
+local-kafka-cluster-start:
+	@echo "Starting local Kafka cluster..."
+	. ./spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh
 
 kafka-cluster-start:
                    ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_github_actions)
@@ -27,60 +36,58 @@ kafka-cluster-stop:
 
 cov: kafka-cluster-start
 	-make check
-	@poetry run coverage run --source=spark_expectations --omit "spark_expectations/examples/*" -m pytest -v -x && \
-	poetry run coverage report -m && \
-	poetry run coverage xml
+	@hatch run dev:coverage-failfast
 
 	make kafka-cluster-stop
 
+python-versions:
+	@echo "Python versions available in hatch:"
+	@hatch python show
+
 dev:
-	@poetry install --all-extras --with dev
-	@poetry run pre-commit install
-	@poetry run pre-commit install --hook-type pre-push
+	@echo "DEFAULT ENV DIRECTORY: $$HATCH_DATA_DIR"
+	@echo "DEFAULT_PYTHON_ENV: $(DEFAULT_HATCH_ENV)"
+	@hatch env show dev
+	@hatch env create $(DEFAULT_HATCH_ENV)
+	@hatch run $(DEFAULT_HATCH_ENV):uv pip install .[$(HATCH_FEATURES)]
+	@hatch run $(DEFAULT_HATCH_ENV):setup-hooks
+
+env-remove-default:
+	@echo "Removing $(DEFAULT_HATCH_ENV) hatch environments..."
+	@hatch env remove $(DEFAULT_HATCH_ENV)
+env-remove-all:
+	@echo "Removing all hatch environments..."
+	@hatch env prune
 
 deploy_env_setup:
-	@poetry install --all-extras --with dev
+	@hatch env create dev
+	@hatch run dev:uv pip install .[$(HATCH_FEATURES)]
+
+deploy_env_setup_hatch:
+	@hatch env create dev
+	@hatch run dev:uv pip install .[$(HATCH_FEATURES)]
 
 test: kafka-cluster-start
-	@poetry run coverage run --source=spark_expectations --omit "spark_expectations/examples/*" -m pytest && \
-	poetry run coverage report -m && \
-	poetry run coverage html
-
+	@hatch run $(DEFAULT_HATCH_ENV):coverage-ignore-failure
 	make kafka-cluster-stop
 
 build:
-	@poetry build
-
-poetry-check:
-	@poetry check --lock
-
-poetry-lock:
-	@poetry lock
-
-poetry:
-	@poetry install --with dev
-
-#poetry:
-#	@poetry lock
-#	@poetry install --with dev
+	@hatch build
 
 coverage: check test
 
 docs:
-	@poetry run mike deploy -u dev latest
-	@poetry run mike set-default latest
-	@poetry run mike serve
+	@hatch run $(DEFAULT_HATCH_ENV):deploy-and-serve-docs
 
 deploy-docs:
-	@poetry run mike deploy --push --update-aliases $(version) latest
+	@VERSION=$(version) hatch run $(DEFAULT_HATCH_ENV):deploy-docs
 
-poetry-install:
-	@pip install --upgrade setuptools && pip install poetry && poetry self add "poetry-dynamic-versioning[plugin]"
-
+set-git-remote:
+	@echo "Setting git remote to $(GIT_REMOTE)"
+	@git remote add $(GIT_REMOTE) git@github.com:nike-inc/spark-expectations.git
 get-version:
-	@poetry version
-
-requirements:
-	@poetry export -f requirements.txt --output requirements.txt --with dev --without-hashes
+	@echo "Print Version Build tool will use for building and publishing"
+	@git fetch $(GIT_REMOTE) --tags
+	@hatch version
 
 .PHONY: docs

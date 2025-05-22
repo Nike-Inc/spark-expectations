@@ -1,54 +1,123 @@
-[tool.poetry]
+[build-system]
+# requires = ["hatchling"]
+requires = ["hatchling", "hatch-vcs"]
+
+build-backend = "hatchling.build"
+
+[project]
 name = "spark-expectations"
-version = "0.0.0"
 description = "This project helps us to run Data Quality Rules in flight while spark job is being run"
-authors = ["Ashok Singamaneni <ashok.singamaneni@nike.com>"]
+authors = [{name = "Ashok Singamaneni", email = "ashok.singamaneni@nike.com"}]
 readme = "README.md"
-packages = [{ include = "spark_expectations" }]
+dynamic = ["version"]
+classifiers = [
+  "Programming Language :: Python",
+]
+requires-python = ">=3.9,<=3.13"
 
-[tool.poetry.dependencies]
-python = "^3.9,<3.13"
-pluggy = ">=1"
-requests = ">=2.28.1"
-pyspark = { version = ">=3.0.0,<4.0.0", extras=["connect"], optional = true }
 
-[tool.poetry.extras]
-pyspark = ["pyspark"]
+[tool.hatch.build.targets.wheel]
+include = ["spark_expectations"]
 
-[tool.poetry.group.dev.dependencies]
-black = "23.3.0"
-botocore = "1.29.133"                                      # This is just for fixing the dependency resolution version on cerberus-python-client
-cerberus-python-client = "2.5.4"
-coverage = "7.2.5"
-griffe = "^1.5.4"
-ipykernel = "^6.29.2"
-mdx-include = ">=1.4.1,<2.0.0"
-mike = "1.1.2"
-mkdocs = "1.5.3"
-mkdocs-autorefs = "1.2.0"
-mkdocs-click = "0.8.0"
-mkdocs-markdownextradata-plugin = "0.2.5"
-mkdocs-material = "9.4.0"
-mkdocstrings = { extras = ["python"], version = "0.27.0" }
-mypy = "1.3.0"
-numpy = "1.26.4"
-pandas = "^2.2.3"
-pre-commit = "3.3.1"
-prospector = "^1.12.1"
-pytest = "^8.3.3"
-pytest-mock = "^3.14.0"
-types-requests = "2.28.11.16"
-types-setuptools = "67.7.0.2"
+[tool.hatch.build.targets.sdist]
+include = ["spark_expectations","docs","tests"]
 
-[tool.poetry-dynamic-versioning]
-enable = true
-vcs = "git"
-bump = true
+[tool.hatch.version]
+source = "vcs"
 style = "semver"
 
-[build-system]
-requires = ["poetry-core>=1.0.0", "poetry-dynamic-versioning"]
-build-backend = "poetry_dynamic_versioning.backend"
+
+dependencies = [
+  "pluggy>=1",
+  "requests>=2.28.1",
+]
+
+[project.optional-dependencies]
+pyspark = [
+  "pyspark[connect]>=3.0.0,<4.0.0"
+]
+mkdocstrings = [
+  "mkdocstrings[python]==0.27.0"
+]
+
+[[tool.hatch.envs.dev.matrix]]
+python = ["3.9", "3.10", "3.11", "3.12"]
+
+[tool.hatch.envs.dev]
+installer = "uv"
+latest = true
+features = [
+  "pyspark",
+  "mkdocstrings"
+]
+dependencies = [
+  "black==23.3.0",
+  "botocore==1.29.133",
+  "cerberus-python-client==2.5.4",
+  "coverage==7.2.5",
+  "griffe~=1.5.4",
+  "ipykernel~=6.29.2",
+  "mdx-include>=1.4.1,<2.0.0",
+  "mike==1.1.2",
+  "mkdocs==1.5.3",
+  "mkdocs-autorefs==1.2.0",
+  "mkdocs-click==0.8.0",
+  "mkdocs-markdownextradata-plugin==0.2.5",
+  "mkdocs-material==9.4.0",
+  "mypy==1.3.0",
+  "numpy==1.26.4",
+  "pandas~=2.2.3",
+  "pre-commit==3.3.1",
+  "prospector~=1.12.1",
+  "pytest~=8.3.3",
+  "pytest-mock~=3.14.0",
+  "types-requests==2.28.11.16",
+  "types-setuptools==67.7.0.2",
+]
+
+[tool.hatch.envs.dev.scripts]
+fmt-check = [
+  "black --check spark_expectations/"
+]
+fmt = [
+  "black spark_expectations/"
+]
+analysis = [
+  "prospector --no-autodetect --profile prospector.yaml"
+]
+type-check = [
+  "mypy -p spark_expectations --exclude venv --exclude dist --exclude .idea"
+]
+# Setup Pre-Commit and Pre-Push Github hooks
+setup-hooks = [
+  "pre-commit install",
+  "pre-commit install --install-hooks"
+]
+coverage-failfast = [
+  "coverage run --source=spark_expectations --omit 'spark_expectations/examples/*' -m pytest -v -x",
+  "coverage report -m",
+  "coverage xml"
+]
+coverage-ignore-failure = [
+  "coverage run --source=spark_expectations --omit 'spark_expectations/examples/*' -m pytest -v",
+  "coverage report -m",
+  "coverage html"
+]
+coverage-report-only = [
+  "coverage report -m",
+  "coverage html",
+]
+tests = [
+  "pytest -v",
+]
+deploy-and-serve-docs = [
+  "mike deploy -u dev latest",
+	"mike set-default latest",
+	"mike serve"
+]
+deploy-docs = [
+  "mike deploy --push --update-aliases $VERSION latest"
+]
 
 
 ###  ~~~~~~~~~~~~~~~~~~  ###

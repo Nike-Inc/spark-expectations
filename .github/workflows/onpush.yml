@@ -14,39 +14,36 @@ jobs:
     strategy:
       max-parallel: 1
       matrix:
-        python-version: [ '3.9' ]
         os: [ ubuntu-latest ]
-
     env:
       HADOOP_USER_HOME: 'hadoop'
       UNIT_TESTING_ENV: 'spark_expectations_unit_testing_on_github_actions'
 
     steps:
-      - uses: actions/checkout@v3 # use latest version of the checkout action
+      - uses: actions/checkout@v4 # use latest version of the checkout action
 
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
           java-version: '8'
           distribution: 'adopt'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: |
+              3.9
+              3.10
+              3.11
+              3.12
+          check-latest: true
+      - name: Install Hatch
+        uses: pypa/hatch@install          
 
       - name: Setup Kafka
         run: |
           curl -SL "https://archive.apache.org/dist/kafka/3.0.0/kafka_2.13-3.0.0.tgz" | tar -xzC /tmp
           export PATH=$PATH:/tmp/kafka_2.13-3.0.0/bin
           echo "KAFKA_HOME=/tmp/kafka_2.13-3.0.0" >> $GITHUB_ENV
-
-      - name: Install pip
-        run: python -m pip install --upgrade pip
-
-      - name: Install and configure Poetry
-        uses: snok/install-poetry@v1
-
-      - name: Install poetry and build tools
-        run: |
-          export PATH=$PATH:$HOME/.local/bin
-          poetry self add "poetry-dynamic-versioning[plugin]"
-
       - name: Install dependencies
         run: |
           export PATH=$PATH:$HOME/.local/bin
@@ -73,24 +70,25 @@ jobs:
       - unittesting
     if: github.event_name == 'release'
     steps:
-      - uses: actions/checkout@v3 # use latest version of the checkout action
+      - uses: actions/checkout@v4 # use latest version of the checkout action
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
           java-version: '8'
           distribution: 'adopt'
 
-      - name: Install pip
-        run: python -m pip install --upgrade pip
-
-      - name: Install and configure Poetry
-        uses: snok/install-poetry@v1
-
-      - name: Install build tools
-        run: |
-          export PATH=$PATH:$HOME/.local/bin
-          poetry self add "poetry-dynamic-versioning[plugin]"
-
+      - name: Set up Python
+        # https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#specifying-multiple-pythonpypy-versions
+        uses: actions/setup-python@v5
+        with:
+          python-version: |
+              3.9
+              3.10
+              3.11
+              3.12
+          check-latest: true
+      - name: Install Hatch
+        uses: pypa/hatch@install              
       - name: Install dependencies
         run: |
           export PATH=$PATH:$HOME/.local/bin
@@ -98,7 +96,6 @@ jobs:
 
       - name: Install wheel and twine
         run: python -m pip install wheel twine
-
       - name: Build and publish
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
