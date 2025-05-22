@@ -13,6 +13,7 @@ dynamic = ["version"]
 classifiers = [
   "Programming Language :: Python",
 ]
+# https://www.python.org/doc/versions/
 requires-python = ">=3.9,<=3.13"
 
 
@@ -41,7 +42,7 @@ mkdocstrings = [
 ]
 
 [[tool.hatch.envs.dev.matrix]]
-python = ["3.9", "3.10", "3.11", "3.12"]
+python = ["3.10", "3.11", "3.12"]
 
 [tool.hatch.envs.dev]
 installer = "uv"
