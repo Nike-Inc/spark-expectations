@@ -47,9 +47,11 @@ python-versions:
 dev:
 	@echo "DEFAULT ENV DIRECTORY: $$HATCH_DATA_DIR"
 	@echo "DEFAULT_PYTHON_ENV: $(DEFAULT_HATCH_ENV)"
+	@hatch env create
 	@hatch env show dev
-	@hatch env create $(DEFAULT_HATCH_ENV)
+	@hatch run $(DEFAULT_HATCH_ENV):uv pip install --upgrade uv pip
 	@hatch run $(DEFAULT_HATCH_ENV):uv pip install .[$(HATCH_FEATURES)]
+	@hatch run dev:uv pip freeze
 	@hatch run $(DEFAULT_HATCH_ENV):setup-hooks
 
 env-remove-default:
@@ -61,15 +63,17 @@ env-remove-all:
 
 deploy_env_setup:
 	@hatch env create dev
+	@hatch run dev:uv pip install --upgrade uv pip
 	@hatch run dev:uv pip install .[$(HATCH_FEATURES)]
-
-deploy_env_setup_hatch:
-	@hatch env create dev
-	@hatch run dev:uv pip install .[$(HATCH_FEATURES)]
+	@hatch run dev:uv pip freeze
 
 test: kafka-cluster-start
 	@hatch run $(DEFAULT_HATCH_ENV):coverage-ignore-failure
 	make kafka-cluster-stop
+
+# make test-arg TEST=tests/sinks/utils/test_collect_statistics.py::test_collect_stats_on_success_failure 
+test-arg:
+	@hatch -e $(DEFAULT_HATCH_ENV) run pytest -ra -vv $(TEST)
 
 build:
 	@hatch build
