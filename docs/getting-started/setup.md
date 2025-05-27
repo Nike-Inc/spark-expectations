@@ -1,6 +1,6 @@
 ## Installation
 The library is available in the Python Package Index (PyPi) and can be installed in your environment using the below command or 
- add the library "spark-expectations" into the requirements.txt or poetry dependencies.
+add the library "spark-expectations" as a dependency into the `requirements.txt` of your project, or as per your project management tool requires (e.g. poetry, hatch, uv).
 
 ```shell
 pip install -U spark-expectations

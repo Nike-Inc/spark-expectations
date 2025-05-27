@@ -16,7 +16,7 @@ There are a few guidelines that we need contributors to follow so that we are ab
 
 * Create a feature branch off of `main` before you start your work.
     * Please avoid working directly on the `main` branch.
-* Setup the required package manager [poetry](#-package-manager)
+* Setup the required package manager [hatch](#-package-manager)
 * Setup the dev environment [see below](#-dev-environment-setup)
 * Make commits of logical units.
     * You may be asked to squash unnecessary commits down to logical units.
@@ -40,12 +40,14 @@ if it isn't showing any activity.
 We use `make` for managing different steps of setup and maintenance in the project. You can install make by following
 the instructions [here](https://formulae.brew.sh/formula/make)
 
-We use `poetry` as our package manager.
+We use `hatch` as our package manager. 
+Checkout https://hatch.pypa.io/latest/install/ for reccomended installation method
 
-Please DO NOT use pip or conda to install the dependencies. Instead, use poetry:
+Please DO NOT use pip or conda to install the dependencies. Instead, use hatch:
 
 ```bash
-make poetry-install
+# One option for Mac users (refer to official docs)
+brew install hatch
 ```
 
 ### 📌 Dev Environment Setup
