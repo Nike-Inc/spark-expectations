@@ -35,7 +35,7 @@ dependencies = [
 
 [project.optional-dependencies]
 pyspark = [
-  "pyspark[connect]>=3.0.0,<4.0.0"
+  "pyspark[connect]>=3.0.0,<3.5.6"
 ]
 mkdocstrings = [
   "mkdocstrings[python]==0.27.0"
@@ -43,6 +43,9 @@ mkdocstrings = [
 
 [[tool.hatch.envs.dev.matrix]]
 python = ["3.10", "3.11", "3.12"]
+
+[tool.hatch.envs.default]
+installer = "uv"
 
 [tool.hatch.envs.dev]
 installer = "uv"
@@ -118,6 +121,9 @@ deploy-and-serve-docs = [
 ]
 deploy-docs = [
   "mike deploy --push --update-aliases $VERSION latest"
+]
+list-dependencies = [
+  "uv pip freeze",
 ]
 
 
