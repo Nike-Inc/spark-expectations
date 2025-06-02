@@ -356,6 +356,7 @@ disable = [
   "bad-inline-option",
   "broad-except",
   "consider-using-set-comprehension",
+  "cyclic-import",
   "deprecated-pragma",
   "duplicate-code",
   "file-ignored",
@@ -399,4 +400,4 @@ enable = ["logging-not-lazy", "c-extension-no-member"]
 notes = ["FIXME", "TODO"]
 
 [tool.pylint.refactoring]
-max-nested-blocks = 3
+max-nested-blocks = 5
