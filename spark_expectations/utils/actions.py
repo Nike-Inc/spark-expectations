@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, date
 from typing import Any, Dict, List, Optional, Tuple
 
 from pyspark.sql import DataFrame
@@ -168,9 +168,23 @@ class SparkExpectationsActions:
                         _agg_dq_expectation_expr = _agg_dq_expectation_match.group(2)
                         _agg_dq_expectation_cond_expr = expr(_agg_dq_expectation_aggstring)
 
-                        _agg_dq_actual_count_value = int(df.agg(_agg_dq_expectation_cond_expr).collect()[0][0])
+                        _agg_dq_actual_count_value_raw = df.agg(_agg_dq_expectation_cond_expr).collect()[0][0]
 
-                        _agg_dq_expression_str = str(_agg_dq_actual_count_value) + _agg_dq_expectation_expr
+                        # set to Not for non int/float types
+                        _agg_dq_actual_count_value = None
+                        if isinstance(_agg_dq_actual_count_value_raw, (int, float)):
+                            _agg_dq_actual_count_value = int(_agg_dq_actual_count_value_raw)
+                            _agg_dq_expression_str = str(_agg_dq_actual_count_value) + _agg_dq_expectation_expr
+                        elif isinstance(_agg_dq_actual_count_value_raw, (str)):
+                            _agg_dq_expression_str = f"'{_agg_dq_actual_count_value_raw}' {_agg_dq_expectation_expr}"
+                        elif isinstance(_agg_dq_actual_count_value_raw, date):
+                            _agg_dq_expression_str = (
+                                f"to_date('{str(_agg_dq_actual_count_value_raw)}')  {_agg_dq_expectation_expr}"
+                            )
+                        else:
+                            raise TypeError(
+                                f"Unexpected type for aggregation result: {type(_agg_dq_actual_count_value_raw)}"
+                            )
 
                         _agg_dq_expr_condition = []
 

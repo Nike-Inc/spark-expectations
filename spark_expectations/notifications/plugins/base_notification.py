@@ -28,4 +28,3 @@ class SparkExpectationsNotification:
         Returns: None
 
         """
-        pass

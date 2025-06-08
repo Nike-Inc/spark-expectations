@@ -5,6 +5,8 @@ from unittest.mock import MagicMock, Mock, PropertyMock
 from unittest.mock import patch
 import pytest
 from pyspark.sql import DataFrame, SparkSession
+from spark_expectations.config.user_config import Constants as SeUserConfig
+from spark_expectations.examples.base_setup import RULES_TABLE_SCHEMA, set_up_delta
 
 
 try:
@@ -3671,3 +3673,66 @@ def test_get_spark_minor_version():
     """Test that get_spark_minor_version returns the correctly formatted version."""
     with patch("spark_expectations.core.expectations.spark_version", "9.9.42"):
         assert get_spark_minor_version() == 9.9
+
+def test_agg_rule_for_non_int_column():
+    """
+    Test that the agg_dq rule works for columns of type date and string.
+    """
+    # Initialize Spark session
+    spark = set_up_delta()
+
+    RULES_DATA = """
+        ("my_product", "dq_spark_dev.d", "agg_dq", "r1", "dt", "min(dt) < current_date()", "fail", "accuracy", "rn1", true, false, true, false, 0, null, null),
+        ("my_product", "dq_spark_dev.d", "agg_dq", "r2", "dt", "max(dt) >= current_date()", "fail", "accuracy", "rn2", true, false, true, false, 0, null, null),
+        ("my_product", "dq_spark_dev.d", "agg_dq", "r3", "dt", "min(str) < 'B'", "fail", "accuracy", "rn3", true, false, true, false, 0, null, null),
+        ("my_product", "dq_spark_dev.d", "agg_dq", "r4", "dt", "max(str) > 'B'", "fail", "accuracy", "rn4", true, false, true, false, 0, null, null)
+        """
+
+    spark.sql("create database if not exists dq_spark_dev")
+    spark.sql("use dq_spark_dev")
+    spark.sql("drop table if exists dq_stats")
+    spark.sql("drop table if exists dq_rules")
+    spark.sql(f" CREATE TABLE dq_rules {RULES_TABLE_SCHEMA} USING DELTA")
+    spark.sql(f" INSERT INTO dq_rules VALUES {RULES_DATA}")
+
+    spark.sql(f" CREATE TABLE d (str STRING, dt DATE) USING DELTA")
+    spark.sql(f" INSERT INTO d VALUES ('A', '2030-01-01'), ('D', '2022-01-01')")
+
+    table_name = "dq_spark_dev.d"
+
+    writer = WrappedDataFrameWriter().mode("append").format("delta")
+
+    se: SparkExpectations = SparkExpectations(
+        product_id="my_product",
+        rules_df=spark.table("dq_spark_dev.dq_rules"),
+        stats_table="dq_spark_dev.dq_stats",
+        stats_table_writer=writer,
+        target_and_error_table_writer=writer,
+        stats_streaming_options={SeUserConfig.se_enable_streaming: False},
+        spark = spark
+    )
+
+    se_user_conf={
+            SeUserConfig.se_notifications_enable_email: False,
+            SeUserConfig.se_notifications_enable_slack: False,
+            SeUserConfig.se_enable_query_dq_detailed_result: True,
+            SeUserConfig.se_enable_agg_dq_detailed_result: True,
+            SeUserConfig.se_enable_error_table: True,
+            SeUserConfig.se_dq_rules_params: {"table": table_name},
+        }
+        
+    @se.with_expectations(
+            target_table=table_name,
+            user_conf=se_user_conf,
+            write_to_table=False,
+            write_to_temp_table=False,
+        )
+    def inner() -> DataFrame:
+        return spark.table(table_name)
+
+    try:
+        output_df = inner()
+        output_df.show(truncate=False)
+        assert True  # Assert that the method runs without exceptions
+    except Exception as e:
+        assert False, f"Method raised an exception: {e}"
