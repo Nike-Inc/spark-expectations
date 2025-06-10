@@ -14,7 +14,7 @@ from pyspark.sql.types import (
 )
 import pytest
 
-spark = get_spark_session()
+spark = get_spark_session().conf.set("spark.sql.shuffle.partitions", "2")
 
 
 @pytest.fixture(scope="module")

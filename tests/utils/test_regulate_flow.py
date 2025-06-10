@@ -12,6 +12,7 @@ from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
 from spark_expectations.utils.regulate_flow import SparkExpectationsRegulateFlow
 
 spark = get_spark_session()
+spark.conf.set("spark.sql.shuffle.partitions", "2")
 
 
 @pytest.fixture(name="_fixture_context")

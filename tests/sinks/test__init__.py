@@ -8,7 +8,7 @@ from spark_expectations.sinks.plugins.kafka_writer import (
     SparkExpectationsKafkaWritePluginImpl,
 )
 
-spark = get_spark_session()
+spark = get_spark_session().conf.set("spark.sql.shuffle.partitions", "2")
 
 
 @pytest.fixture(name="_fixture_create_database")
@@ -25,7 +25,7 @@ def fixture_create_database():
     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db/test_dq_stats_table")
 
 
-@pytest.fixture(name="_fixture_local_kafka_topic")
+@pytest.fixture(name="_fixture_local_kafka_topic",scope="class",autouse=True)
 def fixture_setup_local_kafka_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 

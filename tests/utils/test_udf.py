@@ -1,7 +1,7 @@
 from spark_expectations.core import get_spark_session
 from spark_expectations.utils.udf import remove_empty_maps, get_actions_list
 
-spark = get_spark_session()
+spark = get_spark_session().conf.set("spark.sql.shuffle.partitions", "2")
 
 
 def test_remove_empty_maps():
