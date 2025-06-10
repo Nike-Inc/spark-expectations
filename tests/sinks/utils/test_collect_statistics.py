@@ -12,7 +12,8 @@ from unittest.mock import Mock
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.expectations import WrappedDataFrameWriter
 
-spark = get_spark_session().conf.set("spark.sql.shuffle.partitions", "2")
+spark = get_spark_session()
+spark.conf.set("spark.sql.shuffle.partitions", "2")
 
 
 @pytest.fixture(name="_fixture_local_kafka_topic",scope="class",autouse=True)
