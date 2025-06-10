@@ -6,7 +6,8 @@ from spark_expectations.core import get_spark_session
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from spark_expectations.sinks.plugins.kafka_writer import SparkExpectationsKafkaWritePluginImpl
 
-spark = get_spark_session().conf.set("spark.sql.shuffle.partitions", "2")
+spark = get_spark_session()
+spark.conf.set("spark.sql.shuffle.partitions", "2")
 
 
 @pytest.fixture(name="_fixture_local_kafka_topic",scope="class",autouse=True)
