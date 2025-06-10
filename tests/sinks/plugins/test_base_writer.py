@@ -2,7 +2,7 @@ from spark_expectations.core import get_spark_session
 from spark_expectations.sinks.plugins.base_writer import SparkExpectationsSinkWriter
 
 
-spark = get_spark_session()
+spark = get_spark_session().conf.set("spark.sql.shuffle.partitions", "2")
 
 
 def test_base_writer():
