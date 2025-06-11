@@ -380,7 +380,6 @@ disable = [
   "too-many-lines",
   "too-many-locals",
   "too-many-positional-arguments",
-  "too-many-nested-blocks",
   "too-many-statements",
   "use-implicit-booleaness-not-comparison-to-string",
   "use-implicit-booleaness-not-comparison-to-zero",
