@@ -15,7 +15,6 @@ from spark_expectations.core.exceptions import (
 )
 
 spark = get_spark_session()
-spark.conf.set("spark.sql.shuffle.partitions", "2")
 
 
 @pytest.fixture(name="_fixture_reader")

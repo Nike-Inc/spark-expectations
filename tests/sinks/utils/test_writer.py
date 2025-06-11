@@ -17,8 +17,6 @@ from spark_expectations.core.exceptions import (
 from spark_expectations.core.expectations import WrappedDataFrameWriter
 
 spark = get_spark_session()
-spark.conf.set("spark.sql.shuffle.partitions", "2")
-
 
 @pytest.fixture(name="_fixture_mock_context")
 def fixture_mock_context():
@@ -37,7 +35,7 @@ def fixture_mock_context():
     return mock_object
 
 
-@pytest.fixture(name="_fixture_local_kafka_topic",scope="class",autouse=True)
+@pytest.fixture(name="_fixture_local_kafka_topic",scope="session",autouse=True)
 def fixture_setup_local_kafka_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
