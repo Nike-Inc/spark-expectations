@@ -25,6 +25,10 @@ def get_spark_session() -> SparkSession:
                 f"{current_dir}/../../jars/commons-pool2-2.8.0.jar,"
                 f"{current_dir}/../../jars/spark-token-provider-kafka-0-10_2.12-3.0.0.jar",
             )
+            .config("spark.sql.shuffle.partitions", 1)
+            .config("spark.dynamicAllocation.enabled", "false")
+            .config("spark.ui.enabled", "false")
+            .config("spark.ui.showConsoleProgress", "false")
         )
         return builder.getOrCreate()
 
