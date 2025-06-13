@@ -19,5 +19,3 @@ class SparkExpectationsSinkWriter:
         Returns:
 
         """
-
-        pass

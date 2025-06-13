@@ -1787,3 +1787,18 @@ def test_run_dq_rules_condition_expression_dynamic_exception(
         SparkExpectationsActions.run_dq_rules(
             _fixture_mock_context, _fixture_df, _expectations, _rule_type, False, True
         )
+
+
+def test_agg_query_dq_detailed_result_type_error(_fixture_df, _fixture_agg_dq_rule, _fixture_mock_context):
+    # Patch DataFrame.agg to return a value of an unexpected type (e.g., list)
+    class DummyDF:
+        def agg(self, *args, **kwargs):
+            class DummyRow:
+                def collect(self):
+                    return [[["unexpected", "list"]]]  # Not int, float, str, or date
+            return DummyRow()
+    dummy_df = DummyDF()
+    with pytest.raises(SparkExpectationsMiscException, match="error occurred while running agg_query_dq_detailed_result .*"):
+        SparkExpectationsActions.agg_query_dq_detailed_result(
+            _fixture_mock_context, _fixture_agg_dq_rule, dummy_df, []
+        )
