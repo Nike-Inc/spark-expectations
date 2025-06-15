@@ -195,6 +195,7 @@ def build_new() -> DataFrame:
 
 To allow developers to include their required CA certificates from their local machine, the below instructions need to be added to the Dockerfile
 
-```COPY certs/ /usr/local/share/ca-certificates/
+```dockerfile
+   COPY certs/ /usr/local/share/ca-certificates/
    RUN update-ca-certificates
 ```
