@@ -11,7 +11,7 @@ ENV KAFKA_VERSION=3.3.1
 ENV KAFKA_HOME=/opt/kafka
 
 # Download and install Kafka securely
-RUN curl --insecure -SL "https://archive.apache.org/dist/kafka/${KAFKA_VERSION}/kafka_2.13-${KAFKA_VERSION}.tgz" \
+RUN curl -SL "https://archive.apache.org/dist/kafka/${KAFKA_VERSION}/kafka_2.13-${KAFKA_VERSION}.tgz" \
     | tar -xzC /opt \
     && mv "/opt/kafka_2.13-${KAFKA_VERSION}" "${KAFKA_HOME}"
 
