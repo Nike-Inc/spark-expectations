@@ -489,3 +489,6 @@ spark-warehouse/
 .pipeline/*
 .scannerwork/*
 .vscode/settings.json
+
+# For CA certificates
+certs/
