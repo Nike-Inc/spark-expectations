@@ -61,7 +61,7 @@ final table or not? Below are the hierarchy of checks that happens?
   * Among the 10 row level rules failed, if no rule neither has _fail_ nor _drop_ as an _action_if_failed_ - then 
   the record will be end up in the final table. Note that, this record would also exist in the `_error` table
   * The aggregation and query dq rules have a setting called `action_if_failed` with two options: `fail` or `ignore`. If any of
-  the 10 aggregation rules and 5 query dq rules which failed has an _action_if_failed_as_fail_, then the metadata summary will be 
+  the 10 aggregation rules and 5 query dq rules which failed has an _action_if_failed_ as _fail_, then the metadata summary will be 
   recorded in the `_stats` table and the job will be considered a failure. However, if none of the failed rules 
-  has an _action_if_failed_as_fail_, then summary of the aggregated rules' metadata will still be collected in the 
+  has an _action_if_failed_ as _fail_, then summary of the aggregated rules' metadata will still be collected in the 
   `_stats` table for failed aggregated and  query dq rules.
