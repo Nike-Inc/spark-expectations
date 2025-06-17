@@ -36,7 +36,7 @@ def fixture_mock_context():
     return mock_object
 
 
-@pytest.fixture(name="_fixture_local_kafka_topic")
+@pytest.fixture(name="_fixture_local_kafka_topic",scope="session",autouse=True)
 def fixture_setup_local_kafka_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
