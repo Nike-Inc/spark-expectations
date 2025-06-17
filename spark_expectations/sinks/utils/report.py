@@ -25,7 +25,6 @@ from pyspark.sql.types import DoubleType, StringType, DecimalType, TimestampType
 from spark_expectations import _log
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
-from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
 
 
 @dataclass
@@ -352,29 +351,3 @@ class SparkExpectationsReport:
             return True, df_report_table
         except Exception as e:
             raise SparkExpectationsMiscException(f"An error occurred in dq_obs_report_data_insert: {e}")
-
-    def save_report_table(self, df_report_table: DataFrame) -> None:
-        """
-        Saves the report table to the specified location.
-
-        Args:
-            df_report_table (DataFrame): The PySpark DataFrame containing the report data to be saved.
-
-        Returns:
-            None
-        """
-        context = self._context
-        save_df_report_table = SparkExpectationsWriter(_context=context)
-        save_df_report_table.save_df_as_table(
-            df_report_table,
-            context.get_report_table_name,
-            {
-                "mode": "append",
-                "format": "delta",
-                "partitionBy": ["product_id", "meta_dq_run_datetime"],
-                "sortBy": None,
-                "bucketBy": None,
-                "options": None,
-            },
-            stats_table=False,
-        )
