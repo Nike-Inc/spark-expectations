@@ -191,3 +191,6 @@ def build_new() -> DataFrame:
    
 ```
    
+### Adding Certificates
+
+To enable trusted SSL/TLS communication during Spark-Expectations testing, you may need to provide custom Certificate Authority (CA) certificates. Place any required `.crt` files in the `spark_expectations/examples/docker_scripts/certs` directory. During test container startup, all certificates in this folder will be automatically imported into the container’s trusted certificate store, ensuring that your Spark jobs and dependencies can establish secure connections as needed.
