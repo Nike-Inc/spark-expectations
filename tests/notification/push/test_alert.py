@@ -7,7 +7,6 @@ import pytest
 import re
 
 spark = get_spark_session()
-spark.conf.set("spark.sql.shuffle.partitions", "2")
 context = SparkExpectationsContext("product_id", spark)
 alert = SparkExpectationsAlert(context)
 

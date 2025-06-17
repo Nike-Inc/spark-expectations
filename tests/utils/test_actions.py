@@ -10,7 +10,6 @@ from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from spark_expectations.utils.actions import SparkExpectationsActions
 
 spark = get_spark_session()
-spark.conf.set("spark.sql.shuffle.partitions", "2")
 
 @pytest.fixture(name="_fixture_df")
 def fixture_df():
