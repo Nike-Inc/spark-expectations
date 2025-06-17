@@ -11,6 +11,7 @@ from spark_expectations.utils.actions import SparkExpectationsActions
 
 spark = get_spark_session()
 
+
 @pytest.fixture(name="_fixture_df")
 def fixture_df():
     # Create a sample input dataframe
