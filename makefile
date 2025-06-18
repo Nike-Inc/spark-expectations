@@ -15,6 +15,14 @@ check: black-check mypy
 mypy:
 	hatch run $(DEFAULT_HATCH_ENV):type-check
 
+local-mail-server-start:
+	@echo "Starting local mail server..."
+	sh ./spark_expectations/examples/docker_scripts/docker_mail_server_start_script.sh
+
+local-mail-server-stop:
+	@echo "Stopping local mail server..."
+	sh ./spark_expectations/examples/docker_scripts/docker_mail_server_stop_script.sh
+
 local-kafka-cluster-start:
 	@echo "Starting local Kafka cluster..."
 	. ./spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh
@@ -73,7 +81,7 @@ test: kafka-cluster-start
 
 # make test-arg TEST=tests/sinks/utils/test_collect_statistics.py::test_collect_stats_on_success_failure 
 test-arg:
-	@hatch -e $(DEFAULT_HATCH_ENV) run pytest -ra -vv $(TEST)
+	@hatch -e $(DEFAULT_HATCH_ENV) run pytest -ra -vv -x $(TEST)
 
 build:
 	@hatch build
