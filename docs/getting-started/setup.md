@@ -1,4 +1,143 @@
-## Installation
+## Prerequisites
+
+### Python
+- **Supported versions:** 3.9, 3.10, 3.11, 3.12 (recommended: latest 3.12.x)
+- **Check version:**
+```sh
+    python3 --version
+```
+- **Install Python:** You can install Python by downloading it from [python.org](https://www.python.org/downloads/) or by using a version manager such as [pyenv](https://github.com/pyenv/pyenv).
+
+### Java
+- **Supported versions:** 8, 11, 17 (recommended: latest 17.x)
+- **Check version:**
+```sh
+  java -version
+```
+- **Install Java:** You can install Java by downloading it from [Oracle](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html) or by using a package manager such as [SDKMAN](https://sdkman.io/) or [OpenJDK](https://openjdk.org/).
+- **For macOS users:** You can install OpenJDK using Homebrew:
+```sh
+  brew install openjdk@17
+```
+Add to your shell config:
+```sh
+  export JAVA_HOME="/opt/homebrew/opt/openjdk@17"
+  export PATH="$JAVA_HOME/bin:$PATH"
+```
+
+### IDE
+- **Recommended:** [Visual Studio Code](https://code.visualstudio.com/)
+- **Other options:** [PyCharm](https://www.jetbrains.com/pycharm/)
+- **Recommended VS Code Extensions:**
+  - Python
+  - Pylance
+  - Black Formatter
+  - YAML
+  - Docker
+  - Markdown
+
+### Docker
+- **Required for running Kafka and some integration tests.**
+- **Install Docker:**  
+  Download and install Docker Desktop from [https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/)  
+  or follow the instructions for your OS at [https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/).
+- **Verify installation:**
+  ```sh
+  docker --version
+
+
+## Github Configuration
+- **Required:** A GitHub account to access the source code and documentation.
+
+### Create GPG and SSH Keys
+- **GPG:** Use GPG for signing commits and tags.  
+  See [GitHub Docs – Generate a GPG Key](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key).
+- **SSH:** Use SSH for connecting to and interacting with remote repositories.  
+  See [GitHub Docs – Generate an SSH Key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent).
+- **Clone the repository:**  
+    ```sh
+    git clone git@github.com:Nike-Inc/spark-expectations.git
+    ```
+
+
+## Environment Setup
+- **Create a virtual environment:**
+    ```sh
+    python3 -m venv .venv
+    ```
+- **Activate virtual environment:**
+  - **Linux/macOS:**
+    ```sh
+    source .venv/bin/activate
+    ```
+- **Install Dependencies:**
+All required and optional dependencies are managed via `pyproject.toml`. If you use the provided make commands (`make dev` or `make deploy_env_setup`), all Python dependencies and dev tools will be installed automatically. You only need to manually install system-level dependencies (Python and Java) and VS Code extensions.
+
+### Hatch Installation
+This project uses [Hatch](https://hatch.pypa.io/latest/) for Python environment and dependency management.  
+You must install Hatch before running the development setup commands.
+**To install Hatch:**
+```sh
+pip3 install --user hatch
+```
+**To view Hatch Environments:**
+This shows which environments are available for development, testing, and other workflows, and how they are configured for your project. 
+```sh
+hatch show env
+```
+ 
+### Development Environment 
+Before running any tests, make sure your development environment is set up and all dependencies are installed:
+  ```sh
+make dev
+  ```
+or 
+  ```sh
+  make deploy_env_setup
+  ```
+
+
+## Running Kafka with Docker
+This project provides a Docker container for running Spark-Expectations in a controlled environment. The script below will build and start a Kafka service in a Docker container, making it available for integration tests or local development.
+
+```sh
+sh ./spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh  
+```
+
+This script will:
+- Build the required Docker image (if it does not already exist)
+- Start a Kafka service in a Docker container
+- Make Kafka available for integration tests or local development
+
+**Note:**
+- Ensure Docker is installed and running on your system before executing this script.
+- The script automates both the build and run steps for Kafka, so you do not need to run `docker build` or `docker run` manually.
+
+### Adding Certificates
+To enable trusted SSL/TLS communication during Spark-Expectations testing, you may need to provide custom Certificate Authority (CA) certificates. Place any required `.crt` files in the `spark_expectations/examples/docker_scripts/certs` directory. During test container startup, all certificates in this folder will be automatically imported into the container’s trusted certificate store, ensuring that your Spark jobs and dependencies can establish secure connections as needed.
+
+
+## Running Tests
+To run the test suite for the Spark-Expectations project, follow these steps:
+
+**To run the full test suite:**
+```sh
+make test
+```
+**To run all tests and generate a coverage report:**
+```sh
+make cov
+```
+
+**Troubleshooting:**
+If you encounter issues, try cleaning and recreating the environment.
+```sh
+make env-remove-all
+make dev
+```
+
+
+## Library Installation
 The library is available in the Python Package Index (PyPi) and can be installed in your environment using the below command or 
 add the library "spark-expectations" as a dependency into the `requirements.txt` of your project, or as per your project management tool requires (e.g. poetry, hatch, uv).
 
