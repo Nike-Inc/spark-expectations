@@ -44,6 +44,7 @@ Add to your shell config:
 - **Verify installation:**
   ```sh
   docker --version
+  ```
 
 
 ## Github Configuration
