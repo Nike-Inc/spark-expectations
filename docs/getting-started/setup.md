@@ -42,9 +42,9 @@ Add to your shell config:
   Download and install Docker Desktop from [https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/)  
   or follow the instructions for your OS at [https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/).
 - **Verify installation:**
-  ```sh
+```sh
   docker --version
-  ```
+```
 
 
 ## Github Configuration
@@ -56,21 +56,21 @@ Add to your shell config:
 - **SSH:** Use SSH for connecting to and interacting with remote repositories.  
   See [GitHub Docs – Generate an SSH Key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent).
 - **Clone the repository:**  
-    ```sh
+```sh
     git clone git@github.com:Nike-Inc/spark-expectations.git
-    ```
+```
 
 
 ## Environment Setup
 - **Create a virtual environment:**
-    ```sh
+```sh
     python3 -m venv .venv
-    ```
+```
 - **Activate virtual environment:**
   - **Linux/macOS:**
-    ```sh
+```sh
     source .venv/bin/activate
-    ```
+```
 - **Install Dependencies:**
 All required and optional dependencies are managed via `pyproject.toml`. If you use the provided make commands (`make dev` or `make deploy_env_setup`), all Python dependencies and dev tools will be installed automatically. You only need to manually install system-level dependencies (Python and Java) and VS Code extensions.
 
