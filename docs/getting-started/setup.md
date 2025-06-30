@@ -10,20 +10,8 @@
 
 ### Java
 - **Supported versions:** 8, 11, 17 (recommended: latest 17.x)
-- **Check version:**
-```sh
-  java -version
-```
-- **Install Java:** You can install Java by downloading it from [Oracle](https://www.oracle.com/java/technologies/javase-jdk11-downloads.html) or by using a package manager such as [SDKMAN](https://sdkman.io/) or [OpenJDK](https://openjdk.org/).
-- **For macOS users:** You can install OpenJDK using Homebrew:
-```sh
-  brew install openjdk@17
-```
-Add to your shell config:
-```sh
-  export JAVA_HOME="/opt/homebrew/opt/openjdk@17"
-  export PATH="$JAVA_HOME/bin:$PATH"
-```
+- **Recommendation:** Use a JDK version manager such as [SDKMAN!](https://sdkman.io/) or [OpenJDK](https://openjdk.org/)(Linux/macOS) or an equivalent tool for your operating system to install and manage Java versions.
+- **JAVA_HOME:** If your tools or environment require it, set the `JAVA_HOME` environment variable to point to your installed JDK. Refer to your JDK version manager’s documentation for instructions.
 
 ### IDE
 - **Recommended:** [Visual Studio Code](https://code.visualstudio.com/)
@@ -37,14 +25,7 @@ Add to your shell config:
   - Markdown
 
 ### Docker
-- **Required for running Kafka and some integration tests.**
-- **Install Docker:**  
-  Download and install Docker Desktop from [https://www.docker.com/products/docker-desktop/](https://www.docker.com/products/docker-desktop/)  
-  or follow the instructions for your OS at [https://docs.docker.com/get-docker/](https://docs.docker.com/get-docker/).
-- **Verify installation:**
-```sh
-  docker --version
-```
+- **Requirement:** A container engine is required for running Kafka and some integration tests. You can use Docker, Podman, containerd, Rancher, or any equivalent container runtime for your operating system.
 
 
 ## Github Configuration
@@ -138,7 +119,61 @@ make dev
 ```
 
 
+## Configure SMTP Notifications
+
+To enable email notifications (such as alerts for data quality failures) in Spark-Expectations, you need to configure SMTP settings. 
+You can reference the `user_config.py` file in the `spark_expectations/config` directory to access / setup the SMTP configuration parameters. This file should contain the necessary SMTP/email notification settings for Spark-Expectations.
+
+### Verifying SMTP Parameters
+Before using SMTP notifications, verify that the following parameters are set correctly in your configuration (see `user_config.py` for the exact constant names):
+
+- SMTP server host
+- SMTP server port
+- SMTP username
+- SMTP password
+- Sender email address (`from`)
+- Recipient email address(es) (`to`)
+- Enable/disable SMTP authentication and TLS as needed
+
+### Script to Send a Test Email
+You can use the following Python script to test your SMTP configuration. This script will send a test email using the configured SMTP settings. Make sure to replace the placeholders with your actual SMTP configuration values.
+```python
+from email.mime.text import MIMEText
+
+smtp_host = "smtp.example.com"
+smtp_port = 587
+smtp_user = "your_email@example.com"
+smtp_password = "your_password"
+smtp_from = "your_email@example.com"
+smtp_to = "recipient@example.com"
+
+msg = MIMEText("This is a test email from Spark-Expectations SMTP setup.")
+msg["Subject"] = "Spark-Expectations SMTP Test"
+msg["From"] = smtp_from
+msg["To"] = smtp_to
+
+with smtplib.SMTP(smtp_host, smtp_port) as server:
+    server.starttls()
+    server.login(smtp_user, smtp_password)
+    server.sendmail(smtp_from, [smtp_to], msg.as_string())
+
+print("Test email sent successfully.")
+```
+**Note:**
+Never commit sensitive credentials (like SMTP passwords) to version control. Use environment variables or a secure secrets manager.
+Make sure your SMTP server allows connections from your environment (some providers may require app passwords or special settings).
+
+
+## Testing SMTP Notifications
+To test the email notifications, you can use the provided `make` commands to start and stop a local mail server. 
+```sh
+make local-mail-server-start
+make local-mail-server-stop
+```
+
+
 ## Library Installation
+
 The library is available in the Python Package Index (PyPi) and can be installed in your environment using the below command or 
 add the library "spark-expectations" as a dependency into the `requirements.txt` of your project, or as per your project management tool requires (e.g. poetry, hatch, uv).
 
@@ -146,12 +181,12 @@ add the library "spark-expectations" as a dependency into the `requirements.txt`
 pip install -U spark-expectations
 ```
 
+
 ## Required Tables
 
 There are two tables that need to be created for spark-expectations to run seamlessly and integrate with a spark job.
 The below SQL statements used three namespaces which works with Databricks Unity Catalog, but if you are using hive
 please update the namespaces accordingly and also provide necessary table metadata.
-
 
 ### Rules Table
 
