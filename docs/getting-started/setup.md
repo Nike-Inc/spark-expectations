@@ -251,6 +251,23 @@ ALTER TABLE `catalog`.`schema`.`{product}_rules`
 ADD CONSTRAINT rule_type_action CHECK (rule_type in ('row_dq', 'agg_dq', 'query_dq'));
 ```
 
+### Examples of Supported Rule Types
+
+- **Row DQ**: 
+```sql
+INSERT INTO `catalog`.`schema`.`{product}_rules` VALUES ('your_product', 'your_table', 'row_dq', 'check_nulls', 'column_name', 'is not null', 'drop', 'completeness', 'Check for null values in column_name', true, true, true, false, 0);
+```
+
+- **Aggregation DQ**: 
+```sql
+INSERT INTO `catalog`.`schema`.`{product}_rules` VALUES ('your_product', 'your_table', 'agg_dq', 'check_row_count', '', 'COUNT(*) > 0', 'fail', 'completeness', 'Ensure the table has at least one row', true, true, true, false, 0);
+```
+
+- **Query DQ**:
+```sql
+INSERT INTO `catalog`.`schema`.`{product}_rules` VALUES ('your_product', 'your_table', 'query_dq', 'check_custom_query', '', 'SELECT COUNT(*) FROM your_table WHERE column_name IS NULL', 'ignore', 'validity', 'Custom query to check for null values in column_name', false, true, true, false, 0);
+```
+
 ### Action If Failed For Row, Aggregation and Query Data Quality Rules
 
 The rules column has a column called "action_if_failed". It is important that this column should only accept one of 
