@@ -1,4 +1,179 @@
-## Installation
+## Prerequisites
+
+### Python
+- **Supported versions:** 3.9, 3.10, 3.11, 3.12 (recommended: latest 3.12.x)
+- **Check version:**
+```sh
+    python3 --version
+```
+- **Install Python:** You can install Python by downloading it from [python.org](https://www.python.org/downloads/) or by using a version manager such as [pyenv](https://github.com/pyenv/pyenv).
+
+### Java
+- **Supported versions:** 8, 11, 17 (recommended: latest 17.x)
+- **Recommendation:** Use a JDK version manager such as [SDKMAN!](https://sdkman.io/) or [OpenJDK](https://openjdk.org/)(Linux/macOS) or an equivalent tool for your operating system to install and manage Java versions.
+- **JAVA_HOME:** If your tools or environment require it, set the `JAVA_HOME` environment variable to point to your installed JDK. Refer to your JDK version manager’s documentation for instructions.
+
+### IDE
+- **Recommended:** [Visual Studio Code](https://code.visualstudio.com/)
+- **Other options:** [PyCharm](https://www.jetbrains.com/pycharm/)
+- **Recommended VS Code Extensions:**
+  - Python
+  - Pylance
+  - Black Formatter
+  - YAML
+  - Docker
+  - Markdown
+
+### Docker
+- **Requirement:** A container engine is required for running Kafka and some integration tests. You can use Docker, Podman, containerd, Rancher, or any equivalent container runtime for your operating system.
+
+
+## Github Configuration
+- **Required:** A GitHub account to access the source code and documentation.
+
+### Create GPG and SSH Keys
+- **GPG:** Use GPG for signing commits and tags.  
+  See [GitHub Docs – Generate a GPG Key](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key).
+- **SSH:** Use SSH for connecting to and interacting with remote repositories.  
+  See [GitHub Docs – Generate an SSH Key](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/generating-a-new-ssh-key-and-adding-it-to-the-ssh-agent).
+- **Clone the repository:**  
+```sh
+    git clone git@github.com:Nike-Inc/spark-expectations.git
+```
+
+
+## Environment Setup
+- **Create a virtual environment:**
+```sh
+    python3 -m venv .venv
+```
+- **Activate virtual environment:**
+  - **Linux/macOS:**
+```sh
+    source .venv/bin/activate
+```
+- **Install Dependencies:**
+All required and optional dependencies are managed via `pyproject.toml`. If you use the provided make commands (`make dev` or `make deploy_env_setup`), all Python dependencies and dev tools will be installed automatically. You only need to manually install system-level dependencies (Python and Java) and VS Code extensions.
+
+### Hatch Installation
+This project uses [Hatch](https://hatch.pypa.io/latest/) for Python environment and dependency management.  
+You must install Hatch before running the development setup commands.
+**To install Hatch:**
+```sh
+pip3 install --user hatch
+```
+**To view Hatch Environments:**
+This shows which environments are available for development, testing, and other workflows, and how they are configured for your project. 
+```sh
+hatch show env
+```
+ 
+### Development Environment 
+Before running any tests, make sure your development environment is set up and all dependencies are installed:
+  ```sh
+make dev
+  ```
+or 
+  ```sh
+  make deploy_env_setup
+  ```
+
+
+## Running Kafka with Docker
+This project provides a Docker container for running Spark-Expectations in a controlled environment. The script below will build and start a Kafka service in a Docker container, making it available for integration tests or local development.
+
+```sh
+sh ./spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh  
+```
+
+This script will:
+- Build the required Docker image (if it does not already exist)
+- Start a Kafka service in a Docker container
+- Make Kafka available for integration tests or local development
+
+**Note:**
+- Ensure Docker is installed and running on your system before executing this script.
+- The script automates both the build and run steps for Kafka, so you do not need to run `docker build` or `docker run` manually.
+
+### Adding Certificates
+To enable trusted SSL/TLS communication during Spark-Expectations testing, you may need to provide custom Certificate Authority (CA) certificates. Place any required `.crt` files in the `spark_expectations/examples/docker_scripts/certs` directory. During test container startup, all certificates in this folder will be automatically imported into the container’s trusted certificate store, ensuring that your Spark jobs and dependencies can establish secure connections as needed.
+
+
+## Running Tests
+To run the test suite for the Spark-Expectations project, follow these steps:
+
+**To run the full test suite:**
+```sh
+make test
+```
+**To run all tests and generate a coverage report:**
+```sh
+make cov
+```
+
+**Troubleshooting:**
+If you encounter issues, try cleaning and recreating the environment.
+```sh
+make env-remove-all
+make dev
+```
+
+
+## Configure SMTP Notifications
+
+To enable email notifications (such as alerts for data quality failures) in Spark-Expectations, you need to configure SMTP settings. 
+You can reference the `user_config.py` file in the `spark_expectations/config` directory to access / setup the SMTP configuration parameters. This file should contain the necessary SMTP/email notification settings for Spark-Expectations.
+
+### Verifying SMTP Parameters
+Before using SMTP notifications, verify that the following parameters are set correctly in your configuration (see `user_config.py` for the exact constant names):
+
+- SMTP server host
+- SMTP server port
+- SMTP username
+- SMTP password
+- Sender email address (`from`)
+- Recipient email address(es) (`to`)
+- Enable/disable SMTP authentication and TLS as needed
+
+### Script to Send a Test Email
+You can use the following Python script to test your SMTP configuration. This script will send a test email using the configured SMTP settings. Make sure to replace the placeholders with your actual SMTP configuration values.
+```python
+from email.mime.text import MIMEText
+
+smtp_host = "smtp.example.com"
+smtp_port = 587
+smtp_user = "your_email@example.com"
+smtp_password = "your_password"
+smtp_from = "your_email@example.com"
+smtp_to = "recipient@example.com"
+
+msg = MIMEText("This is a test email from Spark-Expectations SMTP setup.")
+msg["Subject"] = "Spark-Expectations SMTP Test"
+msg["From"] = smtp_from
+msg["To"] = smtp_to
+
+with smtplib.SMTP(smtp_host, smtp_port) as server:
+    server.starttls()
+    server.login(smtp_user, smtp_password)
+    server.sendmail(smtp_from, [smtp_to], msg.as_string())
+
+print("Test email sent successfully.")
+```
+**Note:**
+Never commit sensitive credentials (like SMTP passwords) to version control. Use environment variables or a secure secrets manager.
+Make sure your SMTP server allows connections from your environment (some providers may require app passwords or special settings).
+
+
+## Testing SMTP Notifications
+To test the email notifications, you can use the provided `make` commands to start and stop a local mail server. 
+```sh
+make local-mail-server-start
+make local-mail-server-stop
+```
+
+
+## Library Installation
+
 The library is available in the Python Package Index (PyPi) and can be installed in your environment using the below command or 
 add the library "spark-expectations" as a dependency into the `requirements.txt` of your project, or as per your project management tool requires (e.g. poetry, hatch, uv).
 
@@ -6,12 +181,12 @@ add the library "spark-expectations" as a dependency into the `requirements.txt`
 pip install -U spark-expectations
 ```
 
+
 ## Required Tables
 
 There are two tables that need to be created for spark-expectations to run seamlessly and integrate with a spark job.
 The below SQL statements used three namespaces which works with Databricks Unity Catalog, but if you are using hive
 please update the namespaces accordingly and also provide necessary table metadata.
-
 
 ### Rules Table
 
@@ -74,6 +249,23 @@ Please run the below command to add constraints to the above created rules table
 ```sql
 ALTER TABLE `catalog`.`schema`.`{product}_rules` 
 ADD CONSTRAINT rule_type_action CHECK (rule_type in ('row_dq', 'agg_dq', 'query_dq'));
+```
+
+### Examples of Supported Rule Types
+
+- **Row DQ**: 
+```sql
+INSERT INTO `catalog`.`schema`.`{product}_rules` VALUES ('your_product', 'your_table', 'row_dq', 'check_nulls', 'column_name', 'is not null', 'drop', 'completeness', 'Check for null values in column_name', true, true, true, false, 0);
+```
+
+- **Aggregation DQ**: 
+```sql
+INSERT INTO `catalog`.`schema`.`{product}_rules` VALUES ('your_product', 'your_table', 'agg_dq', 'check_row_count', '', 'COUNT(*) > 0', 'fail', 'completeness', 'Ensure the table has at least one row', true, true, true, false, 0);
+```
+
+- **Query DQ**:
+```sql
+INSERT INTO `catalog`.`schema`.`{product}_rules` VALUES ('your_product', 'your_table', 'query_dq', 'check_custom_query', '', 'SELECT COUNT(*) FROM your_table WHERE column_name IS NULL', 'ignore', 'validity', 'Custom query to check for null values in column_name', false, true, true, false, 0);
 ```
 
 ### Action If Failed For Row, Aggregation and Query Data Quality Rules
