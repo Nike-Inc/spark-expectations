@@ -2194,20 +2194,20 @@ def test_get_se_dq_obs_alert_flag():
     assert context.get_se_dq_obs_alert_flag is None
 
 
-def test_set_default_template():
+def test_set_detailed_default_template():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
-    context.set_default_template("test_template")
-    assert context.get_default_template == "test_template"
+    context.set_detailed_default_template("test_template")
+    assert context.get_detailed_default_template == "test_template"
 
 
-def test_get_default_template():
+def test_get_detailed_default_template():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
-    context.set_default_template("test_template")
-    assert context.get_default_template == "test_template"
+    context.set_detailed_default_template("test_template")
+    assert context.get_detailed_default_template == "test_template"
 
     # testing for None condition
-    context._default_template = None
-    assert context.get_default_template is None
+    context._detailed_default_template = None
+    assert context.get_detailed_default_template is None
 
 
 def test_set_stats_detailed_dataframe():

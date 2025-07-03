@@ -38,6 +38,8 @@ class SparkExpectationsReader:
                 user_config.se_notifications_enable_email: False,
                 user_config.se_notifications_enable_smtp_server_auth: False,
                 user_config.se_notifications_enable_custom_email_body: False,
+                user_config.se_notifications_enable_templated_basic_email_body: False,
+                user_config.se_notifications_default_basic_email_template: "",
                 user_config.se_notifications_email_smtp_host: "",
                 user_config.se_notifications_email_smtp_port: 25,
                 user_config.se_notifications_smtp_password: "",
@@ -74,7 +76,7 @@ class SparkExpectationsReader:
                     self._context.set_mail_smtp_server(
                         str(_notification_dict[user_config.se_notifications_email_smtp_host])
                     )
-                    self._context.set_default_template(
+                    self._context.set_detailed_default_template(
                         str(_notification_dict[user_config.se_dq_obs_default_email_template])
                     )
                 else:
@@ -135,6 +137,9 @@ class SparkExpectationsReader:
                     self._context.set_email_custom_body(
                         str(_notification_dict[user_config.se_notifications_email_custom_body])
                     )
+                if _notification_dict[user_config.se_notifications_enable_templated_basic_email_body]:
+                    self._context.set_enable_templated_basic_email_body(True)
+                self._context.set_basic_default_template(str(_notification_dict[user_config.se_notifications_default_basic_email_template]))
             if _notification_dict[user_config.se_notifications_enable_slack] is True:
                 if _notification_dict[user_config.se_notifications_slack_webhook_url]:
                     self._context.set_enable_slack(True)

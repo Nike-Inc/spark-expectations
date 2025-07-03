@@ -1,4 +1,5 @@
 import traceback
+import os
 from dataclasses import dataclass
 from jinja2 import Environment, FileSystemLoader, BaseLoader
 from pyspark.sql import Row
@@ -94,12 +95,15 @@ class SparkExpectationsAlert:
             context = self._context
             mail_subject = self._context.get_mail_subject
             mail_receivers_list = self._context.get_to_mail
-            if not self._context.get_default_template:
-                template_dir = "../../spark_expectations/config/templates"
+            if not self._context.get_detailed_default_template:
+                # the below for finding the file location is for local testing and should be reverted before merging
+                current_file_dir = os.path.dirname(os.path.abspath(__file__))
+                template_dir = os.path.join(current_file_dir, "..", "..", "config", "templates")
+                #template_dir = "../../spark_expectations/config/templates"
                 env_loader = Environment(loader=FileSystemLoader(template_dir))
                 template = env_loader.get_template("advanced_email_alert_template.jinja")
             else:
-                template_dir = self._context.get_default_template
+                template_dir = self._context.get_detailed_default_template
                 template = Environment(loader=BaseLoader).from_string(template_dir)
 
             header_columns, header_data, _ = self.get_report_data("header")
@@ -140,6 +144,8 @@ class SparkExpectationsAlert:
                 "receiver_mail": context.get_to_mail,
                 "subject": context.get_mail_subject,
                 "message": str(html_data),
+                "content_type": "html",
+                "email_notification_type": "detailed"
             }
             # calling the email_plugin of Spark expectation
             email_plugin = SparkExpectationsEmailPluginImpl()

@@ -96,6 +96,7 @@ class SparkExpectationsNotify:
             _context=self._context,
             _config_args={
                 "message": _notification_message,
+                "content_type": "plain"
             },
         )
 
@@ -126,7 +127,7 @@ class SparkExpectationsNotify:
             # f"            run_status = {self._context.get_dq_run_status}"
         )
 
-        _notification_hook.send_notification(_context=self._context, _config_args={"message": _notification_message})
+        _notification_hook.send_notification(_context=self._context, _config_args={"message": _notification_message, "content_type": "plain"})
 
     def notify_on_ignore_rules(self, ignored_rules_run_results: List[Dict[str, Any]]) -> None:
         """
@@ -145,7 +146,7 @@ class SparkExpectationsNotify:
             f"ignored_rules_run_results: {ignored_rules_run_results}"
         )
 
-        _notification_hook.send_notification(_context=self._context, _config_args={"message": _notification_message})
+        _notification_hook.send_notification(_context=self._context, _config_args={"message": _notification_message, "content_type": "plain"})
 
     def notify_on_completion(self) -> None:
         """
@@ -173,7 +174,7 @@ class SparkExpectationsNotify:
         )
         if self._context.get_enable_custom_email_body is True:
             _notification_message = self.get_custom_notification()
-        _notification_hook.send_notification(_context=self._context, _config_args={"message": _notification_message})
+        _notification_hook.send_notification(_context=self._context, _config_args={"message": _notification_message, "content_type": "plain"})
 
     def notify_on_failure(self, _error: str) -> None:
         """
@@ -208,6 +209,7 @@ class SparkExpectationsNotify:
             _context=self._context,
             _config_args={
                 "message": _notification_message,
+                "content_type": "plain"
             },
         )
 
@@ -261,7 +263,7 @@ class SparkExpectationsNotify:
             f"the specified threshold \n\n\n{message}"
         )
 
-        _notification_hook.send_notification(_context=self._context, _config_args={"message": _notification_message})
+        _notification_hook.send_notification(_context=self._context, _config_args={"message": _notification_message, "content_type": "plain"})
 
     def notify_rules_exceeds_threshold(self, rules: dict) -> None:
         """
