@@ -89,6 +89,7 @@ class SparkExpectationsActions:
                     "action_if_failed",
                     "tag",
                     "description",
+                    "column_name",
                 ]
             ]
         )
