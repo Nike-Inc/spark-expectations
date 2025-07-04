@@ -99,7 +99,7 @@ class SparkExpectationsAlert:
                 # the below for finding the file location is for local testing and should be reverted before merging
                 current_file_dir = os.path.dirname(os.path.abspath(__file__))
                 template_dir = os.path.join(current_file_dir, "..", "..", "config", "templates")
-                #template_dir = "../../spark_expectations/config/templates"
+                # template_dir = "../../spark_expectations/config/templates"
                 env_loader = Environment(loader=FileSystemLoader(template_dir))
                 template = env_loader.get_template("advanced_email_alert_template.jinja")
             else:
@@ -145,7 +145,7 @@ class SparkExpectationsAlert:
                 "subject": context.get_mail_subject,
                 "message": str(html_data),
                 "content_type": "html",
-                "email_notification_type": "detailed"
+                "email_notification_type": "detailed",
             }
             # calling the email_plugin of Spark expectation
             email_plugin = SparkExpectationsEmailPluginImpl()

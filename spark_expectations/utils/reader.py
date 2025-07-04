@@ -139,7 +139,9 @@ class SparkExpectationsReader:
                     )
                 if _notification_dict[user_config.se_notifications_enable_templated_basic_email_body]:
                     self._context.set_enable_templated_basic_email_body(True)
-                self._context.set_basic_default_template(str(_notification_dict[user_config.se_notifications_default_basic_email_template]))
+                self._context.set_basic_default_template(
+                    str(_notification_dict[user_config.se_notifications_default_basic_email_template])
+                )
             if _notification_dict[user_config.se_notifications_enable_slack] is True:
                 if _notification_dict[user_config.se_notifications_slack_webhook_url]:
                     self._context.set_enable_slack(True)

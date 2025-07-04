@@ -105,32 +105,32 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
                 mail_content = f"""{_config_args.get("message")}"""
 
                 # Check if the content is HTML
-                if _config_args.get('content_type') == "html":
+                if _config_args.get("content_type") == "html":
                     content_type = "html"
                 else:
                     content_type = "plain"
 
-                if (_config_args.get('email_notification_type')) != "detailed":
+                if (_config_args.get("email_notification_type")) != "detailed":
                     if _context.get_enable_templated_basic_email_body is True:
                         if not _context.get_basic_default_template:
                             # the below for finding the file location is for local testing and should be reverted before merging
                             current_file_dir = os.path.dirname(os.path.abspath(__file__))
                             template_dir = os.path.join(current_file_dir, "..", "..", "config", "templates")
-                            #template_dir = "../../spark_expectations/config/templates"
+                            # template_dir = "../../spark_expectations/config/templates"
                             env_loader = Environment(loader=FileSystemLoader(template_dir))
                             template = env_loader.get_template("basic_email_alert_template.jinja")
                         else:
                             template_dir = _context.get_basic_default_template
                             template = Environment(loader=BaseLoader).from_string(template_dir)
 
-                        lines = mail_content.strip().split('\n')
+                        lines = mail_content.strip().split("\n")
                         title = lines[0].strip() if lines else ""
 
                         data = []
                         for i in range(1, len(lines)):
                             line = lines[i].strip()
-                            if line and ':' in line:
-                                parts = line.split(':', 1)
+                            if line and ":" in line:
+                                parts = line.split(":", 1)
                                 data.append(parts)
 
                         message_data = {"title": title, "rows": data}

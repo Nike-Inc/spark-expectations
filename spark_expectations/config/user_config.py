@@ -28,7 +28,9 @@ class Constants:
     se_notifications_email_to_other_mail_id = "spark.expectations.notifications.email.to.other.mail.com"
     se_notifications_email_subject = "spark.expectations.notifications.email.subject"
     se_notifications_email_custom_body = "spark.expectations.notifications.email.custom.body"
-    se_notifications_enable_templated_basic_email_body = "spark.expectations.notifications.enable.templated.basic.email.body"
+    se_notifications_enable_templated_basic_email_body = (
+        "spark.expectations.notifications.enable.templated.basic.email.body"
+    )
 
     # declare const user config variables for slack notification
     se_notifications_enable_slack = "spark.expectations.notifications.slack.enabled"
