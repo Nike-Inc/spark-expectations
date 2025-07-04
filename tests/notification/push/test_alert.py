@@ -271,7 +271,7 @@ def test_prep_report_data():
     # env_loader = Environment(loader=FileSystemLoader(template_dir))
     # template = env_loader.get_template('advanced_email_alert_template.jinja')
 
-    context.set_default_template(default_template)
+    context.set_detailed_default_template(default_template)
 
     context.set_mail_subject("test_mail_subject")
     context.set_to_mail("abcd@se.com")

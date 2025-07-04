@@ -25,7 +25,7 @@ class SparkExpectationsContext:
         self._run_id: str = f"{self.product_id}_{uuid1()}"
         self._enable_obs_dq_report_result: bool = False
         self._df_dq_obs_report_dataframe: DataFrame = None
-        self._default_template: str
+        self._detailed_default_template: str
         self._dq_obs_rpt_gen_status_flag: bool = False
         self._dataframe: DataFrame = None
         self._report_table_name: DataFrame = None
@@ -57,6 +57,7 @@ class SparkExpectationsContext:
         self._enable_mail: bool = False
         self._enable_smtp_server_auth: bool = False
         self._enable_custom_email_body: bool = False
+        self._enable_templated_basic_email_body: bool = False
         self._to_mail: Optional[str] = None
         self._mail_subject: Optional[str] = None
         self._mail_from: Optional[str] = None
@@ -580,6 +581,19 @@ class SparkExpectationsContext:
 
         """
         return self._enable_custom_email_body
+
+    def set_enable_templated_basic_email_body(self, enable_templated_basic_email_body: bool) -> None:
+        self._enable_templated_basic_email_body = bool(enable_templated_basic_email_body)
+
+    @property
+    def get_enable_templated_basic_email_body(self) -> bool:
+        """
+        This function return whether to enable html templating for basic emails or not
+        Returns:
+            str: Returns  _enable_templated_basic_email_body(bool)
+
+        """
+        return self._enable_templated_basic_email_body
 
     def set_mail_from(self, mail_from: str) -> None:
         self._mail_from = mail_from
@@ -2096,25 +2110,45 @@ class SparkExpectationsContext:
         """
         return self._se_dq_obs_alert_flag
 
-    def set_default_template(self, default_template: str) -> None:
+    def set_detailed_default_template(self, detailed_default_template: str) -> None:
         """
-        This function is used to set the default_template
+        This function is used to set the detailed_default_template
 
         Returns:
             None
 
         """
-        self._default_template = default_template
+        self._detailed_default_template = detailed_default_template
 
     @property
-    def get_default_template(self) -> str:
+    def get_detailed_default_template(self) -> str:
         """
-        This function is used to get the default_template
+        This function is used to get the detailed_default_template
 
         Returns:
             str: Returns the default_template
         """
-        return self._default_template
+        return self._detailed_default_template
+
+    def set_basic_default_template(self, basic_default_template: str) -> None:
+        """
+        This function is used to set the basic_default_template
+
+        Returns:
+            None
+
+        """
+        self._basic_default_template = basic_default_template
+
+    @property
+    def get_basic_default_template(self) -> str:
+        """
+        This function is used to get the basic_default_template
+
+        Returns:
+            str: Returns the default_template
+        """
+        return self._basic_default_template
 
     def set_stats_detailed_dataframe(self, dataframe: DataFrame) -> None:
         self._dataframe = dataframe
