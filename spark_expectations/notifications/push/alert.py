@@ -1,5 +1,4 @@
 import traceback
-import os
 from dataclasses import dataclass
 from jinja2 import Environment, FileSystemLoader, BaseLoader
 from pyspark.sql import Row
@@ -96,10 +95,7 @@ class SparkExpectationsAlert:
             mail_subject = self._context.get_mail_subject
             mail_receivers_list = self._context.get_to_mail
             if not self._context.get_detailed_default_template:
-                # the below for finding the file location is for local testing and should be reverted before merging
-                current_file_dir = os.path.dirname(os.path.abspath(__file__))
-                template_dir = os.path.join(current_file_dir, "..", "..", "config", "templates")
-                # template_dir = "../../spark_expectations/config/templates"
+                template_dir = "../../spark_expectations/config/templates"
                 env_loader = Environment(loader=FileSystemLoader(template_dir))
                 template = env_loader.get_template("advanced_email_alert_template.jinja")
             else:
