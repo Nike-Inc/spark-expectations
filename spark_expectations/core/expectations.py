@@ -365,6 +365,7 @@ class SparkExpectations:
                     self._context.set_source_query_dq_result()
                     self._context.set_final_query_dq_result()
                     self._context.set_summarized_row_dq_res()
+                    self._context.set_rules_exceeds_threshold()
                     self._context.set_dq_expectations(expectations)
 
                     # initialize variables of start and end time with default values
