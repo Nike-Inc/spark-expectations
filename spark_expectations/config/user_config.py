@@ -12,7 +12,7 @@ class Constants:
 
     se_user_defined_custom_dataframe = "spark.expectations.user.defined.custom.dataframe"
     se_notifications_enable_custom_dataframe = "spark.expectations.notifications.enable.custom.dataframe"
-    se_dq_obs_default_email_template = "spark.expectations.dq.obs.default.email.template"
+    se_dq_obs_default_email_template = "spark.expectations.dq.obs.default.detailed.email.template"
     se_notifications_default_basic_email_template = "spark.expectations.notifications.default.basic.email.template"
     se_dq_obs_mode_of_communication = "spark.expectations.dq.obs.mode.of.communication"
     se_notifications_service_account_email = "spark.expectations.notifications.service.account.email"

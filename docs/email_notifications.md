@@ -18,7 +18,7 @@ run_id: <Run ID>
 run_date: <Run Date>
 ```
 
-Currently the metrics displayed are not configurable (for emails where you can specify metrics see the custom metrics email section).
+Basic notifications only report the table name, run ID, and run date and this is not configurable at this time. For emails where you can choose specific metrics see the [custom metrics email section](#3-custom-metrics-emails) below.
 
 The configurations related to basic email notifications are:
 
@@ -55,8 +55,10 @@ If a template is not provided the default template located in `spark_expectation
 
 This feature is somewhat limited currently and the template should be set up to handle `rows`.
 
-### Example Template
-```html
+
+### Example Template Config Setup
+```python
+basic_html_template = """
 <style>
     table {
         border-collapse: collapse;
@@ -67,7 +69,7 @@ This feature is somewhat limited currently and the template should be set up to 
     td {
         border: 1px solid black; /* Changed to black border */
         text-align: left;
-        padding: 4px; /* Reduced padding from 8px to 6px */
+        padding: 4px;
     }
     tr:nth-child(even) {
         background-color: #f9f9f9;
@@ -90,7 +92,10 @@ This feature is somewhat limited currently and the template should be set up to 
 
 <h3>{{ title }}</h3>
 {{ render_table(rows) }}
+"""
 
+user_config.se_notifications_enable_templated_basic_email_body: True
+user_config.se_notifications_default_basic_email_template: basic_html_template
 ```
 
 ## 3. Custom Metrics Emails

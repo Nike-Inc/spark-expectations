@@ -84,7 +84,7 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
         Takes in the notification message and applies a content type and an html template if that option is set.
         Args:
             _context: SparkExpectationsContext object
-            server: smtplib.SMTP object
+            _config_args: Dict[Union[str], Union[str, bool]]
         """
         mail_content = f"""{_config_args.get("message")}"""
 
