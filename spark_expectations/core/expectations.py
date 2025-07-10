@@ -351,6 +351,7 @@ class SparkExpectations:
                     _ignore_rules_result: List[Optional[List[Dict[str, str]]]] = []
 
                     # initialize variable with default values through set
+                    _log.info(f"initialize variable with default values before next run")
                     self._context.set_dq_run_status()
                     self._context.set_source_agg_dq_status()
                     self._context.set_source_query_dq_status()
@@ -365,6 +366,7 @@ class SparkExpectations:
                     self._context.set_source_query_dq_result()
                     self._context.set_final_query_dq_result()
                     self._context.set_summarized_row_dq_res()
+                    self._context.set_rules_exceeds_threshold()
                     self._context.set_dq_expectations(expectations)
 
                     # initialize variables of start and end time with default values
