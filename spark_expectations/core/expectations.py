@@ -25,6 +25,7 @@ from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
 from spark_expectations.utils.actions import SparkExpectationsActions
 from spark_expectations.utils.reader import SparkExpectationsReader
 from spark_expectations.utils.regulate_flow import SparkExpectationsRegulateFlow
+from spark_expectations.utils.validate_rules import SparkExpectationsValidateRules
 
 
 def get_spark_minor_version() -> float:
@@ -337,6 +338,21 @@ class SparkExpectations:
                     # _df: DataFrame = func(*args, **kwargs)
                     _df: DataFrame = func(*args, **kwargs)
                     table_name: str = self._context.get_table_name
+
+                    # run rule validations
+                    rules = [rule.asDict() for rule in self.rules_df.collect()]
+                    for rule in rules:
+                        try:
+                            SparkExpectationsValidateRules.validate_expectation(
+                                df=_df,
+                                rule=rule,
+                                spark=self.spark,
+                            )
+                        except Exception as e:
+                            raise SparkExpectationsMiscException(
+                                f"Validation failed for rule: {rule.get('rule')} with error: {e}"
+                            )
+                    _log.info("Validation for rules completed successfully")
 
                     _input_count = _df.count()
                     _log.info(f"data frame input record count: {_input_count}")
