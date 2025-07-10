@@ -39,7 +39,8 @@ se_user_conf = {
         "env": "local",
         "table": "product",
      }, # (24)!
-}
+     user_config.se_notifications_enable_templated_basic_email_body: True, # (25)!
+     user_config.se_notifications_default_basic_email_template: "", # (26)!
 }
 ```
 
@@ -63,10 +64,12 @@ se_user_conf = {
 18. When `user_config.se_notifications_on_rules_action_if_failed_set_ignore` parameter set to `True` enables notification when rules action is set to ignore if failed 
 19. The `user_config.se_notifications_on_error_drop_threshold` parameter captures error drop threshold value 
 20. The `user_config.se_enable_error_table` parameter, which controls whether error data to load into error table, is set to true by default 
-21. When `user_config.enable_query_dq_detailed_result` parameter set to `True`, enables the option to cature the query_dq detailed stats to detailed_stats table. By default set to `False`
-22. When `user_config.enable_agg_dq_detailed_result` parameter set to `True`, enables the option to cature the agg_dq detailed stats to detailed_stats table. By default set to `False`
+21. When `user_config.enable_query_dq_detailed_result` parameter set to `True`, enables the option to capture the query_dq detailed stats to detailed_stats table. By default set to `False`
+22. When `user_config.enable_agg_dq_detailed_result` parameter set to `True`, enables the option to capture the agg_dq detailed stats to detailed_stats table. By default set to `False`
 23. The `user_config.querydq_output_custom_table_name` parameter is used to specify the name of the custom query_dq output table which captures the output of the alias queries passed in the query dq expectation. Default is <stats_table>_custom_output 
 24. The `user_config.se_dq_rules_params` parameter, which are required to dynamically update dq rules
+25. The `user_config.se_notifications_enable_templated_basic_email_body` optional parameter is used to enable using a Jinja template for basic email notifications (notifying on job start, completion, failure, etc.)
+26. The `user_config.se_notifications_default_basic_email_template` optional parameter is used to specify the Jinja template used for basic email notifications. If the provided template is blank or this option is missing (while basic email templates are enabled) a default template will be used.
 
 In case of SMTP server authentication, the password can be passed directly with the user config or set in a secure way like Cerberus or Databricks secret.
 If it is preferred to use Cerberus for secure password storage, the `user_config.se_notifications_smtp_creds_dict` parameter can be used to specify the credentials for the SMTP server in the following way:
