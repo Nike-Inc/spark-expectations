@@ -1,4 +1,5 @@
 import re
+import uuid
 from typing import Dict, List
 
 from pyspark.sql import DataFrame, SparkSession
@@ -106,22 +107,34 @@ class SparkExpectationsValidateRules:
             spark (SparkSession): Spark session.
 
         Raises:
-            SparkExpectationsInvalidQueryDQExpectationException: If no table is found or SQL execution fails.
+            SparkExpectationsInvalidQueryDQExpectationException: If the SQL query is invalid or fails to run.
         """
         query = rule.get("expectation").lower()
-        table_names = SparkExpectationsValidateRules.extract_table_names_from_sql(query)
+        temp_view_name = f"__dq_validation_temp_{uuid.uuid4().hex}__"
+
+        # Extract table names
+        table_names = SparkExpectationsValidateRules.extract_table_names_from_sql(query.lower())
 
         if not table_names:
-            raise SparkExpectationsInvalidQueryDQExpectationException(f"No table/view name found in query: {query}")
+            raise ValueError(f"No table/view name found in query: {query}")
+
+        # Replace all extracted table names in the query with the temp view name
         for table_name in table_names:
-            df.createOrReplaceTempView(table_name)
+            query = re.sub(rf"\b{re.escape(table_name)}\b", temp_view_name, query)
+
         try:
-            spark.sql(f"SELECT {query} AS result").schema
+            # Create a temporary view for validation
+            df.createOrReplaceTempView(temp_view_name)
+            # Validate the query
+            spark.sql(f"SELECT {query} AS result").collect()
         except Exception as e:
             raise SparkExpectationsInvalidQueryDQExpectationException(
                 f"[query_dq] Rule failed SQL validation | rule_type: query_dq | rule: '{rule.get('rule')}' | "
                 f"expectation: '{query}' → {e}"
             )
+        finally:
+            # Clean up the temporary view
+            spark.catalog.dropTempView(temp_view_name)
 
     @staticmethod
     def validate_expectation(df: DataFrame, rule: Dict, spark: SparkSession) -> None:
