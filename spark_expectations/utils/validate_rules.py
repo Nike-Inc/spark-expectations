@@ -4,7 +4,7 @@ from typing import Dict, List
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import expr
 
-from spark_expectations.exceptions import (
+from spark_expectations.core.exceptions import (
     SparkExpectationsInvalidAggDQExpectationException,
     SparkExpectationsInvalidQueryDQExpectationException,
     SparkExpectationsInvalidRowDQExpectationException,
