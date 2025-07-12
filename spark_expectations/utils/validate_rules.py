@@ -111,10 +111,10 @@ class SparkExpectationsValidateRules:
         """
         query = rule.get("expectation").lower()
         temp_view_name = f"__dq_validation_temp_{uuid.uuid4().hex}__"
+        # Replace {placeholder} table names
+        query = re.sub(r"\{[^}]+\}", temp_view_name, query)
 
         # Extract table names
-        table_names = SparkExpectationsValidateRules.extract_table_names_from_sql(query.lower())
-
         if not table_names:
             raise ValueError(f"No table/view name found in query: {query}")
 
