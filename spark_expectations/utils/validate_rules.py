@@ -115,8 +115,7 @@ class SparkExpectationsValidateRules:
         query = re.sub(r"\{[^}]+\}", temp_view_name, query)
 
         # Extract table names
-        if not table_names:
-            raise ValueError(f"No table/view name found in query: {query}")
+        table_names = SparkExpectationsValidateRules.extract_table_names_from_sql(query.lower())
 
         # Replace all extracted table names in the query with the temp view name
         for table_name in table_names:
