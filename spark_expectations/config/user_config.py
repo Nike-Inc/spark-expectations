@@ -86,5 +86,5 @@ class Constants:
     se_agg_dq_expectation_regex_pattern = r"(\(.+?\)|\w+\(.+?\))(\s*[<>!=]+\s*.+|\s*between\s*.+)$"
     # declare const variable for range in agg query dq detailed stats
     se_agg_dq_expectation_range_regex_pattern = (
-        r"(\w+\(\w+\)|\w+)(\s*[><]\s*\d+)\s+(and)\s+(\w+\(\w+\)|\w+)(\s*[><]\s*\d+)"
+        r"(\w+\(\*\)|\w+\(\w+\)|\w+)(\s*[><]\s*\d+)\s+(and)\s+(\w+\(\*\)|\w+\(\w+\)|\w+)(\s*[><]\s*\d+)"
     )
