@@ -115,7 +115,7 @@ class SparkExpectationsValidateRules:
         Raises:
             SparkExpectationsInvalidQueryDQExpectationException: If the SQL query is invalid or fails to run.
         """
-        query = rule.get("expectation").lower()
+        query = rule.get("expectation", "").lower()
         temp_view_name = f"__dq_validation_temp_{uuid.uuid4().hex}__"
         # Replace {placeholder} table names
         query = re.sub(r"\{[^}]+\}", temp_view_name, query)
