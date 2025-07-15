@@ -100,9 +100,9 @@ def _fixture_agg_dq_rule_type_range():
         "product_id": "product_1",
     }
 
-@pytest.fixture(name="_fixture_agg_dq_rule_type_upper_lower")
-def _fixture_agg_dq_rule_type_upper_lower():
-     return {
+@pytest.fixture(name="_fixture_agg_dq_rule_type_range_upper_lower")
+def _fixture_agg_dq_rule_type_range_upper_lower():
+    return {
         "product_id": "product1",
         "rule_type": "agg_dq",
         "rule": "expect_row_count_to_be_in_range",
@@ -869,10 +869,10 @@ def test_agg_query_dq_detailed_result_with_range_rule_type(
     )
 
 def test_agg_query_dq_detailed_result_with_upper_lower_rule(
-    _fixture_df, _fixture_agg_dq_rule_type_upper_lower, _fixture_agg_dq_detailed_expected_result, _fixture_mock_context
+    _fixture_df, _fixture_agg_dq_rule_type_range_upper_lower, _fixture_agg_dq_detailed_expected_result, _fixture_mock_context
 ):
     result_out, result_df = SparkExpectationsActions.agg_query_dq_detailed_result(
-        _fixture_mock_context, _fixture_agg_dq_rule_type_upper_lower, _fixture_df, []
+        _fixture_mock_context, _fixture_agg_dq_rule_type_range_upper_lower, _fixture_df, []
     )
 
     assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get("result_agg_query_dq_detailed_upper_lower_bound").get("product_id")
