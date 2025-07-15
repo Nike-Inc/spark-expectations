@@ -11,6 +11,8 @@ from spark_expectations.core.exceptions import (
     SparkExpectationsInvalidRowDQExpectationException,
     SparkExpectationsInvalidRuleTypeException)
 
+from spark_expectations.config.user_config import AGGREGATE_FUNCTIONS
+
 
 class SparkExpectationsValidateRules:
     """
@@ -55,9 +57,8 @@ class SparkExpectationsValidateRules:
             SparkExpectationsInvalidRowDQExpectationException: If aggregate functions are used or expression fails.
         """
         expectation = rule.get("expectation", "").lower()
-        disallowed_funcs = ["sum", "avg", "min", "max", "stddev", "count"]
 
-        if any(func in expectation for func in disallowed_funcs):
+        if any(func in expectation for func in AGGREGATE_FUNCTIONS):
             raise SparkExpectationsInvalidRowDQExpectationException(
                 f"[row_dq] Rule '{rule.get('rule')}' contains aggregate function (not allowed in row_dq): {expectation}"
             )
@@ -82,15 +83,13 @@ class SparkExpectationsValidateRules:
             SparkExpectationsInvalidAggDQExpectationException: If no aggregate function is found or expression fails.
         """
         expectation = rule.get("expectation", "").lower()
-        allowed_funcs = ["sum", "avg", "min", "max", "stddev", "count"]
 
         # Add this check to catch query-like expectations
         if re.search(r"\bselect\b.*\bfrom\b", expectation, re.IGNORECASE):
             raise SparkExpectationsInvalidAggDQExpectationException(
                 f"[agg_dq] Rule '{rule.get('rule')}' contains a SQL query (not allowed in agg_dq): {expectation}"
             )
-
-        if not any(func in expectation for func in allowed_funcs):
+        if not any(func in expectation for func in AGGREGATE_FUNCTIONS):
             raise SparkExpectationsInvalidAggDQExpectationException(
                 f"[agg_dq] Rule '{rule.get('rule')}' does not contain a valid aggregate function: {expectation}"
             )
