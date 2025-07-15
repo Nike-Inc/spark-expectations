@@ -100,6 +100,25 @@ def _fixture_agg_dq_rule_type_range():
         "product_id": "product_1",
     }
 
+@pytest.fixture(name="_fixture_agg_dq_rule_type_range_upper_lower")
+def _fixture_agg_dq_rule_type_range_upper_lower():
+    return {
+        "product_id": "product1",
+        "rule_type": "agg_dq",
+        "rule": "expect_row_count_to_be_in_range",
+        "column_name": "",
+        "expectation": "count(*) > 1 and count(*) < 10",
+        "action_if_failed": "fail",
+        "table_name": "test_table",
+        "tag": "accuracy",
+        "status": "fail",
+        "enable_for_target_dq_validation": True,
+        "enable_for_source_dq_validation": True,
+        "enable_querydq_custom_output": True,
+        "actual_value": 0,
+        "expected_value": None,
+        "description": "rule to check if row count is within upper and lower bounds",
+    }
 
 @pytest.fixture(name="_fixture_query_dq_rule")
 def fixture_query_dq_rule():
@@ -268,6 +287,19 @@ def fixture_agg_dq_detailed_expected_result():
             "description": "table count should be greater than 1",
             "actual_value": 0,
             "expected_value": ">1",
+        },
+        "result_agg_query_dq_detailed_upper_lower_bound": {
+            "product_id": "product1",
+            "table_name": "test_table",
+            "rule_type": "agg_dq",
+            "rule": "expect_row_count_to_be_in_range",
+            "column_name": "",
+            "expectation": "count(*) > 1 and count(*) < 10",
+            "tag": "accuracy",
+            "status": "pass",
+            "description": "rule to check if row count is within upper and lower bounds",
+            "actual_value": 3,
+            "expected_value": "3 > 1 and 3 < 10",
         },
         "result_without_context": {
             "product_id": "product_1",
@@ -847,6 +879,28 @@ def test_agg_query_dq_detailed_result_with_range_rule_type(
 
     assert result_df[10] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get("actual_value")
     assert result_df[11] == _fixture_agg_dq_detailed_expected_result.get("result_without_context1").get(
+        "expected_value"
+    )
+
+def test_agg_query_dq_detailed_result_with_upper_lower_rule(
+    _fixture_df, _fixture_agg_dq_rule_type_range_upper_lower, _fixture_agg_dq_detailed_expected_result, _fixture_mock_context
+):
+    result_out, result_df = SparkExpectationsActions.agg_query_dq_detailed_result(
+        _fixture_mock_context, _fixture_agg_dq_rule_type_range_upper_lower, _fixture_df, []
+    )
+
+    assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get("result_agg_query_dq_detailed_upper_lower_bound").get("product_id")
+    assert result_df[2] == _fixture_agg_dq_detailed_expected_result.get("result_agg_query_dq_detailed_upper_lower_bound").get("table_name")
+    assert result_df[3] == _fixture_agg_dq_detailed_expected_result.get("result_agg_query_dq_detailed_upper_lower_bound").get("rule_type")
+    assert result_df[4] == _fixture_agg_dq_detailed_expected_result.get("result_agg_query_dq_detailed_upper_lower_bound").get("rule")
+    assert result_df[5] == _fixture_agg_dq_detailed_expected_result.get("result_agg_query_dq_detailed_upper_lower_bound").get("column_name")
+    assert result_df[6] == _fixture_agg_dq_detailed_expected_result.get("result_agg_query_dq_detailed_upper_lower_bound").get("expectation")
+    assert result_df[7] == _fixture_agg_dq_detailed_expected_result.get("result_agg_query_dq_detailed_upper_lower_bound").get("tag")
+    assert result_df[8] == _fixture_agg_dq_detailed_expected_result.get("result_agg_query_dq_detailed_upper_lower_bound").get("description")
+    assert result_df[9] == _fixture_agg_dq_detailed_expected_result.get("result_agg_query_dq_detailed_upper_lower_bound").get("status")
+
+    assert result_df[10] == _fixture_agg_dq_detailed_expected_result.get("result_agg_query_dq_detailed_upper_lower_bound").get("actual_value")
+    assert result_df[11] == _fixture_agg_dq_detailed_expected_result.get("result_agg_query_dq_detailed_upper_lower_bound").get(
         "expected_value"
     )
 
