@@ -340,9 +340,9 @@ class SparkExpectations:
                     table_name: str = self._context.get_table_name
 
                     # run rule validations
-                    rules = [rule.asDict() for rule in self.rules_df.collect()]
-                    for rule in rules:
+                    for rule in self.rules_df.toLocalIterator():
                         try:
+                            rule = rule.asDict()
                             SparkExpectationsValidateRules.validate_expectation(
                                 df=_df,
                                 rule=rule,
