@@ -322,12 +322,12 @@ create table if not exists `catalog`.`schema`.`dq_stats` (
 6. `output_percentage` percentage of total count of records that passed the row_dq rules or configured to be ignored when they fail
 7. `success_percentage` percentage of total count of records that passed the row_dq rules
 8. `error_percentage` percentage of total count of records that failed the row_dq rules
-9. `source_agg_dq_results` results for agg dq rules are stored
-10. `final_agg_dq_results` results for agg dq rules are stored after row_dq rules executed
-11. `source_query_dq_results` results for query dq rules are stored
-12. `final_query_dq_results` results for query dq rules are stored after row_dq rules executed
-13. `row_dq_res_summary` summary of row dq results are stored
-14. `row_dq_error_threshold` threshold for rules defined in the rules table for row_dq rules
+9. `source_agg_dq_results` results for agg dq rules are stored after row_dq rules executed in an array with each entry as a map\<string, string\> containing the following keys: `description`, `tag`, `column_name`, `rule`, `rule_type`, `status`, `action_if_failed`
+10. `final_agg_dq_results` results for agg dq rules are stored after row_dq rules executed in an array with each entry as a map\<string, string\> containing the following keys: `description`, `tag`, `column_name`, `rule`, `rule_type`, `status`, `action_if_failed`
+11. `source_query_dq_results` results for query dq rules are stored after row_dq rules executed in an array with each entry as a map\<string, string\> containing the following keys: `description`, `tag`, `column_name`, `rule`, `rule_type`, `status`, `action_if_failed`
+12. `final_query_dq_results` results for query dq rules are stored after row_dq rules executed in an array with each entry as a map\<string, string\> containing the following keys: `description`, `tag`, `column_name`, `rule`, `rule_type`, `status`, `action_if_failed`
+13. `row_dq_res_summary` summary of row dq results are stored in an array with each entry as a map\<string, string\> containing the following keys: `description`, `tag`, `column_name`, `rule`, `rule_type`, `failed_row_count`, `action_if_failed`
+14. `row_dq_error_threshold` error threshold results for rules defined in the rules table for row_dq rules are stored in an array with each entry as a map\<string, string\> containing the following keys: `description`, `column_name` ,`error_drop_threshold`, `rule_type`, `action_if_failed`, `rule_name`, `error_drop_percentage`
 15. `dq_status`  stores the status of the rule execution.
 16. `dq_run_time` time taken by the rules
 17. `dq_rules` how many dq rules are executed in this run
