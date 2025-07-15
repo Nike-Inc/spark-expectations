@@ -81,7 +81,7 @@ class SparkExpectationsValidateRules:
         Raises:
             SparkExpectationsInvalidAggDQExpectationException: If no aggregate function is found or expression fails.
         """
-        expectation = rule.get("expectation").lower()
+        expectation = rule.get("expectation", "").lower()
         allowed_funcs = ["sum", "avg", "min", "max", "stddev", "count"]
 
         # Add this check to catch query-like expectations
