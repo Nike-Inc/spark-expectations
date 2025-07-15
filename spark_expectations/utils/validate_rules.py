@@ -54,7 +54,7 @@ class SparkExpectationsValidateRules:
         Raises:
             SparkExpectationsInvalidRowDQExpectationException: If aggregate functions are used or expression fails.
         """
-        expectation = rule.get("expectation").lower()
+        expectation = rule.get("expectation", "").lower()
         disallowed_funcs = ["sum", "avg", "min", "max", "stddev", "count"]
 
         if any(func in expectation for func in disallowed_funcs):
