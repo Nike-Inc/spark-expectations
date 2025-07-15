@@ -190,7 +190,7 @@ def test_notify_on_start(
     # assert
     _mock_notification_hook.send_notification.assert_called_once_with(
         _context=_fixture_mock_context,
-        _config_args={"message": _fixture_notify_start_expected_result},
+        _config_args={"message": _fixture_notify_start_expected_result, "content_type": "plain"},
     )
 
 
@@ -212,7 +212,7 @@ def test_notify_on_completion(
     # assert for expected result
     _mock_notification_hook.send_notification.assert_called_once_with(
         _context=_fixture_mock_context,
-        _config_args={"message": _fixture_notify_completion_expected_result},
+        _config_args={"message": _fixture_notify_completion_expected_result, "content_type": "plain"},
     )
 
 
@@ -234,7 +234,7 @@ def test_notify_on_exceeds_of_error_threshold(
     # assert for expected result
     _mock_notification_hook.send_notification.assert_called_once_with(
         _context=_fixture_mock_context,
-        _config_args={"message": _fixture_notify_error_threshold_expected_result},
+        _config_args={"message": _fixture_notify_error_threshold_expected_result, "content_type": "plain"},
     )
 
 
@@ -290,7 +290,7 @@ def test_notify_on_ignore_rules(
     # assert for expected result
     _mock_notification_hook.send_notification.assert_called_once_with(
         _context=_fixture_mock_context,
-        _config_args={"message": _fixture_notify_on_ignore_rules_expected_result},
+        _config_args={"message": _fixture_notify_on_ignore_rules_expected_result, "content_type": "plain"},
     )
 
 
@@ -308,7 +308,7 @@ def test_notify_on_failure(_mock_notification_hook, _fixture_mock_context, _fixt
     # assert for expected result
     _mock_notification_hook.send_notification.assert_called_once_with(
         _context=_fixture_mock_context,
-        _config_args={"message": _fixture_notify_fail_expected_result},
+        _config_args={"message": _fixture_notify_fail_expected_result, "content_type": "plain"},
     )
 
 
@@ -341,7 +341,7 @@ def test_notify_on_start_success(
     # assert for expected result
     _mock_notification_hook.send_notification.assert_called_once_with(
         _context=_fixture_mock_context,
-        _config_args={"message": _fixture_notify_start_expected_result},
+        _config_args={"message": _fixture_notify_start_expected_result, "content_type": "plain"},
     )
 
 
@@ -374,7 +374,7 @@ def test_notify_on_completion_success(
     # assert for expected result
     _mock_notification_hook.send_notification.assert_called_once_with(
         _context=_fixture_mock_context,
-        _config_args={"message": _fixture_notify_completion_expected_result},
+        _config_args={"message": _fixture_notify_completion_expected_result, "content_type": "plain"},
     )
 
 
@@ -492,7 +492,8 @@ def test_notify_on_exceeds_of_error_threshold_each_rules(_notification_hook, _fi
     _notification_hook.send_notification.assert_called_once_with(
         _context=_fixture_mock_context,
         _config_args={
-            "message": "Spark expectations - The number of notifications for rules being followed has surpassed the specified threshold \n\n\nTest message"
+            "message": "Spark expectations - The number of notifications for rules being followed has surpassed the specified threshold \n\n\nTest message",
+            "content_type": "plain"
         },
     )
 
@@ -674,7 +675,7 @@ def test_notify_on_completion_with_custom_email_body(
     # assert for expected result
     _mock_notification_hook.send_notification.assert_called_once_with(
         _context=_fixture_mock_context,
-        _config_args={"message": "Custom notification message"},
+        _config_args={"message": "Custom notification message", "content_type": "plain"},
     )
 
 
@@ -699,5 +700,5 @@ def test_notify_on_failure_with_custom_email_body(
     # assert for expected result
     _mock_notification_hook.send_notification.assert_called_once_with(
         _context=_fixture_mock_context,
-        _config_args={"message": "Custom notification message"},
+        _config_args={"message": "Custom notification message", "content_type": "plain"},
     )

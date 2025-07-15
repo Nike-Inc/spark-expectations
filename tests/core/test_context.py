@@ -62,6 +62,7 @@ def test_context_properties():
     context._enable_mail = True
     context._enable_smtp_server_auth = True
     context._enable_custom_email_body = True
+    context._enable_templated_basic_email_body = True
     context._to_mail = "abc@mail.com, decf@mail.com"
     context._mail_from = "abc@mail.com"
     context._mail_subject = "spark expectations"
@@ -191,6 +192,7 @@ def test_context_properties():
     assert context._enable_mail is True
     assert context._enable_smtp_server_auth is True
     assert context._enable_custom_email_body is True
+    assert context._enable_templated_basic_email_body is True
     assert context._to_mail == "abc@mail.com, decf@mail.com"
     assert context._mail_from == "abc@mail.com"
     assert context._mail_subject == "spark expectations"
@@ -514,6 +516,13 @@ def test_set_enable_custom_email_body():
     context.set_enable_custom_email_body(True)
     assert context._enable_custom_email_body is True
     assert context.get_enable_custom_email_body is True
+
+
+def test_set_enable_templated_basic_email_body():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_enable_templated_basic_email_body(True)
+    assert context._enable_templated_basic_email_body is True
+    assert context.get_enable_templated_basic_email_body is True
 
 
 def test_set_smtp_server():
@@ -2194,20 +2203,36 @@ def test_get_se_dq_obs_alert_flag():
     assert context.get_se_dq_obs_alert_flag is None
 
 
-def test_set_default_template():
+def test_set_detailed_default_template():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
-    context.set_default_template("test_template")
-    assert context.get_default_template == "test_template"
+    context.set_detailed_default_template("test_template")
+    assert context.get_detailed_default_template == "test_template"
 
 
-def test_get_default_template():
+def test_get_detailed_default_template():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
-    context.set_default_template("test_template")
-    assert context.get_default_template == "test_template"
+    context.set_detailed_default_template("test_template")
+    assert context.get_detailed_default_template == "test_template"
 
     # testing for None condition
-    context._default_template = None
-    assert context.get_default_template is None
+    context._detailed_default_template = None
+    assert context.get_detailed_default_template is None
+
+
+def test_set_basic_default_template():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_basic_default_template("test_template")
+    assert context.get_basic_default_template == "test_template"
+
+
+def test_get_basic_default_template():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_basic_default_template("test_template")
+    assert context.get_basic_default_template == "test_template"
+
+    # testing for None condition
+    context._basic_default_template = None
+    assert context.get_basic_default_template is None
 
 
 def test_set_stats_detailed_dataframe():

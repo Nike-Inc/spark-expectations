@@ -70,3 +70,11 @@ def test_constants():
 
     assert user_config.se_enable_agg_dq_detailed_result == "spark.expectations.agg.dq.detailed.stats"
     assert user_config.se_enable_query_dq_detailed_result == "spark.expectations.query.dq.detailed.stats"
+
+    assert user_config.se_dq_obs_default_email_template == "spark.expectations.dq.obs.default.detailed.email.template"
+    assert user_config.se_notifications_default_basic_email_template == "spark.expectations.notifications.default.basic.email.template"
+    assert user_config.se_notifications_email_custom_body == "spark.expectations.notifications.email.custom.body"
+    assert user_config.se_notifications_enable_templated_basic_email_body == (
+        "spark.expectations.notifications.enable.templated.basic.email.body"
+    ) 
+    assert user_config.se_notifications_enable_custom_email_body == "spark.expectations.notifications.enable.custom.email.body"

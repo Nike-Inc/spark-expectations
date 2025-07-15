@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 import pytest
 from spark_expectations.core.exceptions import SparkExpectationsEmailException
 from spark_expectations.notifications.plugins.email import SparkExpectationsEmailPluginImpl
@@ -372,3 +372,211 @@ def test_get_smtp_password_none_exception(_mock_context):
 
         with pytest.raises(SparkExpectationsEmailException, match="SMTP password is not set."):
             email_handler._get_smtp_password(_mock_context, server)
+
+
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_process_message_plain_text(_mock_context):
+    """Test that _process_message returns plain text content when content_type is not html"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_templated_basic_email_body = False
+
+    config_args = {"message": "Test message content", "content_type": "plain"}
+
+    mail_content, content_type = email_handler._process_message(_mock_context, config_args)
+
+    assert mail_content == "Test message content"
+    assert content_type == "plain"
+
+
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_process_message_html_content(_mock_context):
+    """Test that _process_message keeps html content_type when specified"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_templated_basic_email_body = False
+
+    config_args = {"message": "<p>Test HTML content</p>", "content_type": "html"}
+
+    mail_content, content_type = email_handler._process_message(_mock_context, config_args)
+
+    assert mail_content == "<p>Test HTML content</p>"
+    assert content_type == "html"
+
+
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_process_message_detailed_notification(_mock_context):
+    """Test that template is not used when email_notification_type is 'detailed'"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_templated_basic_email_body = True
+    _mock_context.get_basic_default_template = None
+
+    config_args = {
+        "message": "Test detailed message",
+        "content_type": "html",
+        "email_notification_type": "detailed",
+    }
+
+    mail_content, content_type = email_handler._process_message(_mock_context, config_args)
+
+    assert mail_content == "Test detailed message"
+    assert content_type == "html"
+
+
+@patch("spark_expectations.notifications.plugins.email.Environment")
+@patch("spark_expectations.notifications.plugins.email.FileSystemLoader")
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_process_message_with_template_filesystem(_mock_context, mock_fs_loader, mock_env):
+    """Test that template is used when email_notification_type is not 'detailed' and template enabled"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_templated_basic_email_body = True
+    _mock_context.get_basic_default_template = None
+    _mock_context.get_mail_subject = "Test Subject"
+
+    # Setup template mocks
+    mock_template = MagicMock()
+    mock_template.module.render_table = "render_function"
+    mock_template.render.return_value = "<table>Rendered HTML</table>"
+    mock_env.return_value.get_template.return_value = mock_template
+
+    # Test message with format similar to your expected format
+    test_message = "Title Line\ntable_name: test_table\nrun_id: 12345"
+
+    config_args = {
+        "message": test_message,
+        "content_type": "plain",
+    }
+
+    mail_content, content_type = email_handler._process_message(_mock_context, config_args)
+
+    # Check that the template was used
+    mock_fs_loader.assert_called_once_with("../../spark_expectations/config/templates")
+    mock_env.assert_called_once_with(loader=mock_fs_loader.return_value)
+    mock_env.return_value.get_template.assert_called_once_with("basic_email_alert_template.jinja")
+    mock_template.render.assert_called_once()
+
+    # Check the resulting content
+    assert "<h2>Test Subject</h2>" in mail_content
+    assert "<table>Rendered HTML</table>" in mail_content
+    assert content_type == "html"
+
+    # Verify the message data was parsed correctly
+    call_args = mock_template.render.call_args[1]
+    assert call_args["title"] == "Title Line"
+    assert call_args["rows"] == [["table_name", " test_table"], ["run_id", " 12345"]]
+    assert call_args["render_table"] == "render_function"
+
+
+@patch("spark_expectations.notifications.plugins.email.Environment")
+@patch("spark_expectations.notifications.plugins.email.BaseLoader")
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_process_message_with_template_baseloader(_mock_context, mock_base_loader, mock_env):
+    """Test template processing when a custom template is provided"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_templated_basic_email_body = True
+    _mock_context.get_basic_default_template = "Custom template string"
+    _mock_context.get_mail_subject = "Custom Subject"
+
+    # Setup template mocks
+    mock_template = MagicMock()
+    mock_template.module.render_table = "render_function"
+    mock_template.render.return_value = "<div>Custom Template</div>"
+    mock_env.return_value.from_string.return_value = mock_template
+
+    test_message = "Alert\nkey1: value1\nkey2: value2"
+
+    config_args = {
+        "message": test_message,
+        "content_type": "plain",
+    }
+
+    mail_content, content_type = email_handler._process_message(_mock_context, config_args)
+
+    # Check the template was used with BaseLoader
+    mock_env.return_value.from_string.assert_called_with("Custom template string")
+    mock_template.render.assert_called_once()
+    assert "<h2>Custom Subject</h2>" in mail_content
+    assert "<div>Custom Template</div>" in mail_content
+    assert content_type == "html"
+
+    # Verify message parsing
+    call_args = mock_template.render.call_args[1]
+    assert call_args["title"] == "Alert"
+    assert call_args["rows"] == [["key1", " value1"], ["key2", " value2"]]
+    assert call_args["render_table"] == "render_function"
+
+
+@patch("spark_expectations.notifications.plugins.email.Environment")
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_process_message_with_empty_message(_mock_context, mock_env):
+    """Test that _process_message handles empty messages gracefully"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_templated_basic_email_body = True
+    _mock_context.get_basic_default_template = "Template string"
+    _mock_context.get_mail_subject = "Subject"
+
+    # Setup template mock
+    mock_template = MagicMock()
+    mock_template.module.render_table = "render_function"
+    mock_template.render.return_value = "<p>Empty Content</p>"
+    mock_env.return_value.from_string.return_value = mock_template
+
+    # Test with empty message
+    config_args = {
+        "message": "",
+        "content_type": "plain",
+    }
+
+    mail_content, content_type = email_handler._process_message(_mock_context, config_args)
+
+    # Check that template was rendered with empty title and rows
+    call_args = mock_template.render.call_args[1]
+    assert call_args["title"] == ""
+    assert call_args["rows"] == []
+    assert content_type == "html"
+
+
+@patch("spark_expectations.notifications.plugins.email.Environment")
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_process_message_with_malformed_data(_mock_context, mock_env):
+    """Test that message parsing handles malformed data gracefully"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_templated_basic_email_body = True
+    _mock_context.get_basic_default_template = "Template string"
+    _mock_context.get_mail_subject = "Subject"
+
+    # Setup template mock
+    mock_template = MagicMock()
+    mock_template.module.render_table = "render_function"
+    mock_template.render.return_value = "<p>Rendered Content</p>"
+    mock_env.return_value.from_string.return_value = mock_template
+
+    # Test with malformed message (no key-value pairs)
+    test_message = "Just a single line with no key-value pairs"
+
+    config_args = {
+        "message": test_message,
+        "content_type": "plain",
+    }
+
+    mail_content, content_type = email_handler._process_message(_mock_context, config_args)
+
+    # Check that title was extracted and empty rows were passed
+    call_args = mock_template.render.call_args[1]
+    assert call_args["title"] == "Just a single line with no key-value pairs"
+    assert call_args["rows"] == []
+
+
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_process_message_no_content_type(_mock_context):
+    """Test that _process_message defaults to plain text when no content_type is provided"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_templated_basic_email_body = False
+
+    # No content_type provided
+    config_args = {"message": "Test message without content type"}
+
+    mail_content, content_type = email_handler._process_message(_mock_context, config_args)
+
+    assert mail_content == "Test message without content type"
+    assert content_type == "plain"
+
+

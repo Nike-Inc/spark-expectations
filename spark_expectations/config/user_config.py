@@ -12,7 +12,8 @@ class Constants:
 
     se_user_defined_custom_dataframe = "spark.expectations.user.defined.custom.dataframe"
     se_notifications_enable_custom_dataframe = "spark.expectations.notifications.enable.custom.dataframe"
-    se_dq_obs_default_email_template = "spark.expectations.dq.obs.default.email.template"
+    se_dq_obs_default_email_template = "spark.expectations.dq.obs.default.detailed.email.template"
+    se_notifications_default_basic_email_template = "spark.expectations.notifications.default.basic.email.template"
     se_dq_obs_mode_of_communication = "spark.expectations.dq.obs.mode.of.communication"
     se_notifications_service_account_email = "spark.expectations.notifications.service.account.email"
     se_dq_obs_alert_flag = "spark.expectations.notifications.alert.flag.disable"
@@ -27,6 +28,9 @@ class Constants:
     se_notifications_email_to_other_mail_id = "spark.expectations.notifications.email.to.other.mail.com"
     se_notifications_email_subject = "spark.expectations.notifications.email.subject"
     se_notifications_email_custom_body = "spark.expectations.notifications.email.custom.body"
+    se_notifications_enable_templated_basic_email_body = (
+        "spark.expectations.notifications.enable.templated.basic.email.body"
+    )
 
     # declare const user config variables for slack notification
     se_notifications_enable_slack = "spark.expectations.notifications.slack.enabled"
