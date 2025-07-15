@@ -90,7 +90,7 @@ class SparkExpectationsValidateRules:
                 f"[agg_dq] Rule '{rule.get('rule')}' contains a SQL query (not allowed in agg_dq): {expectation}"
             )
 
-        if not any(func in expectation for func in allowed_funcs):
+        if not any(re.search(rf"\\b{func}\\b", expectation) for func in allowed_funcs):
             raise SparkExpectationsInvalidAggDQExpectationException(
                 f"[agg_dq] Rule '{rule.get('rule')}' does not contain a valid aggregate function: {expectation}"
             )
