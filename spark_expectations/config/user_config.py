@@ -89,6 +89,12 @@ class Constants:
 
     se_agg_dq_expectation_regex_pattern = r"(\(.+?\)|\w+\(.+?\))(\s*[<>!=]+\s*.+|\s*between\s*.+)$"
     # declare const variable for range in agg query dq detailed stats
+    # ex). count(*), count(), count(col1), sum(col1), col1
+    allowed_functions = r"(\w+\(\*\)|\w+\(\w+\)|\w+)"
+    and_clause = r"(\s+and\s+)"
+    # ex). col1 > 1, col 1 < 10
+    operator_with_value = r"(\s*[><]\s*\d+)"
+
     se_agg_dq_expectation_range_regex_pattern = (
-        r"(\w+\(\w+\)|\w+)(\s*[><]\s*\d+)\s+(and)\s+(\w+\(\w+\)|\w+)(\s*[><]\s*\d+)"
+        allowed_functions + operator_with_value + and_clause + allowed_functions + operator_with_value
     )
