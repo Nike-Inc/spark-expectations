@@ -22,6 +22,7 @@ Thanks to the contributors who helped on this project apart from the authors
 * [Danny Meijer](https://www.linkedin.com/in/dannydatascientist/)
 * [Sasa Mirkovic](https://www.linkedin.com/in/societysling/)
 * [Maria Ovsyankina](https://www.linkedin.com/in/movsyankina/)
+* [Patrick Miki](https://www.linkedin.com/in/pmiki)
 
 # Honorary Mentions
 Thanks to the team below for invaluable insights and support throughout the initial release of this project
