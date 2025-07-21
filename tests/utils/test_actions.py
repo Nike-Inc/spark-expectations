@@ -697,7 +697,7 @@ def test_create_rules_map(_rule_map, expected_output):
                 "enable_for_source_dq_validation": True,
                 "description": "table max col2 bigger then 'a'",
                 "expectation_source_f1": "select max(col2) from query_test_table",
-                "expectation_target_f1": "select max(col2) from query_test_table_target)",
+                "expectation_target_f1": "select max(col2) from query_test_table_target",
             },
             # result in spark col object 4
             {
