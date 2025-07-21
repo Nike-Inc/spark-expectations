@@ -44,7 +44,7 @@ def fixture_mock_context():
         },
         "product_1|test_table|table_distinct_count": {
             "source_f1": "select distinct col1, col2 from query_test_table",
-            "target_f1": "elect distinct col1, col2 from query_test_table_target",
+            "target_f1": "select distinct col1, col2 from query_test_table_target",
         },
     }
 
@@ -576,7 +576,7 @@ def test_create_rules_map(_rule_map, expected_output):
 @pytest.mark.parametrize(
     "_query_dq_rule, query_dq_detailed_expected_result, _source_dq_status,_target_dq_status",
     [
-        # expectations rule
+        # expectations rule 1
         (
             {
                 "product_id": "product_1",
@@ -594,7 +594,7 @@ def test_create_rules_map(_rule_map, expected_output):
                 "expectation_source_f1": "select count(*) from query_test_table",
                 "expectation_target_f1": "select count(*) from query_test_table_target",
             },
-            # result in spark col object
+            # result in spark col object 1
             {
                 "product_id": "product_1",
                 "table_name": "test_table",
@@ -611,7 +611,7 @@ def test_create_rules_map(_rule_map, expected_output):
             True,
             False,
         ),
-        # expectations rule
+        # expectations rule 2
         (
             {
                 "product_id": "product_1",
@@ -629,7 +629,7 @@ def test_create_rules_map(_rule_map, expected_output):
                 "expectation_source_f1": "select count(*) from (select distinct col1, col2 from query_test_table)",
                 "expectation_target_f1": "select count(*) from (select distinct col1, col2 from query_test_table_target)",
             },
-            # result in spark col object
+            # result in spark col object 2
             {
                 "product_id": "product_1",
                 "table_name": "test_table",
@@ -645,6 +645,76 @@ def test_create_rules_map(_rule_map, expected_output):
             },
             False,
             True,
+        ),
+         # expectations rule 3 - float retuned value
+        (
+            {
+                "product_id": "product_1",
+                "rule_type": "query_dq",
+                "rule": "table_distinct_count_float",
+                "column_name": "col1",
+                "expectation": "(select count(col1) + 0.5 from query_test_table) > 2.78",
+                "enable_querydq_custom_output": False,
+                "action_if_failed": "fail",
+                "table_name": "test_table",
+                "tag": "accuracy",
+                "enable_for_target_dq_validation": True,
+                "enable_for_source_dq_validation": True,
+                "description": "query resutls should be more then 2.78",
+                "expectation_source_f1": "select count(col1) + 0.5 from query_test_table",
+                "expectation_target_f1": "",
+            },
+            # result in spark col object 3
+            {
+                "product_id": "product_1",
+                "table_name": "test_table",
+                "rule_type": "query_dq",
+                "rule": "table_distinct_count_float",
+                "column_name": "col1",
+                "expectation": "(select count(col1) + 0.5 from query_test_table) > 2.78",
+                "tag": "accuracy",
+                "status": "pass",
+                "description":  "query resutls should be more then 2.78",
+                "actual_value": 3.5,
+                "expected_value": ">2.78",
+            },
+            True,
+            False,
+        ),
+         # expectations rule 4 - string retuned value
+        (
+            {
+                "product_id": "product_1",
+                "rule_type": "query_dq",
+                "rule": "table_max_string",
+                "column_name": "col2",
+                "expectation": "(select max(col2) from query_test_table) > 'a'",
+                "enable_querydq_custom_output": False,
+                "action_if_failed": "fail",
+                "table_name": "test_table",
+                "tag": "accuracy",
+                "enable_for_target_dq_validation": True,
+                "enable_for_source_dq_validation": True,
+                "description": "table max col2 bigger then 'a'",
+                "expectation_source_f1": "select max(col2) from query_test_table)",
+                "expectation_target_f1": "select max(col2) from query_test_table_target)",
+            },
+            # result in spark col object 4
+            {
+                "product_id": "product_1",
+                "table_name": "test_table",
+                "rule_type": "query_dq",
+                "rule": "table_max_string",
+                "column_name": "col2",
+                "expectation": "(select max(col2) from query_test_table) > 'a'",
+                "tag": "accuracy",
+                "status": "pass",
+                "description": "table max col2 bigger then 'a'",
+                "actual_value": 'c',
+                "expected_value": ">'a'",
+            },
+            True,
+            False,
         ),
     ],
 )
