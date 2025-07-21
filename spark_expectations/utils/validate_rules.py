@@ -13,6 +13,9 @@ from spark_expectations.core.exceptions import (
 
 from spark_expectations.config.user_config import AGGREGATE_FUNCTIONS
 
+import sqlglot
+from sqlglot.errors import ParseError
+
 
 class SparkExpectationsValidateRules:
     """
@@ -104,7 +107,7 @@ class SparkExpectationsValidateRules:
     @staticmethod
     def validate_query_dq_expectation(df: DataFrame, rule: Dict, spark: SparkSession) -> None:
         """
-        Validates a query_dq expectation by registering temp views and running scalar SQL.
+        Validates a query_dq expectation by ensuring it is a valid SQL query.
 
         Args:
             df (DataFrame): The input DataFrame.
@@ -112,33 +115,24 @@ class SparkExpectationsValidateRules:
             spark (SparkSession): Spark session.
 
         Raises:
-            SparkExpectationsInvalidQueryDQExpectationException: If the SQL query is invalid or fails to run.
+            SparkExpectationsInvalidQueryDQExpectationException: If the query is not valid SQL or fails to parse.
         """
-        query = rule.get("expectation", "").lower()
-        temp_view_name = f"__dq_validation_temp_{uuid.uuid4().hex}__"
-        # Replace {placeholder} table names
-        query = re.sub(r"\{[^}]+\}", temp_view_name, query)
 
-        # Extract table names
-        table_names = SparkExpectationsValidateRules.extract_table_names_from_sql(query.lower())
+        query = rule.get("expectation", "")
 
-        # Replace all extracted table names in the query with the temp view name
-        for table_name in table_names:
-            query = re.sub(rf"\b{re.escape(table_name)}\b", temp_view_name, query)
-
-        try:
-            # Create a temporary view for validation
-            df.createOrReplaceTempView(temp_view_name)
-            # Validate the query
-            spark.sql(f"SELECT {query} AS result").collect()
-        except Exception as e:
+        # 1. Ensure it's a SELECT ... FROM ... query
+        if not re.search(r"\bselect\b.*\bfrom\b", query, re.IGNORECASE):
             raise SparkExpectationsInvalidQueryDQExpectationException(
-                f"[query_dq] Rule failed SQL validation | rule_type: query_dq | rule: '{rule.get('rule')}' | "
-                f"expectation: '{query}' → {e}"
-            )
-        finally:
-            # Clean up the temporary view
-            spark.catalog.dropTempView(temp_view_name)
+                f"[query_dq] Expectation does not appear to be a valid SQL SELECT query: '{query}'"
+           )
+
+        # 2. Validate SQL syntax using sqlglot
+        try:
+            sqlglot.parse_one(query)
+        except ParseError as e:
+            raise SparkExpectationsInvalidQueryDQExpectationException(
+                f"[query_dq] Invalid SQL syntax (sqlglot): {e}"
+        )
 
     @staticmethod
     def validate_expectation(df: DataFrame, rule: Dict, spark: SparkSession) -> None:
