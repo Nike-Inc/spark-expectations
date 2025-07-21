@@ -1,7 +1,39 @@
+import json
 import os
+import yaml
 from pyspark.sql.session import SparkSession
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
+
+
+def load_configurations(spark: SparkSession) -> None:
+    try:
+        with open(f"{current_dir}/../config/spark-default-config.yaml", "r", encoding="utf-8") as config_file:
+            config = yaml.safe_load(config_file)
+        if config is None:
+            config = {}
+        elif not isinstance(config, dict):
+            raise yaml.YAMLError("Configuration file is not valid.")
+        streaming_config = {}
+        notification_config = {}
+        for key, value in config.items():
+            if key.startswith("se.streaming."):
+                streaming_config[key] = value
+            elif key.startswith("spark.expectations."):
+                notification_config[key] = value
+            else:
+                spark.conf.set(key, str(value))
+        spark.conf.set("default_streaming_dict", json.dumps(streaming_config))
+        spark.conf.set("default_notification_dict", json.dumps(notification_config))
+
+    except FileNotFoundError as e:
+        raise RuntimeError(f"Configuration file not found: {e}") from e
+    except yaml.YAMLError as e:
+        raise RuntimeError(f"Error parsing YAML configuration file: {e}") from e
+    except PermissionError as e:
+        raise RuntimeError(f"Permission denied while accessing the configuration file: {e}") from e
+    except Exception as e:
+        raise RuntimeError(f"An unexpected error occurred while loading configurations: {e}") from e
 
 
 def get_spark_session() -> SparkSession:
@@ -30,6 +62,9 @@ def get_spark_session() -> SparkSession:
             .config("spark.ui.enabled", "false")
             .config("spark.ui.showConsoleProgress", "false")
         )
-        return builder.getOrCreate()
 
-    return SparkSession.getActiveSession()
+        sparksession = builder.getOrCreate()
+    else:
+        sparksession = SparkSession.getActiveSession()
+    load_configurations(sparksession)
+    return sparksession

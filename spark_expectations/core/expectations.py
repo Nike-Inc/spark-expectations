@@ -1,5 +1,6 @@
 import functools
 import importlib
+import json
 from dataclasses import dataclass
 from typing import Dict, Optional, Any, Union, List
 
@@ -175,34 +176,21 @@ class SparkExpectations:
 
         def _except(func: Any) -> Any:
             # variable used for enabling notification at different level
-
-            _default_notification_dict: Dict[str, Union[str, int, bool, Dict[str, str], None]] = {
-                user_config.se_notifications_on_start: False,
-                user_config.se_notifications_on_completion: True,
-                user_config.se_notifications_on_fail: True,
-                user_config.se_notifications_on_error_drop_exceeds_threshold_breach: False,
-                user_config.se_notifications_on_rules_action_if_failed_set_ignore: False,
-                user_config.se_notifications_on_error_drop_threshold: 100,
-                user_config.se_enable_agg_dq_detailed_result: False,
-                user_config.se_enable_query_dq_detailed_result: False,
-                user_config.se_job_metadata: None,
-                user_config.querydq_output_custom_table_name: f"{self.stats_table}_querydq_output",
-            }
+            _default_notification_dict: Dict[str, Union[str, int, bool, Dict[str, str], None]] = json.loads(
+                self.spark.conf.get("default_notification_dict")
+            )
+            _default_notification_dict[
+                user_config.querydq_output_custom_table_name
+            ] = f"{self.stats_table}_querydq_output"
 
             _notification_dict: Dict[str, Union[str, int, bool, Dict[str, str], None]] = (
                 {**_default_notification_dict, **user_conf} if user_conf else _default_notification_dict
             )
-            _default_stats_streaming_dict: Dict[str, Union[bool, str]] = {
-                user_config.se_enable_streaming: True,
-                user_config.secret_type: "databricks",
-                user_config.dbx_workspace_url: "https://workspace.cloud.databricks.com",
-                user_config.dbx_secret_scope: "secret_scope",
-                user_config.dbx_kafka_server_url: "se_streaming_server_url_secret_key",
-                user_config.dbx_secret_token_url: "se_streaming_auth_secret_token_url_key",
-                user_config.dbx_secret_app_name: "se_streaming_auth_secret_appid_key",
-                user_config.dbx_secret_token: "se_streaming_auth_secret_token_key",
-                user_config.dbx_topic_name: "se_streaming_topic_name",
-            }
+
+            _default_stats_streaming_dict: Dict[str, Union[bool, str]] = json.loads(
+                self.spark.conf.get("default_streaming_dict")
+            )
+
             _se_stats_streaming_dict: Dict[str, Any] = (
                 {**self.stats_streaming_options} if self.stats_streaming_options else _default_stats_streaming_dict
             )
@@ -351,7 +339,7 @@ class SparkExpectations:
                     _ignore_rules_result: List[Optional[List[Dict[str, str]]]] = []
 
                     # initialize variable with default values through set
-                    _log.info(f"initialize variable with default values before next run")
+                    _log.info("initialize variable with default values before next run")
                     self._context.set_dq_run_status()
                     self._context.set_source_agg_dq_status()
                     self._context.set_source_query_dq_status()

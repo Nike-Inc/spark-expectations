@@ -44,7 +44,7 @@ def test_constants():
         "error.drop.threshold"
     )
 
-    assert user_config.se_enable_streaming == "se.enable.streaming"
+    assert user_config.se_enable_streaming == "se.streaming.enable"
 
     assert user_config.se_enable_error_table == "se.enable.error.table"
 
