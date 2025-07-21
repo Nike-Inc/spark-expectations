@@ -674,7 +674,7 @@ def test_create_rules_map(_rule_map, expected_output):
                 "expectation": "(select count(col1) + 0.5 from query_test_table) > 2.78",
                 "tag": "accuracy",
                 "status": "pass",
-                "description":  "query resutls should be more then 2.78",
+                "description": "query results should be more than 2.78",
                 "actual_value": 3.5,
                 "expected_value": ">2.78",
             },
