@@ -56,7 +56,7 @@ class Constants:
     )
     se_notifications_on_error_drop_threshold = "spark.expectations.notifications.error.drop.threshold"
 
-    se_enable_streaming = "se.enable.streaming"
+    se_enable_streaming = "se.streaming.enable"
     se_enable_error_table = "se.enable.error.table"
     se_dq_rules_params = "se.dq.rules.params"
 

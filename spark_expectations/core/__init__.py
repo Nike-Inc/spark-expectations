@@ -1,7 +1,25 @@
+import json
 import os
+import yaml
 from pyspark.sql.session import SparkSession
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
+
+
+def load_configurations(spark: SparkSession) -> None:
+    with open(f"{current_dir}/../config/spark-default-config.yaml", "r", encoding="utf-8") as config_file:
+        config = yaml.safe_load(config_file)
+    streaming_config = {}
+    notification_config = {}
+    for key, value in config.items():
+        if key.startswith("se.streaming."):
+            streaming_config[key] = value
+        elif key.startswith("spark.expectations."):
+            notification_config[key] = value
+        else:
+            spark.conf.set(key, str(value))
+    spark.conf.set("default_streaming_dict", json.dumps(streaming_config))
+    spark.conf.set("default_notification_dict", json.dumps(notification_config))
 
 
 def get_spark_session() -> SparkSession:
@@ -32,4 +50,6 @@ def get_spark_session() -> SparkSession:
         )
         return builder.getOrCreate()
 
-    return SparkSession.getActiveSession()
+    spark = SparkSession.getActiveSession()
+    load_configurations(spark)
+    return spark

@@ -755,7 +755,7 @@ class SparkExpectationsWriter:
             # TODO check if streaming_stats is set to off, if it's enabled only then this should run
 
             _se_stats_dict = self._context.get_se_streaming_stats_dict
-            if _se_stats_dict["se.enable.streaming"]:
+            if _se_stats_dict[user_config.se_enable_streaming]:
                 kafka_write_options: dict = self.get_kafka_write_options(_se_stats_dict)
                 _sink_hook.writer(
                     _write_args={
@@ -841,9 +841,9 @@ class SparkExpectationsWriter:
                 .withColumn("description", col("row_dq_res")["description"])
                 .withColumn("tag", col("row_dq_res")["tag"])
                 .withColumn("action_if_failed", col("row_dq_res")["action_if_failed"])
-                .withColumn("column_name",col("row_dq_res")["column_name"])
-                .select("rule_type", "rule", "column_name","description", "tag", "action_if_failed")
-                .groupBy("rule_type", "rule", "column_name","description", "tag", "action_if_failed")
+                .withColumn("column_name", col("row_dq_res")["column_name"])
+                .select("rule_type", "rule", "column_name", "description", "tag", "action_if_failed")
+                .groupBy("rule_type", "rule", "column_name", "description", "tag", "action_if_failed")
                 .count()
                 .withColumnRenamed("count", "failed_row_count")
             )
@@ -851,7 +851,7 @@ class SparkExpectationsWriter:
                 {
                     "rule_type": row.rule_type,
                     "rule": row.rule,
-                    "column_name":row.column_name,
+                    "column_name": row.column_name,
                     "description": row.description,
                     "tag": row.tag,
                     "action_if_failed": row.action_if_failed,
