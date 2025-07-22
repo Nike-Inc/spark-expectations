@@ -105,6 +105,15 @@ class SparkExpectationsValidateRules:
 
     @staticmethod
     def validate_query_dq_expectation(df: DataFrame, rule: Dict, spark: SparkSession) -> None:
+        """
+        Validates a query_dq expectation by ensuring it is a valid SQL query.
+        Args:
+            df (DataFrame): The input DataFrame.
+            rule (Dict): Rule containing the 'expectation' SQL.
+            spark (SparkSession): Spark session.
+        Raises:
+            SparkExpectationsInvalidQueryDQExpectationException: If the query is not valid SQL or fails to parse.
+        """
         query = rule.get("expectation", "")
 
         # 1. Ensure it's a SELECT ... FROM ... query
@@ -112,18 +121,26 @@ class SparkExpectationsValidateRules:
             raise SparkExpectationsInvalidQueryDQExpectationException(
                 f"[query_dq] Expectation does not appear to be a valid SQL SELECT query: '{query}'"
             )
+        
+        # 2. Use extract_table_names_from_sql to find all table names/placeholders
+        table_names = SparkExpectationsValidateRules.extract_table_names_from_sql(query)
+        temp_view_name = "dummy_table"
+        query_for_validation = query
 
-        # 2. Replace placeholders like {table} with a dummy table name for validation
-        query_for_validation = re.sub(r"\{[^\}]+\}", "dummy_table", query)
+        # 3. Replace each table name/placeholder with the dummy table name
+        for table_name in table_names:
+            query_for_validation = re.sub(
+                rf"\b{re.escape(table_name)}\b", temp_view_name, query_for_validation
+            )
 
-        # 3. Validate SQL syntax using sqlglot
+        # 4. Validate SQL syntax using sqlglot
         try:
             sqlglot.parse_one(query_for_validation)
         except ParseError as e:
             raise SparkExpectationsInvalidQueryDQExpectationException(
                 f"[query_dq] Invalid SQL syntax (sqlglot): {e}"
             )
-    
+   
     @staticmethod
     def validate_expectation(df: DataFrame, rule: Dict, spark: SparkSession) -> None:
         """
