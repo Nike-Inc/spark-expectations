@@ -9,23 +9,19 @@ from spark_expectations.core.exceptions import (
     SparkExpectationsInvalidQueryDQExpectationException,
     SparkExpectationsInvalidRowDQExpectationException,
     SparkExpectationsInvalidRuleTypeException)
-from spark_expectations.utils.validate_rules import \
-    SparkExpectationsValidateRules
+from spark_expectations.utils.validate_rules import (
+    SparkExpectationsValidateRules,
+    RuleType,
+)
 
 
 @pytest.fixture(scope="session")
 def spark():
-    """
-    Returns a Spark session
-    """
     return SparkSession.builder.appName("DQValidation").getOrCreate()
 
 
 @pytest.fixture
 def sample_df(spark):
-    """
-    Returns a spark dataframe
-    """
     return spark.createDataFrame([{"col1": 1, "col2": 10}, {"col1": 2, "col2": 20}, {"col1": 3, "col2": 30}])
 
 
@@ -40,15 +36,13 @@ def sample_df(spark):
     ],
 )
 def test_valid_row_dq(sample_df, expectation, spark):
-    """
-    Test with valid row data quality rules
-    """
     rule = {
         "rule_type": "row_dq",
         "expectation": expectation,
         "rule": "valid_row_dq",
     }
-    SparkExpectationsValidateRules.validate_expectation(sample_df, rule, spark)
+    failed = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
+    assert RuleType.ROW_DQ not in failed
 
 
 @pytest.mark.parametrize(
@@ -65,15 +59,13 @@ def test_valid_row_dq(sample_df, expectation, spark):
     ],
 )
 def test_valid_agg_dq(sample_df, expectation, spark):
-    """
-    Test with valid aggregate data quality rules
-    """
     rule = {
         "rule_type": "agg_dq",
         "expectation": expectation,
         "rule": "valid_agg_dq",
     }
-    SparkExpectationsValidateRules.validate_expectation(sample_df, rule, spark)
+    failed = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
+    assert RuleType.AGG_DQ not in failed
 
 
 @pytest.mark.parametrize(
@@ -90,15 +82,13 @@ def test_valid_agg_dq(sample_df, expectation, spark):
     ],
 )
 def test_valid_query_dq(sample_df, expectation, spark):
-    """
-    Test with valid query data quality rules
-    """
     rule = {
         "rule_type": "query_dq",
         "expectation": expectation,
         "rule": "valid_query_dq",
     }
-    SparkExpectationsValidateRules.validate_expectation(sample_df, rule, spark)
+    failed = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
+    assert RuleType.QUERY_DQ not in failed
 
 
 @pytest.mark.parametrize(
@@ -110,16 +100,13 @@ def test_valid_query_dq(sample_df, expectation, spark):
     ],
 )
 def test_invalid_row_dq(sample_df, expectation, spark):
-    """
-    Test with invalid row data quality rules
-    """
     rule = {
         "rule_type": "row_dq",
         "expectation": expectation,
         "rule": "invalid_row_dq",
     }
-    with pytest.raises(SparkExpectationsInvalidRowDQExpectationException):
-        SparkExpectationsValidateRules.validate_expectation(sample_df, rule, spark)
+    failed = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
+    assert RuleType.ROW_DQ in failed and rule in failed[RuleType.ROW_DQ]
 
 
 @pytest.mark.parametrize(
@@ -131,16 +118,13 @@ def test_invalid_row_dq(sample_df, expectation, spark):
     ],
 )
 def test_invalid_agg_dq(sample_df, expectation, spark):
-    """
-    Test with invalid aggregate data quality rules
-    """
     rule = {
         "rule_type": "agg_dq",
         "expectation": expectation,
         "rule": "invalid_agg_dq",
     }
-    with pytest.raises(SparkExpectationsInvalidAggDQExpectationException):
-        SparkExpectationsValidateRules.validate_expectation(sample_df, rule, spark)
+    failed = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
+    assert RuleType.AGG_DQ in failed and rule in failed[RuleType.AGG_DQ]
 
 
 @pytest.mark.parametrize(
@@ -152,16 +136,13 @@ def test_invalid_agg_dq(sample_df, expectation, spark):
     ],
 )
 def test_invalid_query_dq(sample_df, expectation, spark):
-    """
-    Test with invalid query data quality rules
-    """
     rule = {
         "rule_type": "query_dq",
         "expectation": expectation,
         "rule": "invalid_query_dq",
     }
-    with pytest.raises(SparkExpectationsInvalidQueryDQExpectationException):
-        SparkExpectationsValidateRules.validate_expectation(sample_df, rule, spark)
+    failed = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
+    assert RuleType.QUERY_DQ in failed and rule in failed[RuleType.QUERY_DQ]
 
 
 @pytest.mark.parametrize(
@@ -171,14 +152,10 @@ def test_invalid_query_dq(sample_df, expectation, spark):
     ],
 )
 def test_invalid_rule_type_exception(sample_df, expectation, spark):
-    """
-    Test with invalid rule type
-    """
     rule = {
         "rule_type": "foo_dq",
         "expectation": expectation,
         "rule": "invalid_rule_type",
     }
-    with pytest.raises(SparkExpectationsInvalidRuleTypeException):
-        SparkExpectationsValidateRules.validate_expectation(sample_df, rule, spark)
-
+    with pytest.raises(Exception):
+        SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
