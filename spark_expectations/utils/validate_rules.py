@@ -16,6 +16,13 @@ from spark_expectations.config.user_config import AGGREGATE_FUNCTIONS
 import sqlglot
 from sqlglot.errors import ParseError
 
+from enum import Enum
+
+class RuleType(Enum):
+    ROW_DQ = "row_dq"
+    AGG_DQ = "agg_dq"
+    QUERY_DQ = "query_dq"
+
 class SparkExpectationsValidateRules:
     """
     Performs validations for data quality rules like row_dq, agg_dq and query_dq.
@@ -145,25 +152,29 @@ class SparkExpectationsValidateRules:
             )
    
     @staticmethod
-    def validate_expectation(df: DataFrame, rule: Dict, spark: SparkSession) -> None:
+    def validate_expectations(df: DataFrame, rules: list, spark: SparkSession) -> dict:
         """
-        Method to validate expectations based on rule_type.
+        Validates a list of rules and returns a map of failed rules by rule type.
 
         Args:
             df (DataFrame): Input DataFrame to validate against.
-            rule (Dict): Dictionary representing each rule.
+            rules (list): List of rule dictionaries.
             spark (SparkSession): Spark session.
 
-        Raises:
-            SparkExpectationsInvalidRuleTypeException: If rule_type is not supported or validation fails.
+        Returns:
+            dict: {RuleType: [failed_rule_dicts]}
         """
-        rule_type = rule.get("rule_type")
-
-        if rule_type == "row_dq":
-            SparkExpectationsValidateRules.validate_row_dq_expectation(df, rule)
-        elif rule_type == "query_dq":
-            SparkExpectationsValidateRules.validate_query_dq_expectation(df, rule, spark)
-        elif rule_type == "agg_dq":
-            SparkExpectationsValidateRules.validate_agg_dq_expectation(df, rule)
-        else:
-            raise SparkExpectationsInvalidRuleTypeException(f"Unsupported rule_type: {rule_type}")
+        failed = {rt: [] for rt in RuleType}
+        for rule in rules:
+            try:
+                rule_type = RuleType(rule.get("rule_type"))
+                if rule_type == RuleType.ROW_DQ:
+                    SparkExpectationsValidateRules.validate_row_dq_expectation(df, rule)
+                elif rule_type == RuleType.AGG_DQ:
+                    SparkExpectationsValidateRules.validate_agg_dq_expectation(df, rule)
+                elif rule_type == RuleType.QUERY_DQ:
+                    SparkExpectationsValidateRules.validate_query_dq_expectation(df, rule, spark)
+            except Exception:
+                failed[rule_type].append(rule)
+        # Remove empty lists for rule types with no failures
+        return {k: v for k, v in failed.items() if v}

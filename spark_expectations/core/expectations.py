@@ -340,18 +340,18 @@ class SparkExpectations:
                     table_name: str = self._context.get_table_name
 
                     # run rule validations
-                    for rule in self.rules_df.toLocalIterator():
-                        try:
-                            rule = rule.asDict()
-                            SparkExpectationsValidateRules.validate_expectation(
-                                df=_df,
-                                rule=rule,
-                                spark=self.spark,
-                            )
-                        except Exception as e:
-                            raise SparkExpectationsMiscException(
-                                f"Validation failed for rule: {rule.get('rule')} with error: {e}"
-                            )
+                    rules = [row.asDict() for row in self.rules_df.toLocalIterator()]
+                    failed = SparkExpectationsValidateRules.validate_expectations(
+                        df=_df,
+                        rules=rules,
+                        spark=self.spark,
+                    )
+                    if failed:
+                        # Optionally, raise or log details for each failed rule
+                        failed_rules = [r.get('rule') for rules_list in failed.values() for r in rules_list]
+                        raise SparkExpectationsMiscException(
+                            f"Validation failed for rules: {failed_rules}"
+                        )
                     _log.info("Validation for rules completed successfully")
 
                     _input_count = _df.count()
