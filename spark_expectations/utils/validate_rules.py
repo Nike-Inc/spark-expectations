@@ -16,7 +16,6 @@ from spark_expectations.config.user_config import AGGREGATE_FUNCTIONS
 import sqlglot
 from sqlglot.errors import ParseError
 
-
 class SparkExpectationsValidateRules:
     """
     Performs validations for data quality rules like row_dq, agg_dq and query_dq.
