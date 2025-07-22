@@ -105,34 +105,25 @@ class SparkExpectationsValidateRules:
 
     @staticmethod
     def validate_query_dq_expectation(df: DataFrame, rule: Dict, spark: SparkSession) -> None:
-        """
-        Validates a query_dq expectation by ensuring it is a valid SQL query.
-
-        Args:
-            df (DataFrame): The input DataFrame.
-            rule (Dict): Rule containing the 'expectation' SQL.
-            spark (SparkSession): Spark session.
-
-        Raises:
-            SparkExpectationsInvalidQueryDQExpectationException: If the query is not valid SQL or fails to parse.
-        """
-
         query = rule.get("expectation", "")
 
         # 1. Ensure it's a SELECT ... FROM ... query
         if not re.search(r"\bselect\b.*\bfrom\b", query, re.IGNORECASE):
             raise SparkExpectationsInvalidQueryDQExpectationException(
                 f"[query_dq] Expectation does not appear to be a valid SQL SELECT query: '{query}'"
-           )
+            )
 
-        # 2. Validate SQL syntax using sqlglot
+        # 2. Replace placeholders like {table} with a dummy table name for validation
+        query_for_validation = re.sub(r"\{[^\}]+\}", "dummy_table", query)
+
+        # 3. Validate SQL syntax using sqlglot
         try:
-            sqlglot.parse_one(query)
+            sqlglot.parse_one(query_for_validation)
         except ParseError as e:
             raise SparkExpectationsInvalidQueryDQExpectationException(
                 f"[query_dq] Invalid SQL syntax (sqlglot): {e}"
-        )
-
+            )
+    
     @staticmethod
     def validate_expectation(df: DataFrame, rule: Dict, spark: SparkSession) -> None:
         """
