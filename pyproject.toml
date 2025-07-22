@@ -15,7 +15,11 @@ classifiers = [
 ]
 # https://www.python.org/doc/versions/
 requires-python = ">=3.9,<=3.13"
-
+dependencies = [
+  "pluggy>=1",
+  "requests>=2.28.1",
+  "sqlglot",
+]
 
 [tool.hatch.build.targets.wheel]
 include = ["spark_expectations"]
@@ -26,13 +30,6 @@ include = ["spark_expectations","docs","tests"]
 [tool.hatch.version]
 source = "vcs"
 style = "semver"
-
-
-dependencies = [
-  "pluggy>=1",
-  "requests>=2.28.1",
-  "sqlglot",
-]
 
 [project.optional-dependencies]
 pyspark = [
