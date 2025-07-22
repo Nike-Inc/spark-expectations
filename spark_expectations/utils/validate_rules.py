@@ -132,8 +132,11 @@ class SparkExpectationsValidateRules:
             query_for_validation = re.sub(
                 rf"\b{re.escape(table_name)}\b", temp_view_name, query_for_validation
             )
+        
+        # 4. Handle {table} and similar placeholders
+        query_for_validation = re.sub(r"\{[^\}]+\}", temp_view_name, query_for_validation)
 
-        # 4. Validate SQL syntax using sqlglot
+        # 5. Validate SQL syntax using sqlglot
         try:
             sqlglot.parse_one(query_for_validation)
         except ParseError as e:
