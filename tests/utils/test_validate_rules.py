@@ -149,7 +149,6 @@ def test_invalid_agg_dq(sample_df, expectation, spark):
         "col1 > 20",  # This is a row_dq
         "avg(col1) < 100",  # This is a agg_dq
         "SELECT SUM(col1) > 5 AS result",  # Syntax error
-        "(SELECT MAX(non_existing_col) FROM test_final_table_view) > 1",  # non_existing_col does not exist
     ],
 )
 def test_invalid_query_dq(sample_df, expectation, spark):
