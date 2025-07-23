@@ -3,9 +3,9 @@
 ## v2.5 (2025-07-25)
 ----------------------------
 ### Features
-- `stats_table` schema has been modified to include an additional column "column_name" ([#168](https://github.com/Nike-Inc/spark-expectations/pull/168))
-- Swap out Poetry for hatch for package management, and introduce matrix texting for Python 3.10 - 3.12. ([#146](https://github.com/Nike-Inc/spark-expectations/pull/146))
-    - 3.9 has been excluded from testing.
+- Implemented column_name mapping for each rule in the stats data sent to kafka. ([#168](https://github.com/Nike-Inc/spark-expectations/pull/168))
+- Swap out Poetry for hatch for package management, and introduce matrix testing for Python 3.10 - 3.12 ([#146](https://github.com/Nike-Inc/spark-expectations/pull/146))
+    - 3.9 has been excluded from testing for the time being
 - Added jinja email templates for basic email notifications from SE ([#165](https://github.com/Nike-Inc/spark-expectations/pull/165))
 ### Fixes
 - Resetting `row_dq_error_threshold` prior to each SE run (previous values would pre-exist into next SE call) ([#166](https://github.com/Nike-Inc/spark-expectations/pull/166))
