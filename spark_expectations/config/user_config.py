@@ -88,12 +88,3 @@ class Constants:
     se_agg_dq_expectation_range_regex_pattern = (
         r"(\w+\(\w+\)|\w+)(\s*[><]\s*\d+)\s+(and)\s+(\w+\(\w+\)|\w+)(\s*[><]\s*\d+)"
     )
-
-AGGREGATE_FUNCTIONS = [
-    "avg",
-    "count",
-    "max",
-    "min",
-    "stddev",
-    "sum"
-]

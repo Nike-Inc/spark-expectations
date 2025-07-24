@@ -11,8 +11,6 @@ from spark_expectations.core.exceptions import (
     SparkExpectationsInvalidRowDQExpectationException,
     SparkExpectationsInvalidRuleTypeException)
 
-from spark_expectations.config.user_config import AGGREGATE_FUNCTIONS
-
 import sqlglot
 from sqlglot.errors import ParseError
 
@@ -53,24 +51,31 @@ class SparkExpectationsValidateRules:
         Validates a row_dq expectation by ensuring
         1. It is a valid expression.
         2. The expectation runs successfully on a dataframe.
-
-        This means the expectation for a row_dq
-        1. Cannot include aggregation functions
-        2. Cannot be a SQL query
+        3. It does NOT use aggregate functions.
 
         Args:
             df (DataFrame): The input DataFrame.
             rule (Dict): Rule containing the 'expectation' and 'rule'.
-
+            
         Raises:
             SparkExpectationsInvalidRowDQExpectationException: If aggregate functions are used or expression fails.
         """
-        expectation = rule.get("expectation", "").lower()
+        expectation = rule.get("expectation", "")
 
-        if any(func in expectation for func in AGGREGATE_FUNCTIONS):
+        # Use sqlglot to detect aggregate functions
+        try:
+            tree = sqlglot.parse_one(expectation)
+            agg_funcs = list({node.key for node in tree.find_all(sqlglot.expressions.AggFunc)})
+        except Exception as e:
             raise SparkExpectationsInvalidRowDQExpectationException(
-                f"[row_dq] Rule '{rule.get('rule')}' contains aggregate function (not allowed in row_dq): {expectation}"
+                f"[row_dq] Could not parse expression: {expectation} → {e}"
             )
+
+        if agg_funcs:
+            raise SparkExpectationsInvalidRowDQExpectationException(
+                f"[row_dq] Rule '{rule.get('rule')}' contains aggregate function(s) (not allowed in row_dq): {agg_funcs}"
+            )
+
         try:
             df.select(expr(expectation)).limit(1)
         except Exception as e:
@@ -78,7 +83,7 @@ class SparkExpectationsValidateRules:
                 f"[row_dq] Rule failed validation | rule_type: row_dq | "
                 f"rule: '{rule.get('rule')}' | expectation: '{expectation}' → {e}"
             )
-
+        
     @staticmethod
     def validate_agg_dq_expectation(df: DataFrame, rule: Dict) -> None:
         """
@@ -91,17 +96,22 @@ class SparkExpectationsValidateRules:
         Raises:
             SparkExpectationsInvalidAggDQExpectationException: If no aggregate function is found or expression fails.
         """
-        expectation = rule.get("expectation", "").lower()
+        expectation = rule.get("expectation", "")
 
-        # Add this check to catch query-like expectations
-        if re.search(r"\bselect\b.*\bfrom\b", expectation, re.IGNORECASE):
+        # Use sqlglot to detect aggregate functions
+        try:
+            tree = sqlglot.parse_one(expectation)
+            agg_funcs = list({node.key for node in tree.find_all(sqlglot.expressions.AggFunc)})
+        except Exception as e:
             raise SparkExpectationsInvalidAggDQExpectationException(
-                f"[agg_dq] Rule '{rule.get('rule')}' contains a SQL query (not allowed in agg_dq): {expectation}"
+                f"[agg_dq] Could not parse expression: {expectation} → {e}"
             )
-        if not any(func in expectation for func in AGGREGATE_FUNCTIONS):
+
+        if not agg_funcs:
             raise SparkExpectationsInvalidAggDQExpectationException(
                 f"[agg_dq] Rule '{rule.get('rule')}' does not contain a valid aggregate function: {expectation}"
             )
+
         try:
             df.selectExpr(expectation).limit(1)
         except Exception as e:
