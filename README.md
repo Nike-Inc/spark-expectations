@@ -59,6 +59,18 @@ Please find the spark-expectations flow and feature diagrams below
 <p align="center">
 <img src=https://github.com/Nike-Inc/spark-expectations/blob/main/docs/se_diagrams/features.png?raw=true width=1000></p>
 
+## Data Quality Rule Types
+
+Spark-Expectations supports three distinct types of data quality rules:
+
+- **Row-Level Data Quality (`row_dq`)**: Checks conditions on individual rows, such as `col1 > 10` or `col2 is not null`.
+- **Aggregate Data Quality (`agg_dq`)**: Checks conditions on aggregated values, such as `sum(col3) > 20` or `avg(col1) < 25`.
+- **Query-Based Data Quality (`query_dq`)**: Checks conditions using full SQL queries, such as `(select sum(col1) from test_table) > 10`.
+
+Each rule type has its own expectation format and validation logic.
+
+👉 **For detailed documentation and examples, see the [Data Quality Rule Types section](docs/index.md#spark-expectations-data-quality-rule-types).**
+
 ## Spark Expectation Observability Feature
 
 This feature enhances data observability by leveraging the *stats detailed table* and *custom query table* to generate a *report table* with key metrics.  
