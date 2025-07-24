@@ -94,9 +94,9 @@ def test_valid_query_dq(sample_df, expectation, spark):
 @pytest.mark.parametrize(
     "expectation",
     [
-        "sum(col1) > 20",  # This is an agg_dq
-        "(select stddev(col2) from test_table) > 0",  # This is a query_dq
-        "non_existing_col > 20",  # non_existing_col does not exist
+        "sum(col1) > 20",  # agg_dq expression, not allowed in row_dq
+        "(select stddev(col2) from test_table) > 0",  # SQL query, not allowed in row_dq
+        "non_existing_col > 20",  # column does not exist
     ],
 )
 def test_invalid_row_dq(sample_df, expectation, spark):
@@ -112,9 +112,8 @@ def test_invalid_row_dq(sample_df, expectation, spark):
 @pytest.mark.parametrize(
     "expectation",
     [
-        "col1 > 20",  # This is a row_dq
-        "(select stddev(col2) from test_table) > 0",  # This is a query_dq
         "sum(non_existing_col) > 20",  # non_existing_col does not exist
+        "col1 > 20",                   # not an aggregate expression
     ],
 )
 def test_invalid_agg_dq(sample_df, expectation, spark):
@@ -130,9 +129,10 @@ def test_invalid_agg_dq(sample_df, expectation, spark):
 @pytest.mark.parametrize(
     "expectation",
     [
-        "col1 > 20",  # This is a row_dq
-        "avg(col1) < 100",  # This is a agg_dq
-        "SELECT SUM(col1) > 5 AS result",  # Syntax error
+        "(select stddev(col2) from test_table) > 0",  # valid query_dq
+        "SELECT SUM(col1) > 5 AS result",             # syntax error
+        "col1 > 20",                                  # not a valid query_dq
+        "avg(col1) < 100",                            # not a valid query_dq
     ],
 )
 def test_invalid_query_dq(sample_df, expectation, spark):
