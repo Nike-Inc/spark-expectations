@@ -129,7 +129,6 @@ def test_invalid_agg_dq(sample_df, expectation, spark):
 @pytest.mark.parametrize(
     "expectation",
     [
-        "(select stddev(col2) from test_table) > 0",  # valid query_dq
         "SELECT SUM(col1) > 5 AS result",             # syntax error
         "col1 > 20",                                  # not a valid query_dq
         "avg(col1) < 100",                            # not a valid query_dq
