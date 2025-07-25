@@ -1,6 +1,6 @@
 import re
 from datetime import datetime, date
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import (
@@ -336,11 +336,22 @@ class SparkExpectationsActions:
                         )
 
                 if SparkExpectationsActions.match_parentheses(_dq_rule["expectation"]):
-                    pattern = r"(\(.*\))\s*([<>!=]=?)\s*((\d+)|(\(.*\)))|(\(.*\))"
+
+                     # Improved: break down the regex pattern into logical sections for clarity
+                    left_expr = r"\(.*\)"  # matches a parenthetical SQL expression
+                    operator = r"[<>!=]=?"   # matches comparison operators
+                    right_value = r"(\d+(?:\.\d+)?|\'[^\']*\')"  # matches int, float, or single-quoted string
+                    right_expr = r"\(.*\)"  # matches a parenthetical SQL expression
+                    # Combine into the full pattern
+                    pattern = rf"({left_expr})\s*({operator})\s*({right_value}|({right_expr}))|({left_expr})"
+                    #pattern = r"(\(.*\))\s*([<>!=]=?)\s*((\d+(?:\.\d+)?|\'[^\']*\')|(\(.*\)))|(\(.*\))"
+
                     match = re.search(pattern, _dq_rule["expectation"])
                     if match:
                         # function to execute SQL and get the result
-                        def execute_sql_and_get_result(_se_context: SparkExpectationsContext, query: str) -> int:
+                        def execute_sql_and_get_result(
+                            _se_context: SparkExpectationsContext, query: str
+                        ) -> Union[int, float, str]:
                             return _se_context.spark.sql(f"SELECT ({query}) AS OUTPUT").collect()[0][0] if query else 0
 
                         # function to get the query outputs
