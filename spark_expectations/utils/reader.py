@@ -1,3 +1,4 @@
+import json
 import os
 from typing import Optional, Union, Dict, Tuple
 from dataclasses import dataclass
@@ -34,30 +35,14 @@ class SparkExpectationsReader:
 
         """
         try:
-            _default_spark_conf: Dict[str, Union[str, int, bool, Dict[str, str]]] = {
-                user_config.se_notifications_enable_email: False,
-                user_config.se_notifications_enable_smtp_server_auth: False,
-                user_config.se_notifications_enable_custom_email_body: False,
-                user_config.se_notifications_enable_templated_basic_email_body: False,
-                user_config.se_notifications_default_basic_email_template: "",
-                user_config.se_notifications_email_smtp_host: "",
-                user_config.se_notifications_email_smtp_port: 25,
-                user_config.se_notifications_smtp_password: "",
-                user_config.se_notifications_email_from: "",
-                user_config.se_notifications_email_to_other_mail_id: "",
-                user_config.se_notifications_email_subject: "spark-expectations-testing",
-                user_config.se_notifications_enable_slack: False,
-                user_config.se_notifications_slack_webhook_url: "",
-                user_config.se_notifications_enable_teams: False,
-                user_config.se_notifications_teams_webhook_url: "",
-                user_config.se_notifications_enable_zoom: False,
-                user_config.se_notifications_zoom_webhook_url: "",
-                user_config.se_notifications_zoom_token: "",
-            }
+            _default_notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = json.loads(
+                self.spark.conf.get("default_notification_dict")
+            )
 
             _notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = (
-                {**_default_spark_conf, **notification} if notification else _default_spark_conf
+                {**_default_notification_dict, **notification} if notification else _default_notification_dict
             )
+
             if _notification_dict.get(user_config.se_enable_obs_dq_report_result) is True:
                 self._context.set_enable_obs_dq_report_result(True)
                 if _notification_dict.get(user_config.se_dq_obs_alert_flag) is True:
