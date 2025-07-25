@@ -46,8 +46,6 @@ theme:
 nav:
   - Home: 'index.md'
   - Setup: getting-started/setup.md
-  - Migration_Guide:
-      - comparison: configurations/migration_versions_comparison.md
   - Examples:
       - Understand Args: examples.md
       - Delta: delta.md
