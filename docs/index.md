@@ -4,7 +4,7 @@ Taking inspiration from DLT - data quality expectations: Spark-Expectations is b
 run using decorator pattern while the spark job is in flight and Additionally, the framework able to perform data 
 quality checks when the data is at rest.
 
-### Features Of Spark Expectations
+## Features Of Spark Expectations
 
 Please find the spark-expectations flow and feature diagrams below
 
@@ -14,6 +14,96 @@ Please find the spark-expectations flow and feature diagrams below
 <p align="center">
 <img src=https://github.com/Nike-Inc/spark-expectations/blob/main/docs/se_diagrams/features.png?raw=true width=1000></p>
 
+
+## Data Quality Rule Types
+
+Spark Expectations supports three distinct types of Data Quality (DQ) rules for validating Spark DataFrames.  
+Each rule consists of:
+- `rule_type`: The type of DQ rule (`row_dq`, `agg_dq`, or `query_dq`)
+- `expectation`: The condition or expression to validate
+- `rule_name`: A unique identifier for the rule
+
+Below are the details and examples for each rule type:
+
+---
+
+### 1. Row-Level Data Quality (`row_dq`)
+
+**Purpose:**  
+Checks conditions on individual rows, without using aggregate functions or SQL queries.
+
+**Valid Expectation Examples:**
+- `col1 > 10`
+- `col2 < 25`
+- `col1 is null`
+- `col1 is not null`
+- `(col3 % 2) = 0`
+
+**Characteristics:**
+- Operates on each row independently.
+- **Aggregate functions are NOT allowed** (e.g., `sum`, `avg`, `min`, `max`).
+- **SQL queries are NOT allowed**.
+
+---
+
+### 2. Aggregate Data Quality (`agg_dq`)
+
+**Purpose:**  
+Checks conditions on aggregated values computed from the DataFrame.
+
+**Valid Expectation Examples:**
+- `sum(col3) > 20`
+- `avg(col3) > 25`
+- `min(col1) > 10`
+- `stddev(col3) > 10`
+- `count(distinct col2) > 4`
+- `avg(col1) > 4`
+- `avg(col3) > 18 and avg(col3) < 25`
+- `avg(col3) between 18 and 25`
+- `count(*) > 5` *(Note: support may depend on your Spark version)*
+
+**Characteristics:**
+- **Aggregate functions are required** (e.g., `sum`, `avg`, `min`, `max`, `count`, `stddev`).
+- Operates on the entire DataFrame or groups of rows.
+- **SQL queries are NOT allowed**.
+
+---
+
+### 3. Query-Based Data Quality (`query_dq`)
+
+**Purpose:**  
+Checks conditions using full SQL queries, typically for more complex or cross-table checks.
+
+**Valid Expectation Examples:**
+- `(select sum(col1) from test_table) > 10`
+- `(select stddev(col3) from test_table) > 0`
+- `(select max(col1) from test_final_table_view) > 10`
+- `(select min(col3) from test_final_table_view) > 0`
+- `(select count(col1) from test_final_table_view) > 3`
+- `(select count(case when col3>0 then 1 else 0 end) from test_final_table_view) > 10`
+- `(select sum(col1) from {table}) > 10`
+- `(select count(*) from test_table) > 10`
+
+**Characteristics:**
+- Must be a valid SQL query, typically starting with `select ... from ...`.
+- Can reference other tables or views.
+- Supports complex logic, including subqueries and case statements.
+
+---
+
+### Summary Table
+
+| Rule Type | Valid Expectation Format | Aggregate Functions Allowed | SQL Queries Allowed |
+|-----------|-------------------------|----------------------------|---------------------|
+| `row_dq`  | Simple row expressions  | ❌ No                      | ❌ No               |
+| `agg_dq`  | Aggregate expressions   | ✅ Yes                     | ❌ No               |
+| `query_dq`| SQL queries             | ✅ Yes (via SQL)           | ✅ Yes              |
+
+---
+
+**Tip:**  
+- Match your expectation format to the rule type for correct validation.
+- Use `row_dq` for per-row checks, `agg_dq` for summary statistics, and `query_dq` for advanced SQL-based checks.
 
 ## Concept
 Most of the data quality tools do the data quality checks or data validation on a table at rest and provide metrics in 
