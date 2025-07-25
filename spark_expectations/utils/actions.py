@@ -336,7 +336,15 @@ class SparkExpectationsActions:
                         )
 
                 if SparkExpectationsActions.match_parentheses(_dq_rule["expectation"]):
-                    pattern = r"(\(.*\))\s*([<>!=]=?)\s*((\d+(?:\.\d+)?|\'[^\']*\')|(\(.*\)))|(\(.*\))"
+
+                     # Improved: break down the regex pattern into logical sections for clarity
+                    left_expr = r"\(.*\)"  # matches a parenthetical SQL expression
+                    operator = r"[<>!=]=?"   # matches comparison operators
+                    right_value = r"(\d+(?:\.\d+)?|\'[^\']*\')"  # matches int, float, or single-quoted string
+                    right_expr = r"\(.*\)"  # matches a parenthetical SQL expression
+                    # Combine into the full pattern
+                    pattern = rf"({left_expr})\s*({operator})\s*({right_value}|({right_expr}))|({left_expr})"
+                    #pattern = r"(\(.*\))\s*([<>!=]=?)\s*((\d+(?:\.\d+)?|\'[^\']*\')|(\(.*\)))|(\(.*\))"
 
                     match = re.search(pattern, _dq_rule["expectation"])
                     if match:
