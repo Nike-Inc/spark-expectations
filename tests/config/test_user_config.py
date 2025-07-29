@@ -4,9 +4,9 @@ from spark_expectations.config.user_config import Constants as user_config
 def test_constants():
     assert user_config.se_dq_obs_alert_flag == "spark.expectations.notifications.alert.flag.disable"
 
-    assert user_config.se_notifications_email_smtp_port == "spark.expectations.notifications.email.smtp_port"
+    assert user_config.se_notifications_email_smtp_port == "spark.expectations.notifications.email.smtp.port"
 
-    assert user_config.se_notifications_email_smtp_port == "spark.expectations.notifications.email.smtp_port"
+    assert user_config.se_notifications_email_smtp_port == "spark.expectations.notifications.email.smtp.port"
 
     assert user_config.se_notifications_email_from == "spark.expectations.notifications.email.from"
 
@@ -19,15 +19,15 @@ def test_constants():
 
     assert user_config.se_notifications_enable_slack == "spark.expectations.notifications.slack.enabled"
 
-    assert user_config.se_notifications_slack_webhook_url == "spark.expectations.notifications.slack.webhook_url"
+    assert user_config.se_notifications_slack_webhook_url == "spark.expectations.notifications.slack.webhook.url"
 
     assert user_config.se_notifications_enable_zoom == "spark.expectations.notifications.zoom.enabled"
 
-    assert user_config.se_notifications_zoom_webhook_url == "spark.expectations.notifications.zoom.webhook_url"
+    assert user_config.se_notifications_zoom_webhook_url == "spark.expectations.notifications.zoom.webhook.url"
 
     assert user_config.se_notifications_zoom_token == "spark.expectations.notifications.zoom.token"
 
-    assert user_config.se_notifications_on_start == "spark.expectations.notifications.on_start"
+    assert user_config.se_notifications_on_start == "spark.expectations.notifications.on.start"
 
     assert user_config.se_notifications_on_completion == "spark.expectations.notifications.on.completion"
 
@@ -44,7 +44,7 @@ def test_constants():
         "error.drop.threshold"
     )
 
-    assert user_config.se_enable_streaming == "se.enable.streaming"
+    assert user_config.se_enable_streaming == "se.streaming.enable"
 
     assert user_config.se_enable_error_table == "se.enable.error.table"
 
@@ -72,9 +72,9 @@ def test_constants():
     assert user_config.se_enable_query_dq_detailed_result == "spark.expectations.query.dq.detailed.stats"
 
     assert user_config.se_dq_obs_default_email_template == "spark.expectations.dq.obs.default.detailed.email.template"
-    assert user_config.se_notifications_default_basic_email_template == "spark.expectations.notifications.default.basic.email.template"
+    assert user_config.se_notifications_default_basic_email_template == "spark.expectations.notifications.email.default.basic.template"
     assert user_config.se_notifications_email_custom_body == "spark.expectations.notifications.email.custom.body"
     assert user_config.se_notifications_enable_templated_basic_email_body == (
-        "spark.expectations.notifications.enable.templated.basic.email.body"
+        "spark.expectations.notifications.email.templated.basic.body.enable"
     ) 
-    assert user_config.se_notifications_enable_custom_email_body == "spark.expectations.notifications.enable.custom.email.body"
+    assert user_config.se_notifications_enable_custom_email_body == "spark.expectations.notifications.email.custom.body.enable"

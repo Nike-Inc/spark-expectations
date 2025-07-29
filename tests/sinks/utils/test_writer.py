@@ -2200,12 +2200,12 @@ def test_write_error_stats(
     if writer_config and writer_config["format"] == "bigquery":
         patcher = patch("pyspark.sql.DataFrameWriter.save", autospec=True, spec_set=True)
         mock_bq = patcher.start()
-        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.enable.streaming": False})
+        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.streaming.enable": False})
         _fixture_writer.write_error_stats()
         mock_bq.assert_called_with(unittest.mock.ANY)
 
     else:
-        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.enable.streaming": True})
+        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.streaming.enable": True})
         _fixture_writer.write_error_stats()
         stats_table = spark.table("test_dq_stats_table")
         assert stats_table.count() == 1
@@ -3308,12 +3308,12 @@ def test_write_detailed_stats(
     if writer_config and writer_config["format"] == "bigquery":
         patcher = patch("pyspark.sql.DataFrameWriter.save")
         mock_bq = patcher.start()
-        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.enable.streaming": False})
+        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.streaming.enable": False})
         _fixture_writer.write_detailed_stats()
         mock_bq.assert_called_with()
 
     else:
-        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.enable.streaming": True})
+        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.streaming.enable": True})
         _fixture_writer.write_detailed_stats()
 
         stats_table = spark.sql(f"select * from test_dq_detailed_stats_table where rule_type = '{dq_check}'")
