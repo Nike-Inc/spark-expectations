@@ -77,6 +77,8 @@ dependencies = [
   "pytest-mock~=3.14.0",
   "types-requests==2.28.11.16",
   "types-setuptools==67.7.0.2",
+  "pyyaml~=6.0.2",
+  "types-PyYAML>=6.0.2",
 ]
 
 [tool.hatch.envs.dev.scripts]

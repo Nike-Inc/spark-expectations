@@ -565,7 +565,7 @@ def test_collect_stats_on_success_failure(
         "get_stats_table_writer_config",
         WrappedDataFrameWriter().mode("overwrite").format("delta").build(),
     )
-    setattr(_mock_context, "get_se_streaming_stats_dict", {"se.enable.streaming": True})
+    setattr(_mock_context, "get_se_streaming_stats_dict", {"se.streaming.enable": True})
 
     _mock_context.spark = spark
     _mock_context.product_id = "product1"
@@ -1089,7 +1089,7 @@ def test_collect_stats_on_success_failure_exception(
         "get_stats_table_writer_config",
         WrappedDataFrameWriter().mode("overwrite").format("delta").build(),
     )
-    setattr(_mock_context, "get_se_streaming_stats_dict", {"se.enable.streaming": True})
+    setattr(_mock_context, "get_se_streaming_stats_dict", {"se.streaming.enable": True})
 
     writer = SparkExpectationsWriter(_mock_context)
     statistics_writer_obj = SparkExpectationsCollectStatistics(_mock_context, writer)
