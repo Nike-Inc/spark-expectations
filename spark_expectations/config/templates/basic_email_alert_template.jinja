@@ -1,0 +1,33 @@
+<style>
+    table {
+        border-collapse: collapse;
+        width: 60%; /* Reduced width from 100% to 80% */
+        font-family: Arial, sans-serif;
+        border: 2px solid black; /* Added black border for the table */
+    }
+    td {
+        border: 1px solid black; /* Changed to black border */
+        text-align: left;
+        padding: 4px; /* Reduced padding from 8px to 6px */
+    }
+    tr:nth-child(even) {
+        background-color: #f9f9f9;
+    }
+</style>
+
+{% macro render_table(rows) %}
+<table border=1>
+    <tbody>
+        {% for row in rows %}
+            <tr>
+                {% for cell in row %}
+                        <td>{{ cell }}</td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endmacro %}
+
+<h3>{{ title }}</h3>
+{{ render_table(rows) }}

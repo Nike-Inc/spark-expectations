@@ -1,8 +1,12 @@
+import json
 import os
+import pytest
 from unittest import mock
-from unittest.mock import patch
+from unittest.mock import patch, mock_open
+
+import yaml
 from pyspark.sql.session import SparkSession
-from spark_expectations.core import get_spark_session
+from spark_expectations.core import get_spark_session, load_configurations
 from spark_expectations.core.__init__ import current_dir
 
 
@@ -38,3 +42,43 @@ def test_get_spark_active_session():
     # Now try to get the active session as we disabled unittest flags for this test
     active = get_spark_session()
     assert active == spark
+
+@patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__)+"/../../")
+def test_load_configurations_valid_file():
+    spark = SparkSession.builder.getOrCreate()
+    load_configurations(spark)
+
+    # Check that the configurations are loaded correctly
+    assert spark.conf.get("default_streaming_dict") is not None
+    assert spark.conf.get("default_notification_dict") is not None
+
+    streaming_dict = json.loads(spark.conf.get("default_streaming_dict"))
+    notification_dict = json.loads(spark.conf.get("default_notification_dict"))
+
+    # Check that the streaming and notification configurations are loaded correctly
+    assert streaming_dict["se.streaming.dbx.secret.scope"] == "secret_scope"
+    assert notification_dict["spark.expectations.notifications.email.subject"] == "spark-expectations-testing"
+    assert notification_dict["spark.expectations.notifications.email.from"] == ""
+    assert streaming_dict["se.streaming.enable"] is True
+
+@patch("builtins.open", new_callable=mock.mock_open, read_data="key:[value, another")
+@patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__)+"/../../")
+def test_load_configurations_invalid_file(mock_file):
+    spark = SparkSession.builder.getOrCreate()
+
+    # Expect a RuntimeError due to invalid YAML format
+    with pytest.raises(RuntimeError) as exception_info:
+        load_configurations(spark)
+
+    # Check that the error message is as expected
+    assert "Error parsing Spark config YAML configuration file" in str(exception_info.value)
+
+@patch("builtins.open", new_callable=mock.mock_open, read_data="")
+@patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__)+"/../../")
+def test_load_configurations_empty_file(mock_file):
+    spark = SparkSession.builder.getOrCreate()
+    load_configurations(spark)
+
+    # Check that the default values are set correctly
+    assert spark.conf.get("default_streaming_dict") == "{}"
+    assert spark.conf.get("default_notification_dict") == "{}"

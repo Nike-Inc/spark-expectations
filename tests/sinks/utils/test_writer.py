@@ -2200,12 +2200,12 @@ def test_write_error_stats(
     if writer_config and writer_config["format"] == "bigquery":
         patcher = patch("pyspark.sql.DataFrameWriter.save", autospec=True, spec_set=True)
         mock_bq = patcher.start()
-        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.enable.streaming": False})
+        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.streaming.enable": False})
         _fixture_writer.write_error_stats()
         mock_bq.assert_called_with(unittest.mock.ANY)
 
     else:
-        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.enable.streaming": True})
+        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.streaming.enable": True})
         _fixture_writer.write_error_stats()
         stats_table = spark.table("test_dq_stats_table")
         assert stats_table.count() == 1
@@ -3308,12 +3308,12 @@ def test_write_detailed_stats(
     if writer_config and writer_config["format"] == "bigquery":
         patcher = patch("pyspark.sql.DataFrameWriter.save")
         mock_bq = patcher.start()
-        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.enable.streaming": False})
+        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.streaming.enable": False})
         _fixture_writer.write_detailed_stats()
         mock_bq.assert_called_with()
 
     else:
-        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.enable.streaming": True})
+        setattr(_mock_context, "get_se_streaming_stats_dict", {"se.streaming.enable": True})
         _fixture_writer.write_detailed_stats()
 
         stats_table = spark.sql(f"select * from test_dq_detailed_stats_table where rule_type = '{dq_check}'")
@@ -3482,6 +3482,7 @@ def test_write_error_records_final_dependent(
                             "rule_type": "row_dq",
                             "rule": "rule1",
                             "description": "col1 should not be null",
+                            "column_name":"col1",
                             "tag": "validity",
                             "action_if_failed": "ignore",
                         },
@@ -3489,6 +3490,7 @@ def test_write_error_records_final_dependent(
                             "rule_type": "row_dq",
                             "rule": "rule2",
                             "description": "col2 should start with A",
+                            "column_name": "col2",
                             "tag": "validity",
                             "action_if_failed": "ignore",
                         },
@@ -3502,6 +3504,7 @@ def test_write_error_records_final_dependent(
                             "rule_type": "row_dq",
                             "rule": "rule1",
                             "description": "col1 should not be null",
+                            "column_name": "col1",
                             "tag": "validity",
                             "action_if_failed": "ignore",
                         }
@@ -3515,6 +3518,7 @@ def test_write_error_records_final_dependent(
                             "rule_type": "row_dq",
                             "rule": "rule2",
                             "description": "col2 should start with A",
+                            "column_name": "col2",
                             "tag": "validity",
                             "action_if_failed": "ignore",
                         }
@@ -3528,6 +3532,7 @@ def test_write_error_records_final_dependent(
                     "rule_type": "row_dq",
                     "rule": "rule1",
                     "description": "col1 should not be null",
+                    "column_name": "col1",
                     "tag": "validity",
                     "action_if_failed": "ignore",
                     "failed_row_count": 2,
@@ -3536,6 +3541,7 @@ def test_write_error_records_final_dependent(
                     "rule_type": "row_dq",
                     "rule": "rule2",
                     "description": "col2 should start with A",
+                    "column_name": "col2",
                     "tag": "validity",
                     "action_if_failed": "ignore",
                     "failed_row_count": 2,
@@ -3550,6 +3556,7 @@ def test_write_error_records_final_dependent(
                             "rule_type": "row_dq",
                             "rule": "rule1",
                             "description": "col1 should not be null",
+                            "column_name":"col1",
                             "tag": "validity",
                             "action_if_failed": "ignore",
                         }
@@ -3563,6 +3570,7 @@ def test_write_error_records_final_dependent(
                             "rule_type": "row_dq",
                             "rule": "rule1",
                             "description": "col1 should not be null",
+                            "column_name": "col1",
                             "tag": "validity",
                             "action_if_failed": "ignore",
                         }
@@ -3576,6 +3584,7 @@ def test_write_error_records_final_dependent(
                     "rule_type": "row_dq",
                     "rule": "rule1",
                     "description": "col1 should not be null",
+                    "column_name": "col1",
                     "tag": "validity",
                     "action_if_failed": "ignore",
                     "failed_row_count": 2,
@@ -3584,6 +3593,7 @@ def test_write_error_records_final_dependent(
                     "rule_type": "row_dq",
                     "rule": "rule2",
                     "description": "col2 should start with A",
+                    "column_name": "col2",
                     "tag": "validity",
                     "action_if_failed": "ignore",
                     "failed_row_count": 0,
@@ -3613,6 +3623,7 @@ def test_generate_summarized_row_dq_res(test_data, expected_result, _fixture_con
                         "action_if_failed": "drop",
                         "description": "description1",
                         "rule_type": "row_dq",
+                        "column_name": "col1",
                         "error_drop_threshold": "10",
                     },
                     {
@@ -3620,6 +3631,7 @@ def test_generate_summarized_row_dq_res(test_data, expected_result, _fixture_con
                         "enable_error_drop_alert": True,
                         "action_if_failed": "drop",
                         "description": "description1",
+                        "column_name": "col1",
                         "rule_type": "row_dq",
                         "error_drop_threshold": "10",
                     },
@@ -3633,6 +3645,7 @@ def test_generate_summarized_row_dq_res(test_data, expected_result, _fixture_con
                     "rule_name": "rule1",
                     "action_if_failed": "drop",
                     "description": "description1",
+                    "column_name": "col1",
                     "rule_type": "row_dq",
                     "error_drop_threshold": "10",
                     "error_drop_percentage": "10.0",
@@ -3646,6 +3659,7 @@ def test_generate_summarized_row_dq_res(test_data, expected_result, _fixture_con
                         "rule": "rule3",
                         "enable_error_drop_alert": True,
                         "action_if_failed": "ignore",
+                        "column_name": "col1",
                         "description": "description3",
                         "rule_type": "row_dq",
                         "error_drop_threshold": "10",
@@ -3658,6 +3672,7 @@ def test_generate_summarized_row_dq_res(test_data, expected_result, _fixture_con
                     "rule_name": "rule3",
                     "action_if_failed": "ignore",
                     "description": "description3",
+                    "column_name": "col1",
                     "rule_type": "row_dq",
                     "error_drop_threshold": "10",
                     "error_drop_percentage": "10.0",
@@ -3671,6 +3686,7 @@ def test_generate_summarized_row_dq_res(test_data, expected_result, _fixture_con
                         "rule": "rule4",
                         "enable_error_drop_alert": True,
                         "action_if_failed": "fail",
+                        "column_name": "col1",
                         "description": "description4",
                         "rule_type": "row_dq",
                         "error_drop_threshold": "10",
@@ -3683,6 +3699,7 @@ def test_generate_summarized_row_dq_res(test_data, expected_result, _fixture_con
                     "rule_name": "rule4",
                     "action_if_failed": "fail",
                     "description": "description4",
+                    "column_name": "col1",
                     "rule_type": "row_dq",
                     "error_drop_threshold": "10",
                     "error_drop_percentage": "10.0",
@@ -3696,6 +3713,7 @@ def test_generate_summarized_row_dq_res(test_data, expected_result, _fixture_con
                         "rule": "rule1",
                         "enable_error_drop_alert": True,
                         "action_if_failed": "drop",
+                        "column_name": "col1",
                         "description": "description1",
                         "rule_type": "row_dq",
                         "error_drop_threshold": "10",
@@ -3704,6 +3722,7 @@ def test_generate_summarized_row_dq_res(test_data, expected_result, _fixture_con
                         "rule": "rule2",
                         "enable_error_drop_alert": True,
                         "action_if_failed": "drop",
+                        "column_name": "col1",
                         "description": "description2",
                         "rule_type": "row_dq",
                         "error_drop_threshold": "10",
@@ -3720,6 +3739,7 @@ def test_generate_summarized_row_dq_res(test_data, expected_result, _fixture_con
                     "action_if_failed": "drop",
                     "description": "description1",
                     "rule_type": "row_dq",
+                    "column_name": "col1",
                     "error_drop_threshold": "10",
                     "error_drop_percentage": "10.0",
                 },
@@ -3727,6 +3747,7 @@ def test_generate_summarized_row_dq_res(test_data, expected_result, _fixture_con
                     "rule_name": "rule2",
                     "action_if_failed": "drop",
                     "description": "description2",
+                    "column_name": "col1",
                     "rule_type": "row_dq",
                     "error_drop_threshold": "10",
                     "error_drop_percentage": "20.0",
@@ -3741,6 +3762,7 @@ def test_generate_summarized_row_dq_res(test_data, expected_result, _fixture_con
                         "enable_error_drop_alert": True,
                         "action_if_failed": "drop",
                         "description": "description1",
+                        "column_name": "col1",
                         "rule_type": "row_dq",
                         "error_drop_threshold": "10",
                     },

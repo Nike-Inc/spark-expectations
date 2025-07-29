@@ -1,8 +1,8 @@
-import re
 from typing import Dict, Union, Optional
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from jinja2 import Environment, FileSystemLoader, BaseLoader
 from spark_expectations import _log
 from spark_expectations.notifications.plugins.base_notification import (
     SparkExpectationsNotification,
@@ -77,6 +77,50 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
             raise SparkExpectationsEmailException("SMTP password is not set.")
         server.login(sender, password)
 
+    def _process_message(
+        self, _context: SparkExpectationsContext, _config_args: Dict[Union[str], Union[str, bool]]
+    ) -> tuple[str, str]:
+        """
+        Takes in the notification message and applies a content type and an html template if that option is set.
+        Args:
+            _context: SparkExpectationsContext object
+            _config_args: Dict[Union[str], Union[str, bool]]
+        """
+        mail_content = f"""{_config_args.get("message")}"""
+
+        # Check if the content is HTML
+        if _config_args.get("content_type") == "html":
+            content_type = "html"
+        else:
+            content_type = "plain"
+
+        if (_config_args.get("email_notification_type")) != "detailed":
+            if _context.get_enable_templated_basic_email_body is True:
+                if not _context.get_basic_default_template:
+                    template_dir = "../../spark_expectations/config/templates"
+                    env_loader = Environment(loader=FileSystemLoader(template_dir))
+                    template = env_loader.get_template("basic_email_alert_template.jinja")
+                else:
+                    template_dir = _context.get_basic_default_template
+                    template = Environment(loader=BaseLoader).from_string(template_dir)
+
+                lines = mail_content.strip().split("\n")
+                title = lines[0].strip() if lines else ""
+
+                data = []
+                for i in range(1, len(lines)):
+                    line = lines[i].strip()
+                    if line and ":" in line:
+                        parts = line.split(":", 1)
+                        data.append(parts)
+
+                message_data = {"title": title, "rows": data}
+                html_data = template.render(render_table=template.module.render_table, **message_data)
+                mail_content = f"<h2>{_context.get_mail_subject}</h2>" + html_data
+                content_type = "html"
+
+        return mail_content, content_type
+
     @spark_expectations_notification_impl
     def send_notification(
         self,
@@ -99,14 +143,7 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
                 msg["To"] = _context.get_to_mail
                 msg["Subject"] = _context.get_mail_subject
 
-                # body = _config_args.get('mail_body')
-                mail_content = f"""{_config_args.get("message")}"""
-
-                # Check if the content is HTML
-                if re.search(r"<[a-z][\s\S]*>", mail_content, re.IGNORECASE):
-                    content_type = "html"
-                else:
-                    content_type = "plain"
+                mail_content, content_type = self._process_message(_context, _config_args)
 
                 msg.attach(MIMEText(mail_content, content_type))
 
@@ -123,7 +160,7 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
                 )
                 server.quit()
 
-                _log.info("email send successfully")
+                _log.info("email sent successfully")
 
         except Exception as e:
             raise SparkExpectationsEmailException(

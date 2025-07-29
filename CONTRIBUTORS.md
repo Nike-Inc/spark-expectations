@@ -21,6 +21,10 @@ Thanks to the contributors who helped on this project apart from the authors
 * [Lior Zadok](https://www.linkedin.com/in/lior-zadok-24ab5a7/)
 * [Danny Meijer](https://www.linkedin.com/in/dannydatascientist/)
 * [Sasa Mirkovic](https://www.linkedin.com/in/societysling/)
+* [Maria Ovsyankina](https://www.linkedin.com/in/movsyankina/)
+* [Patrick Miki](https://www.linkedin.com/in/pmiki)
+* [Manasa Kanathur](https://www.linkedin.com/in/manasa-kanathur)
+* [Keerthana Yakkati](https://www.linkedin.com/in/keerthana-yakkati-06941b214/)
 
 # Honorary Mentions
 Thanks to the team below for invaluable insights and support throughout the initial release of this project
