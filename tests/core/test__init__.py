@@ -62,7 +62,7 @@ def test_load_configurations_invalid_file(mock_file):
     spark = SparkSession.builder.getOrCreate()
     with pytest.raises(RuntimeError) as exception_info:
         load_configurations(spark)
-    assert "Error parsing YAML configuration file" in str(exception_info.value)
+    assert "Error parsing Spark config YAML configuration file" in str(exception_info.value)
 
 @patch("builtins.open", new_callable=mock.mock_open, read_data="")
 @patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__)+"/../../")

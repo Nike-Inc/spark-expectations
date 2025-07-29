@@ -8,12 +8,20 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 def load_configurations(spark: SparkSession) -> None:
     """
-    Loads Spark configuration settings from a YAML file and applies them to the provided SparkSession.
-    - Reads the configuration file located at ../config/spark-default-config.yaml.
-    - Separates streaming and notification-related configurations into dictionaries.
+    Load Spark configuration settings from a YAML file and apply them to the provided SparkSession.
+
+    This function:
+    - Reads the configuration file located at `../config/spark-default-config.yaml`.
+    - Separates streaming (`se.streaming.*`) and notification (`spark.expectations.*`) configurations into dictionaries.
     - Sets other configuration values directly in the Spark session.
     - Stores streaming and notification configs as JSON strings in Spark session configs.
     - Raises RuntimeError for file not found, YAML parsing errors, permission issues, or other exceptions.
+
+    Args:
+        spark (SparkSession): The SparkSession to apply configurations to.
+
+    Raises:
+        RuntimeError: If the configuration file is not found, cannot be parsed, or other errors occur.
     """
     try:
         with open(f"{current_dir}/../config/spark-default-config.yaml", "r", encoding="utf-8") as config_file:
@@ -21,7 +29,7 @@ def load_configurations(spark: SparkSession) -> None:
         if config is None:
             config = {}
         elif not isinstance(config, dict):
-            raise yaml.YAMLError("Configuration file is not valid.")
+            raise yaml.YAMLError("Spark config YAML file is not valid.")
         streaming_config = {}
         notification_config = {}
         for key, value in config.items():
@@ -35,13 +43,11 @@ def load_configurations(spark: SparkSession) -> None:
         spark.conf.set("default_notification_dict", json.dumps(notification_config))
 
     except FileNotFoundError as e:
-        raise RuntimeError(f"Configuration file not found: {e}") from e
+        raise RuntimeError(f"Spark config YAML file not found: {e}") from e
     except yaml.YAMLError as e:
-        raise RuntimeError(f"Error parsing YAML configuration file: {e}") from e
-    except PermissionError as e:
-        raise RuntimeError(f"Permission denied while accessing the configuration file: {e}") from e
+        raise RuntimeError(f"Error parsing Spark config YAML configuration file: {e}") from e
     except Exception as e:
-        raise RuntimeError(f"An unexpected error occurred while loading configurations: {e}") from e
+        raise RuntimeError(f"An unexpected error occurred while loading spark configurations: {e}") from e
 
 
 def get_spark_session() -> SparkSession:
