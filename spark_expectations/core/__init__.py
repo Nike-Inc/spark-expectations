@@ -7,6 +7,14 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 def load_configurations(spark: SparkSession) -> None:
+    """
+    Loads Spark configuration settings from a YAML file and applies them to the provided SparkSession.
+    - Reads the configuration file located at ../config/spark-default-config.yaml.
+    - Separates streaming and notification-related configurations into dictionaries.
+    - Sets other configuration values directly in the Spark session.
+    - Stores streaming and notification configs as JSON strings in Spark session configs.
+    - Raises RuntimeError for file not found, YAML parsing errors, permission issues, or other exceptions.
+    """
     try:
         with open(f"{current_dir}/../config/spark-default-config.yaml", "r", encoding="utf-8") as config_file:
             config = yaml.safe_load(config_file)

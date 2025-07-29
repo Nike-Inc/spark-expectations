@@ -97,24 +97,24 @@ def fixture_product_rules_pipe():
         (
             {
                 "spark.expectations.notifications.email.enabled": True,
-                "spark.expectations.notifications.enable.custom.email.body": False,
-                "spark.expectations.notifications.email.smtp_host": "smtp.mail.com",
-                "spark.expectations.notifications.email.smtp_port": 587,
+                "spark.expectations.notifications.email.custom.body.enable": False,
+                "spark.expectations.notifications.email.smtp.host": "smtp.mail.com",
+                "spark.expectations.notifications.email.smtp.port": 587,
                 "spark.expectations.notifications.email.from": "sender@mail.com",
                 "spark.expectations.notifications.email.to.other.mail.com": "recipient@mail.com",
                 "spark.expectations.notifications.email.subject": "Test email",
                 "spark.expectations.notifications.slack.enabled": False,
-                "spark.expectations.notifications.slack.webhook_url": "",
+                "spark.expectations.notifications.slack.webhook.url": "",
                 "spark.expectations.notifications.teams.enabled": False,
-                "spark.expectations.notifications.teams.webhook_url": "",
+                "spark.expectations.notifications.teams.webhook.url": "",
             },
             None,
         ),
         (
             {
                 "spark.expectations.notifications.email.enabled": True,
-                "spark.expectations.notifications.email.smtp_host": "",
-                "spark.expectations.notifications.email.smtp_port": 25,
+                "spark.expectations.notifications.email.smtp.host": "",
+                "spark.expectations.notifications.email.smtp.port": 25,
                 "spark.expectations.notifications.email.from": "",
                 "spark.expectations.notifications.email.to.other.mail.com": "",
                 "spark.expectations.notifications.email.subject": "",
@@ -124,8 +124,8 @@ def fixture_product_rules_pipe():
         (
             {
                 "spark.expectations.notifications.email.enabled": False,
-                "spark.expectations.notifications.email.smtp_host": "smtp.mail.com",
-                "spark.expectations.notifications.email.smtp_port": 25,
+                "spark.expectations.notifications.email.smtp.host": "smtp.mail.com",
+                "spark.expectations.notifications.email.smtp.port": 25,
                 "spark.expectations.notifications.email.from": "sender@mail.com",
                 "spark.expectations.notifications.email.to.other.mail.com": "recipient@mail.com",
                 "spark.expectations.notifications.email.subject": "Test email",
@@ -135,71 +135,71 @@ def fixture_product_rules_pipe():
         (
             {
                 "spark.expectations.notifications.slack.enabled": True,
-                "spark.expectations.notifications.slack.webhook_url": "https://hooks.slack.com/services/...",
+                "spark.expectations.notifications.slack.webhook.url": "https://hooks.slack.com/services/...",
             },
             None,
         ),
         (
             {
                 "spark.expectations.notifications.slack.enabled": True,
-                "spark.expectations.notifications.slack.webhook_url": "",
+                "spark.expectations.notifications.slack.webhook.url": "",
             },
             SparkExpectationsMiscException,
         ),
         (
             {
                 "spark.expectations.notifications.teams.enabled": True,
-                "spark.expectations.notifications.teams.webhook_url": "https://hooks.teams.com/services/...",
+                "spark.expectations.notifications.teams.webhook.url": "https://hooks.teams.com/services/...",
             },
             None,
         ),
         (
             {
                 "spark.expectations.notifications.teams.enabled": True,
-                "spark.expectations.notifications.teams.webhook_url": "",
+                "spark.expectations.notifications.teams.webhook.url": "",
             },
             SparkExpectationsMiscException,
         ),
         (
             {
-                "spark.expectations.notifications.enable.custom.email.body": True,
+                "spark.expectations.notifications.email.custom.body.enable": True,
                 "spark.expectations.notifications.email.enabled": True,
-                "spark.expectations.notifications.email.smtp_host": "smtp.mail.com",
-                "spark.expectations.notifications.email.smtp_port": 587,
+                "spark.expectations.notifications.email.smtp.host": "smtp.mail.com",
+                "spark.expectations.notifications.email.smtp.port": 587,
                 "spark.expectations.notifications.email.from": "sender@mail.com",
                 "spark.expectations.notifications.email.to.other.mail.com": "recipient@mail.com",
                 "spark.expectations.notifications.email.subject": "Test email",
                 "spark.expectations.notifications.email.custom.body": "Test email body",
                 "spark.expectations.notifications.slack.enabled": False,
-                "spark.expectations.notifications.slack.webhook_url": "",
+                "spark.expectations.notifications.slack.webhook.url": "",
                 "spark.expectations.notifications.teams.enabled": False,
-                "spark.expectations.notifications.teams.webhook_url": "",
+                "spark.expectations.notifications.teams.webhook.url": "",
             },
             None,
         ),
         (
             {
-                "spark.expectations.notifications.email.smtp_server_auth": True,
+                "spark.expectations.notifications.email.smtp.server.auth": True,
                 "spark.expectations.notifications.email.enabled": True,
-                "spark.expectations.notifications.email.smtp_host": "smtp.mail.com",
-                "spark.expectations.notifications.email.smtp_port": 587,
-                "spark.expectations.notifications.smtp.password": "password",
+                "spark.expectations.notifications.email.smtp.host": "smtp.mail.com",
+                "spark.expectations.notifications.email.smtp.port": 587,
+                "spark.expectations.notifications.email.smtp.password": "password",
                 "spark.expectations.notifications.email.from": "sender@mail.com",
                 "spark.expectations.notifications.email.to.other.mail.com": "recipient@mail.com",
                 "spark.expectations.notifications.email.subject": "Test email",
                 "spark.expectations.notifications.slack.enabled": False,
-                "spark.expectations.notifications.slack.webhook_url": "",
+                "spark.expectations.notifications.slack.webhook.url": "",
                 "spark.expectations.notifications.teams.enabled": False,
-                "spark.expectations.notifications.teams.webhook_url": "",
+                "spark.expectations.notifications.teams.webhook.url": "",
             },
             None,
         ),
         (
             {
-                "spark.expectations.notifications.email.smtp_server_auth": True,
+                "spark.expectations.notifications.email.smtp.server.auth": True,
                 "spark.expectations.notifications.email.enabled": True,
-                "spark.expectations.notifications.email.smtp_host": "smtp.mail.com",
-                "spark.expectations.notifications.email.smtp_port": 587,
+                "spark.expectations.notifications.email.smtp.host": "smtp.mail.com",
+                "spark.expectations.notifications.email.smtp.port": 587,
                 "spark.expectations.notifications.smtp.creds.dict": {
                     "se.streaming.secret.type": "cerberus",
                     "se.streaming.cerberus.url": "https://xyz.com",
@@ -210,34 +210,34 @@ def fixture_product_rules_pipe():
                 "spark.expectations.notifications.email.to.other.mail.com": "recipient@mail.com",
                 "spark.expectations.notifications.email.subject": "Test email",
                 "spark.expectations.notifications.slack.enabled": False,
-                "spark.expectations.notifications.slack.webhook_url": "",
+                "spark.expectations.notifications.slack.webhook.url": "",
                 "spark.expectations.notifications.teams.enabled": False,
-                "spark.expectations.notifications.teams.webhook_url": "",
+                "spark.expectations.notifications.teams.webhook.url": "",
             },
             None,
         ),
         (
             {
-                "spark.expectations.notifications.email.smtp_server_auth": True,
+                "spark.expectations.notifications.email.smtp.server.auth": True,
                 "spark.expectations.notifications.email.enabled": True,
-                "spark.expectations.notifications.email.smtp_host": "smtp.mail.com",
-                "spark.expectations.notifications.email.smtp_port": 587,
+                "spark.expectations.notifications.email.smtp.host": "smtp.mail.com",
+                "spark.expectations.notifications.email.smtp.port": 587,
                 "spark.expectations.notifications.email.from": "sender@mail.com",
                 "spark.expectations.notifications.email.to.other.mail.com": "recipient@mail.com",
                 "spark.expectations.notifications.email.subject": "Test email",
                 "spark.expectations.notifications.slack.enabled": False,
-                "spark.expectations.notifications.slack.webhook_url": "",
+                "spark.expectations.notifications.slack.webhook.url": "",
                 "spark.expectations.notifications.teams.enabled": False,
-                "spark.expectations.notifications.teams.webhook_url": "",
+                "spark.expectations.notifications.teams.webhook.url": "",
             },
             SparkExpectationsMiscException,
         ),
         (
             {
-                "spark.expectations.notifications.email.smtp_server_auth": True,
+                "spark.expectations.notifications.email.smtp.server.auth": True,
                 "spark.expectations.notifications.email.enabled": True,
-                "spark.expectations.notifications.email.smtp_host": "smtp.mail.com",
-                "spark.expectations.notifications.email.smtp_port": 587,
+                "spark.expectations.notifications.email.smtp.host": "smtp.mail.com",
+                "spark.expectations.notifications.email.smtp.port": 587,
                 "spark.expectations.notifications.smtp.creds.dict": {
                     "se.streaming.secret.type": 1,
                     "se.streaming.cerberus.url": True,
@@ -246,9 +246,9 @@ def fixture_product_rules_pipe():
                 "spark.expectations.notifications.email.to.other.mail.com": "recipient@mail.com",
                 "spark.expectations.notifications.email.subject": "Test email",
                 "spark.expectations.notifications.slack.enabled": False,
-                "spark.expectations.notifications.slack.webhook_url": "",
+                "spark.expectations.notifications.slack.webhook.url": "",
                 "spark.expectations.notifications.teams.enabled": False,
-                "spark.expectations.notifications.teams.webhook_url": "",
+                "spark.expectations.notifications.teams.webhook.url": "",
             },
             SparkExpectationsMiscException,
         ),
@@ -275,10 +275,10 @@ def test_set_notification_param(notification, expected_result):
                 notification.get("spark.expectations.notifications.email.subject")
             )
             mock_context.set_mail_smtp_server.assert_called_once_with(
-                notification.get("spark.expectations.notifications.email.smtp_host")
+                notification.get("spark.expectations.notifications.email.smtp.host")
             )
             mock_context.set_mail_smtp_port.assert_called_once_with(
-                notification.get("spark.expectations.notifications.email.smtp_port")
+                notification.get("spark.expectations.notifications.email.smtp.port")
             )
             mock_context.set_mail_from.assert_called_once_with(
                 notification.get("spark.expectations.notifications.email.from")
@@ -286,7 +286,7 @@ def test_set_notification_param(notification, expected_result):
             mock_context.set_to_mail.assert_called_once_with(
                 notification.get("spark.expectations.notifications.email.to.other.mail.com")
             )
-        if notification.get("spark.expectations.notifications.enable.custom.email.body"):
+        if notification.get("spark.expectations.notifications.email.custom.body.enable"):
             mock_context.set_enable_mail.assert_called_once_with(
                 notification.get("spark.expectations.notifications.email.enabled")
             )
@@ -294,10 +294,10 @@ def test_set_notification_param(notification, expected_result):
                 notification.get("spark.expectations.notifications.email.subject")
             )
             mock_context.set_mail_smtp_server.assert_called_once_with(
-                notification.get("spark.expectations.notifications.email.smtp_host")
+                notification.get("spark.expectations.notifications.email.smtp.host")
             )
             mock_context.set_mail_smtp_port.assert_called_once_with(
-                notification.get("spark.expectations.notifications.email.smtp_port")
+                notification.get("spark.expectations.notifications.email.smtp.port")
             )
             mock_context.set_mail_from.assert_called_once_with(
                 notification.get("spark.expectations.notifications.email.from")
@@ -306,18 +306,18 @@ def test_set_notification_param(notification, expected_result):
                 notification.get("spark.expectations.notifications.email.to.other.mail.com")
             )
             mock_context.set_enable_custom_email_body.assert_called_once_with(
-                notification.get("spark.expectations.notifications.enable.custom.email.body")
+                notification.get("spark.expectations.notifications.email.custom.body.enable")
             )
             mock_context.set_email_custom_body.assert_called_once_with(
                 notification.get("spark.expectations.notifications.email.custom.body")
             )
-        if notification.get("spark.expectations.notifications.email.smtp_server_auth"):
+        if notification.get("spark.expectations.notifications.email.smtp.server.auth"):
             mock_context.set_enable_smtp_server_auth.assert_called_once_with(
-                notification.get("spark.expectations.notifications.email.smtp_server_auth")
+                notification.get("spark.expectations.notifications.email.smtp.server.auth")
             )
-            if notification.get("spark.expectations.notifications.smtp.password"):
+            if notification.get("spark.expectations.notifications.email.smtp.password"):
                 mock_context.set_mail_smtp_password.assert_called_once_with(
-                    notification.get("spark.expectations.notifications.smtp.password")
+                    notification.get("spark.expectations.notifications.email.smtp.password")
                 )
             elif notification.get("spark.expectations.notifications.smtp.creds.dict"):
                 mock_context.set_smtp_creds_dict.assert_called_once_with(
@@ -328,14 +328,14 @@ def test_set_notification_param(notification, expected_result):
                 notification.get("spark.expectations.notifications.slack.enabled")
             )
             mock_context.set_slack_webhook_url.assert_called_once_with(
-                notification.get("spark.expectations.notifications.slack.webhook_url")
+                notification.get("spark.expectations.notifications.slack.webhook.url")
             )
         if notification.get("spark.expectations.notifications.teams.enabled"):
             mock_context.set_enable_teams.assert_called_once_with(
                 notification.get("spark.expectations.notifications.teams.enabled")
             )
             mock_context.set_teams_webhook_url.assert_called_once_with(
-                notification.get("spark.expectations.notifications.teams.webhook_url")
+                notification.get("spark.expectations.notifications.teams.webhook.url")
             )
     else:
         with pytest.raises(

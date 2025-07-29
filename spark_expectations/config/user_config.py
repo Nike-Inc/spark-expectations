@@ -4,8 +4,8 @@ from dataclasses import dataclass
 @dataclass
 class Constants:
     # declare const user config variables for email notification
-    se_notifications_enable_smtp_server_auth = "spark.expectations.notifications.email.smtp_server_auth"
-    se_notifications_smtp_password = "spark.expectations.notifications.smtp.password"
+    se_notifications_enable_smtp_server_auth = "spark.expectations.notifications.email.smtp.server.auth"
+    se_notifications_smtp_password = "spark.expectations.notifications.email.smtp.password"
     se_notifications_smtp_creds_dict = "spark.expectations.notifications.smtp.creds.dict"
     cbs_smtp_password = "spark.expectations.notifications.cerberus.smtp.password"
     dbx_smtp_password = "spark.expectations.notifications.dbx.smtp.password"
@@ -13,7 +13,7 @@ class Constants:
     se_user_defined_custom_dataframe = "spark.expectations.user.defined.custom.dataframe"
     se_notifications_enable_custom_dataframe = "spark.expectations.notifications.enable.custom.dataframe"
     se_dq_obs_default_email_template = "spark.expectations.dq.obs.default.detailed.email.template"
-    se_notifications_default_basic_email_template = "spark.expectations.notifications.default.basic.email.template"
+    se_notifications_default_basic_email_template = "spark.expectations.notifications.email.default.basic.template"
     se_dq_obs_mode_of_communication = "spark.expectations.dq.obs.mode.of.communication"
     se_notifications_service_account_email = "spark.expectations.notifications.service.account.email"
     se_dq_obs_alert_flag = "spark.expectations.notifications.alert.flag.disable"
@@ -21,31 +21,31 @@ class Constants:
     se_notifications_smtp_user_name = "spark.expectations.notifications.smtp.user.name"
     se_notifications_enable_email = "spark.expectations.notifications.email.enabled"
     se_enable_obs_dq_report_result = "spark.expectations.notifications.observability.enabled"
-    se_notifications_enable_custom_email_body = "spark.expectations.notifications.enable.custom.email.body"
-    se_notifications_email_smtp_host = "spark.expectations.notifications.email.smtp_host"
-    se_notifications_email_smtp_port = "spark.expectations.notifications.email.smtp_port"
+    se_notifications_enable_custom_email_body = "spark.expectations.notifications.email.custom.body.enable"
+    se_notifications_email_smtp_host = "spark.expectations.notifications.email.smtp.host"
+    se_notifications_email_smtp_port = "spark.expectations.notifications.email.smtp.port"
     se_notifications_email_from = "spark.expectations.notifications.email.from"
     se_notifications_email_to_other_mail_id = "spark.expectations.notifications.email.to.other.mail.com"
     se_notifications_email_subject = "spark.expectations.notifications.email.subject"
     se_notifications_email_custom_body = "spark.expectations.notifications.email.custom.body"
     se_notifications_enable_templated_basic_email_body = (
-        "spark.expectations.notifications.enable.templated.basic.email.body"
+        "spark.expectations.notifications.email.templated.basic.body.enable"
     )
 
     # declare const user config variables for slack notification
     se_notifications_enable_slack = "spark.expectations.notifications.slack.enabled"
-    se_notifications_slack_webhook_url = "spark.expectations.notifications.slack.webhook_url"
+    se_notifications_slack_webhook_url = "spark.expectations.notifications.slack.webhook.url"
 
     # declare const user config variables for teams notification
     se_notifications_enable_teams = "spark.expectations.notifications.teams.enabled"
-    se_notifications_teams_webhook_url = "spark.expectations.notifications.teams.webhook_url"
+    se_notifications_teams_webhook_url = "spark.expectations.notifications.teams.webhook.url"
 
     # declare const user config variables for zoom notification
     se_notifications_enable_zoom = "spark.expectations.notifications.zoom.enabled"
-    se_notifications_zoom_webhook_url = "spark.expectations.notifications.zoom.webhook_url"
+    se_notifications_zoom_webhook_url = "spark.expectations.notifications.zoom.webhook.url"
     se_notifications_zoom_token = "spark.expectations.notifications.zoom.token"
 
-    se_notifications_on_start = "spark.expectations.notifications.on_start"
+    se_notifications_on_start = "spark.expectations.notifications.on.start"
     se_notifications_on_completion = "spark.expectations.notifications.on.completion"
     se_notifications_on_fail = "spark.expectations.notifications.on.fail"
     se_notifications_on_error_drop_exceeds_threshold_breach = (
