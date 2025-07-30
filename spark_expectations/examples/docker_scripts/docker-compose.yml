@@ -1,0 +1,25 @@
+# docker-compose.yml
+version: '3.8'
+services:
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: se-mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - se-net
+    volumes:
+      - ./certs/mailpit.crt:/certs/mailpit.crt:ro
+      - ./certs/mailpit.key:/certs/mailpit.key:ro
+    command:
+      [
+        "--smtp", "0.0.0.0:1025",
+        "--smtp-tls-cert", "/certs/mailpit.crt",
+        "--smtp-tls-key", "/certs/mailpit.key",
+        "--smtp-auth-accept-any"
+      ]         
+
+networks:
+  se-net:
+    external: true
