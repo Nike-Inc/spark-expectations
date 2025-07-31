@@ -1,3 +1,5 @@
+import os
+import json
 from typing import Dict, Union, Optional
 import smtplib
 from email.mime.text import MIMEText
@@ -94,7 +96,29 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
         else:
             content_type = "plain"
 
-        if (_config_args.get("email_notification_type")) != "detailed":
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        template_dir = f"{current_dir}/../../config/templates"
+
+        if mail_content.startswith("CUSTOM EMAIL\n"):
+            mail_content = mail_content[len("CUSTOM EMAIL\n") :]  # remove leading "CUSTOM EMAIL" text
+
+            if _context.get_enable_templated_custom_email is True:
+                custom_email_data = json.loads(mail_content)
+                if not _context.get_custom_default_template:
+                    env_loader = Environment(loader=FileSystemLoader(template_dir))
+                    template = env_loader.get_template("custom_email_alert_template_test.jinja")
+                else:
+                    template_dir = _context.get_custom_default_template
+                    template = Environment(loader=BaseLoader).from_string(template_dir)
+
+                    mail_content = template.render(custom_email_data)
+                    content_type = "html"
+                    # TODO: put error handling here to catch any errors caused by incorrect formatting or inability to process the message
+                    # maybe make it try and not use a template and just send the basic email if this stuff fails?
+            else:
+                content_type = "plain"
+
+        elif (_config_args.get("email_notification_type")) != "detailed":
             if _context.get_enable_templated_basic_email_body is True:
                 if not _context.get_basic_default_template:
                     template_dir = "../../spark_expectations/config/templates"

@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Rule-Level Alert Summary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            margin: 20px;
+        }
+        dl {
+            border: 1px solid #ccc;
+            padding: 12px;
+            width: 400px;
+            background-color: #f9f9f9;
+        }
+        dt {
+            font-weight: bold;
+            margin-top: 8px;
+        }
+        dd {
+            margin: 0 0 8px 16px;
+        }
+    </style>
+</head>
+<body>
+
+<dl>
+    <dt>Product</dt>
+    <dd>{{ product_id }}</dd>
+
+    <dt>Table</dt>
+    <dd>{{ table_name }}</dd>
+
+    <dt>Source Query DQ Check Name</dt>
+    {% for item in source_query_dq_results %}
+        <dd>{{ item.rule }}</dd>
+    {% endfor %}
+
+    <dt>Source Query DQ Check Description</dt>
+    {% for item in source_query_dq_results %}
+        <dd>{{ item.description }}</dd>
+    {% endfor %}
+
+    <dt>Source Query DQ Check Result</dt>
+    {% for item in source_query_dq_results %}
+        <dd>{{ item.status }}</dd>
+    {% endfor %}
+
+    <dt>Source AGG DQ Check Name</dt>
+    {% for item in source_agg_dq_results %}
+        <dd>{{ item.rule }}</dd>
+    {% endfor %}
+
+    <dt>Source AGG DQ Check Description</dt>
+    {% for item in source_agg_dq_results %}
+        <dd>{{ item.description }}</dd>
+    {% endfor %}
+
+    <dt>Source AGG DQ Check Result</dt>
+    {% for item in source_agg_dq_results %}
+        <dd>{{ item.status }}</dd>
+    {% endfor %}
+
+    <dt>Rule Execution Timestamp</dt>
+    <dd>{{ meta_dq_run_datetime }}</dd>
+</dl>
+
+</body>
+</html>

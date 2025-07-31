@@ -80,7 +80,7 @@ This feature enhances data observability by leveraging the *stats detailed table
 
 ### Workflow:
 1. *Automatic Trigger: The observability feature is initiated upon the completion of **Spark Expectation*, based on configurable user-defined settings.  
-2. Extracts relevant data from the *stats detailed table* and *custom query table, processes it, and creates a **report table* with key insights.  
+2. Extracts relevant data from the *stats detailed table* and *custom query table*, processes it, and creates a *report table* with key insights.  
 3. Compiles and summarizes essential observability metrics.  
 4. Delivers an *alert notification* via email using a *Jinja template*.  
 
@@ -135,7 +135,10 @@ se_user_conf = {
     #user_config.enable_agg_dq_detailed_result: True,
     #Below two params are optional and need to be enabled to pass the custom email body
     #user_config.se_notifications_enable_custom_email_body: True,
-    #user_config.se_notifications_email_custom_body: "Custom statistics: 'product_id': {}",
+    #user_config.se_notifications_email_custom_body: "'product_id': {}",
+    #Below two parameters are optional and are for enabling html templates for the custom email body
+    #user_config.se_notifications_enable_templated_custom_email: True,
+    #user_config.se_notifications_email_custom_template: "",
     #Below parameter is optional and needs to be enabled in case authorization is required to access smtp server.
     #user_config.se_notifications_email_smtp_auth: True,
     #Below parameter is optional and used to specify environment value.

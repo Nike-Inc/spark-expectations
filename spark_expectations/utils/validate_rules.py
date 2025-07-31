@@ -9,17 +9,20 @@ from spark_expectations.core.exceptions import (
     SparkExpectationsInvalidAggDQExpectationException,
     SparkExpectationsInvalidQueryDQExpectationException,
     SparkExpectationsInvalidRowDQExpectationException,
-    SparkExpectationsInvalidRuleTypeException)
+    SparkExpectationsInvalidRuleTypeException,
+)
 
 import sqlglot
 from sqlglot.errors import ParseError
 
 from enum import Enum
 
+
 class RuleType(Enum):
     ROW_DQ = "row_dq"
     AGG_DQ = "agg_dq"
     QUERY_DQ = "query_dq"
+
 
 class SparkExpectationsValidateRules:
     """
@@ -56,7 +59,7 @@ class SparkExpectationsValidateRules:
         Args:
             df (DataFrame): The input DataFrame.
             rule (Dict): Rule containing the 'expectation' and 'rule'.
-            
+
         Raises:
             SparkExpectationsInvalidRowDQExpectationException: If aggregate functions are used or expression fails.
         """
@@ -83,7 +86,7 @@ class SparkExpectationsValidateRules:
                 f"[row_dq] Rule failed validation | rule_type: row_dq | "
                 f"rule: '{rule.get('rule')}' | expectation: '{expectation}' → {e}"
             )
-        
+
     @staticmethod
     def validate_agg_dq_expectation(df: DataFrame, rule: Dict) -> None:
         """
@@ -138,7 +141,7 @@ class SparkExpectationsValidateRules:
             raise SparkExpectationsInvalidQueryDQExpectationException(
                 f"[query_dq] Expectation does not appear to be a valid SQL SELECT query: '{query}'"
             )
-        
+
         # 2. Use extract_table_names_from_sql to find all table names/placeholders
         table_names = SparkExpectationsValidateRules.extract_table_names_from_sql(query)
         temp_view_name = "dummy_table"
@@ -146,10 +149,8 @@ class SparkExpectationsValidateRules:
 
         # 3. Replace each table name/placeholder with the dummy table name
         for table_name in table_names:
-            query_for_validation = re.sub(
-                rf"\b{re.escape(table_name)}\b", temp_view_name, query_for_validation
-            )
-        
+            query_for_validation = re.sub(rf"\b{re.escape(table_name)}\b", temp_view_name, query_for_validation)
+
         # 4. Handle {table} and similar placeholders
         query_for_validation = re.sub(r"\{[^\}]+\}", temp_view_name, query_for_validation)
 
@@ -157,10 +158,8 @@ class SparkExpectationsValidateRules:
         try:
             sqlglot.parse_one(query_for_validation)
         except ParseError as e:
-            raise SparkExpectationsInvalidQueryDQExpectationException(
-                f"[query_dq] Invalid SQL syntax (sqlglot): {e}"
-            )
-   
+            raise SparkExpectationsInvalidQueryDQExpectationException(f"[query_dq] Invalid SQL syntax (sqlglot): {e}")
+
     @staticmethod
     def validate_expectations(df: DataFrame, rules: list, spark: SparkSession) -> dict:
         """
