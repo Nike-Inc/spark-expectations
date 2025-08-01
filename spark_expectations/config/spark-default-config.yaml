@@ -1,8 +1,10 @@
 spark.expectations.notifications.email.enabled: false
 spark.expectations.notifications.email.smtp.server.auth: false
 spark.expectations.notifications.email.custom.body.enable: false
+spark.expectations.notifications.email.templated.custom.email.enable: false
 spark.expectations.notifications.email.templated.basic.body.enable: false
 spark.expectations.notifications.email.default.basic.template: ""
+spark.expectations.notifications.email.custom.template: ""
 spark.expectations.notifications.email.smtp.host: ""
 spark.expectations.notifications.email.smtp.port: 25
 spark.expectations.notifications.email.smtp.password: ""

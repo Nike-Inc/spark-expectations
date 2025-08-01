@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from typing import Any, List, Dict
 import re
+import json
+from datetime import date, datetime
 from pyspark.sql import DataFrame
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.notifications import _notification_hook
@@ -19,6 +21,19 @@ class SparkExpectationsNotify:
         self.send_notification_decorator: Any = self.notify_on_start_completion_failure(
             self.notify_on_start, self.notify_on_completion, self.notify_on_failure
         )
+
+    @staticmethod
+    def serialize_date(value: Any) -> str:
+        """
+        Transform date and datetime for JSON serialization
+        Args:
+            value: value to be transformed to a type that is JSON serializable
+        Returns:
+            str: the date or datetime as a string
+        """
+
+        if isinstance(value, (datetime, date)):
+            return value.isoformat()
 
     def notify_on_start_completion_failure(self, _on_start: Any, _on_completion: Any, _on_failure: Any) -> Any:
         """
@@ -70,8 +85,12 @@ class SparkExpectationsNotify:
             keys = re.findall(r"'(\w+)': \{\}", _custom_email_body)
             if not keys:
                 raise SparkExpectationsMiscException("No key words for statistics were provided.")
+            # TODO: put a check in here so if a key isn't found
+            # (one was given by the user in the custom config that doesn't have a value in the dict here)
+            # then the program just skips it and maybe logs that it wasn't found in the report? but that the program doesn't stop
             values = {key: _dict_list[0][key] for key in keys}
-            _notification_message = _custom_email_body.format(*[values[key] for key in keys])
+            formatted = json.dumps(values, default=self.serialize_date)
+            _notification_message = "CUSTOM EMAIL\n" + formatted
             return _notification_message
         except Exception as e:
             raise SparkExpectationsMiscException(

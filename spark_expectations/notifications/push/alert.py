@@ -5,6 +5,7 @@ from pyspark.sql import Row
 from spark_expectations import _log
 from spark_expectations.notifications import SparkExpectationsEmailPluginImpl
 from spark_expectations.core.context import SparkExpectationsContext
+import os
 
 
 @dataclass
@@ -91,11 +92,12 @@ class SparkExpectationsAlert:
             Exception: If an error occurs during the report preparation or email sending process.
         """
         try:
+            current_dir = os.path.dirname(os.path.abspath(__file__))
             context = self._context
             mail_subject = self._context.get_mail_subject
             mail_receivers_list = self._context.get_to_mail
             if not self._context.get_detailed_default_template:
-                template_dir = "../../spark_expectations/config/templates"
+                template_dir = f"{current_dir}/../../spark_expectations/config/templates"
                 env_loader = Environment(loader=FileSystemLoader(template_dir))
                 template = env_loader.get_template("advanced_email_alert_template.jinja")
             else:

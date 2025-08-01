@@ -58,6 +58,7 @@ class SparkExpectationsContext:
         self._enable_smtp_server_auth: bool = False
         self._enable_custom_email_body: bool = False
         self._enable_templated_basic_email_body: bool = False
+        self._enable_templated_custom_email: bool = False
         self._to_mail: Optional[str] = None
         self._mail_subject: Optional[str] = None
         self._mail_from: Optional[str] = None
@@ -594,6 +595,19 @@ class SparkExpectationsContext:
 
         """
         return self._enable_templated_basic_email_body
+
+    def set_enable_templated_custom_email(self, enable_templated_custom_email: bool) -> None:
+        self._enable_templated_custom_email = bool(enable_templated_custom_email)
+
+    @property
+    def get_enable_templated_custom_email(self) -> bool:
+        """
+        This function return whether to enable html templating for custom emails or not
+        Returns:
+            str: Returns  _enable_templated_custom_email(bool)
+
+        """
+        return self._enable_templated_custom_email
 
     def set_mail_from(self, mail_from: str) -> None:
         self._mail_from = mail_from
@@ -2149,6 +2163,26 @@ class SparkExpectationsContext:
             str: Returns the default_template
         """
         return self._basic_default_template
+
+    def set_custom_default_template(self, custom_default_template: str) -> None:
+        """
+        This function is used to set the custom_default_template
+
+        Returns:
+            None
+
+        """
+        self._custom_default_template = custom_default_template
+
+    @property
+    def get_custom_default_template(self) -> str:
+        """
+        This function is used to get the custom_default_template
+
+        Returns:
+            str: Returns the custom_template
+        """
+        return self._custom_default_template
 
     def set_stats_detailed_dataframe(self, dataframe: DataFrame) -> None:
         self._dataframe = dataframe

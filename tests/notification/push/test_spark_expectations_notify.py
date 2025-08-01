@@ -601,15 +601,11 @@ def test_notify_rules_exceeds_threshold_exception(_fixture_mock_context):
 
 
 def test_get_custom_notification(_fixture_mock_context):
-    _fixture_mock_context.get_email_custom_body = """Custom statistics for dq run:
-    'product_id': {},
-    'table_name': {}"""
+    _fixture_mock_context.get_email_custom_body = """'product_id': {}, 'table_name': {}"""
     _fixture_mock_context.get_stats_dict = [{"product_id": "product_id1", "table_name": "test_table", "input_count": 5}]
 
     result = SparkExpectationsNotify(_fixture_mock_context).get_custom_notification()
-    expected_result = """Custom statistics for dq run:
-    'product_id': product_id1,
-    'table_name': test_table"""
+    expected_result = 'CUSTOM EMAIL\n{"product_id": "product_id1", "table_name": "test_table"}'
     assert result == expected_result
 
 
