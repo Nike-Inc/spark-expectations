@@ -62,10 +62,11 @@ env-remove-all:
 	@hatch env prune
 
 deploy_env_setup:
+	@hatch env create
 	@hatch env create dev
-	@hatch run dev:uv pip install --upgrade uv pip
-	@hatch run dev:uv pip install .[$(HATCH_FEATURES)]
-	@hatch run dev:uv pip freeze
+	@hatch run $(DEFAULT_HATCH_ENV):uv pip install --upgrade uv pip
+	@hatch run $(DEFAULT_HATCH_ENV):uv pip install .[$(HATCH_FEATURES)]
+	@hatch run $(DEFAULT_HATCH_ENV):uv pip freeze
 
 test: kafka-cluster-start
 	@hatch run $(DEFAULT_HATCH_ENV):coverage-ignore-failure
