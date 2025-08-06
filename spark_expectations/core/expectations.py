@@ -336,10 +336,8 @@ class SparkExpectations:
                     )
                     if failed:
                         # Optionally, raise or log details for each failed rule
-                        failed_rules = [r.get('rule') for rules_list in failed.values() for r in rules_list]
-                        raise SparkExpectationsMiscException(
-                            f"Validation failed for rules: {failed_rules}"
-                        )
+                        failed_rules = [r.get("rule") for rules_list in failed.values() for r in rules_list]
+                        raise SparkExpectationsMiscException(f"Validation failed for rules: {failed_rules}")
                     _log.info("Validation for rules completed successfully")
 
                     _input_count = _df.count()

@@ -57,11 +57,10 @@ Users have two options for generating the report table:
 
 1. *Custom Template:*
    - If the user provides a custom template through the specified attribute, the system will use this template to render the report table.
-   - user_config.se_dq_obs_default_email_template: ""
+   - `user_config.se_dq_obs_default_email_template: ""`
 
 2. *Default Jinja Template:*
-   - If no custom template is provided by the user, the system will automatically fall back to the default jinja template* for rendering the report table.
-
+   - If no custom template is provided by the user, the system will automatically fall back to the default jinja template ([spark_expectations/config/templates/advanced_email_alert_template.jinja](../spark_expectations/config/templates/advanced_email_alert_template.jinja)) for rendering the report table.
 
 ### *Sample for the alert received in the mail*
 ![Spark Expectation alert](se_diagrams/alert_sample.png)

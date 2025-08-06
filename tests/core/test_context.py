@@ -63,6 +63,7 @@ def test_context_properties():
     context._enable_smtp_server_auth = True
     context._enable_custom_email_body = True
     context._enable_templated_basic_email_body = True
+    context._enable_templated_custom_email = True
     context._to_mail = "abc@mail.com, decf@mail.com"
     context._mail_from = "abc@mail.com"
     context._mail_subject = "spark expectations"
@@ -193,6 +194,7 @@ def test_context_properties():
     assert context._enable_smtp_server_auth is True
     assert context._enable_custom_email_body is True
     assert context._enable_templated_basic_email_body is True
+    assert context._enable_templated_custom_email is True
     assert context._to_mail == "abc@mail.com, decf@mail.com"
     assert context._mail_from == "abc@mail.com"
     assert context._mail_subject == "spark expectations"
@@ -524,6 +526,11 @@ def test_set_enable_templated_basic_email_body():
     assert context._enable_templated_basic_email_body is True
     assert context.get_enable_templated_basic_email_body is True
 
+def test_set_enable_templated_custom_email():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_enable_templated_custom_email(True)
+    assert context._enable_templated_custom_email is True
+    assert context.get_enable_templated_custom_email is True
 
 def test_set_smtp_server():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
@@ -2233,6 +2240,22 @@ def test_get_basic_default_template():
     # testing for None condition
     context._basic_default_template = None
     assert context.get_basic_default_template is None
+
+
+def test_set_custom_default_template():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_custom_default_template("test_template")
+    assert context.get_custom_default_template == "test_template"
+
+
+def test_get_custom_default_template():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_custom_default_template("test_template")
+    assert context.get_custom_default_template == "test_template"
+
+    # testing for None condition
+    context._custom_default_template = None
+    assert context.get_custom_default_template is None
 
 
 def test_set_stats_detailed_dataframe():
