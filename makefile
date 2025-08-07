@@ -54,6 +54,10 @@ env-remove-default:
 fmt:
 	@hatch run $(DEFAULT_HATCH_ENV):fmt
 
+generate-mailserver-certs:
+	@echo "Generating mail server certificates..."
+	@cd containers/certs && openssl req -x509 -newkey rsa:4096 -keyout mailpit.key -out mailpit.crt -days 365 -nodes -subj "/CN=localhost"
+
 get-version:
 	@echo "Print Version Build tool will use for building and publishing"
 	@git fetch $(GIT_REMOTE) --tags
@@ -73,7 +77,7 @@ kafka-cluster-stop:
 	                   . ./spark_expectations/examples/docker_scripts/kafka_cluster_stop.sh
 	                   rm -rf /tmp/kafka-logs
                    endif
-				   
+
 LOCAL_SE_CONTAINER_ARGS='--build'
 local-se-server-start:
 	@echo "Starting local SparkExpectation environment (kafka, jupyterlab, mail server)..."
