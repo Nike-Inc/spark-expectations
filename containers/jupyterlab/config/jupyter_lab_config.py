@@ -1128,7 +1128,9 @@ c.ServerApp.allow_origin = '*'
 ## DEPRECATED. Use IdentityProvider.token
 #  Default: '<DEPRECATED>'
 # c.ServerApp.token = '<DEPRECATED>'
-c.ServerApp.token = 'admin'
+# !!!!! ---- Disable token/password authentication ------ !!!!
+c.ServerApp.password = ''
+c.ServerApp.token = ''
 
 ## Supply overrides for the tornado.web.Application that the Jupyter server uses.
 #  Default: {}
