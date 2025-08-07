@@ -60,20 +60,20 @@ get-version:
 	@hatch version
 
 kafka-cluster-start:
-				ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_github_actions)
-					. ./spark_expectations/examples/docker_scripts/kafka_cluster_start.sh
-					sleep 30
-					. ./spark_expectations/examples/docker_scripts/delete_kafka_topic.sh
-					. ./spark_expectations/examples/docker_scripts/create_kafka_topic.sh
-				endif
+                   ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_github_actions)
+	                   . ./spark_expectations/examples/docker_scripts/kafka_cluster_start.sh
+	                   sleep 30
+	                   . ./spark_expectations/examples/docker_scripts/delete_kafka_topic.sh
+	                   . ./spark_expectations/examples/docker_scripts/create_kafka_topic.sh
+                   endif
 
 kafka-cluster-stop:
-				ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_github_actions)
-					. ./spark_expectations/examples/docker_scripts/delete_kafka_topic.sh
-					. ./spark_expectations/examples/docker_scripts/kafka_cluster_stop.sh
-					rm -rf /tmp/kafka-logs
-				endif
-
+                  ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_github_actions)
+	                   . ./spark_expectations/examples/docker_scripts/delete_kafka_topic.sh
+	                   . ./spark_expectations/examples/docker_scripts/kafka_cluster_stop.sh
+	                   rm -rf /tmp/kafka-logs
+                   endif
+				   
 LOCAL_SE_CONTAINER_ARGS='--build'
 local-se-server-start:
 	@echo "Starting local SparkExpectation environment (kafka, jupyterlab, mail server)..."
