@@ -580,3 +580,142 @@ def test_process_message_no_content_type(_mock_context):
     assert content_type == "plain"
 
 
+# test default template when type is custom
+@patch("spark_expectations.notifications.plugins.email.Environment")
+@patch("spark_expectations.notifications.plugins.email.FileSystemLoader")
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_process_message_with_custom_template(_mock_context, mock_fs_loader, mock_env):
+    """Test that default custom template is used"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_templated_custom_email = True
+    _mock_context.get_custom_default_template = None
+    _mock_context.get_mail_subject = "Test Subject"
+
+    # Setup template mocks
+    mock_template = MagicMock()
+    mock_template.module.render_table = "render_function"
+    mock_template.render.return_value = "<table>Rendered HTML</table>"
+    mock_env.return_value.get_template.return_value = mock_template
+
+    # Test message with format similar to your expected format
+    test_message = 'CUSTOM EMAIL\n{"product_id": "product_id1", "table_name": "test_table"}'
+
+    config_args = {
+        "message": test_message,
+        "content_type": "plain",
+    }
+
+    mail_content, content_type = email_handler._process_message(_mock_context, config_args)
+
+    # Check that the template was used
+    mock_fs_loader.assert_called_once_with("../../spark_expectations/config/templates")
+    mock_env.assert_called_once_with(loader=mock_fs_loader.return_value)
+    mock_env.return_value.get_template.assert_called_once_with("custom_email_alert_template.jinja")
+    mock_template.render.assert_called_once()
+
+    # Check the resulting content
+    assert "<table>Rendered HTML</table>" in mail_content
+    assert content_type == "html"
+
+    # Verify the message data was parsed correctly
+    call_args = mock_template.render.call_args[0]
+    assert call_args[0] == {'product_id': 'product_id1', 'table_name': 'test_table'}
+
+
+# test template from user config when type is custom
+@patch("spark_expectations.notifications.plugins.email.Environment")
+@patch("spark_expectations.notifications.plugins.email.BaseLoader")
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_process_message_with_custom_template(_mock_context, mock_base_loader, mock_env):
+    """Test custom email template processing when a template is provided in the user config"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_templated_custom_email = True
+    _mock_context.get_custom_default_template = "Custom template"
+    _mock_context.get_mail_subject = "Test Subject"
+
+    # Setup template mocks
+    mock_template = MagicMock()
+    mock_template.module.render_table = "render_function"
+    mock_template.render.return_value = "<div>Custom Template</div>"
+    mock_env.return_value.from_string.return_value = mock_template
+
+    # Test message with format similar to your expected format
+    test_message = 'CUSTOM EMAIL\n{"product_id": "product_id1", "table_name": "test_table"}'
+
+    config_args = {
+        "message": test_message,
+        "content_type": "plain",
+    }
+
+    mail_content, content_type = email_handler._process_message(_mock_context, config_args)
+
+    # Check the template was used with BaseLoader
+    mock_env.return_value.from_string.assert_called_with("Custom template")
+    mock_template.render.assert_called_once()
+
+    # Check the resulting content
+    assert "<div>Custom Template</div>" in mail_content
+    assert content_type == "html"
+
+    # Verify the message data was parsed correctly
+    call_args = mock_template.render.call_args[0]
+    assert call_args[0] == {'product_id': 'product_id1', 'table_name': 'test_table'}
+
+# test custom email throws json error
+@patch("spark_expectations.notifications.plugins.email.Environment")
+@patch("spark_expectations.notifications.plugins.email.FileSystemLoader")
+@patch("spark_expectations.notifications.plugins.email._log")
+def test_process_message_invalid_json_logs_and_fallback(mock_log, mock_fs_loader, mock_env):
+    email_handler = SparkExpectationsEmailPluginImpl()
+    context = MagicMock()
+    context.get_enable_templated_custom_email = True
+    context.get_custom_default_template = None
+
+    # Simulate invalid JSON in mail_content
+    config_args = {
+        "message": "CUSTOM EMAIL\n{'invalid': unquoted_value}",  # Not valid JSON
+        "content_type": "plain"
+    }
+
+    mail_content, content_type = email_handler._process_message(context, config_args)
+
+    # Check that the error was logged
+    assert mock_log.error.call_count == 1
+    assert "JSON decode error" in mock_log.error.call_args[0][0]
+
+    # Check that the returned content is a plain text error message
+    assert mail_content.startswith("Error: Invalid JSON format in custom email content.")
+    assert "Original content:" in mail_content
+    assert content_type == "plain"
+
+# test custom email template rendering throws error
+@patch("spark_expectations.notifications.plugins.email.Environment")
+@patch("spark_expectations.notifications.plugins.email.FileSystemLoader")
+@patch("spark_expectations.notifications.plugins.email._log")
+def test_process_message_template_render_exception(mock_log, mock_fs_loader, mock_env):
+    email_handler = SparkExpectationsEmailPluginImpl()
+    context = MagicMock()
+    context.get_enable_templated_custom_email = True
+    context.get_custom_default_template = None
+
+    # Valid JSON, but template.render will raise a general Exception
+    config_args = {
+        "message": 'CUSTOM EMAIL\n{"product_id": "product_id1", "table_name": "test_table"}',
+        "content_type": "plain"
+    }
+
+    # Setup template mock to raise Exception on render
+    mock_template = MagicMock()
+    mock_template.render.side_effect = Exception("Render error")
+    mock_env.return_value.get_template.return_value = mock_template
+
+    mail_content, content_type = email_handler._process_message(context, config_args)
+
+    # Check that the error was logged
+    assert mock_log.error.call_count >= 1
+    assert "Template rendering error" in mock_log.error.call_args[0][0]
+
+    # Check that the returned content is a plain text error message
+    assert mail_content.startswith("Error: Failed to render custom email template.")
+    assert "Original content:" in mail_content
+    assert content_type == "plain"
