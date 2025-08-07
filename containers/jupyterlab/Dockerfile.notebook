@@ -1,0 +1,47 @@
+# Dockerfile for running Spark notebooks with Spark Expectations
+# This Dockerfile sets up a JupyterLab environment with Apache Spark and Spark Expectations installed.
+FROM apache/spark:3.5.5-java17-python3
+
+USER root
+
+# Install git
+RUN apt-get update && apt-get install -y git
+
+# Upgrade pip and install JupyterLab, dark theme, and ipywidgets
+RUN pip install --upgrade pip && \
+    pip install jupyterlab jupyterlab-night && \
+    pip install ipywidgets && \
+    pip install jinja2 && \ 
+    pip install pandas && \
+    pip install pyspark==3.5.5 && \
+    pip install spark-expectations
+
+# Ensure jupyterlab related folders exist and are owned by spark
+RUN mkdir -p /home/spark/.local/share/jupyter && \
+    mkdir -p /home/spark/.jupyter && \
+    mkdir -p /home/spark/.jupyter/lab/user-settings/@jupyterlab/apputils-extension && \
+    mkdir -p /app/notebooks && \
+    chown -R spark:spark /home/spark && \
+    chown -R spark:spark /home/spark/.jupyter && \
+    chown -R spark:spark /app/notebooks
+
+# Copy your JupyterLab config files and notebooks 
+COPY containers/jupyterlab/config/jupyter_lab_config.py /home/spark/.jupyter/jupyter_lab_config.py
+COPY containers/jupyterlab/config/themes.jupyterlab-settings /home/spark/.jupyter/lab/user-settings/@jupyterlab/apputils-extension/themes.jupyterlab-settings
+COPY notebooks/ /app/notebooks
+
+# Expose the JupyterLab port
+EXPOSE 8888
+
+
+# Set environment variables for Spark Expectations
+# ENV SPARK_EXPECTATIONS_CONFIG_PATH=/app/notebooks/config
+ENV SPARK_EXPECTATIONS_LOG_LEVEL=DEBUG
+ENV PYSPARK_SUBMIT_ARGS="--packages io.delta:delta-spark_2.12:3.0.0 pyspark-shell"
+
+USER spark
+# Set the working directory
+WORKDIR /app
+
+# Start JupyterLab when the container launches
+CMD ["jupyter", "lab", "--ip=0.0.0.0", "--port=8888", "--no-browser", "--allow-root"]

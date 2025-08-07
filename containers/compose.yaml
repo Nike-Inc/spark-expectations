@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  spark-notebooks:
+    container_name: se-notebook
+    build:
+      context: ../
+      dockerfile: containers/jupyterlab/Dockerfile.notebook
+    ports:
+      - "8888:8888"
+    # volumes:
+    #   - ./notebooks:/app/notebooks
+    environment:
+      - SPARK_EXPECTATIONS_CONFIG_PATH=/app/notebooks/config
+      - SPARK_EXPECTATIONS_LOG_LEVEL=DEBUG
+    command: >
+      jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root
+    networks:
+      - spark-net
+  mailpit:
+    container_name: se-mailpit
+    build:
+      context: ../
+      dockerfile: containers/mailserver/Dockerfile.mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - spark-net    
+  kafka:
+    container_name: se-kafka
+    build:
+      context: ../
+      dockerfile: containers/kafka/Dockerfile.kafka
+    ports:
+      - "9092:9092"
+    networks:
+      - spark-net
+networks:
+  spark-net:
+    driver: bridge
