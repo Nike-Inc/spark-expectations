@@ -2,6 +2,7 @@ version: '3.8'
 
 services:
   spark-notebooks:
+    container_name: se-notebook
     build:
       context: ../
       dockerfile: containers/jupyterlab/Dockerfile.notebook
@@ -17,24 +18,17 @@ services:
     networks:
       - spark-net
   mailpit:
-    image: axllent/mailpit:latest
     container_name: se-mailpit
+    build:
+      context: ../
+      dockerfile: containers/mailserver/Dockerfile.mailpit
     ports:
       - "8025:8025"
       - "1025:1025"
     networks:
-      - spark-net
-    volumes:
-      - ./containers/certs/mailpit.crt:/certs/mailpit.crt:ro
-      - ./containers/certs/mailpit.key:/certs/mailpit.key:ro
-    command:
-      [
-        "--smtp", "0.0.0.0:1025",
-        "--smtp-tls-cert", "/certs/mailpit.crt",
-        "--smtp-tls-key", "/certs/mailpit.key",
-        "--smtp-auth-accept-any"
-      ]           
+      - spark-net    
   kafka:
+    container_name: se-kafka
     build:
       context: ../
       dockerfile: containers/kafka/Dockerfile.kafka

@@ -68,11 +68,11 @@ kafka-cluster-start:
 				endif
 
 kafka-cluster-stop:
-                  ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_github_actions)
-                       . ./spark_expectations/examples/docker_scripts/delete_kafka_topic.sh
-                       . ./spark_expectations/examples/docker_scripts/kafka_cluster_stop.sh
-                       rm -rf /tmp/kafka-logs
-                   endif
+				ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_github_actions)
+					. ./spark_expectations/examples/docker_scripts/delete_kafka_topic.sh
+					. ./spark_expectations/examples/docker_scripts/kafka_cluster_stop.sh
+					rm -rf /tmp/kafka-logs
+				endif
 
 LOCAL_SE_CONTAINER_ARGS='--build'
 local-se-server-start:
