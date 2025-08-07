@@ -16,6 +16,24 @@ services:
       jupyter lab --ip=0.0.0.0 --port=8888 --no-browser --allow-root
     networks:
       - spark-net
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: se-mailpit
+    ports:
+      - "8025:8025"
+      - "1025:1025"
+    networks:
+      - spark-net
+    volumes:
+      - ./containers/certs/mailpit.crt:/certs/mailpit.crt:ro
+      - ./containers/certs/mailpit.key:/certs/mailpit.key:ro
+    command:
+      [
+        "--smtp", "0.0.0.0:1025",
+        "--smtp-tls-cert", "/certs/mailpit.crt",
+        "--smtp-tls-key", "/certs/mailpit.key",
+        "--smtp-auth-accept-any"
+      ]           
   kafka:
     build:
       context: ../
