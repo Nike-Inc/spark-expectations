@@ -78,3 +78,7 @@ def test_constants():
         "spark.expectations.notifications.email.templated.basic.body.enable"
     ) 
     assert user_config.se_notifications_enable_custom_email_body == "spark.expectations.notifications.email.custom.body.enable"
+    assert user_config.se_notifications_enable_templated_custom_email == (
+        "spark.expectations.notifications.email.templated.custom.email.enable"
+    )
+    assert user_config.se_notifications_email_custom_template == "spark.expectations.notifications.email.custom.template"

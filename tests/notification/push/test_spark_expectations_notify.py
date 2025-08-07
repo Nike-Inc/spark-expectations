@@ -601,15 +601,11 @@ def test_notify_rules_exceeds_threshold_exception(_fixture_mock_context):
 
 
 def test_get_custom_notification(_fixture_mock_context):
-    _fixture_mock_context.get_email_custom_body = """Custom statistics for dq run:
-    'product_id': {},
-    'table_name': {}"""
+    _fixture_mock_context.get_email_custom_body = """'product_id': {}, 'table_name': {}"""
     _fixture_mock_context.get_stats_dict = [{"product_id": "product_id1", "table_name": "test_table", "input_count": 5}]
 
     result = SparkExpectationsNotify(_fixture_mock_context).get_custom_notification()
-    expected_result = """Custom statistics for dq run:
-    'product_id': product_id1,
-    'table_name': test_table"""
+    expected_result = 'CUSTOM EMAIL\n{"product_id": "product_id1", "table_name": "test_table"}'
     assert result == expected_result
 
 
@@ -631,12 +627,6 @@ def test_get_custom_notification_no_keys_exception(_fixture_mock_context):
 
     with pytest.raises(SparkExpectationsMiscException, match="No key words for statistics were provided."):
         SparkExpectationsNotify(_fixture_mock_context).get_custom_notification()
-
-
-import pytest
-from unittest.mock import Mock
-from spark_expectations.core.exceptions import SparkExpectationsMiscException
-from spark_expectations.notifications.push.spark_expectations_notify import SparkExpectationsNotify
 
 
 def test_get_custom_notification_exception(_fixture_mock_context):
@@ -702,3 +692,15 @@ def test_notify_on_failure_with_custom_email_body(
         _context=_fixture_mock_context,
         _config_args={"message": "Custom notification message", "content_type": "plain"},
     )
+
+@patch("spark_expectations.notifications.push.spark_expectations_notify._log")
+def test_get_custom_notification(mock_log,_fixture_mock_context):
+    _fixture_mock_context.get_email_custom_body = """'product_id': {}, 'table_name': {}, 'unmatched_key': {}"""
+    _fixture_mock_context.get_stats_dict = [{"product_id": "product_id1", "table_name": "test_table", "input_count": 5}]
+
+    result = SparkExpectationsNotify(_fixture_mock_context).get_custom_notification()
+    expected_result = 'CUSTOM EMAIL\n{"product_id": "product_id1", "table_name": "test_table"}'
+    assert result == expected_result
+
+    assert mock_log.warning.call_count >= 1
+    assert "unmatched_key" in mock_log.warning.call_args[0][0]

@@ -100,19 +100,18 @@ user_config.se_notifications_default_basic_email_template: basic_html_template
 
 ## 3. Custom Metrics Emails
 
-The following two attributes in the user configuration should be set to enable custom metrics emails:
+The following two attributes in the user configuration should be set to enable custom metrics emails (plain text by default):
 ```python
 user_config.se_notifications_enable_custom_email_body: True,
 user_config.se_notifications_email_custom_body: "custom stats: 'product_id': {}"
 ```
-The `se_notifications_email_custom_body` field needs to comply with a specific syntax.
+The `se_notifications_email_custom_body` field needs to comply with a specific syntax, matching the style in the example below. The metrics that can be requested are the names of the columns in the __dq_stats__ table.
 
 ### Example Custom Metrics Config
 
-The following is a more comprehensive configuration for the custom email body, showing how to request more metrics.
+The following is a comprehensive configuration for the custom email body, showing how to request more metrics.
 ```python
 user_config.se_notifications_email_custom_body: (
-        "Custom statistics:\n "
         "'product_id': {},\n "
         "'table_name': {},\n "
         "'input_count': {},\n "
@@ -121,6 +120,12 @@ user_config.se_notifications_email_custom_body: (
         "'output_percentage': {},\n "
         "'success_percentage': {},\n "
         "'error_percentage': {},\n "
+        "'source_agg_dq_results': {},\n "
+        "'source_query_dq_results': {},\n "
+        "'final_agg_dq_results': {},\n "
+        "'final_query_dq_results': {},\n "
+        "'row_dq_res_summary': {},\n "
+        "'row_dq_error_threshold': {},\n "
         "'dq_status': {},\n "
         "'dq_run_time': {},\n "
         "'dq_rules': {},\n "
@@ -130,3 +135,99 @@ user_config.se_notifications_email_custom_body: (
         "'dq_env': {}\n"
     )
 ```
+By default the custom emails are in plain text, but there is an option to format them using an HTML template.
+
+### Using Custom Jinja2 HTML Templates
+
+Set `user_config.se_notifications_enable_templated_custom_email` and `user_config.se_notifications_email_custom_template` to enable using a Jinja2 HTML template to format the custom metrics email. The example below includes an example template definition in addition to the config.
+
+```python
+custom_html_template = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DQ Results Summary</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            color: #333;
+            margin: 20px;
+        }
+        dl {
+            border: 1px solid #ccc;
+            padding: 12px;
+            width: 400px;
+            background-color: #f9f9f9;
+        }
+        dt {
+            font-weight: bold;
+            margin-top: 8px;
+        }
+        dd {
+            margin: 0 0 8px 16px;
+        }
+    </style>
+</head>
+<body>
+
+<dl>
+    <dt>Product</dt>
+    <dd>{{ product_id }}</dd>
+
+    <dt>Table</dt>
+    <dd>{{ table_name }}</dd>
+
+    <dt>Source AGG DQ Check Name [0]</dt>
+    <dd>{{ source_agg_dq_results[0].rule }}</dd>
+
+    <dt>Source AGG DQ Check Description [0]</dt>
+    <dd>{{ source_agg_dq_results[0].description }}</dd>
+
+    <dt>Source AGG DQ Check Result [0]</dt>
+    <dd>{{ source_agg_dq_results[0].status }}</dd>
+
+    <dt>Source AGG DQ Check Name [1]</dt>
+    <dd>{{ source_agg_dq_results[1].rule }}</dd>
+
+    <dt>Source AGG DQ Check Description [1]</dt>
+    <dd>{{ source_agg_dq_results[1].description }}</dd>
+
+    <dt>Source AGG DQ Check Result [1]</dt>
+    <dd>{{ source_agg_dq_results[1].status }}</dd>
+
+    <dt>Source Query DQ Check Name</dt>
+    {% for item in source_query_dq_results %}
+        <dd>{{ item.rule }}</dd>
+    {% endfor %}
+
+    <dt>Source Query DQ Check Description</dt>
+    {% for item in source_query_dq_results %}
+        <dd>{{ item.description }}</dd>
+    {% endfor %}
+
+    <dt>Source Query DQ Check Result</dt>
+    {% for item in source_query_dq_results %}
+        <dd>{{ item.status }}</dd>
+    {% endfor %}
+
+    <dt>Rule Execution Timestamp</dt>
+    <dd>{{ meta_dq_run_datetime }}</dd>
+
+    <dt>Final AGG DQ Results</dt>
+    <dd>{{ final_agg_dq_results }}</dd>
+
+</dl>
+
+</body>
+</html>
+"""
+
+user_config.se_notifications_enable_templated_custom_email: True
+user_config.se_notifications_email_custom_template: ""
+```
+As seen in the template, some of the results values are nested data structures (often an array of maps/dicts) and their elements can be accessed directly with the right syntax, or using `for` loops or other options that Jinja2 supports.
+
+__Note:__
+- If an empty string `""` is passed in to the template field in the user config, the default template will be used: ([spark_expectations/config/templates/custom_email_alert_template.jinja](../spark_expectations/config/templates/custom_email_alert_template.jinja)).
+- A metric name must be specified in `user_config.se_notifications_email_custom_body` if it is being referenced in the template. For example, if `{{ final_agg_dq_results }}` is referenced in the template, then `"'final_agg_dq_results': {},\n "` must be in the user config.
