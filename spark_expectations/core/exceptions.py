@@ -39,6 +39,10 @@ class SparkExpectationsZoomNotificationException(Exception):
     Throw this exception when spark expectations encounters exceptions while sending Zoom notifications
     """
 
+class SparkExpectationsPagerDutyNotificationException(Exception):
+    """
+    Throw this exception when spark expectations encounters exceptions while sending PagerDuty API notifications
+    """
 
 class SparkExpectationsEmailException(Exception):
     """

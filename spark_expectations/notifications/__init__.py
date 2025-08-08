@@ -18,6 +18,9 @@ from spark_expectations.notifications.plugins.teams import (
 from spark_expectations.notifications.plugins.zoom import (
     SparkExpectationsZoomPluginImpl,  # Import Zoom plugin
 )
+from spark_expectations.notifications.plugins.pagerduty_api import (
+    SparkExpectationsPagerDutyPluginImpl,  # Import PagerDuty plugin
+)
 
 
 @functools.lru_cache

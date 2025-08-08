@@ -71,6 +71,7 @@ nav:
           - Base_Notification_plugin: api/base_notification_plugin.md
           - Email_Notification_plugin: api/email_plugin.md
           - Slack_Notification_plugin: api/slack_plugin.md
+          - PagerDuty_Notification_plugin: api/pagerduty_plugin.md
           - Push:
               - Notification_Decorater: api/notifications_decorater.md
       - Utils:
