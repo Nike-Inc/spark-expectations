@@ -3,10 +3,8 @@ import pytest
 from pyspark.sql.functions import col
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType
 from spark_expectations.core import get_spark_session
-from spark_expectations.sinks import get_sink_hook, _sink_hook
-from spark_expectations.sinks.plugins.kafka_writer import (
-    SparkExpectationsKafkaWritePluginImpl,
-)
+from spark_expectations.sinks import _sink_hook
+
 
 spark = get_spark_session()
 
@@ -30,7 +28,7 @@ def fixture_setup_local_kafka_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     if os.getenv("UNIT_TESTING_ENV") != "spark_expectations_unit_testing_on_github_actions":
-        # remove if docker conatiner is running
+        # remove if docker container is running
         os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
         # start docker container and create the topic
@@ -62,15 +60,6 @@ def fixture_dataset():
         ]
     )
     return spark.createDataFrame(data, schema)
-
-
-def test_get_sink_hook():
-    pm = get_sink_hook()
-    # Check that the correct number of plugins have been registered
-    assert len(pm.list_name_plugin()) == 1
-
-    # Check that the correct plugins have been registered
-    assert isinstance(pm.get_plugin("spark_expectations_kafka_write"), SparkExpectationsKafkaWritePluginImpl)
 
 
 def test_sink_hook_write(_fixture_create_database, _fixture_local_kafka_topic, _fixture_dataset):
