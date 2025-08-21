@@ -422,7 +422,7 @@ def test_process_message_detailed_notification(_mock_context):
 
 
 @patch("spark_expectations.notifications.plugins.email.Environment")
-@patch("spark_expectations.notifications.plugins.email.FileSystemLoader")
+@patch("spark_expectations.notifications.plugins.email.PackageLoader")
 @patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
 def test_process_message_with_template_filesystem(_mock_context, mock_fs_loader, mock_env):
     """Test that template is used when email_notification_type is not 'detailed' and template enabled"""
@@ -582,7 +582,7 @@ def test_process_message_no_content_type(_mock_context):
 
 # test default template when type is custom
 @patch("spark_expectations.notifications.plugins.email.Environment")
-@patch("spark_expectations.notifications.plugins.email.FileSystemLoader")
+@patch("spark_expectations.notifications.plugins.email.PackageLoader")
 @patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
 def test_process_message_with_custom_template(_mock_context, mock_fs_loader, mock_env):
     """Test that default custom template is used"""
@@ -663,7 +663,7 @@ def test_process_message_with_custom_template(_mock_context, mock_base_loader, m
 
 # test custom email throws json error
 @patch("spark_expectations.notifications.plugins.email.Environment")
-@patch("spark_expectations.notifications.plugins.email.FileSystemLoader")
+@patch("spark_expectations.notifications.plugins.email.PackageLoader")
 @patch("spark_expectations.notifications.plugins.email._log")
 def test_process_message_invalid_json_logs_and_fallback(mock_log, mock_fs_loader, mock_env):
     email_handler = SparkExpectationsEmailPluginImpl()
@@ -690,7 +690,7 @@ def test_process_message_invalid_json_logs_and_fallback(mock_log, mock_fs_loader
 
 # test custom email template rendering throws error
 @patch("spark_expectations.notifications.plugins.email.Environment")
-@patch("spark_expectations.notifications.plugins.email.FileSystemLoader")
+@patch("spark_expectations.notifications.plugins.email.PackageLoader")
 @patch("spark_expectations.notifications.plugins.email._log")
 def test_process_message_template_render_exception(mock_log, mock_fs_loader, mock_env):
     email_handler = SparkExpectationsEmailPluginImpl()

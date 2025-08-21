@@ -3,7 +3,7 @@ from typing import Dict, Union, Optional
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from jinja2 import Environment, FileSystemLoader, PackageLoader, BaseLoader
+from jinja2 import Environment, PackageLoader, BaseLoader
 from spark_expectations import _log
 from spark_expectations.notifications.plugins.base_notification import (
     SparkExpectationsNotification,
@@ -95,8 +95,6 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
         else:
             content_type = "plain"
 
-        template_dir = "../../spark_expectations/config/templates"
-
         if mail_content.startswith("CUSTOM EMAIL\n"):
             mail_content = mail_content[len("CUSTOM EMAIL\n"):]  # remove leading "CUSTOM EMAIL" text
 
@@ -104,11 +102,14 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
                 try:
                     custom_email_data = json.loads(mail_content)
                     if not _context.get_custom_default_template:
-                        env_loader = Environment(loader=FileSystemLoader(template_dir))
+                        template_dir = "config/templates"
+                        env_loader = Environment(
+                            loader=PackageLoader("spark_expectations", template_dir)
+                        )
                         template = env_loader.get_template("custom_email_alert_template.jinja")
                     else:
-                        template_dir = _context.get_custom_default_template
-                        template = Environment(loader=BaseLoader).from_string(template_dir)
+                        template_string = _context.get_custom_default_template
+                        template = Environment(loader=BaseLoader).from_string(template_string)
 
                     mail_content = template.render(custom_email_data)
                     content_type = "html"
@@ -127,16 +128,13 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
             if _context.get_enable_templated_basic_email_body is True:
                 if not _context.get_basic_default_template:
                     template_dir = "config/templates"
-                    # env_loader = Environment(loader=FileSystemLoader(template_dir))
                     env_loader = Environment(
-                        loader=PackageLoader("spark_expectations", "config/templates"),
-                        autoescape=True 
+                        loader=PackageLoader("spark_expectations", template_dir)
                     )
-
                     template = env_loader.get_template("basic_email_alert_template.jinja")
                 else:
-                    template_dir = _context.get_basic_default_template
-                    template = Environment(loader=BaseLoader).from_string(template_dir)
+                    template_string = _context.get_basic_default_template
+                    template = Environment(loader=BaseLoader).from_string(template_string)
 
                 lines = mail_content.strip().split("\n")
                 title = lines[0].strip() if lines else ""
