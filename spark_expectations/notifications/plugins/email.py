@@ -3,7 +3,7 @@ from typing import Dict, Union, Optional
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-from jinja2 import Environment, FileSystemLoader, BaseLoader
+from jinja2 import Environment, FileSystemLoader, PackageLoader, BaseLoader
 from spark_expectations import _log
 from spark_expectations.notifications.plugins.base_notification import (
     SparkExpectationsNotification,
@@ -126,8 +126,13 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
         elif (_config_args.get("email_notification_type")) != "detailed":
             if _context.get_enable_templated_basic_email_body is True:
                 if not _context.get_basic_default_template:
-                    template_dir = "../../spark_expectations/config/templates"
-                    env_loader = Environment(loader=FileSystemLoader(template_dir))
+                    template_dir = "config/templates"
+                    # env_loader = Environment(loader=FileSystemLoader(template_dir))
+                    env_loader = Environment(
+                        loader=PackageLoader("spark_expectations", "config/templates"),
+                        autoescape=True 
+                    )
+
                     template = env_loader.get_template("basic_email_alert_template.jinja")
                 else:
                     template_dir = _context.get_basic_default_template
