@@ -448,7 +448,7 @@ def test_process_message_with_template_filesystem(_mock_context, mock_fs_loader,
     mail_content, content_type = email_handler._process_message(_mock_context, config_args)
 
     # Check that the template was used
-    mock_fs_loader.assert_called_once_with("config/templates")
+    mock_fs_loader.assert_called_once_with("spark_expectations", "config/templates")
     mock_env.assert_called_once_with(loader=mock_fs_loader.return_value)
     mock_env.return_value.get_template.assert_called_once_with("basic_email_alert_template.jinja")
     mock_template.render.assert_called_once()
@@ -608,7 +608,7 @@ def test_process_message_with_custom_template(_mock_context, mock_fs_loader, moc
     mail_content, content_type = email_handler._process_message(_mock_context, config_args)
 
     # Check that the template was used
-    mock_fs_loader.assert_called_once_with("config/templates")
+    mock_fs_loader.assert_called_once_with("spark_expectations","config/templates")
     mock_env.assert_called_once_with(loader=mock_fs_loader.return_value)
     mock_env.return_value.get_template.assert_called_once_with("custom_email_alert_template.jinja")
     mock_template.render.assert_called_once()
