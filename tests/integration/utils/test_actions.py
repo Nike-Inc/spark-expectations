@@ -491,6 +491,42 @@ def fixture_query_dq_expected_result():
     }
 
 
+@pytest.mark.parametrize(
+    "rule, rule_type_name, source_dq_enabled, target_dq_enabled, expected",
+    [
+        (
+            {"enable_for_source_dq_validation": True},
+            "query_dq",
+            True,
+            False,
+            True,
+        ),
+        (
+            {"enable_for_target_dq_validation": False},
+            "agg_dq",
+            False,
+            True,
+            False,
+        ),
+        (
+            {"enable_for_source_dq_validation": True},
+            "query_dq",
+            False,
+            False,
+            False,
+        ),
+    ],
+)
+def test_get_rule_is_active(
+    rule, rule_type_name, source_dq_enabled, target_dq_enabled, expected, _fixture_mock_context
+):
+    assert (
+        SparkExpectationsActions.get_rule_is_active(
+            _fixture_mock_context, rule, rule_type_name, source_dq_enabled, target_dq_enabled
+        )
+        == expected
+    )
+
 
 @pytest.mark.parametrize(
     "_query_dq_rule, query_dq_detailed_expected_result, _source_dq_status,_target_dq_status",
@@ -726,16 +762,6 @@ def test_agg_query_dq_detailed_result_exception_v2(_fixture_df, _query_dq_rule_e
             _fixture_mock_context, _query_dq_rule_exception, _fixture_df, []
         )
 
-def test_agg_query_dq_detailed_result_exception(_fixture_df, _fixture_query_dq_rule):
-    _mock_object_context = Mock(spec=SparkExpectationsContext)
-    # faulty user input is given to test the exception functionality of the agg_query_dq_detailed_result
-
-    with pytest.raises(
-        SparkExpectationsMiscException, match=r"error occurred while running agg_query_dq_detailed_result .*"
-    ):
-        SparkExpectationsActions().agg_query_dq_detailed_result(
-            _mock_object_context, "_fixture_query_dq_rule", "<df>", []
-        )
 
 def test_agg_query_dq_detailed_result(
     _fixture_df, _fixture_agg_dq_rule, _fixture_agg_dq_detailed_expected_result, _fixture_mock_context
@@ -1010,7 +1036,6 @@ def test_run_dq_rules_condition_expression_exception(
         )
 
 
-
 @pytest.mark.parametrize(
     "_rule_test",
     [
@@ -1044,7 +1069,8 @@ def test_run_dq_rules_condition_expression_dynamic_exception(
             _fixture_mock_context, _fixture_df, _expectations, _rule_type, False, True
         )
 
-def test_agg_query_dq_detailed_result_type_error(_fixture_df, _fixture_agg_dq_rule, _fixture_mock_context):
+
+def test_agg_query_dq_detailed_result_type_error(_fixture_agg_dq_rule, _fixture_mock_context):
     # Patch DataFrame.agg to return a value of an unexpected type (e.g., list)
     class DummyDF:
         def agg(self, *args, **kwargs):
@@ -1057,6 +1083,7 @@ def test_agg_query_dq_detailed_result_type_error(_fixture_df, _fixture_agg_dq_ru
         SparkExpectationsActions.agg_query_dq_detailed_result(
             _fixture_mock_context, _fixture_agg_dq_rule, dummy_df, []
         )
+
 
 @pytest.mark.parametrize(
     "input_df, rule_type_name, expected_output",
