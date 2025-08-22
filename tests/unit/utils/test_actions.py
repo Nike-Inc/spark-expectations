@@ -4,79 +4,26 @@ from unittest.mock import patch
 import pytest
 from pyspark.sql.functions import lit, struct, array, udf
 
-from spark_expectations.core import get_spark_session
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from spark_expectations.utils.actions import SparkExpectationsActions
 
-spark = get_spark_session()
 
-
-@pytest.fixture(name="_fixture_mock_context")
-def fixture_mock_context():
-    # fixture for mock context
-    mock_object = Mock(spec=SparkExpectationsContext)
-    mock_object.product_id = "product1"
-    mock_object.spark = spark
-    mock_object.get_row_dq_rule_type_name = "row_dq"
-    mock_object.get_agg_dq_rule_type_name = "agg_dq"
-    mock_object.get_query_dq_rule_type_name = "query_dq"
-    mock_object.get_agg_dq_detailed_stats_status = True
-    mock_object.get_query_dq_detailed_stats_status = True
-    mock_object.get_querydq_secondary_queries = {
-        "product_1|test_table|table_row_count_gt_1": {
-            "source_f1": "select count(*) from query_test_table",
-            "target_f1": "select count(*) from query_test_table_target",
-        },
-        "product_1|test_table|table_distinct_count": {
-            "source_f1": "select distinct col1, col2 from query_test_table",
-            "target_f1": "select distinct col1, col2 from query_test_table_target",
-        },
+@pytest.fixture(name="_fixture_agg_dq_rule")
+def fixture_agg_dq_rule():
+    # Define the expectations for the data quality rules
+    return {
+        "rule_type": "agg_dq",
+        "rule": "col1_sum_gt_eq_6",
+        "column_name": "col1",
+        "expectation": "sum(col1)>=6",
+        "action_if_failed": "ignore",
+        "table_name": "test_table",
+        "tag": "validity",
+        "enable_for_source_dq_validation": True,
+        "description": "col1 sum gt 1",
+        "product_id": "product_1",
     }
-
-    mock_object.get_supported_df_query_dq = spark.createDataFrame([{"spark_expectations_test": "se_query_dq"}])
-    return mock_object
-
-
-
-import pytest
-
-
-@pytest.mark.parametrize(
-    "rule, rule_type_name, source_dq_enabled, target_dq_enabled, expected",
-    [
-        (
-            {"enable_for_source_dq_validation": True},
-            "query_dq",
-            True,
-            False,
-            True,
-        ),
-        (
-            {"enable_for_target_dq_validation": False},
-            "agg_dq",
-            False,
-            True,
-            False,
-        ),
-        (
-            {"enable_for_source_dq_validation": True},
-            "query_dq",
-            False,
-            False,
-            False,
-        ),
-    ],
-)
-def test_get_rule_is_active(
-    rule, rule_type_name, source_dq_enabled, target_dq_enabled, expected, _fixture_mock_context
-):
-    assert (
-        SparkExpectationsActions.get_rule_is_active(
-            _fixture_mock_context, rule, rule_type_name, source_dq_enabled, target_dq_enabled
-        )
-        == expected
-    )
 
 
 @pytest.mark.parametrize(
@@ -123,6 +70,13 @@ def test_create_rules_map(_rule_map, expected_output):
     compare_result(actual_output, expected_output)
 
 
+def test_agg_query_dq_detailed_result_exception():
+    _mock_object_context = Mock(spec=SparkExpectationsContext)
+    # faulty user input is given to test the exception functionality of the agg_query_dq_detailed_result
 
-
-
+    with pytest.raises(
+        SparkExpectationsMiscException, match=r"error occurred while running agg_query_dq_detailed_result .*"
+    ):
+        SparkExpectationsActions().agg_query_dq_detailed_result(
+            _mock_object_context, "_fixture_query_dq_rule", "<df>", []
+        )

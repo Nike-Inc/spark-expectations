@@ -40,15 +40,15 @@ def fixture_setup_local_kafka_topic():
 
     if os.getenv("UNIT_TESTING_ENV") != "spark_expectations_unit_testing_on_github_actions":
         # remove if docker container is running
-        os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
+        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
         # start docker container and create the topic
-        os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
+        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
 
         yield "docker container started"
 
         # remove docker container
-        os.system(f"sh {current_dir}/../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
+        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
     else:
         yield (
@@ -110,6 +110,21 @@ def fixture_rules_df():
 
 @pytest.fixture(name="_fixture_create_database")
 def fixture_create_database():
+    # try: 
+    #     # drop and create dq_spark if exists
+    #     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
+    #     spark.sql("create database if not exists dq_spark")
+    #     spark.sql("use dq_spark")
+
+    #     yield "dq_spark"
+
+    #     # drop dq_spark if exists
+    #     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
+    # except Exception as e:
+    #     print(f"EXCEPTION: {e} ")
+    #     raise e
+
+ 
     # drop and create dq_spark if exists
     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
     spark.sql("create database if not exists dq_spark")
@@ -119,6 +134,8 @@ def fixture_create_database():
 
     # drop dq_spark if exists
     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
+
+
 
 
 @pytest.fixture(name="_fixture_context")

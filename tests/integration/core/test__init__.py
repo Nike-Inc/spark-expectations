@@ -43,7 +43,7 @@ def test_get_spark_active_session():
     active = get_spark_session()
     assert active == spark
 
-@patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__)+"/../../")
+@patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__)+"/../../../")
 def test_load_configurations_valid_file():
     spark = SparkSession.builder.getOrCreate()
     load_configurations(spark)
@@ -62,7 +62,7 @@ def test_load_configurations_valid_file():
     assert streaming_dict["se.streaming.enable"] is True
 
 @patch("builtins.open", new_callable=mock.mock_open, read_data="key:[value, another")
-@patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__)+"/../../")
+@patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__)+"/../../../")
 def test_load_configurations_invalid_file(mock_file):
     spark = SparkSession.builder.getOrCreate()
 
@@ -74,7 +74,7 @@ def test_load_configurations_invalid_file(mock_file):
     assert "Error parsing Spark config YAML configuration file" in str(exception_info.value)
 
 @patch("builtins.open", new_callable=mock.mock_open, read_data="")
-@patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__)+"/../../")
+@patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__)+"/../../../")
 def test_load_configurations_empty_file(mock_file):
     spark = SparkSession.builder.getOrCreate()
     load_configurations(spark)
