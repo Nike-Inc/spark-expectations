@@ -96,16 +96,14 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
             content_type = "plain"
 
         if mail_content.startswith("CUSTOM EMAIL\n"):
-            mail_content = mail_content[len("CUSTOM EMAIL\n"):]  # remove leading "CUSTOM EMAIL" text
+            mail_content = mail_content[len("CUSTOM EMAIL\n") :]  # remove leading "CUSTOM EMAIL" text
 
             if _context.get_enable_templated_custom_email is True:
                 try:
                     custom_email_data = json.loads(mail_content)
                     if not _context.get_custom_default_template:
                         template_dir = "config/templates"
-                        env_loader = Environment(
-                            loader=PackageLoader("spark_expectations", template_dir)
-                        )
+                        env_loader = Environment(loader=PackageLoader("spark_expectations", template_dir))
                         template = env_loader.get_template("custom_email_alert_template.jinja")
                     else:
                         template_string = _context.get_custom_default_template
@@ -128,9 +126,7 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
             if _context.get_enable_templated_basic_email_body is True:
                 if not _context.get_basic_default_template:
                     template_dir = "config/templates"
-                    env_loader = Environment(
-                        loader=PackageLoader("spark_expectations", template_dir)
-                    )
+                    env_loader = Environment(loader=PackageLoader("spark_expectations", template_dir))
                     template = env_loader.get_template("basic_email_alert_template.jinja")
                 else:
                     template_string = _context.get_basic_default_template

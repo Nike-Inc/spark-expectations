@@ -96,9 +96,7 @@ class SparkExpectationsAlert:
             mail_receivers_list = self._context.get_to_mail
             if not self._context.get_detailed_default_template:
                 template_dir = "config/templates"
-                env_loader = Environment(
-                    loader=PackageLoader("spark_expectations", template_dir)
-                )
+                env_loader = Environment(loader=PackageLoader("spark_expectations", template_dir))
                 template = env_loader.get_template("advanced_email_alert_template.jinja")
             else:
                 template_string = self._context.get_detailed_default_template
