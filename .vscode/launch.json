@@ -5,6 +5,7 @@
             "name": "Python: Debug Unit Tests",
             "type": "debugpy",
             "request": "launch",
+            "program": "${file}",
             "purpose": [
                 "debug-test"
             ],
