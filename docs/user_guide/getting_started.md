@@ -7,7 +7,7 @@ This guide will help you set up your environment, install the library, and under
 ### Python
 - **Supported versions:** 3.9, 3.10, 3.11, 3.12 (recommended: latest 3.12.x)
 ### Java
-- **Suported versions:** 8, 11, 17 
+- **Supported versions:** 8, 11, 17 
 
 
 ## Installation

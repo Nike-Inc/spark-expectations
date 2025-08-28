@@ -31,7 +31,7 @@ otherwise specified.
 send notifications at the start, as well as upon completion
 
 
-There is a field in the rules table called [action_if_failed](getting-started/setup.md/#action_if_failed), which determines
+There is a field in the rules table called [action_if_failed](../../user_guide/data_quality_rules/#action-if-failed-configuration-for-data-quality-rules), which determines
 what needs to be done if a rule fails
 
 

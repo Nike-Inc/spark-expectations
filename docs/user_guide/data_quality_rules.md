@@ -1,4 +1,4 @@
-When evaluating characteristic of data and it's quality we usualy think of data quality dimensions. Spark-expectations is there to verify data integrity once data has already been ingested or in-flight before data lands in a datastore. Some of the data quality dimensions are 
+When evaluating characteristic of data and it's quality we usually think of data quality dimensions. Spark-expectations is there to verify data integrity once data has already been ingested or in-flight before data lands in a datastore. Some of the data quality dimensions are 
 
 - `Completeness` (all required data is present), 
 - `Uniqueness` (no duplicates), 
@@ -63,7 +63,7 @@ The Spark Expectation process consists of three phases:
 
 1. When enable_for_source_dq_validation is true, execute agg_dq and query_dq on the source Dataframe
 2. If the first step is successful, proceed to run row_dq
-3. When enable_for_target_dq_validation is true, exeucte agg_dq and query_dq on the Dataframe resulting from row_dq
+3. When enable_for_target_dq_validation is true, execute agg_dq and query_dq on the Dataframe resulting from row_dq
 
 ### Action If Failed Configuration For Data Quality Rules
 

@@ -1,6 +1,6 @@
 # Quick Start
 
-To successfully run spark-expectectation user needs to create `Rules` table as a first step. 
+To successfully run spark-expectations user needs to create `Rules` table as a first step. 
 
 
 ## Required Tables
@@ -61,7 +61,7 @@ create table if not exists `catalog`.`schema`.`{product}_rules` (
 The Spark Expectation process consists of three phases:
 1. When enable_for_source_dq_validation is true, execute agg_dq and query_dq on the source Dataframe
 2. If the first step is successful, proceed to run row_dq
-3. When enable_for_target_dq_validation is true, exeucte agg_dq and query_dq on the Dataframe resulting from row_dq
+3. When enable_for_target_dq_validation is true, execute agg_dq and query_dq on the Dataframe resulting from row_dq
 
 ### Rule Type
 
@@ -217,7 +217,7 @@ Returns:
 )
 def get_dataset():
     _df_source: DataFrame = input_df
-    _df_source.createOrReplaceTempView("in_memory_data_source"])
+    _df_source.createOrReplaceTempView("in_memory_data_source")
     return _df_source
 
 
