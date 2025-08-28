@@ -19,7 +19,9 @@ required for this activity
 
 * Spark Expectations provides the ability to run both individual row-based and overall aggregated data quality rules 
 on both the source and validated data sets. In case a rules fails, the row-level error is recorded in the `_error` table 
-and a summarized report of all failed aggregated data quality rules is compiled in the `_stats` table
+and a summarized report of all failed aggregated data quality rules is compiled in the `_stats` table. 
+* Spark Expectations optionally provides detailed, rule-level records showing the execution and results of each rule. 
+These per-rule validation results are captured in the `stats_detailed` table, allowing for thorough inspection and analysis.
 * All the records which fail one or more data quality rules, are by default quarantined in an `_error` table along with 
 the metadata on rules that failed, job information etc. This helps analysts or products to look at the error data easily 
 and work with the teams required to correct the data and reprocess it easily
