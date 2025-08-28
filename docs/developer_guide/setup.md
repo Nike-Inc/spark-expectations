@@ -52,7 +52,7 @@ We recommend using version manager tool like
 
 - **Create a virtual environment:**
 ```sh
-    pyenv install -l | less # List avaialable versions
+    pyenv install -l | less # List available versions
     pyenv install 3.12.11 # Install specific python version
     pyenv versions # List installed versions
     pyenv prefix # Display full path to the current installed python directory

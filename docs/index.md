@@ -18,13 +18,6 @@ Please find the spark-expectations flow and feature diagrams below
 
 Rules table holds most important building block that defines data quality expectations. Tool currently support three different types of Rules. 
 
-| Rule Type | Valid Expectation Format | Aggregate Functions Allowed | SQL Queries Allowed |
-|-----------|-------------------------|----------------------------|---------------------|
-| `row_dq`  | Simple row expressions  | ❌ No                      | ❌ No               |
-| `agg_dq`  | Aggregate expressions   | ✅ Yes                     | ❌ No               |
-| `query_dq`| SQL queries             | ✅ Yes (via SQL)           | ✅ Yes              |
-
----
 
 Proceed to [User Guide / Data Quality Rules](user_guide/data_quality_rules/) for details how rules can be configured
 

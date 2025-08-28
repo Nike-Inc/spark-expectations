@@ -71,7 +71,7 @@ This table need not be created. It gets auto created with "_detailed " to the dq
 
 
 !!! warning
-    Detailed Stats Tables are optional. It is auto cretead and named as stats table with suffix `_detailed`.
+    Detailed Stats Tables are optional. It is auto created and named as stats table with suffix `_detailed`.
 
     Default Behaviour: Detailed Stats table is disabled. To enable it pass 
     ```
@@ -150,7 +150,7 @@ dq_job_metadata_info string,  -- (28)!
 ### DQ Query Output Table 
 
 !!! warning
-    DQ Query Output Table is optional. It is auto cretead and named as stats table with suffix `_querydq_output`.
+    DQ Query Output Table is optional. It is auto created and named as stats table with suffix `_querydq_output`.
 
     Name can be overriden by passing `querydq_output_custom_table_name`
 

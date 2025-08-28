@@ -176,7 +176,7 @@ from spark_expectations.core.expectations import (
 )
 
 from spark_expectations.core import load_configurations
-# Initialize Default Config: in future release this will not be required 
+# Initialize Default Config: in a future release this will not be required 
 load_configurations(spark) 
 
 writer = WrappedDataFrameWriter().mode("append").format("delta")
