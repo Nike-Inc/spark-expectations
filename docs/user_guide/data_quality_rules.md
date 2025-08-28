@@ -65,6 +65,24 @@ The Spark Expectation process consists of three phases:
 2. If the first step is successful, proceed to run row_dq
 3. When enable_for_target_dq_validation is true, exeucte agg_dq and query_dq on the Dataframe resulting from row_dq
 
+### Action If Failed Configuration For Data Quality Rules
+
+The rules column has a column called `action_if_failed`. It is important that this column should only accept one of 
+these values:
+
+ - `[fail, drop or ignore]` for `'rule_type'='row_dq'` and 
+ - `[fail, ignore]` for `'rule_type'='agg_dq' and 'rule_type'='query_dq'`. 
+ 
+If other values are provided, the library may cause unforeseen errors.
+Please run the below command to add constraints to the above created rules table
+
+```sql
+ALTER TABLE apla_nd_dq_rules ADD CONSTRAINT action CHECK 
+((rule_type = 'row_dq' and action_if_failed IN ('ignore', 'drop', 'fail')) or 
+(rule_type = 'agg_dq' and action_if_failed in ('ignore', 'fail')) or 
+(rule_type = 'query_dq' and action_if_failed in ('ignore', 'fail')));
+```
+
 
 ### Rule Types
 
@@ -145,6 +163,23 @@ Checks conditions using full SQL queries, typically for more complex or cross-ta
 - Can reference other tables or views.
 - Supports complex logic, including subqueries and case statements.
 
+
+### Examples of Supported Rule Types
+
+- **Row DQ**: 
+```sql
+INSERT INTO `catalog`.`schema`.`{product}_rules` VALUES ('your_product', 'your_table', 'row_dq', 'check_nulls', 'column_name', 'is not null', 'drop', 'completeness', 'Check for null values in column_name', true, true, true, false, 0);
+```
+
+- **Aggregation DQ**: 
+```sql
+INSERT INTO `catalog`.`schema`.`{product}_rules` VALUES ('your_product', 'your_table', 'agg_dq', 'check_row_count', '', 'COUNT(*) > 0', 'fail', 'completeness', 'Ensure the table has at least one row', true, true, true, false, 0);
+```
+
+- **Query DQ**:
+```sql
+INSERT INTO `catalog`.`schema`.`{product}_rules` VALUES ('your_product', 'your_table', 'query_dq', 'check_custom_query', '', 'SELECT COUNT(*) FROM your_table WHERE column_name IS NULL', 'ignore', 'validity', 'Custom query to check for null values in column_name', false, true, true, false, 0);
+```
 
 
 

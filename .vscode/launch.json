@@ -2,15 +2,37 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Debug Unit Tests",
+            "name": "Coverage: Pytest (All files)",
             "type": "debugpy",
             "request": "launch",
-            "program": "${file}",
-            "purpose": [
-                "debug-test"
+            "module": "coverage",
+            "args": [
+                "run",
+                "--source=spark_expectations",
+                "--omit=spark_expectations/examples/*",
+                "-m", "pytest",
+                "-v",
+                "-x"
             ],
             "console": "integratedTerminal",
-            "justMyCode": false,
+            "justMyCode": false
+        },
+        {
+            "name": "Coverage: Pytest (Selected File)",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "coverage",
+            "args": [
+                "run",
+                "--source=spark_expectations",
+                "--omit=spark_expectations/examples/*",
+                "-m", "pytest",
+                "-v",
+                "-x",
+                "${file}"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false
         }
     ]
 }

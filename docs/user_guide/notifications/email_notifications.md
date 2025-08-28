@@ -46,6 +46,52 @@ By default email notifications are disabled. To use them we need to pass require
     - <abbr title="If provided it will use custom jinja template in place of a default one">user_config.se_notifications_default_basic_email_template</abbr>
 
 
+
+### Configure SMTP Notifications
+
+To enable email notifications (such as alerts for data quality failures) in Spark-Expectations, you need to configure SMTP settings. 
+You can reference the `user_config.py` file in the `spark_expectations/config` directory to access / setup the SMTP configuration parameters. This file should contain the necessary SMTP/email notification settings for Spark-Expectations.
+
+#### Verifying SMTP Parameters
+Before using SMTP notifications, verify that the following parameters are set correctly in your configuration (see `user_config.py` for the exact constant names):
+
+- SMTP server host
+- SMTP server port
+- SMTP username
+- SMTP password
+- Sender email address (`from`)
+- Recipient email address(es) (`to`)
+- Enable/disable SMTP authentication and TLS as needed
+
+??? info "Sample Python Script to Send a Test Email"
+
+    You can use the following Python script to test your SMTP configuration. This script will send a test email using the configured SMTP settings. Make sure to replace the placeholders with your actual SMTP configuration values.
+    ```python
+    from email.mime.text import MIMEText
+
+    smtp_host = "smtp.example.com"
+    smtp_port = 587
+    smtp_user = "your_email@example.com"
+    smtp_password = "your_password"
+    smtp_from = "your_email@example.com"
+    smtp_to = "recipient@example.com"
+
+    msg = MIMEText("This is a test email from Spark-Expectations SMTP setup.")
+    msg["Subject"] = "Spark-Expectations SMTP Test"
+    msg["From"] = smtp_from
+    msg["To"] = smtp_to
+
+    with smtplib.SMTP(smtp_host, smtp_port) as server:
+        server.starttls()
+        server.login(smtp_user, smtp_password)
+        server.sendmail(smtp_from, [smtp_to], msg.as_string())
+
+    print("Test email sent successfully.")
+    ```
+**Note:**
+Never commit sensitive credentials (like SMTP passwords) to version control. Use environment variables or a secure secrets manager.
+Make sure your SMTP server allows connections from your environment (some providers may require app passwords or special settings).
+
 ## User Configuration Example
 
 ???+ note "Show example user configuration"
