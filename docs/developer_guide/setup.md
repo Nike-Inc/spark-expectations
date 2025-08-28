@@ -80,7 +80,7 @@ To initialize dev environment (python virtual environments) and install dependen
 
 This shows which environments are available for development, testing, and other workflows, and how they are configured for your project. 
 ```sh
-hatch show env
+hatch env show
 ```
 
 Since `Hatch` is used as dependency management tool output of this command will be creation of multiple python virtual environments stored under project root `.venv/env/virtual/<dev.py3.X>`
