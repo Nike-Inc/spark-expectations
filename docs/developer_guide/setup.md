@@ -44,13 +44,14 @@
 
 ## Environment Setup
 
-We recommend using version manager tool like 
- - [`pyenv`](https://github.com/pyenv/pyenv) - Python version manager
- - [`asdf](https://github.com/asdf-vm/asdf) - Multiple language version manager
-    - ['supported plugins`](https://github.com/asdf-vm/asdf-plugins)
+We recommend using version manager tool like:
+
+ - [pyenv](https://github.com/pyenv/pyenv) - Python version manager
+ - [asdf](https://github.com/asdf-vm/asdf) - Multiple language version manager
+    - [supported plugins](https://github.com/asdf-vm/asdf-plugins)
 
 
-- **Create a virtual environment:**
+**Create a virtual environment:**
 ```sh
     pyenv install -l | less # List available versions
     pyenv install 3.12.11 # Install specific python version
@@ -60,18 +61,23 @@ We recommend using version manager tool like
     pyenv local <version>    # sets version for current directory (creates .python-version)
 ```
 
-- **Install Dependencies:**
+**Install Dependencies:**
+
 This project uses [Hatch](https://hatch.pypa.io/latest/) for Python environment and dependency management.  
 
-All required and optional dependencies are managed via `pyproject.toml`. Hatch environments (python vRun provided makefile target (`make dev`) to create hatch environments and install necessary project dependencies. This step doesn't cover any system-level dependencies and any IDE extensions.
+All required and optional dependencies are managed via `pyproject.toml`. 
 
-### Development Environment 
-Before running any tests, make sure your development environment is set up and all dependencies are installed:
-  ```sh
-make dev
-  ```
+To initialize dev environment (python virtual environments) and install dependencies run following makefile target:
+
+```sh
+  # Configures  Hatch dev Environment 
+  # Initializes Python virtual environments ( 3.10,3.11,3.12)
+  # Installs Dependencies
+  make dev
+```
 
 **To view Hatch Environments:**
+
 This shows which environments are available for development, testing, and other workflows, and how they are configured for your project. 
 ```sh
 hatch show env
@@ -81,6 +87,7 @@ Since `Hatch` is used as dependency management tool output of this command will 
 
 
 **Troubleshooting Hatch Environments:**
+
 If you encounter issues, try cleaning and recreating the environment.
 ```sh
 make env-remove-all
@@ -92,7 +99,11 @@ make dev
 
 ### Running Tests
 
-Running makefile target `make cov` will execute all tests. 
+To execture all spark-expectations tests run following command: 
+
+```bash
+make cov
+```
 
 !!! warning
     Previous command will spin up docker container needed to execute some tests so make sure docker is running.
