@@ -65,7 +65,7 @@ pip3 install --user hatch
 **To view Hatch Environments:**
 This shows which environments are available for development, testing, and other workflows, and how they are configured for your project. 
 ```sh
-hatch env show
+hatch show env
 ```
  
 ### Development Environment 
