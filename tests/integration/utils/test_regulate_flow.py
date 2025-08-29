@@ -38,53 +38,6 @@ def fixture_actions():
     # fixture for actions
     return SparkExpectationsActions()
 
-
-@pytest.fixture(name="_fixture_create_stats_table")
-def fixture_create_stats_table():
-    # drop if exist dq_spark database and create with test_dq_stats_table
-    os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
-    spark.sql("create database if not exists dq_spark")
-    spark.sql("use dq_spark")
-
-    spark.sql("drop table if exists test_dq_stats_table")
-    os.system("rm -rf /tmp/hive/warehouse/dq_spark.db/test_dq_stats_table")
-
-    spark.sql(
-        """
-    create table test_dq_stats_table (
-    product_id STRING,
-    table_name STRING,
-    input_count LONG,
-    error_count LONG,
-    output_count LONG,
-    output_percentage FLOAT,
-    success_percentage FLOAT,
-    error_percentage FLOAT,
-    source_agg_dq_results array<map<string, string>>,
-    final_agg_dq_results array<map<string, string>>,
-    source_query_dq_results array<map<string, string>>,
-    final_query_dq_results array<map<string, string>>,
-    row_dq_res_summary array<map<string, string>>,
-    row_dq_error_threshold array<map<string, string>>,
-    dq_status map<string, string>,
-    dq_run_time map<string, float>,
-    dq_rules map<string, map<string,int>>,
-    meta_dq_run_id STRING,
-    meta_dq_run_date DATE,
-    meta_dq_run_datetime TIMESTAMP,
-    dq_env STRING
-    )
-    USING delta
-    """
-    )
-
-    yield "test_dq_stats_table"
-
-    # drop stats table
-    spark.sql("drop table if exists test_dq_stats_table")
-    os.system("rm -rf /tmp/hive/warehouse/dq_spark.db/test_dq_stats_table")
-
-
 @pytest.mark.parametrize(
     "df, "
     "expectations, "

@@ -12,20 +12,6 @@ from spark_expectations.utils.actions import SparkExpectationsActions
 spark = get_spark_session()
 
 
-@pytest.fixture(name="_fixture_df")
-def fixture_df():
-    # Create a sample input dataframe
-    _fixture_df = spark.createDataFrame(
-        [
-            {"row_id": 0, "col1": 1, "col2": "a"},
-            {"row_id": 1, "col1": 2, "col2": "b"},
-            {"row_id": 2, "col1": 3, "col2": "c"},
-        ]
-    )
-
-    return _fixture_df
-
-
 @pytest.fixture(name="_fixture_mock_context")
 def fixture_mock_context():
     # fixture for mock context
@@ -70,23 +56,6 @@ def fixture_query_dq_rule():
         "expectation_source_f1": "select count(*) from query_test_table",
         "expectation_target_f1": "select count(*) from query_test_table_target",
         "description": "table count should be greater than 1",
-    }
-
-
-@pytest.fixture(name="_fixture_agg_dq_rule")
-def fixture_agg_dq_rule():
-    # Define the expectations for the data quality rules
-    return {
-        "rule_type": "agg_dq",
-        "rule": "col1_sum_gt_eq_6",
-        "column_name": "col1",
-        "expectation": "sum(col1)>=6",
-        "action_if_failed": "ignore",
-        "table_name": "test_table",
-        "tag": "validity",
-        "enable_for_source_dq_validation": True,
-        "description": "col1 sum gt 1",
-        "product_id": "product_1",
     }
 
 
