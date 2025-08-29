@@ -36,27 +36,27 @@ def fixture_mock_context():
     return mock_object
 
 
-@pytest.fixture(name="_fixture_local_kafka_topic",scope="session",autouse=True)
-def fixture_setup_local_kafka_topic():
-    current_dir = os.path.dirname(os.path.abspath(__file__))
+# @pytest.fixture(name="_fixture_local_kafka_topic",scope="session",autouse=True)
+# def fixture_setup_local_kafka_topic():
+#     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    if os.getenv("UNIT_TESTING_ENV") != "spark_expectations_unit_testing_on_github_actions":
-        # remove if docker conatiner is running
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
+#     if os.getenv("UNIT_TESTING_ENV") != "spark_expectations_unit_testing_on_github_actions":
+#         # remove if docker conatiner is running
+#         os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
-        # start docker container and create the topic
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
+#         # start docker container and create the topic
+#         os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
 
-        yield "docker container started"
+#         yield "docker container started"
 
-        # remove docker container
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
+#         # remove docker container
+#         os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
-    else:
-        yield (
-            "A Kafka server has been launched within a Docker container for the purpose of conducting tests "
-            "in a Jenkins environment"
-        )
+#     else:
+#         yield (
+#             "A Kafka server has been launched within a Docker container for the purpose of conducting tests "
+#             "in a Jenkins environment"
+#         )
 
 
 @pytest.fixture(name="_fixture_employee")
@@ -268,6 +268,7 @@ def fixture_expected_dq_dataset():
         ),
     ],
 )
+@pytest.mark.xdist_group(name="xdist_test_writer")
 def test_save_df_as_table(
     table_name,
     options,
@@ -299,6 +300,7 @@ def test_save_df_as_table(
 
 
 @patch("pyspark.sql.DataFrameWriter.save", autospec=True, spec_set=True)
+@pytest.mark.xdist_group(name="test_writer")
 def test_save_df_to_table_bq(save, _fixture_writer, _fixture_employee, _fixture_create_employee_table):
     _fixture_writer.save_df_as_table(
         _fixture_employee,
@@ -339,6 +341,7 @@ def test_save_df_to_table_bq(save, _fixture_writer, _fixture_employee, _fixture_
     autospec=True,
     spec_set=True,
 )
+@pytest.mark.xdist_group(name="test_writer")
 def test_write_df_to_table(
     save_df_as_table,
     table_name,
@@ -1952,6 +1955,7 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
         ),
     ],
 )
+@pytest.mark.xdist_group(name="test_writer")
 def test_write_error_stats(
     input_record,
     expected_result,
@@ -3157,6 +3161,7 @@ def test_write_error_stats(
         ),
     ],
 )
+@pytest.mark.xdist_group(name="test_writer")
 def test_write_detailed_stats(
     input_record,
     expected_result,
@@ -3333,6 +3338,7 @@ def test_write_detailed_stats(
         assert row.target_dq_row_count == expected_result.get("target_dq_row_count")
 
 
+@pytest.mark.xdist_group(name="test_writer")
 def test_write_detailed_stats_exception() -> None:
     """
     This functions writes the detailed stats for all rule type into the detailed stats table
@@ -3811,6 +3817,7 @@ def test_generate_summarized_row_dq_res_exception(test_data, _fixture_writer):
         _fixture_writer.generate_summarized_row_dq_res(test_df, "row_dq")
 
 
+@pytest.mark.xdist_group(name="test_writer")
 def test_save_df_as_table_exception(_fixture_employee, _fixture_writer):
     with pytest.raises(
         SparkExpectationsUserInputOrConfigInvalidException,

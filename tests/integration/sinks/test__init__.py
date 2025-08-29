@@ -23,27 +23,27 @@ def fixture_create_database():
     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db/test_dq_stats_table")
 
 
-@pytest.fixture(name="_fixture_local_kafka_topic",scope="session",autouse=True)
-def fixture_setup_local_kafka_topic():
-    current_dir = os.path.dirname(os.path.abspath(__file__))
+# @pytest.fixture(name="_fixture_local_kafka_topic",scope="session",autouse=True)
+# def fixture_setup_local_kafka_topic():
+#     current_dir = os.path.dirname(os.path.abspath(__file__))
 
-    if os.getenv("UNIT_TESTING_ENV") != "spark_expectations_unit_testing_on_github_actions":
-        # remove if docker container is running
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
+#     if os.getenv("UNIT_TESTING_ENV") != "spark_expectations_unit_testing_on_github_actions":
+#         # remove if docker container is running
+#         os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
-        # start docker container and create the topic
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
+#         # start docker container and create the topic
+#         os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
 
-        yield "docker container started"
+#         yield "docker container started"
 
-        # remove docker container
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
+#         # remove docker container
+#         os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
 
-    else:
-        yield (
-            "A Kafka server has been launched within a Docker container for the purpose of conducting tests "
-            "in a Jenkins environment"
-        )
+#     else:
+#         yield (
+#             "A Kafka server has been launched within a Docker container for the purpose of conducting tests "
+#             "in a Jenkins environment"
+#         )
 
 
 @pytest.fixture(name="_fixture_dataset")
