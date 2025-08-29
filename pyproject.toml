@@ -99,7 +99,7 @@ setup-hooks = [
   "pre-commit install --install-hooks"
 ]
 coverage-failfast = [
-  "coverage run --source=spark_expectations --omit 'spark_expectations/examples/*' -m pytest -v -x -n 2 --durations=20",
+  "coverage run --source=spark_expectations --omit 'spark_expectations/examples/*' -m pytest -v -x -n 0 --durations=20",
   "coverage report -m",
   "coverage xml"
 ]
