@@ -74,21 +74,6 @@ def fixture_rules_df():
 
 @pytest.fixture(name="_fixture_create_database")
 def fixture_create_database():
-    # try: 
-    #     # drop and create dq_spark if exists
-    #     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
-    #     spark.sql("create database if not exists dq_spark")
-    #     spark.sql("use dq_spark")
-
-    #     yield "dq_spark"
-
-    #     # drop dq_spark if exists
-    #     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
-    # except Exception as e:
-    #     print(f"EXCEPTION: {e} ")
-    #     raise e
-
- 
     # drop and create dq_spark if exists
     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
     spark.sql("create database if not exists dq_spark")
@@ -98,8 +83,6 @@ def fixture_create_database():
 
     # drop dq_spark if exists
     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
-
-
 
 
 @pytest.fixture(name="_fixture_context")

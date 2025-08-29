@@ -196,7 +196,6 @@ def fixture_expected_dq_dataset():
         ),
     ],
 )
-@pytest.mark.xdist_group(name="xdist_test_writer")
 def test_save_df_as_table(
     table_name,
     options,
