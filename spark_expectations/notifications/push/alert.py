@@ -1,6 +1,6 @@
 import traceback
 from dataclasses import dataclass
-from jinja2 import Environment, FileSystemLoader, BaseLoader
+from jinja2 import Environment, PackageLoader, BaseLoader
 from pyspark.sql import Row
 from spark_expectations import _log
 from spark_expectations.notifications import SparkExpectationsEmailPluginImpl
@@ -95,12 +95,12 @@ class SparkExpectationsAlert:
             mail_subject = self._context.get_mail_subject
             mail_receivers_list = self._context.get_to_mail
             if not self._context.get_detailed_default_template:
-                template_dir = "../../spark_expectations/config/templates"
-                env_loader = Environment(loader=FileSystemLoader(template_dir))
+                template_dir = "config/templates"
+                env_loader = Environment(loader=PackageLoader("spark_expectations", template_dir))
                 template = env_loader.get_template("advanced_email_alert_template.jinja")
             else:
-                template_dir = self._context.get_detailed_default_template
-                template = Environment(loader=BaseLoader).from_string(template_dir)
+                template_string = self._context.get_detailed_default_template
+                template = Environment(loader=BaseLoader).from_string(template_string)
 
             header_columns, header_data, _ = self.get_report_data("header")
             (
