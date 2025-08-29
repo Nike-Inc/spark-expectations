@@ -113,4 +113,4 @@ test: kafka-cluster-start
 test-arg:
 	@hatch -e $(DEFAULT_HATCH_ENV) run pytest -ra -vv $(TEST)
 
-.PHONY: black-check build check cov coverage deploy-docs deploy_env_setup dev env-remove-all env-remove-default fmt generate-mailserver-certs get-version kafka-cluster-start kafka-cluster-stop local-kafka-cluster-start local-se-server-start local-se-server-stop mypy python-versions set-git-remote test test-arg
+.PHONY: black-check build check cov coverage deploy-docs deploy_env_setup dev docs env-remove-all env-remove-default fmt generate-mailserver-certs get-version kafka-cluster-start kafka-cluster-stop local-kafka-cluster-start local-se-server-start local-se-server-stop mypy python-versions set-git-remote test test-arg
