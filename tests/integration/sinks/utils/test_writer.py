@@ -35,30 +35,6 @@ def fixture_mock_context():
 
     return mock_object
 
-
-# @pytest.fixture(name="_fixture_local_kafka_topic",scope="session",autouse=True)
-# def fixture_setup_local_kafka_topic():
-#     current_dir = os.path.dirname(os.path.abspath(__file__))
-
-#     if os.getenv("UNIT_TESTING_ENV") != "spark_expectations_unit_testing_on_github_actions":
-#         # remove if docker conatiner is running
-#         os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
-
-#         # start docker container and create the topic
-#         os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
-
-#         yield "docker container started"
-
-#         # remove docker container
-#         os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
-
-#     else:
-#         yield (
-#             "A Kafka server has been launched within a Docker container for the purpose of conducting tests "
-#             "in a Jenkins environment"
-#         )
-
-
 @pytest.fixture(name="_fixture_employee")
 def fixture_employee_df():
     return (
@@ -139,54 +115,6 @@ def fixture_create_employee_table():
 
     spark.sql("drop table if exists employee_table")
     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db/employee_table")
-
-
-@pytest.fixture(name="_fixture_create_stats_table")
-def fixture_create_stats_table():
-    # drop if exist dq_spark database and create with test_dq_stats_table
-    os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
-    spark.sql("DROP DATABASE IF EXISTS dq_spark CASCADE")
-    spark.sql("create database if not exists dq_spark")
-    spark.sql("use dq_spark")
-
-    spark.sql("drop table if exists test_dq_stats_table")
-    os.system("rm -rf /tmp/hive/warehouse/dq_spark.db/test_dq_stats_table")
-    spark.sql(
-        """
-    create table test_dq_stats_table (
-    product_id STRING,
-    table_name STRING,
-    input_count LONG,
-    error_count LONG,
-    output_count LONG,
-    output_percentage FLOAT,
-    success_percentage FLOAT,
-    error_percentage FLOAT,
-    source_agg_dq_results array<map<string, string>>,
-    final_agg_dq_results array<map<string, string>>,
-    source_query_dq_results array<map<string, string>>,
-    final_query_dq_results array<map<string, string>>,
-    row_dq_res_summary array<map<string, string>>,
-    row_dq_error_threshold array<map<string, string>>,
-    dq_status map<string, string>,
-    dq_run_time map<string, float>,
-    dq_rules map<string, map<string,int>>,
-    meta_dq_run_id STRING,
-    meta_dq_run_date DATE,
-    meta_dq_run_datetime TIMESTAMP,
-    dq_env STRING
-    )
-    USING delta
-    """
-    )
-
-    yield "test_dq_stats_table"
-
-    spark.sql("drop table if exists test_dq_stats_table")
-    os.system("rm -rf /tmp/hive/warehouse/dq_spark.db/test_dq_stats_table")
-
-    # remove database
-    os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
 
 
 @pytest.fixture(name="_fixture_dq_dataset")
@@ -300,7 +228,6 @@ def test_save_df_as_table(
 
 
 @patch("pyspark.sql.DataFrameWriter.save", autospec=True, spec_set=True)
-@pytest.mark.xdist_group(name="test_writer")
 def test_save_df_to_table_bq(save, _fixture_writer, _fixture_employee, _fixture_create_employee_table):
     _fixture_writer.save_df_as_table(
         _fixture_employee,
@@ -341,7 +268,6 @@ def test_save_df_to_table_bq(save, _fixture_writer, _fixture_employee, _fixture_
     autospec=True,
     spec_set=True,
 )
-@pytest.mark.xdist_group(name="test_writer")
 def test_write_df_to_table(
     save_df_as_table,
     table_name,
@@ -1955,7 +1881,6 @@ def test_get_row_dq_detailed_stats_exception(input_record, _fixture_writer):
         ),
     ],
 )
-@pytest.mark.xdist_group(name="test_writer")
 def test_write_error_stats(
     input_record,
     expected_result,
@@ -3161,7 +3086,6 @@ def test_write_error_stats(
         ),
     ],
 )
-@pytest.mark.xdist_group(name="test_writer")
 def test_write_detailed_stats(
     input_record,
     expected_result,
@@ -3338,7 +3262,6 @@ def test_write_detailed_stats(
         assert row.target_dq_row_count == expected_result.get("target_dq_row_count")
 
 
-@pytest.mark.xdist_group(name="test_writer")
 def test_write_detailed_stats_exception() -> None:
     """
     This functions writes the detailed stats for all rule type into the detailed stats table
@@ -3817,7 +3740,6 @@ def test_generate_summarized_row_dq_res_exception(test_data, _fixture_writer):
         _fixture_writer.generate_summarized_row_dq_res(test_df, "row_dq")
 
 
-@pytest.mark.xdist_group(name="test_writer")
 def test_save_df_as_table_exception(_fixture_employee, _fixture_writer):
     with pytest.raises(
         SparkExpectationsUserInputOrConfigInvalidException,

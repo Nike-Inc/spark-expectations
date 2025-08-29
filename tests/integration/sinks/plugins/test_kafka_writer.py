@@ -8,29 +8,6 @@ from spark_expectations.sinks.plugins.kafka_writer import SparkExpectationsKafka
 spark = get_spark_session()
 
 
-# @pytest.fixture(name="_fixture_local_kafka_topic",scope="session",autouse=True)
-# def fixture_setup_local_kafka_topic():
-#     current_dir = os.path.dirname(os.path.abspath(__file__))
-
-#     if os.getenv("UNIT_TESTING_ENV") != "spark_expectations_unit_testing_on_github_actions":
-#         # remove if docker conatiner is running
-#         os.system(f"sh {current_dir}/../../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
-
-#         # start docker container and create the topic
-#         os.system(f"sh {current_dir}/../../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
-
-#         yield "docker container started"
-
-#         # remove docker container
-#         os.system(f"sh {current_dir}/../../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
-
-#     else:
-#         yield (
-#             "A Kafka server has been launched within a Docker container for the purpose of conducting tests in "
-#             "a Jenkins environment"
-#         )
-
-
 @pytest.fixture(name="_fixture_dataset")
 def fixture_dataset():
     # Create a mock dataframe
