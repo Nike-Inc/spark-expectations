@@ -61,24 +61,38 @@ def test_load_configurations_valid_file():
     assert notification_dict["spark.expectations.notifications.email.from"] == ""
     assert streaming_dict["se.streaming.enable"] is True
 
-@patch("builtins.open", new_callable=mock.mock_open, read_data="key:[value, another")
-@patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__)+"/../../../")
-def test_load_configurations_invalid_file(mock_file):
+@patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__) + "/../../../")
+def test_load_configurations_invalid_file():
+    """Test that load_configurations raises RuntimeError for invalid YAML content."""
     spark = SparkSession.builder.getOrCreate()
+    
+    # Test with malformed YAML - unclosed bracket
+    invalid_yaml_content = "key:[value, another"
+    
+    with patch("builtins.open", mock_open(read_data=invalid_yaml_content)):
+        with pytest.raises(RuntimeError) as exception_info:
+            load_configurations(spark)
+        
+        # Verify the error message contains expected text
+        assert "Error parsing Spark config YAML configuration file" in str(exception_info.value)
 
-    # Expect a RuntimeError due to invalid YAML format
-    with pytest.raises(RuntimeError) as exception_info:
+@patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__) + "/../../../")
+def test_load_configurations_empty_file():
+    """Test that load_configurations handles empty files correctly."""
+    spark = SparkSession.builder.getOrCreate()
+    
+    # Clear any existing configurations that might interfere
+    try:
+        spark.conf.unset("default_streaming_dict")
+        spark.conf.unset("default_notification_dict")
+    except Exception:
+        # Ignore if configs don't exist
+        pass
+
+    # Mock the open function to return empty data
+    with patch("builtins.open", mock_open(read_data="")):
         load_configurations(spark)
 
-    # Check that the error message is as expected
-    assert "Error parsing Spark config YAML configuration file" in str(exception_info.value)
-
-@patch("builtins.open", new_callable=mock.mock_open, read_data="")
-@patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__)+"/../../../")
-def test_load_configurations_empty_file(mock_file):
-    spark = SparkSession.builder.getOrCreate()
-    load_configurations(spark)
-
-    # Check that the default values are set correctly
-    assert spark.conf.get("default_streaming_dict") == "{}"
-    assert spark.conf.get("default_notification_dict") == "{}"
+        # Check that the default values are set correctly
+        assert spark.conf.get("default_streaming_dict") == "{}"
+        assert spark.conf.get("default_notification_dict") == "{}"
