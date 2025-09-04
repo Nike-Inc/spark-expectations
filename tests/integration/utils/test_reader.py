@@ -59,6 +59,7 @@ def fixture_product_rules_schema():
             StructField("error_drop_threshold", IntegerType(), False),
             StructField("query_dq_delimiter", StringType(), True),
             StructField("enable_querydq_custom_output", BooleanType(), True),
+            StructField("priority", StringType(), False),
         ]
     )
 
@@ -411,6 +412,7 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                         "description": "description1",
                         "enable_error_drop_alert": True,
                         "error_drop_threshold": 10,
+                        "priority": "medium",
                     },
                     {
                         "product_id": "product1",
@@ -426,6 +428,7 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                         "description": "description2",
                         "enable_error_drop_alert": False,
                         "error_drop_threshold": 0,
+                        "priority": "medium",
                     },
                     {
                         "action_if_failed": "ignore",
@@ -441,6 +444,7 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                         "rule_type": "row_dq",
                         "table_name": "table1",
                         "tag": "tag3",
+                        "priority": "medium",
                     },
                 ],
                 "agg_dq_rules": [
@@ -458,6 +462,7 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                         "description": "description6",
                         "enable_error_drop_alert": False,
                         "error_drop_threshold": 0,
+                        "priority": "medium",
                     },
                     {
                         "action_if_failed": "ignore",
@@ -473,6 +478,7 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                         "rule_type": "agg_dq",
                         "table_name": "table1",
                         "tag": "tag10",
+                        "priority": "medium",
                     },
                 ],
                 "query_dq_rules": [
@@ -492,6 +498,7 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                         "enable_querydq_custom_output": True,
                         "expectation_source_f1": "expectation13a",
                         "error_drop_threshold": 0,
+                        "priority": "medium",
                     },
                     {
                         "product_id": "product1",
@@ -509,6 +516,7 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                         "enable_querydq_custom_output": False,
                         "expectation_source_f1": "expectation13a",
                         "error_drop_threshold": 0,
+                        "priority": "medium",
                     },
                     {
                         "product_id": "product1",
@@ -526,6 +534,7 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                         "enable_querydq_custom_output": False,
                         "expectation_source_f1": "expectation13a",
                         "error_drop_threshold": 0,
+                        "priority": "medium",
                     },
                     {
                         "product_id": "product1",
@@ -543,6 +552,7 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                         "enable_querydq_custom_output": False,
                         "expectation_source_f1": "expectation13a",
                         "error_drop_threshold": 0,
+                        "priority": "medium",
                     },
                 ],
             },

@@ -34,6 +34,7 @@ create table if not exists `catalog`.`schema`.`{product}_rules` (
     error_drop_threshold INT,  -- (14)!
     query_dq_delimiter STRING,  -- (15)!
     enable_querydq_custom_output BOOLEAN,  -- (16)!
+    priority STRING DEFAULT "medium", -- (17)!
 );
 ```
 
@@ -56,6 +57,7 @@ create table if not exists `catalog`.`schema`.`{product}_rules` (
 14. `error_drop_threshold` Threshold for the alert notification that gets triggered when row(s) is(are) dropped from the data set
 15. `query_dq_delimiter` segregate custom queries delimiter ex: $, @ etc. By default it is @. Users can override it with any other delimiter based on the need. The same delimiter mentioned here has to be used in the custom query.
 16. `enable_querydq_custom_output` required custom query output in separate table
+17. `priority` Priority level for the rule. Supported values are: 'low', 'medium' and 'high'.
 
 
 The Spark Expectation process consists of three phases:
@@ -121,6 +123,7 @@ rules_data = [
         "is_active": True,
         "enable_error_drop_alert": False,
         "error_drop_threshold": 0,
+        "priority": "medium",
     }
 ]
 

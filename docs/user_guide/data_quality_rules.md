@@ -35,6 +35,7 @@ create table if not exists `catalog`.`schema`.`{product}_rules` (
     error_drop_threshold INT,  -- (14)!
     query_dq_delimiter STRING,  -- (15)!
     enable_querydq_custom_output BOOLEAN,  -- (16)!
+    priority STRING DEFAULT "medium", -- (17)!
 );
 ```
 
@@ -57,6 +58,7 @@ create table if not exists `catalog`.`schema`.`{product}_rules` (
 14. `error_drop_threshold` Threshold for the alert notification that gets triggered when row(s) is(are) dropped from the data set
 15. `query_dq_delimiter` segregate custom queries delimiter ex: $, @ etc. By default it is @. Users can override it with any other delimiter based on the need. The same delimiter mentioned here has to be used in the custom query.
 16. `enable_querydq_custom_output` required custom query output in separate table
+17. `priority` Priority level for the rule. Supported values are: 'low', 'medium' and 'high'.
 
 
 The Spark Expectation process consists of three phases:
@@ -80,7 +82,7 @@ Please run the below command to add constraints to the above created rules table
 ALTER TABLE apla_nd_dq_rules ADD CONSTRAINT action CHECK 
 ((rule_type = 'row_dq' and action_if_failed IN ('ignore', 'drop', 'fail')) or 
 (rule_type = 'agg_dq' and action_if_failed in ('ignore', 'fail')) or 
-(rule_type = 'query_dq' and action_if_failed in ('ignore', 'fail')));
+(rule_type = 'query_dq' and action_if_failed in ('ignore', 'fail'))) and priority IN ('low', 'medium', 'high');
 ```
 
 
@@ -168,17 +170,17 @@ Checks conditions using full SQL queries, typically for more complex or cross-ta
 
 - **Row DQ**: 
 ```sql
-INSERT INTO `catalog`.`schema`.`{product}_rules` VALUES ('your_product', 'your_table', 'row_dq', 'check_nulls', 'column_name', 'is not null', 'drop', 'completeness', 'Check for null values in column_name', true, true, true, false, 0);
+INSERT INTO `catalog`.`schema`.`{product}_rules` VALUES ('your_product', 'your_table', 'row_dq', 'check_nulls', 'column_name', 'is not null', 'drop', 'completeness', 'Check for null values in column_name', true, true, true, false, 0, "medium");
 ```
 
 - **Aggregation DQ**: 
 ```sql
-INSERT INTO `catalog`.`schema`.`{product}_rules` VALUES ('your_product', 'your_table', 'agg_dq', 'check_row_count', '', 'COUNT(*) > 0', 'fail', 'completeness', 'Ensure the table has at least one row', true, true, true, false, 0);
+INSERT INTO `catalog`.`schema`.`{product}_rules` VALUES ('your_product', 'your_table', 'agg_dq', 'check_row_count', '', 'COUNT(*) > 0', 'fail', 'completeness', 'Ensure the table has at least one row', true, true, true, false, 0, "medium");
 ```
 
 - **Query DQ**:
 ```sql
-INSERT INTO `catalog`.`schema`.`{product}_rules` VALUES ('your_product', 'your_table', 'query_dq', 'check_custom_query', '', 'SELECT COUNT(*) FROM your_table WHERE column_name IS NULL', 'ignore', 'validity', 'Custom query to check for null values in column_name', false, true, true, false, 0);
+INSERT INTO `catalog`.`schema`.`{product}_rules` VALUES ('your_product', 'your_table', 'query_dq', 'check_custom_query', '', 'SELECT COUNT(*) FROM your_table WHERE column_name IS NULL', 'ignore', 'validity', 'Custom query to check for null values in column_name', false, true, true, false, 0, "medium");
 ```
 
 
