@@ -104,6 +104,7 @@ def fixture_rules_df():
         "is_active": True,
         "enable_error_drop_alert": True,
         "error_drop_threshold": "10",
+        "priority": "medium",
     }
     return spark.createDataFrame([rules_dict])
 
@@ -302,6 +303,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "10",
+                    "priority": "medium",
                 }
             ],
             True,  # write to table
@@ -375,6 +377,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "5",
+                    "priority": "medium",
                 }
             ],
             True,  # write to table
@@ -450,6 +453,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "15",
+                    "priority": "medium",
                 }
             ],
             True,  # write to table
@@ -515,6 +519,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "10",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -531,6 +536,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "15",
+                    "priority": "medium",
                 },
             ],
             True,  # write to table
@@ -603,6 +609,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -619,6 +626,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "5",
+                    "priority": "medium",
                 },
             ],
             True,  # write to table
@@ -692,6 +700,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "25",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -708,6 +717,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "25",
+                    "priority": "medium",
                 },
             ],
             True,  # write to table
@@ -773,6 +783,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "10",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -789,6 +800,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "10",
+                    "priority": "medium",
                 },
             ],
             True,  # write to table
@@ -865,6 +877,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "0",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -881,6 +894,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "10",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -897,6 +911,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
             ],
             True,  # write to table
@@ -962,6 +977,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "10",
+                    "priority": "medium",
                 }
             ],
             True,  # write to table
@@ -1040,6 +1056,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 }
             ],
             True,  # write to table
@@ -1112,6 +1129,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -1128,6 +1146,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "0",
+                    "priority": "medium",
                 },
             ],
             True,  # write to table
@@ -1210,6 +1229,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -1226,6 +1246,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "15",
+                    "priority": "medium",
                 },
             ],
             True,  # write to table
@@ -1303,6 +1324,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "0",
+                    "priority": "medium",
                 }
             ],
             True,  # write to table
@@ -1371,6 +1393,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "10",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -1387,6 +1410,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "10",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -1403,6 +1427,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
             ],
             True,  # write to table
@@ -1486,6 +1511,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -1502,6 +1528,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "2",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -1518,6 +1545,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
             ],
             True,  # write to table
@@ -1613,6 +1641,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "25",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -1629,6 +1658,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "30",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -1645,6 +1675,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -1661,6 +1692,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
             ],
             True,  # write to table
@@ -1773,6 +1805,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -1789,6 +1822,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
             ],
             False,  # write to table
@@ -1877,6 +1911,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -1893,6 +1928,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -1909,6 +1945,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
             ],
             True,  # write to table
@@ -2001,6 +2038,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -2017,6 +2055,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
             ],
             False,  # write to table
@@ -2103,6 +2142,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "25",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -2119,6 +2159,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -2135,6 +2176,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
             ],
             True,  # write to table
@@ -2225,6 +2267,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": True,
                     "error_drop_threshold": "40",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -2241,6 +2284,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -2257,6 +2301,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -2273,6 +2318,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
             ],
             True,  # write to table
@@ -2379,6 +2425,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "10",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -2395,6 +2442,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -2411,6 +2459,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -2427,6 +2476,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
             ],
             True,  # write to table
@@ -2528,6 +2578,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -2544,6 +2595,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "100",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -2560,6 +2612,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -2577,6 +2630,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
             ],
             True,  # write to table
@@ -2692,6 +2746,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
                 {
                     "product_id": "product1",
@@ -2708,6 +2763,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 },
             ],
             False,  # write to table
@@ -2792,6 +2848,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 }
             ],
             True,  # write to table
@@ -2865,6 +2922,7 @@ def test_spark_session_initialization():
                     "is_active": True,
                     "enable_error_drop_alert": False,
                     "error_drop_threshold": "20",
+                    "priority": "medium",
                 }
             ],
             True,  # write to table
@@ -3129,6 +3187,7 @@ def test_with_expectations_exception(_fixture_create_database, _fixture_spark_ex
             "is_active": True,
             "enable_error_drop_alert": True,
             "error_drop_threshold": "10",
+            "priority": "medium",
         }
     ]
 
@@ -3183,6 +3242,7 @@ def test_with_expectations_negative_parameter(
             "is_active": True,
             "enable_error_drop_alert": False,
             "error_drop_threshold": "20",
+            "priority": "medium",
         }
     ]
 
@@ -3251,6 +3311,7 @@ def test_error_threshold_breach(
             "is_active": True,
             "enable_error_drop_alert": True,
             "error_drop_threshold": "25",
+            "priority": "medium",
         },
         {
             "product_id": "product1",
@@ -3267,6 +3328,7 @@ def test_error_threshold_breach(
             "is_active": True,
             "enable_error_drop_alert": True,
             "error_drop_threshold": "10",
+            "priority": "medium",
         },
     ]
 
@@ -3342,6 +3404,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
             "is_active": True,
             "enable_error_drop_alert": True,
             "error_drop_threshold": "20",
+            "priority": "medium",
         },
         {
             "product_id": "product1",
@@ -3358,6 +3421,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
             "is_active": True,
             "enable_error_drop_alert": True,
             "error_drop_threshold": "20",
+            "priority": "medium",
         },
         {
             "product_id": "product1",
@@ -3374,6 +3438,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
             "is_active": True,
             "enable_error_drop_alert": True,
             "error_drop_threshold": "25",
+            "priority": "medium",
         },
         {
             "product_id": "product1",
@@ -3390,6 +3455,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
             "is_active": True,
             "enable_error_drop_alert": True,
             "error_drop_threshold": "10",
+            "priority": "medium",
         },
     ]
     rules_df = spark.createDataFrame(rules)
@@ -3507,6 +3573,7 @@ def test_target_table_view_exception(_fixture_create_database, _fixture_local_ka
             "is_active": True,
             "enable_error_drop_alert": True,
             "error_drop_threshold": "10",
+            "priority": "medium",
         },
         {
             "product_id": "product1",
@@ -3523,6 +3590,7 @@ def test_target_table_view_exception(_fixture_create_database, _fixture_local_ka
             "is_active": True,
             "enable_error_drop_alert": True,
             "error_drop_threshold": "10",
+            "priority": "medium",
         },
     ]
 
@@ -3718,10 +3786,10 @@ def test_agg_rule_for_non_int_column():
     spark = set_up_delta()
 
     RULES_DATA = """
-        ("my_product", "dq_spark_dev.d", "agg_dq", "r1", "dt", "min(dt) < current_date()", "fail", "accuracy", "rn1", true, false, true, false, 0, null, null),
-        ("my_product", "dq_spark_dev.d", "agg_dq", "r2", "dt", "max(dt) >= current_date()", "fail", "accuracy", "rn2", true, false, true, false, 0, null, null),
-        ("my_product", "dq_spark_dev.d", "agg_dq", "r3", "dt", "min(str) < 'B'", "fail", "accuracy", "rn3", true, false, true, false, 0, null, null),
-        ("my_product", "dq_spark_dev.d", "agg_dq", "r4", "dt", "max(str) > 'B'", "fail", "accuracy", "rn4", true, false, true, false, 0, null, null)
+        ("my_product", "dq_spark_dev.d", "agg_dq", "r1", "dt", "min(dt) < current_date()", "fail", "accuracy", "rn1", true, false, true, false, 0, null, null,"medium"),
+        ("my_product", "dq_spark_dev.d", "agg_dq", "r2", "dt", "max(dt) >= current_date()", "fail", "accuracy", "rn2", true, false, true, false, 0, null, null, "medium"),
+        ("my_product", "dq_spark_dev.d", "agg_dq", "r3", "dt", "min(str) < 'B'", "fail", "accuracy", "rn3", true, false, true, false, 0, null, null, "medium"),
+        ("my_product", "dq_spark_dev.d", "agg_dq", "r4", "dt", "max(str) > 'B'", "fail", "accuracy", "rn4", true, false, true, false, 0, null, null, "medium")
         """
 
     spark.sql("create database if not exists dq_spark_dev")
