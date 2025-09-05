@@ -70,7 +70,6 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
-        architecture: [x86_64, arm64]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4 # use latest version of the checkout action

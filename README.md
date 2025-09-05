@@ -62,13 +62,25 @@ Please find the spark-expectations flow and feature diagrams below
 <p align="center">
 <img src=https://github.com/Nike-Inc/spark-expectations/blob/main/docs/se_diagrams/features.png?raw=true width=1000></p>
 
+## Data Quality Rule Types
+
+Spark-Expectations supports three distinct types of data quality rules:
+
+- **Row-Level Data Quality (`row_dq`)**: Checks conditions on individual rows, such as `col1 > 10` or `col2 is not null`.
+- **Aggregate Data Quality (`agg_dq`)**: Checks conditions on aggregated values, such as `sum(col3) > 20` or `avg(col1) < 25`.
+- **Query-Based Data Quality (`query_dq`)**: Checks conditions using full SQL queries, such as `(select sum(col1) from test_table) > 10`.
+
+Each rule type has its own expectation format and validation logic.
+
+👉 **For detailed documentation and examples, see the [Data Quality Rule Types section](docs/index.md#spark-expectations-data-quality-rule-types).**
+
 ## Spark Expectation Observability Feature
 
 This feature enhances data observability by leveraging the *stats detailed table* and *custom query table* to generate a *report table* with key metrics.  
 
 ### Workflow:
 1. *Automatic Trigger: The observability feature is initiated upon the completion of **Spark Expectation*, based on configurable user-defined settings.  
-2. Extracts relevant data from the *stats detailed table* and *custom query table, processes it, and creates a **report table* with key insights.  
+2. Extracts relevant data from the *stats detailed table* and *custom query table*, processes it, and creates a *report table* with key insights.  
 3. Compiles and summarizes essential observability metrics.  
 4. Delivers an *alert notification* via email using a *Jinja template*.  
 
@@ -123,7 +135,10 @@ se_user_conf = {
     #user_config.enable_agg_dq_detailed_result: True,
     #Below two params are optional and need to be enabled to pass the custom email body
     #user_config.se_notifications_enable_custom_email_body: True,
-    #user_config.se_notifications_email_custom_body: "Custom statistics: 'product_id': {}",
+    #user_config.se_notifications_email_custom_body: "'product_id': {}",
+    #Below two parameters are optional and are for enabling html templates for the custom email body
+    #user_config.se_notifications_enable_templated_custom_email: True,
+    #user_config.se_notifications_email_custom_template: "",
     #Below parameter is optional and needs to be enabled in case authorization is required to access smtp server.
     #user_config.se_notifications_email_smtp_auth: True,
     #Below parameter is optional and used to specify environment value.

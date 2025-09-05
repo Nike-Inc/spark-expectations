@@ -1,0 +1,8 @@
+FROM axllent/mailpit:latest
+
+COPY containers/certs/mailpit.crt /certs/mailpit.crt
+COPY containers/certs/mailpit.key /certs/mailpit.key
+
+EXPOSE 1025 8025
+
+CMD ["--smtp", "0.0.0.0:1025", "--smtp-tls-cert", "/certs/mailpit.crt", "--smtp-tls-key", "/certs/mailpit.key", "--smtp-auth-accept-any"]

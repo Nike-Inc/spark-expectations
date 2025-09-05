@@ -44,8 +44,23 @@ theme:
 
 
 nav:
-  - Home: 'index.md'
-  - Setup: getting-started/setup.md
+  - Home:
+      - Overview: index.md
+      - Why Spark-Expectations: home/why_spark_expectations.md
+  - User Guide:
+      - Overview:
+          - Getting Started: user_guide/getting_started.md
+          - Quickstart: user_guide/quickstart.md
+      - Reference:
+          - Data Quality Rules: user_guide/data_quality_rules.md
+          - Data Quality Metrics: user_guide/data_quality_metrics.md
+          - User Config: user_guide/user_config.md
+          - Notifications:
+              - Email: user_guide/notifications/email_notifications.md
+              - Slack: user_guide/notifications/slack_notifications.md
+  - Developer Guide:
+      - Contributing: developer_guide/contributing.md
+      - Setup: developer_guide/setup.md
   - Examples:
       - Understand Args: examples.md
       - Delta: delta.md

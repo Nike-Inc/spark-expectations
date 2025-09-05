@@ -54,3 +54,27 @@ class SparkExpectationsErrorThresholdExceedsException(Exception):
     """
     Throw this exception when error percentage exceeds certain configured value
     """
+
+
+class SparkExpectationsInvalidRuleTypeException(Exception):
+    """
+    Throw this exception when an invalid rule type is encountered
+    """
+
+
+class SparkExpectationsInvalidRowDQExpectationException(Exception):
+    """
+    Throw this exception when an invalid row_dq expectation is encountered
+    """
+
+
+class SparkExpectationsInvalidQueryDQExpectationException(Exception):
+    """
+    Throw this exception when an invalid query_dq expectation is encountered
+    """
+
+
+class SparkExpectationsInvalidAggDQExpectationException(Exception):
+    """
+    Throw this exception when an invalid agg_dq expectation is encountered
+    """
