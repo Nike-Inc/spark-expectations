@@ -3786,7 +3786,7 @@ def test_agg_rule_for_non_int_column():
     spark = set_up_delta()
 
     RULES_DATA = """
-        ("my_product", "dq_spark_dev.d", "agg_dq", "r1", "dt", "min(dt) < current_date()", "fail", "accuracy", "rn1", true, false, true, false, 0, null, null,"medium"),
+        ("my_product", "dq_spark_dev.d", "agg_dq", "r1", "dt", "min(dt) < current_date()", "fail", "accuracy", "rn1", true, false, true, false, 0, null, null, "medium"),
         ("my_product", "dq_spark_dev.d", "agg_dq", "r2", "dt", "max(dt) >= current_date()", "fail", "accuracy", "rn2", true, false, true, false, 0, null, null, "medium"),
         ("my_product", "dq_spark_dev.d", "agg_dq", "r3", "dt", "min(str) < 'B'", "fail", "accuracy", "rn3", true, false, true, false, 0, null, null, "medium"),
         ("my_product", "dq_spark_dev.d", "agg_dq", "r4", "dt", "max(str) > 'B'", "fail", "accuracy", "rn4", true, false, true, false, 0, null, null, "medium")

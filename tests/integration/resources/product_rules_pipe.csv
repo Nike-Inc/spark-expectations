@@ -13,6 +13,6 @@ product1|table2|agg_dq|rule11|column8|expectation11|ignore|tag11|description11|t
 product1|table1|query_dq|rule13|column10|expectation13{source_f1}@source_f1@expectation13a|fail|tag13|description13|true|false|true|false|0|null|true|medium
 product1|table1|query_dq|rule13|column10|expectation13{source_f1}@source_f1@expectation13a|fail|tag13|description13|true|false|true|false|0|@|false|medium
 product1|table1|query_dq|rule13|column10|expectation13{source_f1}@source_f1@expectation13a|fail|tag13|description13|true|false|true|false|0|@|null|medium
-product1|table1|query_dq|rule13|column10|expectation13{source_f1}@source_f1@expectation13a|fail|tag13|description13|true|false|true|false|0|@|fal|medium
+product1|table1|query_dq|rule13|column10|expectation13{source_f1}@source_f1@expectation13a|fail|tag13|description13|true|false|true|false|0|@|false|medium
 product1|table2|query_dq|rule14|column11|expectation14|fail|tag14|description14|false|false|true|false|0|null|null|medium
 product1|table2|query_dq|rule15|column12|expectation15|ignore|tag15|description15|false|true|true|false|0|null|null|medium
