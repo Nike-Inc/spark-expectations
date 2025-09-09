@@ -1,7 +1,13 @@
+import ast
 import json
 import os
+from typing import Any, Dict, Optional, Union
+
 import yaml
 from pyspark.sql.session import SparkSession
+
+
+from spark_expectations.config.user_config import Constants as user_config
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -24,8 +30,8 @@ def load_configurations(spark: SparkSession) -> None:
         RuntimeError: If the configuration file is not found, cannot be parsed, or other errors occur.
     """
     try:
-        with open(f"{current_dir}/../config/spark-default-config.yaml", "r", encoding="utf-8") as config_file:
-            config = yaml.safe_load(config_file)
+        with open(f"{current_dir}/../config/spark-expectations-default-config.yaml", "r", encoding="utf-8") as cfg_file:
+            config = yaml.safe_load(cfg_file)
         if config is None:
             config = {}
         elif not isinstance(config, dict):
@@ -48,6 +54,61 @@ def load_configurations(spark: SparkSession) -> None:
         raise RuntimeError(f"Error parsing Spark config YAML configuration file: {e}") from e
     except Exception as e:
         raise RuntimeError(f"An unexpected error occurred while loading spark configurations: {e}") from e
+
+
+def get_config_dict(
+    spark: SparkSession, user_conf: Dict[str, Union[str, int, bool, Dict[str, str]]] = None
+) -> tuple[
+    Dict[str, Union[str, int, bool, Dict[str, str], None]],
+    Dict[str, Union[bool, str]],
+]:
+    """
+    Retrieve both notification and streaming config dictionaries from the user configuration or Spark session or default configuration.
+
+    Args:
+        spark (SparkSession): The Spark session to retrieve the configuration from.
+        user_conf (Optional[Dict[str, Any]]): User configuration to merge with default configuration.
+
+    Returns:
+        tuple: A tuple containing (notification_dict, streaming_dict).
+
+    Raises:
+        RuntimeError: If there are errors parsing or retrieving the configuration.
+    """
+
+    def _build_config_dict(
+        default_dict: Dict[str, Union[str, int, bool, Dict[str, str]]],
+        user_conf: Dict[str, Union[str, int, bool, Dict[str, str]]] = None
+    ) -> Dict[str, Union[str, int, bool, Dict[str, str]]]:
+        """Helper function to build configuration dictionary with type inference."""
+        if user_conf:
+            config_dict = {
+                key: infer_safe_cast(user_conf.get(key, spark.conf.get(key, str(value))))
+                for key, value in default_dict.items()
+            }
+        else:
+            config_dict = {key: infer_safe_cast(spark.conf.get(key, str(value))) for key, value in default_dict.items()}
+        return config_dict
+
+    try:
+        load_configurations(spark)
+        # Parse both JSON configurations at once
+        default_notification_dict_str = spark.conf.get("default_notification_dict")
+        default_streaming_dict_str = spark.conf.get("default_streaming_dict")
+
+        default_notification_dict = json.loads(default_notification_dict_str)
+        default_streaming_dict = json.loads(default_streaming_dict_str)
+
+        # Build both dictionaries using the helper function
+        notification_dict = _build_config_dict(default_notification_dict, user_conf)
+        streaming_dict = _build_config_dict(default_streaming_dict, user_conf)
+
+        return notification_dict, streaming_dict
+
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"Error parsing configuration JSON: {e}") from e
+    except Exception as e:
+        raise RuntimeError(f"Error retrieving configuration: {e}") from e
 
 
 def get_spark_session() -> SparkSession:
@@ -82,3 +143,55 @@ def get_spark_session() -> SparkSession:
         sparksession = SparkSession.getActiveSession()
     load_configurations(sparksession)
     return sparksession
+
+
+def infer_safe_cast(input_value: Any) -> Union[int, float, bool, dict, str, None]:  # pylint: disable=R0911
+    """
+    Infers and safely casts the input value to int, float, bool, dict, str, or None.
+
+    Args:
+        input_value: The value to analyze (can be any type)
+
+    Returns:
+        Union[int, float, bool, dict, str, None]: The inferred and converted value
+    """
+    if input_value is None:
+        return "None"
+
+    # Return early for already acceptable types
+    if isinstance(input_value, (int, float, bool, dict, list)):
+        return input_value
+
+    # Convert to string and clean
+    cleaned_input = str(input_value).strip()
+
+    # Handle string representations of None
+    if cleaned_input.lower() in {"none", "null"}:
+        return 'None'
+
+    # Handle booleans (case-insensitive)
+    if cleaned_input.lower() in {"true", "false"}:
+        return cleaned_input.lower() == "true"
+
+    # Try integer
+    try:
+        return int(cleaned_input)
+    except ValueError:
+        pass
+
+    # Try float
+    try:
+        return float(cleaned_input)
+    except ValueError:
+        pass
+
+    # Try dictionary
+    try:
+        parsed = ast.literal_eval(cleaned_input)
+        if isinstance(parsed, dict):
+            return parsed
+    except (ValueError, SyntaxError):
+        pass
+
+    # Fallback to original string (not lowercased)
+    return str(input_value).strip()
