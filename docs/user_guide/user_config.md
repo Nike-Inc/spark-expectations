@@ -1,1 +1,1 @@
-TBD - reference [examples page](../../examples/#configurations)
+Please see this page [examples page](../../examples/#configurations)
