@@ -29,6 +29,7 @@ from spark_expectations.utils.regulate_flow import SparkExpectationsRegulateFlow
 from spark_expectations.utils.validate_rules import SparkExpectationsValidateRules
 from spark_expectations.core import get_config_dict
 
+
 def get_spark_minor_version() -> float:
     """Returns the minor version of the spark instance.
 
@@ -176,7 +177,7 @@ class SparkExpectations:
         """
 
         def _except(func: Any) -> Any:
-            # variable used for enabling notification at different level            
+            # variable used for enabling notification at different level
             _default_notification_dict, _default_stats_streaming_dict = get_config_dict(self.spark, user_conf)
 
             _default_notification_dict[

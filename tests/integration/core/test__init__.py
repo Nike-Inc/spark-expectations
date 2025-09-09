@@ -247,11 +247,11 @@ def test_infer_safe_cast_basic_types(input_value, expected):
         assert result == expected
 
 @pytest.mark.parametrize("input_value,expected", [
-    (None, "None"),
-    ("none", "None"),
-    ("null", "None"),
-    ("NONE", "None"),
-    ("NULL", "None"),
+    (None, None),
+    ("none", None),
+    ("null", None),
+    ("NONE", None),
+    ("NULL", None),
 ])
 def test_infer_safe_cast_none_handling(input_value, expected):
     """Test None value handling."""

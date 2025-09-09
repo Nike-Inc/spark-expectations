@@ -58,10 +58,7 @@ def load_configurations(spark: SparkSession) -> None:
 
 def get_config_dict(
     spark: SparkSession, user_conf: Dict[str, Union[str, int, bool, Dict[str, str]]] = None
-) -> tuple[
-    Dict[str, Union[str, int, bool, Dict[str, str], None]],
-    Dict[str, Union[bool, str]],
-]:
+) -> tuple[Dict[str, Union[str, int, bool, Dict[str, str], None]], Dict[str, Union[bool, str]],]:
     """
     Retrieve both notification and streaming config dictionaries from the user configuration or Spark session or default configuration.
 
@@ -78,7 +75,7 @@ def get_config_dict(
 
     def _build_config_dict(
         default_dict: Dict[str, Union[str, int, bool, Dict[str, str]]],
-        user_conf: Dict[str, Union[str, int, bool, Dict[str, str]]] = None
+        user_conf: Dict[str, Union[str, int, bool, Dict[str, str]]] = None,
     ) -> Dict[str, Union[str, int, bool, Dict[str, str]]]:
         """Helper function to build configuration dictionary with type inference."""
         if user_conf:
@@ -156,7 +153,7 @@ def infer_safe_cast(input_value: Any) -> Union[int, float, bool, dict, str, None
         Union[int, float, bool, dict, str, None]: The inferred and converted value
     """
     if input_value is None:
-        return "None"
+        return None
 
     # Return early for already acceptable types
     if isinstance(input_value, (int, float, bool, dict, list)):
@@ -167,7 +164,7 @@ def infer_safe_cast(input_value: Any) -> Union[int, float, bool, dict, str, None
 
     # Handle string representations of None
     if cleaned_input.lower() in {"none", "null"}:
-        return 'None'
+        return None
 
     # Handle booleans (case-insensitive)
     if cleaned_input.lower() in {"true", "false"}:
