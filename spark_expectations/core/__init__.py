@@ -17,7 +17,7 @@ def load_configurations(spark: SparkSession) -> None:
     Load Spark configuration settings from a YAML file and apply them to the provided SparkSession.
 
     This function:
-    - Reads the configuration file located at `../config/spark-default-config.yaml`.
+    - Reads the configuration file located at `../config/spark-expectations-default-config.yaml`.
     - Separates streaming (`se.streaming.*`) and notification (`spark.expectations.*`) configurations into dictionaries.
     - Sets other configuration values directly in the Spark session.
     - Stores streaming and notification configs as JSON strings in Spark session configs.

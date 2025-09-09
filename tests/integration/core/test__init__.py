@@ -7,7 +7,7 @@ from typing import Any
 import yaml
 from pyspark.sql.session import SparkSession
 from spark_expectations.core import get_spark_session, load_configurations, get_config_dict, infer_safe_cast
-from spark_expectations.core.__init__ import  current_dir
+from spark_expectations.core.__init__ import current_dir
 
 
 @patch("spark_expectations.core.__init__.current_dir", autospec=True, spec_set=True)
