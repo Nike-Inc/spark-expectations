@@ -3,10 +3,10 @@ import os
 import pytest
 from unittest import mock
 from unittest.mock import patch, mock_open
-
+from typing import Any
 import yaml
 from pyspark.sql.session import SparkSession
-from spark_expectations.core import get_spark_session, load_configurations
+from spark_expectations.core import get_spark_session, load_configurations, get_config_dict, infer_safe_cast
 from spark_expectations.core.__init__ import current_dir
 
 
@@ -61,24 +61,227 @@ def test_load_configurations_valid_file():
     assert notification_dict["spark.expectations.notifications.email.from"] == ""
     assert streaming_dict["se.streaming.enable"] is True
 
-@patch("builtins.open", new_callable=mock.mock_open, read_data="key:[value, another")
-@patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__)+"/../../../")
-def test_load_configurations_invalid_file(mock_file):
+@patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__) + "/../../../")
+def test_load_configurations_invalid_file():
+    """Test that load_configurations raises RuntimeError for invalid YAML content."""
     spark = SparkSession.builder.getOrCreate()
 
-    # Expect a RuntimeError due to invalid YAML format
-    with pytest.raises(RuntimeError) as exception_info:
+    # Test with malformed YAML - unclosed bracket
+    invalid_yaml_content = "key:[value, another"
+
+    with patch("builtins.open", mock_open(read_data=invalid_yaml_content)):
+        with pytest.raises(RuntimeError) as exception_info:
+            load_configurations(spark)
+
+        # Verify the error message contains expected text
+        assert "Error parsing Spark config YAML configuration file" in str(exception_info.value)
+
+@patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__) + "/../../../")
+def test_load_configurations_empty_file():
+    """Test that load_configurations handles empty files correctly."""
+    spark = SparkSession.builder.getOrCreate()
+
+    # Clear any existing configurations that might interfere
+    spark.conf.unset("default_streaming_dict")
+    spark.conf.unset("default_notification_dict")
+
+    # Mock the open function to return empty data
+    with patch("builtins.open", mock_open(read_data="")):
         load_configurations(spark)
 
-    # Check that the error message is as expected
-    assert "Error parsing Spark config YAML configuration file" in str(exception_info.value)
+        # Check that the default values are set correctly
+        assert spark.conf.get("default_streaming_dict") == "{}"
+        assert spark.conf.get("default_notification_dict") == "{}"
 
-@patch("builtins.open", new_callable=mock.mock_open, read_data="")
-@patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__)+"/../../../")
-def test_load_configurations_empty_file(mock_file):
+@pytest.fixture
+def spark_session():
+    """Fixture to provide a SparkSession for testing."""
+    return SparkSession.builder.getOrCreate()
+
+@pytest.fixture
+def mock_config_data():
+    """Fixture providing mock configuration data from spark-expectations default config."""
+    return {
+        'streaming': {
+            'se.streaming.enable': True,
+            'se.streaming.secret.type': 'databricks',
+            'se.streaming.dbx.workspace.url': 'https://workspace.cloud.databricks.com',
+            'se.streaming.dbx.secret.scope': 'secret_scope',
+            'se.streaming.dbx.topic.name': 'se_streaming_topic_name'
+        },
+        'notification': {
+            'spark.expectations.notifications.email.enabled': False,
+            'spark.expectations.notifications.slack.enabled': False,
+            'spark.expectations.notifications.teams.enabled': False,
+            'spark.expectations.notifications.zoom.enabled': False,
+            'spark.expectations.notifications.on.start': False,
+            'spark.expectations.notifications.on.completion': True,
+            'spark.expectations.notifications.on.fail': True,
+            'spark.expectations.notifications.error.drop.threshold': 100,
+            'spark.expectations.notifications.email.subject': 'spark-expectations-testing',
+            'spark.expectations.notifications.smtp.creds.dict': { 
+                'se.streaming.secret.type': 'cerberus',
+                "se.streaming.cerberus.url": 'https://cerberus.example.com',
+                'se.streaming.cerberus.sdb.path': 'your_sdb_path',
+                'spark.expectations.notifications.cerberus.smtp.password': 'your_smtp_password'
+            }
+        }
+    }
+
+# Tests for get_config_dict function
+
+@patch("spark_expectations.core.load_configurations")
+def test_get_config_dict_basic_functionality(mock_load_configs, mock_config_data: dict[str, dict[str, Any]]):
+    """Test basic functionality of get_config_dict."""
     spark = SparkSession.builder.getOrCreate()
-    load_configurations(spark)
 
-    # Check that the default values are set correctly
-    assert spark.conf.get("default_streaming_dict") == "{}"
-    assert spark.conf.get("default_notification_dict") == "{}"
+    # Setup mock Spark configurations
+    spark.conf.set("default_streaming_dict", json.dumps(mock_config_data['streaming']))
+    spark.conf.set("default_notification_dict", json.dumps(mock_config_data['notification']))
+
+    # Call the function
+    notification_dict, streaming_dict = get_config_dict(spark)
+
+    # Verify load_configurations was called
+    mock_load_configs.assert_called_once_with(spark)
+
+    # Verify return types and basic content
+    assert isinstance(notification_dict, dict)
+    assert isinstance(streaming_dict, dict)
+    assert streaming_dict['se.streaming.enable'] is True
+    assert notification_dict['spark.expectations.notifications.email.enabled'] is False
+
+@patch("spark_expectations.core.load_configurations")
+def test_get_config_dict_with_user_conf(mock_load_configs, mock_config_data: dict[str, dict[str, Any]]):
+    """Test get_config_dict with user configuration override."""
+    spark = SparkSession.builder.getOrCreate()
+
+    spark.conf.set("default_streaming_dict", json.dumps(mock_config_data['streaming']))
+    spark.conf.set("default_notification_dict", json.dumps(mock_config_data['notification']))
+
+    # User configuration to override defaults
+    user_conf = {
+        'se.streaming.enable': False,
+        'spark.expectations.notifications.email.enabled': True
+    }
+
+    # Call the function with user config
+    notification_dict, streaming_dict = get_config_dict(spark, user_conf)
+
+    # Verify user overrides are applied
+    assert streaming_dict['se.streaming.enable'] is False
+    assert notification_dict['spark.expectations.notifications.email.enabled'] is True
+
+@patch("spark_expectations.core.load_configurations")
+def test_get_config_dict_empty_configs(mock_load_configs):
+    """Test get_config_dict with empty configuration dictionaries."""
+    spark = SparkSession.builder.getOrCreate()
+
+    spark.conf.set("default_streaming_dict", "{}")
+    spark.conf.set("default_notification_dict", "{}")
+
+    # Call the function
+    notification_dict, streaming_dict = get_config_dict(spark)
+
+    # Verify empty dictionaries are returned
+    assert notification_dict == {}
+    assert streaming_dict == {}
+
+@patch("spark_expectations.core.load_configurations")
+def test_get_config_dict_json_decode_error(mock_load_configs):
+    """Test get_config_dict handles JSON decode errors properly."""
+    spark = SparkSession.builder.getOrCreate()
+
+    spark.conf.set("default_streaming_dict", "invalid json")
+    spark.conf.set("default_notification_dict", "{}")
+
+    # Verify RuntimeError is raised
+    with pytest.raises(RuntimeError) as exc_info:
+        get_config_dict(spark)
+
+    assert "Error parsing configuration JSON" in str(exc_info.value)
+
+@patch("spark_expectations.core.load_configurations")
+def test_get_config_dict_load_configurations_error(mock_load_configs):
+    """Test get_config_dict handles load_configurations errors properly."""
+    spark = SparkSession.builder.getOrCreate()
+
+    # Make load_configurations raise an exception
+    mock_load_configs.side_effect = RuntimeError("Configuration load failed")
+
+    # Verify RuntimeError is propagated and wrapped
+    with pytest.raises(RuntimeError) as exc_info:
+        get_config_dict(spark)
+
+    error_message = str(exc_info.value)
+    assert "Error retrieving configuration: Configuration load failed" in error_message
+
+# Tests for infer_safe_cast function
+
+@pytest.mark.parametrize("input_value,expected", [
+    # Test integers
+    ("123", 123),
+    ("0", 0),
+    ("-456", -456),
+    # Test floats
+    ("3.14", 3.14),
+    ("0.0", 0.0),
+    ("-2.5", -2.5),
+    # Test booleans
+    ("true", True),
+    ("false", False),
+    ("TRUE", True),
+    ("FALSE", False),
+    # Test strings
+    ("hello", "hello"),
+    ("  spaced  ", "spaced"),
+    ("", ""),
+    ("not_a_number", "not_a_number"),
+])
+def test_infer_safe_cast_basic_types(input_value, expected):
+    """Test basic type inference for common values."""
+    result = infer_safe_cast(input_value)
+    if isinstance(expected, bool):
+        assert result is expected
+    else:
+        assert result == expected
+
+@pytest.mark.parametrize("input_value,expected", [
+    (None, None),
+    ("none", None),
+    ("null", None),
+    ("NONE", None),
+    ("NULL", None),
+])
+def test_infer_safe_cast_none_handling(input_value, expected):
+    """Test None value handling."""
+    assert infer_safe_cast(input_value) == expected
+
+@pytest.mark.parametrize("input_value,expected_type", [
+    (42, int),
+    (3.14, float),
+    (True, bool),
+    (False, bool),
+    ({"key": "value"}, dict),
+    ([1, 2, 3], list),
+])
+def test_infer_safe_cast_existing_types(input_value, expected_type):
+    """Test that existing types are preserved."""
+    result = infer_safe_cast(input_value)
+    assert result == input_value
+    assert isinstance(result, expected_type)
+
+@pytest.mark.parametrize("dict_str,expected", [
+    ("{'key': 'value', 'num': 42}", {'key': 'value', 'num': 42}),
+    ("{}", {}),
+    ("{invalid dict}", "{invalid dict}"),
+    ("{'nested': {'key': 'value'}}", {'nested': {'key': 'value'}}),
+])
+def test_infer_safe_cast_dictionary_strings(dict_str, expected):
+    """Test dictionary string conversion."""
+    result = infer_safe_cast(dict_str)
+    if isinstance(expected, dict):
+        assert isinstance(result, dict)
+        assert result == expected
+    else:
+        assert result == expected
