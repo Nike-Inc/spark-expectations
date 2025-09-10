@@ -328,7 +328,7 @@ class SparkExpectationsReader:
                         "description": row["description"],
                         "enable_error_drop_alert": row["enable_error_drop_alert"],
                         "error_drop_threshold": row["error_drop_threshold"],
-                        "priority": row["priority"]
+                        "priority": row["priority"],
                     }
 
                     if row["rule_type"] == self._context.get_query_dq_rule_type_name:
