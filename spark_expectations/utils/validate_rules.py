@@ -1,21 +1,18 @@
 import re
-import uuid
 from typing import Dict, List
+from enum import Enum
 
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import expr
+
+import sqlglot
+from sqlglot.errors import ParseError
 
 from spark_expectations.core.exceptions import (
     SparkExpectationsInvalidAggDQExpectationException,
     SparkExpectationsInvalidQueryDQExpectationException,
     SparkExpectationsInvalidRowDQExpectationException,
-    SparkExpectationsInvalidRuleTypeException,
 )
-
-import sqlglot
-from sqlglot.errors import ParseError
-
-from enum import Enum
 
 
 class RuleType(Enum):

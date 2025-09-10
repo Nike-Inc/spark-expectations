@@ -67,6 +67,8 @@ class SparkExpectationsContext:
         self._mail_smtp_password: Optional[str] = None
         self._smtp_creds_dict: Dict[str, str] = {}
         self._email_custom_body: Optional[str] = None
+        self._basic_default_template: str
+        self._custom_default_template: str
 
         self._enable_slack: bool = False
         self._slack_webhook_url: Optional[str] = None

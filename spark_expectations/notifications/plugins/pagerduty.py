@@ -1,6 +1,5 @@
-from typing import Dict, Union
-import requests
 from typing import Dict, Union, Optional
+import requests
 from spark_expectations import _log
 from spark_expectations.notifications.plugins.base_notification import (
     SparkExpectationsNotification,
@@ -9,8 +8,6 @@ from spark_expectations.notifications.plugins.base_notification import (
 from spark_expectations.core.exceptions import (
     SparkExpectationsPagerDutyException,
 )
-from spark_expectations.core.context import SparkExpectationsContext
-from spark_expectations.secrets import SparkExpectationsSecretsBackend
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.secrets import SparkExpectationsSecretsBackend
 from spark_expectations.config.user_config import Constants as user_config
