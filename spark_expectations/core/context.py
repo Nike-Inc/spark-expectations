@@ -80,7 +80,7 @@ class SparkExpectationsContext:
 
         self._enable_pagerduty: bool = False
         self._pagerduty_webhook_url: Optional[str] = None
-        self._pagerduty_routing_key: Optional[str] = None
+        self._pagerduty_integration_key: Optional[str] = None
         self._pagerduty_creds_dict: Dict[str, str] = {}
 
         self._table_name: Optional[str] = None
@@ -834,27 +834,27 @@ class SparkExpectationsContext:
         """
         return self._enable_pagerduty
 
-    def set_pagerduty_routing_key(self, pagerduty_routing_key: str) -> None:
+    def set_pagerduty_integration_key(self, pagerduty_integration_key: str) -> None:
         """
-        Set the pagerduty routing key manually.
+        Set the pagerduty integration key manually.
 
         Args:
-            pagerduty_routing_key (str): Integration key for PagerDuty when creating incidents.
+            pagerduty_integration_key (str): Integration key for PagerDuty when creating incidents.
         """
-        self._pagerduty_routing_key = pagerduty_routing_key
+        self._pagerduty_integration_key = pagerduty_integration_key
 
     @property
-    def get_pagerduty_routing_key(self) -> str:
+    def get_pagerduty_integration_key(self) -> Optional[str]:
         """
-        This function returns pagerduty routing key
+        This function returns pagerduty integration key
         Returns:
-            str: Returns _pagerduty_routing_key(str)
+            str: Returns _pagerduty_integration_key(str)
 
         """
-        if self._pagerduty_routing_key:
-            return self._pagerduty_routing_key
+        if self._pagerduty_integration_key:
+            return self._pagerduty_integration_key
         raise SparkExpectationsMiscException(
-            """The spark expectations context is not set completely, please assign '_pagerduty_routing_key' before 
+            """The spark expectations context is not set completely, please assign '_pagerduty_integration_key' before 
             accessing it"""
         )
 

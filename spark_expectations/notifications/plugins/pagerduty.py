@@ -25,7 +25,7 @@ class SparkExpectationsPagerDutyPluginImpl(SparkExpectationsNotification):
         self, secret_handler: SparkExpectationsSecretsBackend, pd_secret_dict: dict
     ) -> Optional[str]:
         cbs_sdb_path = pd_secret_dict.get(user_config.cbs_sdb_path)
-        pd_integration_key = pd_secret_dict.get(user_config.pd_integration_key)
+        pd_integration_key = pd_secret_dict.get(user_config.se_notifications_pagerduty_integration_key)
         if cbs_sdb_path and pd_integration_key:
             secret = secret_handler.get_secret(cbs_sdb_path)
             if isinstance(secret, dict):
@@ -35,7 +35,7 @@ class SparkExpectationsPagerDutyPluginImpl(SparkExpectationsNotification):
     def _get_databricks_integration_key(
         self, secret_handler: SparkExpectationsSecretsBackend, pd_secret_dict: dict
     ) -> Optional[str]:
-        pd_integration_key = pd_secret_dict.get(user_config.pd_integration_key)
+        pd_integration_key = pd_secret_dict.get(user_config.se_notifications_pagerduty_integration_key)
         if pd_integration_key:
             return secret_handler.get_secret(pd_integration_key)
         return None
@@ -58,7 +58,7 @@ class SparkExpectationsPagerDutyPluginImpl(SparkExpectationsNotification):
         Args:
             _context: SparkExpectationsContext object
         """
-        integration_key = _context.get_pagerduty_routing_key
+        integration_key = _context.get_pagerduty_integration_key
 
         if not integration_key:
             pagerduty_secret_dict = _context.get_pagerduty_creds_dict
@@ -66,7 +66,7 @@ class SparkExpectationsPagerDutyPluginImpl(SparkExpectationsNotification):
             secret_type = pagerduty_secret_dict.get(user_config.secret_type)
             if secret_type:
                 try:
-                    integration_key = self._retrieve_integration_key(secret_handler, secret_type, pd_secret_dict)
+                    integration_key = self._retrieve_integration_key(secret_handler, secret_type, pagerduty_secret_dict)
                 except KeyError:
                     _log.error("KeyError: Integration key is missing in the secret.")
                     raise SparkExpectationsPagerDutyException("KeyError: Integration key is missing in the secret.")
@@ -96,13 +96,13 @@ class SparkExpectationsPagerDutyPluginImpl(SparkExpectationsNotification):
             if _context.get_enable_pagerduty is True:
                 message = _config_args.get("message")
 
-                if _context.get_pagerduty_routing_key:
+                if _context.get_pagerduty_integration_key:
                     self._get_pd_integration_key(_context)
 
                 # Sending request to PagerDuty Events API v2 > https://developer.pagerduty.com/docs/send-alert-event
                 # Severity Levels can be: critical, error, warning, or info
                 payload = {
-                    "routing_key": _context.get_pagerduty_routing_key,
+                    "routing_key": _context.get_pagerduty_integration_key,
                     "event_action": "trigger",
                     "payload": {
                         "summary": message,
