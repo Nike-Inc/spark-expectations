@@ -27,6 +27,7 @@ from spark_expectations.utils.actions import SparkExpectationsActions
 from spark_expectations.utils.reader import SparkExpectationsReader
 from spark_expectations.utils.regulate_flow import SparkExpectationsRegulateFlow
 from spark_expectations.utils.validate_rules import SparkExpectationsValidateRules
+from spark_expectations.core import get_config_dict
 
 
 def get_spark_minor_version() -> float:
@@ -177,19 +178,14 @@ class SparkExpectations:
 
         def _except(func: Any) -> Any:
             # variable used for enabling notification at different level
-            _default_notification_dict: Dict[str, Union[str, int, bool, Dict[str, str], None]] = json.loads(
-                self.spark.conf.get("default_notification_dict")
-            )
+            _default_notification_dict, _default_stats_streaming_dict = get_config_dict(self.spark, user_conf)
+
             _default_notification_dict[
                 user_config.querydq_output_custom_table_name
             ] = f"{self.stats_table}_querydq_output"
 
             _notification_dict: Dict[str, Union[str, int, bool, Dict[str, str], None]] = (
                 {**_default_notification_dict, **user_conf} if user_conf else _default_notification_dict
-            )
-
-            _default_stats_streaming_dict: Dict[str, Union[bool, str]] = json.loads(
-                self.spark.conf.get("default_streaming_dict")
             )
 
             _se_stats_streaming_dict: Dict[str, Any] = (
