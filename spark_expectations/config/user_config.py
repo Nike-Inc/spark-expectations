@@ -9,6 +9,7 @@ class Constants:
     se_notifications_smtp_creds_dict = "spark.expectations.notifications.smtp.creds.dict"
     cbs_smtp_password = "spark.expectations.notifications.cerberus.smtp.password"
     dbx_smtp_password = "spark.expectations.notifications.dbx.smtp.password"
+    pd_integration_key = "spark.expectations.notifications.pagerduty.integration.key"
 
     se_user_defined_custom_dataframe = "spark.expectations.user.defined.custom.dataframe"
     se_notifications_enable_custom_dataframe = "spark.expectations.notifications.enable.custom.dataframe"

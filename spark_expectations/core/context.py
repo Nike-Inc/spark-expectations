@@ -78,6 +78,11 @@ class SparkExpectationsContext:
         self._zoom_webhook_url: Optional[str] = None
         self._zoom_token: Optional[str] = None
 
+        self._enable_pagerduty: bool = False
+        self._pagerduty_webhook_url: Optional[str] = None
+        self._pagerduty_routing_key: Optional[str] = None
+        self._pagerduty_creds_dict: Dict[str, str] = {}
+
         self._table_name: Optional[str] = None
         self._input_count: int = 0
         self._error_count: int = 0
@@ -809,6 +814,87 @@ class SparkExpectationsContext:
             """The spark expectations context is not set completely, please assign '_zoom_token' before 
             accessing it"""
         )
+
+    def set_enable_pagerduty(self, enable_pagerduty: bool) -> None:
+        """
+        Set whether to enable pagerduty notification or not
+
+        Args:
+            enable_pagerduty (bool): Whether to enable pagerduty incidents or not
+        """
+        self._enable_pagerduty = enable_pagerduty
+
+    @property
+    def get_enable_pagerduty(self) -> bool:
+        """
+        This function returns whether to enable pagerduty notification or not
+
+        Returns:
+            bool: Whether to enable pagerduty incidents or not
+        """
+        return self._enable_pagerduty
+
+    def set_pagerduty_routing_key(self, pagerduty_routing_key: str) -> None:
+        """
+        Set the pagerduty routing key manually.
+
+        Args:
+            pagerduty_routing_key (str): Integration key for PagerDuty when creating incidents.
+        """
+        self._pagerduty_routing_key = pagerduty_routing_key
+
+    @property
+    def get_pagerduty_routing_key(self) -> str:
+        """
+        This function returns pagerduty routing key
+        Returns:
+            str: Returns _pagerduty_routing_key(str)
+
+        """
+        if self._pagerduty_routing_key:
+            return self._pagerduty_routing_key
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign '_pagerduty_routing_key' before 
+            accessing it"""
+        )
+
+    def set_pagerduty_webhook_url(self, pagerduty_webhook_url: str) -> None:
+        """
+        This function helps to set pagerduty webhook url
+        Args:
+            pagerduty_webhook_url (str): PagerDuty webhook url to create incidents
+        """
+        self._pagerduty_webhook_url = pagerduty_webhook_url
+
+    @property
+    def get_pagerduty_webhook_url(self) -> str:
+        """
+        This function returns pagerduty webhook url
+        Returns:
+            str: Returns _pagerduty_webhook_url(str)
+
+        """
+        if self._pagerduty_webhook_url:
+            return self._pagerduty_webhook_url
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign '_pagerduty_webhook_url' before 
+            accessing it"""
+        )
+
+    def set_pagerduty_creds_dict(self, pagerduty_creds_dict: Dict[str, str]) -> None:
+        """
+        This function helps to set secret keys dict for pagerduty authentication
+        Args:
+            pagerduty_creds_dict (Dict[str, str]): Dictionary containing secrets for PagerDuty authentication
+        """
+        self._pagerduty_creds_dict = pagerduty_creds_dict
+
+    @property
+    def get_pagerduty_creds_dict(self) -> Dict[str, str]:
+        """
+        This function returns secret keys dict for pagerduty authentication
+        """
+        return self._pagerduty_creds_dict
 
     def set_table_name(self, table_name: str) -> None:
         self._table_name = table_name

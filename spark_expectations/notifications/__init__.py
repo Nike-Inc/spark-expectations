@@ -18,7 +18,7 @@ from spark_expectations.notifications.plugins.teams import (
 from spark_expectations.notifications.plugins.zoom import (
     SparkExpectationsZoomPluginImpl,  # Import Zoom plugin
 )
-from spark_expectations.notifications.plugins.pagerduty_api import (
+from spark_expectations.notifications.plugins.pagerduty import (
     SparkExpectationsPagerDutyPluginImpl,  # Import PagerDuty plugin
 )
 
@@ -40,6 +40,7 @@ def get_notifications_hook() -> pluggy.PluginManager:
         SparkExpectationsZoomPluginImpl(),
         "spark_expectations_zoom_notification",  # Register Zoom plugin
     )
+    pm.register(SparkExpectationsPagerDutyPluginImpl(), "spark_expectations_pagerduty_notification")
     for name, plugin_instance in pm.list_name_plugin():
         _log.info(f"Loaded plugin with name: {name} and class: {plugin_instance.__class__.__name__}")
 
