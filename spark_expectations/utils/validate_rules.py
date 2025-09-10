@@ -121,6 +121,7 @@ class SparkExpectationsValidateRules:
             )
 
     @staticmethod
+    # pylint: disable=unused-argument
     def validate_query_dq_expectation(df: DataFrame, rule: Dict, spark: SparkSession) -> None:
         """
         Validates a query_dq expectation by ensuring it is a valid SQL query.

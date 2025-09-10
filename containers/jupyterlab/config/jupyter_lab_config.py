@@ -10,7 +10,7 @@
 # Configuration file for lab.
 
 # pylint: disable=undefined-variable
-c = get_config()  #noqa
+c = get_config()  # noqa
 
 #------------------------------------------------------------------------------
 # Application(SingletonConfigurable) configuration
