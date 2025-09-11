@@ -195,3 +195,17 @@ To enable trusted SSL/TLS communication during Spark-Expectations testing, you m
 Place any required `.crt` files in the `spark_expectations/examples/docker_scripts/certs` directory. 
 
 During test container startup, all certificates in this folder will be automatically imported into the container’s trusted certificate store, ensuring that your Spark jobs and dependencies can establish secure connections as needed.
+
+
+
+### Deploying the Docs site locally
+
+When updating the project documnetation, it is good idea to test your changes locally. You could deploy the server locally following these steps:
+
+```sh
+# Installs Dependencies
+make dev
+
+# Deploy the Docs server locally
+make docs 
+```

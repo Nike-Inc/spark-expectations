@@ -1,11 +1,14 @@
 When evaluating characteristic of data and it's quality we usually think of data quality dimensions. Spark-expectations is there to verify data integrity once data has already been ingested or in-flight before data lands in a datastore. Some of the data quality dimensions are 
 
-- `Completeness` (all required data is present), 
-- `Uniqueness` (no duplicates), 
-- `Validity` (data conforms to format and rules), 
-- `Accuracy` (data reflects reality), 
-- `Consistency` (data is uniform across systems), and 
-- `Timeliness` (data is up-to-date) 
+| Dimension        | What It Means                                                                             | Business Quality            | Technical Quality     |
+|------------------|-------------------------------------------------------------------------------------------|---------------------------- |-----------------------|
+| `Completeness`   | Proportion of the data against the potential of 100% data                                 | Is this field required for business use and does it need to be populated fully to answer business questions?                  | Is the data we received equal to the data we loaded in the target?               |
+| `Validity`       | Measures of the existence, structure, content, and other basic characteristics of data    | Data is valid when it meets the formal and structural requirements of the business rule that the organization defines         | Validity is a measure of the correspondence between the formal aspects of the column data and format that the organization requires          |
+| `Uniqueness`     | Extent to which all distinct values of a data element appear only once                    | Is an individual data point recorded more than once?                                   | Is an individual data point recorded more than once?                                       |
+| `Consistency`    | Absence of difference when comparing two or more representations against its definition   | Are the data within the data attribute the same as it moves across the ecosystem based on expectations?                      | Are the record counts and/or summation of the measure of data attributes the same over time based on the defined threshold?                |
+| `Timeliness`     | Degree to which data is available when it is required                                     | Is data relevant for the business use at the point in time?                             | Did my data arrive on time? Are tables refreshing on time?                 |
+| `Accuracy`       | Degree to which data correctly describes the real-world object or event being described   | Does data describe the real-world environment it's trying to represent?                  | Does data describe the real-world environment it's trying to represent?                |
+
 
 !!! Hint "[Rule Examples](../../configurations/rules/)" 
 
