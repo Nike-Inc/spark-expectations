@@ -65,8 +65,8 @@ class SparkExpectationsPagerDutyPluginImpl(SparkExpectationsNotification):
                 try:
                     integration_key = self._retrieve_integration_key(secret_handler, secret_type, pagerduty_secret_dict)
                 except KeyError:
-                    _log.error("KeyError: Integration key is missing in the secret.")
-                    raise SparkExpectationsPagerDutyException("KeyError: Integration key is missing in the secret.")
+                    _log.error("KeyError: PagerDuty integration key is missing.")
+                    raise SparkExpectationsPagerDutyException("KeyError: PagerDuty integration key is missing.")
                 except Exception as e:
                     _log.error(f"Error retrieving PagerDuty integration key: {e}")
                     raise SparkExpectationsPagerDutyException("Failed to retrieve PagerDuty integration key.") from e
