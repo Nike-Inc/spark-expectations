@@ -19,7 +19,7 @@ def test_send_incident_success(_mock_context):
         mock_response.status_code = 202
         mock_post.return_value = mock_response
 
-        pagerduty_handler.create_incident(_context=_mock_context, _config_args=_config_args)
+        pagerduty_handler.send_notification(_context=_mock_context, _config_args=_config_args)
 
         mock_post.assert_called_once_with(
             _mock_context.get_pagerduty_webhook_url,
@@ -50,7 +50,7 @@ def test_send_incident_exception(_mock_context):
         mock_post.return_value = mock_response
 
         with pytest.raises(SparkExpectationsPagerDutyException):
-            pagerduty_handler.create_incident(_context=_mock_context, _config_args=_config_args)
+            pagerduty_handler.send_notification(_context=_mock_context, _config_args=_config_args)
 
 
 @patch("spark_expectations.secrets.SparkExpectationsSecretsBackend", autospec=True, spec_set=True)
@@ -252,5 +252,5 @@ def test_send_incident_pagerduty_disabled(_mock_context):
     _config_args = {"message": "test message"}
 
     with patch.object(requests, "post") as mock_post:
-        pagerduty_handler.create_incident(_context=_mock_context, _config_args=_config_args)
+        pagerduty_handler.send_notification(_context=_mock_context, _config_args=_config_args)
         mock_post.post.assert_not_called()

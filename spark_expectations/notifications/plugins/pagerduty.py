@@ -75,7 +75,7 @@ class SparkExpectationsPagerDutyPluginImpl(SparkExpectationsNotification):
             raise SparkExpectationsPagerDutyException("PagerDuty integration key is not set.")
 
     @spark_expectations_notification_impl
-    def create_incident(
+    def send_notification(
         self,
         _context: SparkExpectationsContext,
         _config_args: Dict[str, Union[str, bool]],
@@ -85,9 +85,7 @@ class SparkExpectationsPagerDutyPluginImpl(SparkExpectationsNotification):
         Args:
             _context: SparkExpectationsContext class object
             _config_args: dict
-
         Returns: None
-
         """
         try:
             if _context.get_enable_pagerduty is True:
