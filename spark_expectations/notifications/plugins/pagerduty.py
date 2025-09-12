@@ -84,7 +84,7 @@ class SparkExpectationsPagerDutyPluginImpl(SparkExpectationsNotification):
         function to create a PagerDuty incident
         Args:
             _context: SparkExpectationsContext class object
-            _config_args: dict
+            _config_args: dict which contains message(str) and other related configurations for PD
         Returns: None
         """
         try:

@@ -829,7 +829,7 @@ class SparkExpectationsContext:
     @property
     def get_enable_pagerduty(self) -> bool:
         """
-        This function returns whether to enable pagerduty notification or not
+        This function returns if pagerduty notifications are enabled or not.
 
         Returns:
             bool: Whether to enable pagerduty incidents or not
