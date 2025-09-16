@@ -9,7 +9,6 @@
 
 # Configuration file for lab.
 
-# pylint: disable=undefined-variable
 c = get_config()  # noqa
 
 #------------------------------------------------------------------------------
