@@ -227,7 +227,7 @@ class SparkExpectationsContext:
     @property
     def get_dq_expectations(self) -> dict:
         """
-        Get dq_expectations to which has rule infromation
+        Get dq_expectations to which has rule information
 
         Returns:
             str: returns the rules_df
@@ -278,10 +278,10 @@ class SparkExpectationsContext:
     @staticmethod
     def set_run_date() -> str:
         """
-        This function is used to generate the current datatime in UTC
+        This function is used to generate the current datetime in UTC
 
         Returns:
-            str: Returns the current utc datatime in the format - "%Y-%m-%d %H:%M:%S"
+            str: Returns the current utc datetime in the format - "%Y-%m-%d %H:%M:%S"
 
         """
         current_datetime: datetime = datetime.now(timezone.utc)
