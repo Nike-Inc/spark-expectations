@@ -54,15 +54,6 @@ jobs:
           export GITHUB_ACTIONS=true
           make cov
       
-      - name: Selecting the base PR for codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          run_command: 'pr-base-picking'
-          base_sha: '8a32f71151d23eeaf099b39a2e9ca35690c4651e'
-          fail_ci_if_error: true
-          verbose: true
-
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
