@@ -108,3 +108,4 @@ jobs:
           export PATH=$PATH:$HOME/.local/bin
           make build
           twine upload dist/*
+          
