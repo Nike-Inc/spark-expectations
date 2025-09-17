@@ -21,8 +21,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v5 # use latest version of the checkout action
-        with:
-          fetch-depth: 0
 
       - name: Set up JDK
         uses: actions/setup-java@v3
