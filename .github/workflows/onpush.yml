@@ -20,7 +20,9 @@ jobs:
       UNIT_TESTING_ENV: 'spark_expectations_unit_testing_on_github_actions'
 
     steps:
-      - uses: actions/checkout@v4 # use latest version of the checkout action
+      - uses: actions/checkout@v5 # use latest version of the checkout action
+        with:
+          fetch-depth: 0
 
       - name: Set up JDK
         uses: actions/setup-java@v3
@@ -55,12 +57,13 @@ jobs:
           make cov
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-          files: coverage.xml
+        uses: codecov/codecov-action@v5
+        with:
           fail_ci_if_error: true
-
+          files: ./coverage.xml
+          verbose: true
+          slug: Nike-Inc/spark-expectations
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   deploy:
     name: Deploy to PyPi
