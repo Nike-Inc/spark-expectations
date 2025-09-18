@@ -10,6 +10,7 @@ ignore-paths:
   - htmlcov
   - spark_expectations/examples/
   - tests  #commented until test scripts corrected
+  - containers
 
 
 max-line-length: 120

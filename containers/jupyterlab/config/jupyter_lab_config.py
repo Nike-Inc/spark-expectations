@@ -9,7 +9,7 @@
 
 # Configuration file for lab.
 
-c = get_config()  #noqa
+c = get_config()  # noqa
 
 #------------------------------------------------------------------------------
 # Application(SingletonConfigurable) configuration

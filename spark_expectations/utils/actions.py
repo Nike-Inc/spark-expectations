@@ -154,6 +154,7 @@ class SparkExpectationsActions:
             Any: The querydq_output and detailed result of the data quality rule.
         """
 
+        # pylint: disable=too-many-nested-blocks
         try:
             if (
                 _dq_rule["rule_type"] == _context.get_agg_dq_rule_type_name
