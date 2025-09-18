@@ -16,6 +16,7 @@ except ImportError:
 
 from pyspark.sql.functions import lit, to_timestamp, col
 from pyspark.sql.types import StringType, IntegerType, StructField, StructType
+from pyspark.sql import SparkSession
 
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.expectations import (
@@ -25,14 +26,59 @@ from spark_expectations.core.expectations import (
     get_spark_minor_version,
 )
 from spark_expectations.config.user_config import Constants as user_config
-from spark_expectations.core import get_spark_session
+from spark_expectations.core import load_configurations
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from spark_expectations.notifications.push.spark_expectations_notify import SparkExpectationsNotify
 
+current_dir = os.path.dirname(os.path.abspath(__file__))
+
 # os.environ["UNIT_TESTING_ENV"] = "local"
 
-spark = get_spark_session()
+@pytest.fixture
+def spark(tmp_path_factory):
+    worker_id = "0"  # default value for non-xdist runs
+    # when doing xdist runs, pass in 'worker_id' to the spark fixture and delete the default value above
 
+    # Stop any existing Spark session
+    SparkSession._instantiatedSession = None
+    try:
+        SparkSession.builder.getOrCreate().stop()
+    except Exception:
+        pass  # Ignore if no session exists
+
+    # Create a new Spark session for testing
+    # Each worker gets its own warehouse and derby directory to avoid conflicts
+    warehouse_dir = tmp_path_factory.mktemp(f"warehouse_{worker_id}")
+    derby_dir = tmp_path_factory.mktemp(f"derby_{worker_id}")
+    builder = (
+        SparkSession.builder.config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+        .config("spark.jars.packages", "io.delta:delta-spark_2.12:3.0.0")
+        .config(
+            "spark.sql.catalog.spark_catalog",
+            "org.apache.spark.sql.delta.catalog.DeltaCatalog",
+        )
+        .config("spark.sql.warehouse.dir", str(warehouse_dir))
+        .config("spark.driver.extraJavaOptions", f"-Dderby.system.home={str(derby_dir)}")
+        .config("spark.jars.ivy", "/tmp/ivy2")
+        .config(  # below jars are used only in the local env, not coupled with databricks or EMR
+            "spark.jars",
+            f"{current_dir}/../../jars/spark-sql-kafka-0-10_2.12-3.0.0.jar,"
+            f"{current_dir}/../../jars/kafka-clients-3.0.0.jar,"
+            f"{current_dir}/../../jars/commons-pool2-2.8.0.jar,"
+            f"{current_dir}/../../jars/spark-token-provider-kafka-0-10_2.12-3.0.0.jar",
+        )
+        .config("spark.sql.shuffle.partitions", 1)
+        .config("spark.dynamicAllocation.enabled", "false")
+        .config("spark.ui.enabled", "false")
+        .config("spark.ui.showConsoleProgress", "false")
+    )
+
+    sparksession = builder.getOrCreate()
+
+    load_configurations(sparksession)
+    spark = sparksession
+    yield spark
+    spark.stop()
 
 @pytest.fixture(name="_fixture_local_kafka_topic",scope="session",autouse=True)
 def fixture_setup_local_kafka_topic():
@@ -58,7 +104,7 @@ def fixture_setup_local_kafka_topic():
 
 
 @pytest.fixture(name="_fixture_df")
-def fixture_df():
+def fixture_df(spark):
     # create a sample input raw dataframe for spark expectations
     return spark.createDataFrame(
         [
@@ -88,7 +134,7 @@ def fixture_dq_rules():
 
 
 @pytest.fixture(name="_fixture_rules_df")
-def fixture_rules_df():
+def fixture_rules_df(spark):
     rules_dict = {
         "product_id": "product1",
         "table_name": "dq_spark.test_table",
@@ -110,7 +156,7 @@ def fixture_rules_df():
 
 
 @pytest.fixture(name="_fixture_create_database")
-def fixture_create_database():
+def fixture_create_database(spark):
     # drop and create dq_spark if exists
     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
     spark.sql("create database if not exists dq_spark")
@@ -123,7 +169,7 @@ def fixture_create_database():
 
 
 @pytest.fixture(name="_fixture_context")
-def fixture_context():
+def fixture_context(spark):
     _context: SparkExpectationsContext = SparkExpectationsContext("product_id", spark)
     _context.set_table_name("dq_spark.test_final_table")
     _context.set_dq_stats_table_name("dq_spark.test_dq_stats_table")
@@ -211,7 +257,7 @@ def fixture_spark_expectations(_fixture_rules_df):
 #     os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
 
 
-def test_spark_session_initialization():
+def test_spark_session_initialization(spark):
     # Test if spark session is initialized even if dataframe.sparkSession is not accessible
     with patch.object(DataFrame, "sparkSession", new_callable=PropertyMock) as mock_sparkSession:
         mock_sparkSession.side_effect = AttributeError("The 'sparkSession' attribute is not accessible")
@@ -255,11 +301,11 @@ def test_spark_session_initialization():
 
 
 @pytest.mark.parametrize(
-    "input_df, "
+    "input_array, "
     "expectations, "
     "write_to_table, "
     "write_to_temp_table, "
-    "expected_output, "
+    "expected_output_array, "
     "input_count, "
     "error_count, "
     "output_count, "
@@ -277,16 +323,14 @@ def test_spark_session_initialization():
             # so the function should return the input DataFrame with all rows.
             # collect stats in the test_stats_table and
             # log the error records into the error table.
-            spark.createDataFrame(
-                [
-                    {"col1": 1, "col2": "a"},
-                    # row doesn't meet expectations(ignore), log into err & fnl
-                    {"col1": 2, "col2": "b"},
-                    # row meets expectations(ignore), log into final table
-                    {"col1": 3, "col2": "c"},
-                    # row meets expectations(ignore), log into final table
-                ]
-            ),
+            [
+                {"col1": 1, "col2": "a"},
+                # row doesn't meet expectations(ignore), log into err & fnl
+                {"col1": 2, "col2": "b"},
+                # row meets expectations(ignore), log into final table
+                {"col1": 3, "col2": "c"},
+                # row meets expectations(ignore), log into final table
+            ],
             [
                 {
                     "product_id": "product1",
@@ -309,13 +353,11 @@ def test_spark_session_initialization():
             True,  # write to table
             True,  # write to temp table
             # expected res
-            spark.createDataFrame(
-                [
-                    {"col1": 1, "col2": "a"},
-                    {"col1": 2, "col2": "b"},
-                    {"col1": 3, "col2": "c"},
-                ]
-            ),
+            [
+                {"col1": 1, "col2": "a"},
+                {"col1": 2, "col2": "b"},
+                {"col1": 3, "col2": "c"},
+            ],
             3,  # input count
             1,  # error count
             3,  # output count
@@ -351,16 +393,14 @@ def test_spark_session_initialization():
             # In this test case, the action for failed rows is "drop",
             # collect stats in the test_stats_table and
             # log the error records into the error table.
-            spark.createDataFrame(
-                [
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row  meets expectations(drop), log into err & fnl
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # row doesn't meets expectations(drop), log into final table
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets expectations(drop), log into final table
-                ]
-            ),
+            [
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row  meets expectations(drop), log into err & fnl
+                {"col1": 2, "col2": "b", "col3": 5},
+                # row doesn't meets expectations(drop), log into final table
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets expectations(drop), log into final table
+            ],
             [
                 {
                     "product_id": "product1",
@@ -383,14 +423,12 @@ def test_spark_session_initialization():
             True,  # write to table
             True,  # write to temp table
             # expected res
-            spark.createDataFrame(
-                [
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row doesn't meet expectations(ignore), log into err & fnl
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets expectations(ignore), log into final table
-                ]
-            ),
+            [
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row doesn't meet expectations(ignore), log into err & fnl
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets expectations(ignore), log into final table
+            ],
             3,  # input count
             1,  # error count
             2,  # output count
@@ -427,16 +465,14 @@ def test_spark_session_initialization():
             # spark expectations expected to fail
             # collect stats in the test_stats_table and
             # log the error records into the error table.
-            spark.createDataFrame(
-                [
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row doesn't meet expectations(fail), log into err & fnl
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # row meets doesn't expectations(fail), log into final table
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets doesn't expectations(fail), log into final table
-                ]
-            ),
+            [
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row doesn't meet expectations(fail), log into err & fnl
+                {"col1": 2, "col2": "b", "col3": 5},
+                # row meets doesn't expectations(fail), log into final table
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets doesn't expectations(fail), log into final table
+            ],
             [
                 {
                     "product_id": "product1",
@@ -493,16 +529,14 @@ def test_spark_session_initialization():
             # In this test case, the action for failed rows is "ignore" & "drop",
             # collect stats in the test_stats_table and
             # log the error records into the error table.
-            spark.createDataFrame(
-                [
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row doesn't meet expectations1(ignore) 2(drop), log into err & fnl
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # row meets expectations1(ignore), log into final table
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row doesnt'meets expectations1(ignore), log into final table
-                ]
-            ),
+            [
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row doesn't meet expectations1(ignore) 2(drop), log into err & fnl
+                {"col1": 2, "col2": "b", "col3": 5},
+                # row meets expectations1(ignore), log into final table
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row doesnt'meets expectations1(ignore), log into final table
+            ],
             [
                 {
                     "product_id": "product1",
@@ -542,12 +576,10 @@ def test_spark_session_initialization():
             True,  # write to table
             True,  # write to temp table
             # expected res
-            spark.createDataFrame(
-                [
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    {"col1": 3, "col2": "c", "col3": 6},
-                ]
-            ),
+            [
+                {"col1": 2, "col2": "b", "col3": 5},
+                {"col1": 3, "col2": "c", "col3": 6},
+            ],
             3,  # input count
             3,  # error count
             2,  # output count
@@ -583,16 +615,14 @@ def test_spark_session_initialization():
             # In this test case, the action for failed rows is "ignore" & "fail",
             # collect stats in the test_stats_table and
             # log the error records into the error table.
-            spark.createDataFrame(
-                [
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row doesn't meet expectations1(ignore), log into err & fnl
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # row meets expectations1(ignore), log into final table
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets expectations1(ignore), log into final table
-                ]
-            ),
+            [
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row doesn't meet expectations1(ignore), log into err & fnl
+                {"col1": 2, "col2": "b", "col3": 5},
+                # row meets expectations1(ignore), log into final table
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets expectations1(ignore), log into final table
+            ],
             [
                 {
                     "product_id": "product1",
@@ -632,13 +662,11 @@ def test_spark_session_initialization():
             True,  # write to table
             True,  # write to temp table
             # expected res
-            spark.createDataFrame(
-                [
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    {"col1": 3, "col2": "c", "col3": 6},
-                ]
-            ),
+            [
+                {"col1": 1, "col2": "a", "col3": 4},
+                {"col1": 2, "col2": "b", "col3": 5},
+                {"col1": 3, "col2": "c", "col3": 6},
+            ],
             3,  # input count
             3,  # error count
             3,  # output count
@@ -674,16 +702,14 @@ def test_spark_session_initialization():
             # In this test case, the action for failed rows is "drop" & "fail",
             # collect stats in the test_stats_table and
             # log the error records into the error table.
-            spark.createDataFrame(
-                [
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row doesn't meet expectations1(drop) & 2(drop), log into err & fnl
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # row meets expectations1(drop) & 2(fail), log into final table
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets expectations1(drop), & 2(fail) log into final table
-                ]
-            ),
+            [
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row doesn't meet expectations1(drop) & 2(drop), log into err & fnl
+                {"col1": 2, "col2": "b", "col3": 5},
+                # row meets expectations1(drop) & 2(fail), log into final table
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets expectations1(drop), & 2(fail) log into final table
+            ],
             [
                 {
                     "product_id": "product1",
@@ -757,16 +783,14 @@ def test_spark_session_initialization():
             # In this test case, the action for failed rows is "drop" & "fail",
             # collect stats in the test_stats_table and
             # log the error records into the error table
-            spark.createDataFrame(
-                [
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row doesn't meet expectations1(drop) & meets 2(fail), log into err & fnl
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # row meets expectations1(drop) & meets 2(fail), log into final table
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets expectations1(drop) & meets 2(fail), log into final table
-                ]
-            ),
+            [
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row doesn't meet expectations1(drop) & meets 2(fail), log into err & fnl
+                {"col1": 2, "col2": "b", "col3": 5},
+                # row meets expectations1(drop) & meets 2(fail), log into final table
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets expectations1(drop) & meets 2(fail), log into final table
+            ],
             [
                 {
                     "product_id": "product1",
@@ -806,16 +830,7 @@ def test_spark_session_initialization():
             True,  # write to table
             True,  # write to temp table
             # expected res
-            spark.createDataFrame(
-                [],
-                schema=StructType(
-                    [
-                        StructField("col1", IntegerType()),
-                        StructField("col2", StringType()),
-                        StructField("col3", IntegerType()),
-                    ]
-                ),
-            ),
+            [],
             3,  # input count
             3,  # error count
             0,  # output count
@@ -851,16 +866,14 @@ def test_spark_session_initialization():
             # In this test case, the action for failed rows is "ignore", "drop" & "fail",
             # collect stats in the test_stats_table and
             # log the error records into the error table
-            spark.createDataFrame(
-                [
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row doesn't meet the expectation1(ignore) & expectation2(drop)
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # row doesn't meet the expectation2(drop)
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets all the expectations
-                ]
-            ),
+            [
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row doesn't meet the expectation1(ignore) & expectation2(drop)
+                {"col1": 2, "col2": "b", "col3": 5},
+                # row doesn't meet the expectation2(drop)
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets all the expectations
+            ],
             [
                 {
                     "product_id": "product1",
@@ -916,11 +929,9 @@ def test_spark_session_initialization():
             ],
             True,  # write to table
             True,  # write_to_temp_table
-            spark.createDataFrame(  # expected output
-                [
-                    {"col1": 3, "col2": "c", "col3": 6},
-                ]
-            ),
+            [
+                {"col1": 3, "col2": "c", "col3": 6},
+            ],
             3,  # input count
             2,  # error count
             1,  # output count
@@ -954,13 +965,11 @@ def test_spark_session_initialization():
             # Test case 8
             # In this test case, dq run set for source_agg_dq
             # collect stats in the test_stats_table
-            spark.createDataFrame(
-                [
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    {"col1": 3, "col2": "c", "col3": 6},
-                ]
-            ),
+            [
+                {"col1": 1, "col2": "a", "col3": 4},
+                {"col1": 2, "col2": "b", "col3": 5},
+                {"col1": 3, "col2": "c", "col3": 6},
+            ],
             [
                 {
                     "product_id": "product1",
@@ -982,13 +991,11 @@ def test_spark_session_initialization():
             ],
             True,  # write to table
             True,  # write to temp table
-            spark.createDataFrame(
-                [
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    {"col1": 3, "col2": "c", "col3": 6},
-                ]
-            ),  # expected result
+            [
+                {"col1": 1, "col2": "a", "col3": 4},
+                {"col1": 2, "col2": "b", "col3": 5},
+                {"col1": 3, "col2": "c", "col3": 6},
+            ],
             3,  # input count
             0,  # error count
             0,  # output count
@@ -1032,14 +1039,12 @@ def test_spark_session_initialization():
             # Test case 9
             # In this test case, dq run set for source_agg_dq with action_if_failed fail
             # collect stats in the test_stats_table
-            spark.createDataFrame(
-                [
-                    # avg of col3 is not more than 25
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    {"col1": 3, "col2": "c", "col3": 6},
-                ]
-            ),
+            [
+                # avg of col3 is not more than 25
+                {"col1": 1, "col2": "a", "col3": 4},
+                {"col1": 2, "col2": "b", "col3": 5},
+                {"col1": 3, "col2": "c", "col3": 6},
+            ],
             [
                 {
                     "product_id": "product1",
@@ -1105,14 +1110,12 @@ def test_spark_session_initialization():
             # Test case 10
             # In this test case, dq run set for final_agg_dq with action_if_failed ignore
             # collect stats in the test_stats_table
-            spark.createDataFrame(
-                [
-                    # minimum of col1 must be greater than 10
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    {"col1": 3, "col2": "c", "col3": 6},
-                ]
-            ),
+            [
+                # minimum of col1 must be greater than 10
+                {"col1": 1, "col2": "a", "col3": 4},
+                {"col1": 2, "col2": "b", "col3": 5},
+                {"col1": 3, "col2": "c", "col3": 6},
+            ],
             [
                 {
                     "product_id": "product1",
@@ -1151,12 +1154,10 @@ def test_spark_session_initialization():
             ],
             True,  # write to table
             True,  # write to temp table
-            spark.createDataFrame(
-                [
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    {"col1": 3, "col2": "c", "col3": 6},
-                ]
-            ),  # expected result but row_dq set to false
+            [
+                {"col1": 1, "col2": "a", "col3": 4},
+                {"col1": 3, "col2": "c", "col3": 6},
+            ],
             3,  # input count
             1,  # error count
             2,  # output count
@@ -1202,17 +1203,15 @@ def test_spark_session_initialization():
             # In this test case, dq run set for row_dq & final_agg_dq
             # with action_if_failed drop(row), fail(agg)
             # collect stats in the test_stats_table & error into error_table
-            spark.createDataFrame(
-                # standard deviation of col3 must be greater than 10
-                [
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row meet expectation
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # row doesn't meet expectation
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets expectations
-                ]
-            ),
+            # standard deviation of col3 must be greater than 10
+            [
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row meet expectation
+                {"col1": 2, "col2": "b", "col3": 5},
+                # row doesn't meet expectation
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets expectations
+            ],
             [
                 {
                     "product_id": "product1",
@@ -1298,16 +1297,14 @@ def test_spark_session_initialization():
             # In this test case, dq run set for row_dq
             # with action_if_failed drop
             # collect stats in the test_stats_table & error into error_table
-            spark.createDataFrame(
-                [
-                    {"col1": 1, "col2": "a"},
-                    # row doesn't meet the expectations
-                    {"col1": 2, "col2": "b"},
-                    # row meets the expectation
-                    {"col1": 3, "col2": "c"},
-                    # row meets the expectations
-                ]
-            ),
+            [
+                {"col1": 1, "col2": "a"},
+                # row doesn't meet the expectations
+                {"col1": 2, "col2": "b"},
+                # row meets the expectation
+                {"col1": 3, "col2": "c"},
+                # row meets the expectations
+            ],
             [
                 {
                     "product_id": "product1",
@@ -1329,9 +1326,7 @@ def test_spark_session_initialization():
             ],
             True,  # write to table
             True,  # write to temp table
-            spark.createDataFrame(
-                [{"col1": 2, "col2": "b"}, {"col1": 3, "col2": "c"}]  # expected_output
-            ),  # expected result
+            [{"col1": 2, "col2": "b"}, {"col1": 3, "col2": "c"}],  # expected_output
             3,  # input count
             1,  # error count
             2,  # output count
@@ -1366,17 +1361,15 @@ def test_spark_session_initialization():
             # In this test case, dq run set for row_dq  & source_agg_dq
             # with action_if_failed (ignore, drop) and ignore(agg_dq)
             # collect stats in the test_stats_table & error into error_table
-            spark.createDataFrame(
-                [
-                    # count of distinct element in col2 must be greater than 2
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row doesn't meet expectation1(ignore)
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # row meets all row_dq expectations
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets all row_dq expectations
-                ]
-            ),
+            [
+                # count of distinct element in col2 must be greater than 2
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row doesn't meet expectation1(ignore)
+                {"col1": 2, "col2": "b", "col3": 5},
+                # row meets all row_dq expectations
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets all row_dq expectations
+            ],
             [
                 {
                     "product_id": "product1",
@@ -1432,13 +1425,11 @@ def test_spark_session_initialization():
             ],
             True,  # write to table
             True,  # write to temp table
-            spark.createDataFrame(
-                [  # expected_output
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    {"col1": 3, "col2": "c", "col3": 6},
-                ]
-            ),
+            [  # expected_output
+                {"col1": 1, "col2": "a", "col3": 4},
+                {"col1": 2, "col2": "b", "col3": 5},
+                {"col1": 3, "col2": "c", "col3": 6},
+            ],
             3,  # input count
             1,  # error count
             3,  # output count
@@ -1484,17 +1475,15 @@ def test_spark_session_initialization():
             # In this test case, dq run set for row_dq, source_agg_dq & final_agg_dq
             # with action_if_failed r(ignore, drop) for row_dq  and (ignore) for agg_dq
             # collect stats in the test_stats_table & error into error_table
-            spark.createDataFrame(
-                [
-                    # avg of col1 must be greater than 4(ignore) for agg_dq
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row doesn't meet row_dq expectation1(ignore)
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # row doesn't meet row_dq expectation2(drop)
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets all row-dq expectations
-                ]
-            ),
+            [
+                # avg of col1 must be greater than 4(ignore) for agg_dq
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row doesn't meet row_dq expectation1(ignore)
+                {"col1": 2, "col2": "b", "col3": 5},
+                # row doesn't meet row_dq expectation2(drop)
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets all row-dq expectations
+            ],
             [
                 {
                     "product_id": "product1",
@@ -1550,12 +1539,10 @@ def test_spark_session_initialization():
             ],
             True,  # write to table
             True,  # write to temp table
-            spark.createDataFrame(
-                [  # expected_output
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    {"col1": 3, "col2": "c", "col3": 6},
-                ]
-            ),  # expected result
+            [  # expected_output
+                {"col1": 2, "col2": "b", "col3": 5},
+                {"col1": 3, "col2": "c", "col3": 6},
+            ],
             3,  # input count
             2,  # error count
             2,  # output count
@@ -1612,19 +1599,17 @@ def test_spark_session_initialization():
             # In this test case, dq run set for row_dq, source_agg_dq & final_agg_dq
             # with action_if_failed (ignore, drop) for row_dq  and (ignore, fail) for agg_dq
             # collect stats in the test_stats_table & error into error_table
-            spark.createDataFrame(
-                [
-                    # average of col1 must be greater than 4(ignore)
-                    # standard deviation of col1 must be greater than 0(fail)
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row doesn't meet row_dq expectation1(drop) and expectation2(ignore)
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # row meets all row_dq_expectations
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets all row_dq_expectations
-                    {"col1": 2, "col2": "d", "col3": 7},
-                ]
-            ),
+            [
+                # average of col1 must be greater than 4(ignore)
+                # standard deviation of col1 must be greater than 0(fail)
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row doesn't meet row_dq expectation1(drop) and expectation2(ignore)
+                {"col1": 2, "col2": "b", "col3": 5},
+                # row meets all row_dq_expectations
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets all row_dq_expectations
+                {"col1": 2, "col2": "d", "col3": 7},
+            ],
             [
                 {
                     "product_id": "product1",
@@ -1697,12 +1682,10 @@ def test_spark_session_initialization():
             ],
             True,  # write to table
             True,  # write to temp table
-            spark.createDataFrame(
-                [  # expected_output
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    {"col1": 2, "col2": "d", "col3": 7},
-                ]
-            ),  # expected result
+            [  # expected_output
+                {"col1": 3, "col2": "c", "col3": 6},
+                {"col1": 2, "col2": "d", "col3": 7},
+            ],
             4,  # input count
             3,  # error count
             2,  # output count
@@ -1777,18 +1760,16 @@ def test_spark_session_initialization():
             # In this test case, dq run set for query_dq source_query_dq
             # with action_if_failed (ignore) for query_dq
             # collect stats in the test_stats_table & error into error_table
-            spark.createDataFrame(
-                [
-                    # sum of col1 must be greater than 10(ignore)
-                    # standard deviation of col3 must be greater than 0(ignore)
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row doesn't meet row_dq expectation1(drop)
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # row meets all row_dq_expectations
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets all row_dq_expectations
-                ]
-            ),
+            [
+                # sum of col1 must be greater than 10(ignore)
+                # standard deviation of col3 must be greater than 0(ignore)
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row doesn't meet row_dq expectation1(drop)
+                {"col1": 2, "col2": "b", "col3": 5},
+                # row meets all row_dq_expectations
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets all row_dq_expectations
+            ],
             [
                 {
                     "product_id": "product1",
@@ -1883,18 +1864,16 @@ def test_spark_session_initialization():
             # In this test case, dq run set for query_dq final_query_dq
             # with action_if_failed (ignore) for query_dq
             # collect stats in the test_stats_table & error into error_table
-            spark.createDataFrame(
-                [
-                    # max of col1 must be greater than 10(ignore)
-                    # min of col3 must be greater than 0(ignore)
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row doesn't meet row_dq expectation1(drop) and expectation2(ignore)
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # row meets all row_dq_expectations
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets all row_dq_expectations
-                ]
-            ),
+            [
+                # max of col1 must be greater than 10(ignore)
+                # min of col3 must be greater than 0(ignore)
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row doesn't meet row_dq expectation1(drop) and expectation2(ignore)
+                {"col1": 2, "col2": "b", "col3": 5},
+                # row meets all row_dq_expectations
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets all row_dq_expectations
+            ],
             [
                 {
                     "product_id": "product1",
@@ -1950,11 +1929,9 @@ def test_spark_session_initialization():
             ],
             True,  # write to table
             False,  # write to temp table
-            spark.createDataFrame(
-                [
-                    {"col1": 3, "col2": "c", "col3": 6},
-                ]
-            ),  # expected result
+            [
+                {"col1": 3, "col2": "c", "col3": 6},
+            ],
             3,  # input count
             2,  # error count
             1,  # output count
@@ -2010,18 +1987,16 @@ def test_spark_session_initialization():
             # In this test case, dq run set for query_dq source_query_dq(ignore, fail)
             # with action_if_failed (fail) for query_dq
             # collect stats in the test_stats_table, error into error_table & raises the error
-            spark.createDataFrame(
-                [
-                    # min of col1 must be greater than 10(fail)
-                    # standard deviation of col3 must be greater than 0(ignore)
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row doesn't meet row_dq expectation1(drop)
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # row meets all row_dq_expectations
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets all row_dq_expectations
-                ]
-            ),
+            [
+                # min of col1 must be greater than 10(fail)
+                # standard deviation of col3 must be greater than 0(ignore)
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row doesn't meet row_dq expectation1(drop)
+                {"col1": 2, "col2": "b", "col3": 5},
+                # row meets all row_dq_expectations
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets all row_dq_expectations
+            ],
             [
                 {
                     "product_id": "product1",
@@ -2114,18 +2089,16 @@ def test_spark_session_initialization():
             # In this test case, dq run set for query_dq final_query_dq(ignore, fail)
             # with action_if_failed (ignore, fail) for query_dq
             # collect stats in the test_stats_table, error into error_table & raises error
-            spark.createDataFrame(
-                [
-                    # max of col1 must be greater than 10(ignore)
-                    # min of col3 must be greater than 0(ignore)
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row doesn't meet row_dq expectation1(drop) and expectation2(ignore)
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # row meets all row_dq_expectations
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets all row_dq_expectations
-                ]
-            ),
+            [
+                # max of col1 must be greater than 10(ignore)
+                # min of col3 must be greater than 0(ignore)
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row doesn't meet row_dq expectation1(drop) and expectation2(ignore)
+                {"col1": 2, "col2": "b", "col3": 5},
+                # row meets all row_dq_expectations
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets all row_dq_expectations
+            ],
             [
                 {
                     "product_id": "product1",
@@ -2238,19 +2211,17 @@ def test_spark_session_initialization():
             # final_query_dq(ignore, fail)
             # with action_if_failed (ignore, fail) for query_dq
             # collect stats in the test_stats_table, error into error_table
-            spark.createDataFrame(
-                [
-                    # min of col1 must be greater than 10(ignore) - source_query_dq
-                    # max of col1 must be greater than 100(ignore) - final_query_dq
-                    # min of col3 must be greater than 0(fail) - final_query_dq
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row meets all row_dq_expectations(drop)
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # ow doesn't meet row_dq expectation1(drop)
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets all row_dq_expectations
-                ]
-            ),
+            [
+                # min of col1 must be greater than 10(ignore) - source_query_dq
+                # max of col1 must be greater than 100(ignore) - final_query_dq
+                # min of col3 must be greater than 0(fail) - final_query_dq
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row meets all row_dq_expectations(drop)
+                {"col1": 2, "col2": "b", "col3": 5},
+                # ow doesn't meet row_dq expectation1(drop)
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets all row_dq_expectations
+            ],
             [
                 {
                     "product_id": "product1",
@@ -2323,12 +2294,10 @@ def test_spark_session_initialization():
             ],
             True,  # write to table
             False,  # write to temp table
-            spark.createDataFrame(
-                [
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    {"col1": 3, "col2": "c", "col3": 6},
-                ]
-            ),  # expected result
+            [
+                {"col1": 1, "col2": "a", "col3": 4},
+                {"col1": 3, "col2": "c", "col3": 6},
+            ],
             3,  # input count
             1,  # error count
             2,  # output count
@@ -2396,19 +2365,17 @@ def test_spark_session_initialization():
             # final_query_dq(ignore, fail)
             # with action_if_failed (ignore, fail) for query_dq
             # collect stats in the test_stats_table, error into error_table & raise the error
-            spark.createDataFrame(
-                [
-                    # min of col1 must be greater than 10(ignore) - source_query_dq
-                    # max of col1 must be greater than 100(fail) - final_query_dq
-                    # min of col3 must be greater than 0(fail) - final_query_dq
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row meets all row_dq_expectations(drop)
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # ow doesn't meet row_dq expectation1(drop)
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets all row_dq_expectations
-                ]
-            ),
+            [
+                # min of col1 must be greater than 10(ignore) - source_query_dq
+                # max of col1 must be greater than 100(fail) - final_query_dq
+                # min of col3 must be greater than 0(fail) - final_query_dq
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row meets all row_dq_expectations(drop)
+                {"col1": 2, "col2": "b", "col3": 5},
+                # ow doesn't meet row_dq expectation1(drop)
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets all row_dq_expectations
+            ],
             [
                 {
                     "product_id": "product1",
@@ -2549,19 +2516,17 @@ def test_spark_session_initialization():
             # final_query_dq(ignore, fail)
             # with action_if_failed (ignore, fail) for query_dq
             # collect stats in the test_stats_table, error into error_table & raise the error
-            spark.createDataFrame(
-                [
-                    # min of col1 must be greater than 10(ignore) - source_query_dq
-                    # max of col1 must be greater than 100(fail) - final_query_dq
-                    # min of col3 must be greater than 0(fail) - final_query_dq
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row meets all row_dq_expectations(drop)
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # ow doesn't meet row_dq expectation1(drop)
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets all row_dq_expectations
-                ]
-            ),
+            [
+                # min of col1 must be greater than 10(ignore) - source_query_dq
+                # max of col1 must be greater than 100(fail) - final_query_dq
+                # min of col3 must be greater than 0(fail) - final_query_dq
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row meets all row_dq_expectations(drop)
+                {"col1": 2, "col2": "b", "col3": 5},
+                # ow doesn't meet row_dq expectation1(drop)
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets all row_dq_expectations
+            ],
             [
                 {
                     "product_id": "product1",
@@ -2635,12 +2600,10 @@ def test_spark_session_initialization():
             ],
             True,  # write to table
             False,  # write to temp table
-            spark.createDataFrame(
-                [
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    {"col1": 3, "col2": "c", "col3": 6},
-                ]
-            ),  # expected result
+            [
+                {"col1": 1, "col2": "a", "col3": 4},
+                {"col1": 3, "col2": "c", "col3": 6},
+            ],
             3,  # input count
             1,  # error count
             2,  # output count
@@ -2718,18 +2681,16 @@ def test_spark_session_initialization():
             # In this test case, dq run set for query_dq source_query_dq and one of the rule is parameterized
             # with action_if_failed (ignore) for query_dq
             # collect stats in the test_stats_table & error into error_table
-            spark.createDataFrame(
-                [
-                    # sum of col1 must be greater than 10(ignore)
-                    # standard deviation of col3 must be greater than 0(ignore)
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    # row doesn't meet row_dq expectation1(drop)
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    # row meets all row_dq_expectations
-                    {"col1": 3, "col2": "c", "col3": 6},
-                    # row meets all row_dq_expectations
-                ]
-            ),
+            [
+                # sum of col1 must be greater than 10(ignore)
+                # standard deviation of col3 must be greater than 0(ignore)
+                {"col1": 1, "col2": "a", "col3": 4},
+                # row doesn't meet row_dq expectation1(drop)
+                {"col1": 2, "col2": "b", "col3": 5},
+                # row meets all row_dq_expectations
+                {"col1": 3, "col2": "c", "col3": 6},
+                # row meets all row_dq_expectations
+            ],
             [
                 {
                     "product_id": "product1",
@@ -2824,14 +2785,12 @@ def test_spark_session_initialization():
             # In this test case, dq run set for source_agg_dq with action_if_failed fail
             # with the sql syntax > lower_bound and < upper_bound
             # collect stats in the test_stats_table
-            spark.createDataFrame(
-                [
-                    # avg of col3 is greater than 18 and not more than 25
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    {"col1": 3, "col2": "c", "col3": 6},
-                ]
-            ),
+            [
+                # avg of col3 is greater than 18 and not more than 25
+                {"col1": 1, "col2": "a", "col3": 4},
+                {"col1": 2, "col2": "b", "col3": 5},
+                {"col1": 3, "col2": "c", "col3": 6},
+            ],
             [
                 {
                     "product_id": "product1",
@@ -2898,14 +2857,12 @@ def test_spark_session_initialization():
             # In this test case, dq run set for source_agg_dq with action_if_failed fail
             # with the sql syntax between lower_bound and upper_bound
             # collect stats in the test_stats_table
-            spark.createDataFrame(
-                [
-                    # avg of col3 is greater than 18 and not more than 25
-                    {"col1": 1, "col2": "a", "col3": 4},
-                    {"col1": 2, "col2": "b", "col3": 5},
-                    {"col1": 3, "col2": "c", "col3": 6},
-                ]
-            ),
+            [
+                # avg of col3 is greater than 18 and not more than 25
+                {"col1": 1, "col2": "a", "col3": 4},
+                {"col1": 2, "col2": "b", "col3": 5},
+                {"col1": 3, "col2": "c", "col3": 6},
+            ],
             [
                 {
                     "product_id": "product1",
@@ -2970,11 +2927,11 @@ def test_spark_session_initialization():
     ],
 )
 def test_with_expectations(
-    input_df,
+    input_array,
     expectations,
     write_to_table,
     write_to_temp_table,
-    expected_output,
+    expected_output_array,
     input_count,
     error_count,
     output_count,
@@ -2986,7 +2943,9 @@ def test_with_expectations(
     status,
     _fixture_create_database,
     _fixture_local_kafka_topic,
+    spark
 ):
+    input_df = spark.createDataFrame(input_array)
     input_df.createOrReplaceTempView("test_table")
 
     spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
@@ -3015,7 +2974,7 @@ def test_with_expectations(
         "dq_spark.test_final_table",
         user_conf={
             user_config.se_notifications_on_fail: False,
-            user_config.se_dq_rules_params: {"table": "test_table", "env": "local"},
+            user_config.se_dq_rules_params: {"table": "test_table", "env": "local"}
         },
         write_to_table=write_to_table,
         write_to_temp_table=write_to_temp_table,
@@ -3024,6 +2983,26 @@ def test_with_expectations(
         return input_df
 
     input_df.show(truncate=False)
+
+    SparkExpectationsMiscException
+    
+    if isinstance(expected_output_array, type) and issubclass(expected_output_array, Exception):
+        expected_output = expected_output_array
+    elif expected_output_array == []:
+        expected_output = spark.createDataFrame(
+            [],
+            schema=StructType(
+                [
+                    StructField("col1", IntegerType()),
+                    StructField("col2", StringType()),
+                    StructField("col3", IntegerType()),
+                ]
+            ),
+        )
+    elif expected_output_array is None:
+        expected_output = None
+    else:
+        expected_output = spark.createDataFrame(expected_output_array)
 
     if isinstance(expected_output, type) and issubclass(expected_output, Exception):
         with pytest.raises(
@@ -3078,19 +3057,20 @@ def test_with_expectations(
     assert row.dq_env == "local"
     assert len(stats_table.columns) == 21
 
-    assert (
-        spark.read.format("kafka")
-        .option("kafka.bootstrap.servers", "localhost:9092")
-        .option("subscribe", "dq-sparkexpectations-stats")
-        .option("startingOffsets", "earliest")
-        .option("endingOffsets", "latest")
-        .load()
-        .orderBy(col("timestamp").desc())
-        .limit(1)
-        .selectExpr("cast(value as string) as value")
+    kafka_table = spark.read.format("kafka") \
+        .option("kafka.bootstrap.servers", "localhost:9092") \
+        .option("subscribe", "dq-sparkexpectations-stats") \
+        .option("startingOffsets", "earliest") \
+        .option("endingOffsets", "latest") \
+        .load() \
+        .orderBy(col("timestamp").desc()) \
+        .limit(1) \
+        .selectExpr("cast(value as string) as value") \
         .collect()
-        == stats_table.selectExpr("to_json(struct(*)) AS value").collect()
-    )
+    
+    stats_table = stats_table.selectExpr("to_json(struct(*)) AS value").collect()
+
+    assert kafka_table == stats_table
 
     # spark.sql("select * from dq_spark.test_final_table").show(truncate=False)
     # spark.sql("select * from dq_spark.test_final_table_error").show(truncate=False)
