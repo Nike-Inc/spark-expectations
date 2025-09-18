@@ -173,7 +173,7 @@ class SparkExpectationsValidateRules:
         Returns:
             dict: {RuleType: [failed_rule_dicts]}
         """
-        failed = {rt: [] for rt in RuleType}
+        failed: Dict[RuleType, List[Dict]] = {rt: [] for rt in RuleType}
         for rule in rules:
             try:
                 rule_type = RuleType(rule.get("rule_type"))
