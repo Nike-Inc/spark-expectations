@@ -328,7 +328,8 @@ class SparkExpectationsReader:
                         "description": row["description"],
                         "enable_error_drop_alert": row["enable_error_drop_alert"],
                         "error_drop_threshold": row["error_drop_threshold"],
-                        "priority": row["priority"],
+                        # TODO Rules table "priority" column should be required when we start leveraging it for notifications. For now, setting a default value.
+                        "priority": row["priority"] if "priority" in row else "medium",
                     }
 
                     if row["rule_type"] == self._context.get_query_dq_rule_type_name:
