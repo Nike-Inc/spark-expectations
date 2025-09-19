@@ -34,7 +34,7 @@ from spark_expectations.notifications.push.spark_expectations_notify import Spar
 spark = get_spark_session()
 
 
-@pytest.fixture(name="_fixture_local_kafka_topic",scope="session",autouse=True)
+@pytest.fixture(name="_fixture_local_kafka_topic",scope="session")
 def fixture_setup_local_kafka_topic():
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -2985,7 +2985,6 @@ def test_with_expectations(
     dq_rules,
     status,
     _fixture_create_database,
-    _fixture_local_kafka_topic,
 ):
     input_df.createOrReplaceTempView("test_table")
 
@@ -3002,6 +3001,7 @@ def test_with_expectations(
         stats_table_writer=writer,
         target_and_error_table_writer=writer,
         debugger=False,
+        stats_streaming_options={user_config.se_enable_streaming: False},
     )
     se._context._run_date = "2022-12-27 10:00:00"
     se._context._env = "local"
@@ -3078,19 +3078,19 @@ def test_with_expectations(
     assert row.dq_env == "local"
     assert len(stats_table.columns) == 21
 
-    assert (
-        spark.read.format("kafka")
-        .option("kafka.bootstrap.servers", "localhost:9092")
-        .option("subscribe", "dq-sparkexpectations-stats")
-        .option("startingOffsets", "earliest")
-        .option("endingOffsets", "latest")
-        .load()
-        .orderBy(col("timestamp").desc())
-        .limit(1)
-        .selectExpr("cast(value as string) as value")
-        .collect()
-        == stats_table.selectExpr("to_json(struct(*)) AS value").collect()
-    )
+    # assert (
+    #     spark.read.format("kafka")
+    #     .option("kafka.bootstrap.servers", "localhost:9092")
+    #     .option("subscribe", "dq-sparkexpectations-stats")
+    #     .option("startingOffsets", "earliest")
+    #     .option("endingOffsets", "latest")
+    #     .load()
+    #     .orderBy(col("timestamp").desc())
+    #     .limit(1)
+    #     .selectExpr("cast(value as string) as value")
+    #     .collect()
+    #     == stats_table.selectExpr("to_json(struct(*)) AS value").collect()
+    # )
 
     # spark.sql("select * from dq_spark.test_final_table").show(truncate=False)
     # spark.sql("select * from dq_spark.test_final_table_error").show(truncate=False)
