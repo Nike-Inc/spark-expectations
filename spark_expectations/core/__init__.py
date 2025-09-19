@@ -1,13 +1,12 @@
 import ast
 import json
 import os
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Union
 
 import yaml
 from pyspark.sql.session import SparkSession
 
 
-from spark_expectations.config.user_config import Constants as user_config
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 

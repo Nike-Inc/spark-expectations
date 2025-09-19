@@ -1,7 +1,9 @@
 import re
-import uuid
+from enum import Enum
 from typing import Dict, List
 
+import sqlglot
+from sqlglot.errors import ParseError
 from pyspark.sql import DataFrame, SparkSession
 from pyspark.sql.functions import expr
 
@@ -9,13 +11,7 @@ from spark_expectations.core.exceptions import (
     SparkExpectationsInvalidAggDQExpectationException,
     SparkExpectationsInvalidQueryDQExpectationException,
     SparkExpectationsInvalidRowDQExpectationException,
-    SparkExpectationsInvalidRuleTypeException,
 )
-
-import sqlglot
-from sqlglot.errors import ParseError
-
-from enum import Enum
 
 
 class RuleType(Enum):
@@ -124,7 +120,7 @@ class SparkExpectationsValidateRules:
             )
 
     @staticmethod
-    def validate_query_dq_expectation(df: DataFrame, rule: Dict, spark: SparkSession) -> None:
+    def validate_query_dq_expectation(_df: DataFrame, rule: Dict, _spark: SparkSession) -> None:
         """
         Validates a query_dq expectation by ensuring it is a valid SQL query.
         Args:
@@ -173,7 +169,7 @@ class SparkExpectationsValidateRules:
         Returns:
             dict: {RuleType: [failed_rule_dicts]}
         """
-        failed = {rt: [] for rt in RuleType}
+        failed: Dict[RuleType, List[Dict]] = {rt: [] for rt in RuleType}
         for rule in rules:
             try:
                 rule_type = RuleType(rule.get("rule_type"))
