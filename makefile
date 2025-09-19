@@ -111,6 +111,6 @@ test: kafka-cluster-start
 
 # make test-arg TEST=tests/sinks/utils/test_collect_statistics.py::test_collect_stats_on_success_failure 
 test-arg:
-	@hatch -e $(DEFAULT_HATCH_ENV) run pytest -ra -vv $(TEST)
+	@hatch -e $(DEFAULT_HATCH_ENV) run pytest -ra -vv $(TEST) -n 0 --durations=30
 
 .PHONY: black-check build check cov coverage deploy-docs deploy_env_setup dev docs env-remove-all env-remove-default fmt generate-mailserver-certs get-version kafka-cluster-start kafka-cluster-stop local-kafka-cluster-start local-se-server-start local-se-server-stop mypy python-versions set-git-remote test test-arg
