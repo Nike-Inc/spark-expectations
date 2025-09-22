@@ -32,6 +32,8 @@ class SparkExpectationsContext:
         self._custom_dataframe: DataFrame = None
         self._se_dq_obs_alert_flag: bool = False
         self._run_date: str = self.set_run_date()
+        self._basic_default_template: Optional[str] = None
+        self._custom_default_template: Optional[str] = None
         self._dq_stats_table_name: Optional[str] = None
         self._dq_detailed_stats_table_name: Optional[str] = None
         self._final_table_name: Optional[str] = None
