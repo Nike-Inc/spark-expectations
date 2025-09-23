@@ -6,8 +6,6 @@ from typing import Any, Dict, Union
 import yaml
 from pyspark.sql.session import SparkSession
 
-
-
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 
@@ -63,7 +61,7 @@ def get_config_dict(
 
     Args:
         spark (SparkSession): The Spark session to retrieve the configuration from.
-        user_conf (Optional[Dict[str, Any]]): User configuration to merge with default configuration.
+        user_conf ([Dict[str, Any]]): User configuration to merge with default configuration.
 
     Returns:
         tuple: A tuple containing (notification_dict, streaming_dict).

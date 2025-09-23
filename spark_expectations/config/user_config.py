@@ -49,6 +49,12 @@ class Constants:
     se_notifications_zoom_webhook_url = "spark.expectations.notifications.zoom.webhook.url"
     se_notifications_zoom_token = "spark.expectations.notifications.zoom.token"
 
+    # declare const user configs for pagerduty incidents
+    se_notifications_enable_pagerduty = "spark.expectations.notifications.pagerduty.enabled"
+    # For Pagerduty Services, your integration key is the routing key when making calls to the Events API v2.
+    se_notifications_pagerduty_integration_key = "spark.expectations.notifications.pagerduty.integration.key"
+    se_notifications_pagerduty_webhook_url = "spark.expectations.notifications.pagerduty.webhook.url"
+
     se_notifications_on_start = "spark.expectations.notifications.on.start"
     se_notifications_on_completion = "spark.expectations.notifications.on.completion"
     se_notifications_on_fail = "spark.expectations.notifications.on.fail"

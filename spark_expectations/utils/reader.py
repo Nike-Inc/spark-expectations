@@ -165,7 +165,20 @@ class SparkExpectationsReader:
                         raise SparkExpectationsMiscException(
                             "All params/variables required for zoom notification is not configured or supplied"
                         )
-
+            
+            if _notification_dict.get(user_config.se_notifications_enable_pagerduty) is True:
+                if _notification_dict[user_config.se_notifications_pagerduty_integration_key]:
+                    self._context.set_enable_pagerduty(True)
+                    self._context.set_pagerduty_integration_key(
+                        str(_notification_dict[user_config.se_notifications_pagerduty_integration_key])
+                    )
+                    self._context.set_pagerduty_webhook_url(
+                        str(_notification_dict[user_config.se_notifications_pagerduty_webhook_url])
+                    )
+                else:
+                    raise SparkExpectationsMiscException(
+                        "All params/variables required for pagerduty notification is not configured or supplied"
+                    )
         except Exception as e:
             raise SparkExpectationsMiscException(f"error occurred while reading notification configurations {e}")
 

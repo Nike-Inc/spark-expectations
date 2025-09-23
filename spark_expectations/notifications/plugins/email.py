@@ -159,7 +159,7 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
         function to send email notification for requested mail id's
         Args:
             _context: object of SparkExpectationsContext
-            _config_args: dict(which consists of: receiver mail(str), subject: subject of
+            _config_args: dict which consists of: receiver mail(str), subject: subject of
                           the mail(str) and body: body of the mail(str)
         Returns:
 

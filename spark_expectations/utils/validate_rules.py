@@ -1,6 +1,6 @@
 import re
-from enum import Enum
 from typing import Dict, List
+from enum import Enum
 
 import sqlglot
 from sqlglot.errors import ParseError
@@ -120,7 +120,8 @@ class SparkExpectationsValidateRules:
             )
 
     @staticmethod
-    def validate_query_dq_expectation(_df: DataFrame, rule: Dict, _spark: SparkSession) -> None:
+    # pylint: disable=unused-argument
+    def validate_query_dq_expectation(df: DataFrame, rule: Dict, spark: SparkSession) -> None:
         """
         Validates a query_dq expectation by ensuring it is a valid SQL query.
         Args:

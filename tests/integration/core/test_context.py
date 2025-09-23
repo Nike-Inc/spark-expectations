@@ -666,6 +666,27 @@ def test_set_zoom_token():
     assert context.get_zoom_token == "abcdefghi"
 
 
+def test_set_enable_pagerduty():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_enable_pagerduty(True)
+    assert context._enable_pagerduty is True
+    assert context.get_enable_pagerduty is True
+
+
+def test_set_pagerduty_webhook_url():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_pagerduty_webhook_url("abcdefghi")
+    assert context._pagerduty_webhook_url == "abcdefghi"
+    assert context.get_pagerduty_webhook_url == "abcdefghi"
+
+
+def test_set_pagerduty_integration_key():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_pagerduty_integration_key("abcdefghi")
+    assert context._pagerduty_integration_key == "abcdefghi"
+    assert context.get_pagerduty_integration_key == "abcdefghi"
+
+
 def test_table_name():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_table_name("test_table")
@@ -855,6 +876,17 @@ def test_get_zoom_webhook_url_exception():
         "'_zoom_webhook_url' before \n            accessing it",
     ):
         context.get_zoom_webhook_url
+
+
+def test_get_pagerduty_webhook_url_exception():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context._pagerduty_webhook_url = False
+    with pytest.raises(
+        SparkExpectationsMiscException,
+        match="The spark expectations context is not set completely, please assign "
+        "'_pagerduty_webhook_url' before \n            accessing it",
+    ):
+        context.get_pagerduty_webhook_url
 
 
 def test_get_zoom_token():
