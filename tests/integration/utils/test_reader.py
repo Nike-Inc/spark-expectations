@@ -108,6 +108,9 @@ def fixture_product_rules_pipe():
                 "spark.expectations.notifications.slack.webhook.url": "",
                 "spark.expectations.notifications.teams.enabled": False,
                 "spark.expectations.notifications.teams.webhook.url": "",
+                "spark.expectations.notifications.pagerduty.enabled": False,
+                "spark.expectations.notifications.pagerduty.integration.key": "",
+                "spark.expectations.notifications.pagerduty.webhook.url": "",
             },
             None,
         ),
@@ -175,6 +178,9 @@ def fixture_product_rules_pipe():
                 "spark.expectations.notifications.slack.webhook.url": "",
                 "spark.expectations.notifications.teams.enabled": False,
                 "spark.expectations.notifications.teams.webhook.url": "",
+                "spark.expectations.notifications.pagerduty.enabled": False,
+                "spark.expectations.notifications.pagerduty.integration.key": "",
+                "spark.expectations.notifications.pagerduty.webhook.url": "",
             },
             None,
         ),
@@ -192,6 +198,9 @@ def fixture_product_rules_pipe():
                 "spark.expectations.notifications.slack.webhook.url": "",
                 "spark.expectations.notifications.teams.enabled": False,
                 "spark.expectations.notifications.teams.webhook.url": "",
+                "spark.expectations.notifications.pagerduty.enabled": False,
+                "spark.expectations.notifications.pagerduty.integration.key": "",
+                "spark.expectations.notifications.pagerduty.webhook.url": "",
             },
             None,
         ),
@@ -214,6 +223,9 @@ def fixture_product_rules_pipe():
                 "spark.expectations.notifications.slack.webhook.url": "",
                 "spark.expectations.notifications.teams.enabled": False,
                 "spark.expectations.notifications.teams.webhook.url": "",
+                "spark.expectations.notifications.pagerduty.enabled": False,
+                "spark.expectations.notifications.pagerduty.integration.key": "",
+                "spark.expectations.notifications.pagerduty.webhook.url": "",
             },
             None,
         ),
@@ -230,6 +242,9 @@ def fixture_product_rules_pipe():
                 "spark.expectations.notifications.slack.webhook.url": "",
                 "spark.expectations.notifications.teams.enabled": False,
                 "spark.expectations.notifications.teams.webhook.url": "",
+                "spark.expectations.notifications.pagerduty.enabled": False,
+                "spark.expectations.notifications.pagerduty.integration.key": "",
+                "spark.expectations.notifications.pagerduty.webhook.url": "",
             },
             SparkExpectationsMiscException,
         ),
@@ -250,9 +265,28 @@ def fixture_product_rules_pipe():
                 "spark.expectations.notifications.slack.webhook.url": "",
                 "spark.expectations.notifications.teams.enabled": False,
                 "spark.expectations.notifications.teams.webhook.url": "",
+                "spark.expectations.notifications.pagerduty.enabled": True,
+                "spark.expectations.notifications.pagerduty.integration.key": "",
+                "spark.expectations.notifications.pagerduty.webhook.url": "",
             },
             SparkExpectationsMiscException,
         ),
+        (
+            {
+                "spark.expectations.notifications.pagerduty.enabled": True,
+                "spark.expectations.notifications.pagerduty.integration.key": "",
+                "spark.expectations.notifications.pagerduty.webhook.url": "",
+            },
+            SparkExpectationsMiscException,
+        ),
+        (
+            {
+                "spark.expectations.notifications.pagerduty.enabled": True,
+                "spark.expectations.notifications.pagerduty.integration.key": "123",
+                "spark.expectations.notifications.pagerduty.webhook.url": "https://test.url/",
+            },
+            None,
+        )
     ],
 )
 def test_set_notification_param(notification, expected_result):
@@ -337,6 +371,16 @@ def test_set_notification_param(notification, expected_result):
             )
             mock_context.set_teams_webhook_url.assert_called_once_with(
                 notification.get("spark.expectations.notifications.teams.webhook.url")
+            )
+        if notification.get("spark.expectations.notifications.pagerduty.enabled"):
+            mock_context.set_enable_pagerduty.assert_called_once_with(
+                notification.get("spark.expectations.notifications.pagerduty.enabled")
+            )
+            mock_context.set_pagerduty_integration_key.assert_called_once_with(
+                notification.get("spark.expectations.notifications.pagerduty.integration.key")
+            )
+            mock_context.set_pagerduty_webhook_url.assert_called_once_with(
+                notification.get("spark.expectations.notifications.pagerduty.webhook.url")
             )
     else:
         with pytest.raises(
