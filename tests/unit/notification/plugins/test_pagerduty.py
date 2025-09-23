@@ -9,7 +9,8 @@ from spark_expectations.notifications.plugins.pagerduty import SparkExpectations
 def test_send_incident_success(_mock_context):
     pagerduty_handler = SparkExpectationsPagerDutyPluginImpl()
     _mock_context.get_enable_pagerduty = True
-    _mock_context.get_pagerduty_webhook_url = "http://test_webhook_url"
+    _mock_context.get_pagerduty_webhook_url = "https://events.pagerduty.com/v2/change/enqueue"
+    _mock_context.get_pagerduty_integration_key = "test_integration_key"
 
     _config_args = {"message": "test message"}
 
@@ -19,8 +20,10 @@ def test_send_incident_success(_mock_context):
         mock_response.status_code = 202
         mock_post.return_value = mock_response
 
+        print("TEST")
+        print(_mock_context.get_pagerduty_webhook_url)
+        print(_mock_context.get_pagerduty_integration_key)
         pagerduty_handler.send_notification(_context=_mock_context, _config_args=_config_args)
-
         mock_post.assert_called_once_with(
             _mock_context.get_pagerduty_webhook_url,
             json={
