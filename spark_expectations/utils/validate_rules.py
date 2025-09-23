@@ -2,11 +2,10 @@ import re
 from typing import Dict, List
 from enum import Enum
 
-from pyspark.sql import DataFrame, SparkSession
-from pyspark.sql.functions import expr
-
 import sqlglot
 from sqlglot.errors import ParseError
+from pyspark.sql import DataFrame, SparkSession
+from pyspark.sql.functions import expr
 
 from spark_expectations.core.exceptions import (
     SparkExpectationsInvalidAggDQExpectationException,
@@ -171,7 +170,7 @@ class SparkExpectationsValidateRules:
         Returns:
             dict: {RuleType: [failed_rule_dicts]}
         """
-        failed: dict = {rt: [] for rt in RuleType}
+        failed: Dict[RuleType, List[Dict]] = {rt: [] for rt in RuleType}
         for rule in rules:
             try:
                 rule_type = RuleType(rule.get("rule_type"))

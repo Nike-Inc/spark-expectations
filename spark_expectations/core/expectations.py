@@ -323,7 +323,7 @@ class SparkExpectations:
                     table_name: str = self._context.get_table_name
 
                     # run rule validations
-                    rules = [row.asDict() for row in self.rules_df.toLocalIterator()]
+                    rules = [row.asDict() for row in self.rules_df.collect()]
                     failed = SparkExpectationsValidateRules.validate_expectations(
                         df=_df,
                         rules=rules,
