@@ -8,6 +8,7 @@ from pyspark.sql import DataFrame, SparkSession
 from spark_expectations.config.user_config import Constants as SeUserConfig
 from spark_expectations.examples.base_setup import RULES_TABLE_SCHEMA, set_up_delta
 import subprocess
+import uuid
 
 
 try:
@@ -38,21 +39,27 @@ print(pyspark.__version__)
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 @pytest.fixture
-def spark(scope="session"):
+def spark(tmp_path_factory, scope="function"):
     # Stop any existing Spark session
     SparkSession._instantiatedSession = None
-    try:
-        SparkSession.builder.getOrCreate().stop()
-    except Exception:
-        pass  # Ignore if no session exists
+
+    uuid_for_spark = str(uuid.uuid4()).replace("-", "")
+
+    warehouse_dir = tmp_path_factory.mktemp(f"warehouse_{uuid_for_spark}")
+    derby_dir = tmp_path_factory.mktemp(f"derby_{uuid_for_spark}")
+
+    # try:
+    #     SparkSession.builder.getOrCreate().stop()
+    # except Exception:
+    #     pass  # Ignore if no session exists
     builder = (
         SparkSession.builder.config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
         .config(
             "spark.sql.catalog.spark_catalog",
             "org.apache.spark.sql.delta.catalog.DeltaCatalog",
         )
-        .config("spark.sql.warehouse.dir", "/tmp/hive/warehouse")
-        .config("spark.driver.extraJavaOptions", "-Dderby.system.home=/tmp/derby")
+        .config("spark.sql.warehouse.dir", str(warehouse_dir))
+        .config("spark.driver.extraJavaOptions", f"-Dderby.system.home={str(derby_dir)}")
         .config("spark.jars.ivy", "/tmp/ivy2")
         .config(  # below jars are used only in the local env, not coupled with databricks or EMR
             "spark.jars",
@@ -72,6 +79,8 @@ def spark(scope="session"):
 
     load_configurations(sparksession)
     spark = sparksession
+    spark.conf.set("uuid", uuid_for_spark)
+
     yield spark
     spark.stop()
 
@@ -86,7 +95,7 @@ def fixture_setup_local_kafka_topic():
 
         # start docker container and create the topic
         result = subprocess.run(
-            ["sh", f"{current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script_parallel.sh"],
+            ["sh", f"{current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh"],
             capture_output=True,
             text=True
         )
@@ -157,23 +166,29 @@ def fixture_rules_df(spark):
 @pytest.fixture(name="_fixture_create_database")
 def fixture_create_database(spark):
     # drop and create dq_spark if exists
-    os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
-    spark.sql("create database if not exists dq_spark")
-    spark.sql("use dq_spark")
+    dir_to_delete = spark.conf.get("spark.sql.warehouse.dir")
+    os.system(f"rm -rf {dir_to_delete}")
 
-    yield "dq_spark"
+    uuid_spark = spark.conf.get("uuid")
+
+    spark.sql(f"create database if not exists dq_spark_{uuid_spark}")
+    spark.sql(f"use dq_spark_{uuid_spark}")
+
+    yield f"dq_spark_{uuid_spark}"
 
     # drop dq_spark if exists
-    os.system("rm -rf /tmp/hive/warehouse/dq_spark.db")
+    os.system(f"rm -rf {dir_to_delete}/dq_spark_{uuid_spark}.db")
 
 
 @pytest.fixture(name="_fixture_context")
-def fixture_context():
+def fixture_context(spark):
+    uuid_spark = spark.conf.get("uuid")
+
     _context: SparkExpectationsContext = SparkExpectationsContext("product_id", spark)
-    _context.set_table_name("dq_spark.test_final_table")
-    _context.set_dq_stats_table_name("dq_spark.test_dq_stats_table")
-    _context.set_final_table_name("dq_spark.test_final_table")
-    _context.set_error_table_name("dq_spark.test_final_table_error")
+    _context.set_table_name(f"dq_spark_{uuid_spark}.test_final_table_{uuid_spark}")
+    _context.set_dq_stats_table_name(f"dq_spark_{uuid_spark}.test_dq_stats_table_{uuid_spark}")
+    _context.set_final_table_name(f"dq_spark_{uuid_spark}.test_final_table_{uuid_spark}")
+    _context.set_error_table_name(f"dq_spark_{uuid_spark}.test_final_table_error_{uuid_spark}")
     _context._run_date = "2022-12-27 10:39:44"
     _context._env = "local"
     _context.set_input_count(100)
@@ -185,13 +200,14 @@ def fixture_context():
 
 
 @pytest.fixture(name="_fixture_spark_expectations")
-def fixture_spark_expectations(_fixture_rules_df):
+def fixture_spark_expectations(_fixture_rules_df, spark):
+    uuid_spark = spark.conf.get("uuid")
     # create a spark expectations class object
     writer = WrappedDataFrameWriter().mode("append").format("delta")
     spark_expectations = SparkExpectations(
         product_id="product1",
         rules_df=_fixture_rules_df,
-        stats_table="dq_spark.test_dq_stats_table",
+        stats_table=f"dq_spark_{uuid_spark}.test_dq_stats_table_{uuid_spark}",
         stats_table_writer=writer,
         target_and_error_table_writer=writer,
         debugger=False,
@@ -333,7 +349,7 @@ def test_spark_session_initialization(spark):
             [
                 {
                     "product_id": "product1",
-                    "table_name": "dq_spark.test_final_table",
+                    "table_name": "test_final_table",
                     "rule_type": "row_dq",
                     "rule": "col1_threshold",
                     "column_name": "col1",
@@ -1897,7 +1913,7 @@ def test_spark_session_initialization(spark):
                     "rule_type": "query_dq",
                     "rule": "max_col1_threshold",
                     "column_name": "col1",
-                    "expectation": "(select max(col1) from test_final_table_view) > 10",
+                    "expectation": f"(select max(col1) from test_final_table_{uuid}_view) > 10",
                     "action_if_failed": "ignore",
                     "tag": "strict",
                     "description": "max of col1 value must be greater than 10",
@@ -2945,9 +2961,14 @@ def test_with_expectations(
     spark
 ):
     input_df = spark.createDataFrame(input_array)
-    input_df.createOrReplaceTempView("test_table")
+
+    uuid_spark = spark.conf.get("uuid")
+
+    input_df.createOrReplaceTempView(f"test_table")
 
     spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
+
+    
 
     rules_df = spark.createDataFrame(expectations) if len(expectations) > 0 else expectations
     rules_df.show(truncate=False) if len(expectations) > 0 else None
@@ -2956,7 +2977,7 @@ def test_with_expectations(
     se = SparkExpectations(
         product_id="product1",
         rules_df=rules_df,
-        stats_table="dq_spark.test_dq_stats_table",
+        stats_table=f"dq_spark_{uuid_spark}.test_dq_stats_table_{uuid_spark}",
         stats_table_writer=writer,
         target_and_error_table_writer=writer,
         debugger=False,
@@ -2970,10 +2991,10 @@ def test_with_expectations(
 
     # Decorate the mock function with required args
     @se.with_expectations(
-        "dq_spark.test_final_table",
+        f"dq_spark_{uuid_spark}.test_final_table_{uuid_spark}",
         user_conf={
             user_config.se_notifications_on_fail: False,
-            user_config.se_dq_rules_params: {"table": "test_table", "env": "local"},
+            user_config.se_dq_rules_params: {"table": "test_table", "env": "local", "uuid": f"{uuid_spark}"},
         },
         write_to_table=write_to_table,
         write_to_temp_table=write_to_temp_table,
@@ -3010,7 +3031,7 @@ def test_with_expectations(
 
         if status.get("final_agg_dq_status") == "Failed" or status.get("final_query_dq_status") == "Failed":
             try:
-                spark.table("dq_spark.test_final_table")
+                spark.table(f"dq_spark_{uuid_spark}.test_final_table_{uuid_spark}")
                 assert False
             except Exception as e:
                 assert True
@@ -3023,18 +3044,18 @@ def test_with_expectations(
                 "run_date", to_timestamp(lit("2022-12-27 10:00:00"))
             )
 
-            result_df = spark.table("dq_spark.test_final_table")
+            result_df = spark.table(f"dq_spark_{uuid_spark}.test_final_table_{uuid_spark}")
             assert result_df.orderBy("col2").collect() == expected_output_df.orderBy("col2").collect()
 
-            if spark.catalog.tableExists("dq_spark.test_final_table_error"):
-                error_table = spark.table("dq_spark.test_final_table_error")
+            if spark.catalog.tableExists(f"dq_spark_{uuid_spark}.test_final_table_error_{uuid_spark}"):
+                error_table = spark.table(f"dq_spark_{uuid_spark}.test_final_table_error_{uuid_spark}")
                 assert error_table.count() == error_count
 
-    stats_table = spark.table("test_dq_stats_table")
+    stats_table = spark.table(f"test_dq_stats_table_{uuid_spark}")
     row = stats_table.first()
     assert stats_table.count() == 1
     assert row.product_id == "product1"
-    assert row.table_name == "dq_spark.test_final_table"
+    assert row.table_name == f"dq_spark_{uuid_spark}.test_final_table_{uuid_spark}"
     assert row.input_count == input_count
     assert row.error_count == error_count
     assert row.output_count == output_count
