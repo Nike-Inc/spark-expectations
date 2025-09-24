@@ -1,13 +1,10 @@
 import ast
 import json
 import os
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, Union
 
 import yaml
 from pyspark.sql.session import SparkSession
-
-
-from spark_expectations.config.user_config import Constants as user_config
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -64,7 +61,7 @@ def get_config_dict(
 
     Args:
         spark (SparkSession): The Spark session to retrieve the configuration from.
-        user_conf (Optional[Dict[str, Any]]): User configuration to merge with default configuration.
+        user_conf ([Dict[str, Any]]): User configuration to merge with default configuration.
 
     Returns:
         tuple: A tuple containing (notification_dict, streaming_dict).
