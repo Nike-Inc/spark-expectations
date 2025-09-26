@@ -143,9 +143,10 @@ def fixture_dq_rules():
 
 @pytest.fixture(name="_fixture_rules_df")
 def fixture_rules_df(spark):
+    uuid_spark = spark.conf.get("uuid")
     rules_dict = {
         "product_id": "product1",
-        "table_name": "dq_spark.test_table",
+        "table_name": f"dq_spark_{uuid_spark}.test_table",
         "rule_type": "row_dq",
         "rule": "col1_threshold",
         "column_name": "col1",
@@ -207,7 +208,7 @@ def fixture_spark_expectations(_fixture_rules_df, spark):
     spark_expectations = SparkExpectations(
         product_id="product1",
         rules_df=_fixture_rules_df,
-        stats_table=f"dq_spark_{uuid_spark}.test_dq_stats_table_{uuid_spark}",
+        stats_table=f"dq_spark_{uuid_spark}.test_dq_stats_table",
         stats_table_writer=writer,
         target_and_error_table_writer=writer,
         debugger=False,
@@ -2964,7 +2965,7 @@ def test_with_expectations(
 
     uuid_spark = spark.conf.get("uuid")
 
-    input_df.createOrReplaceTempView(f"test_table")
+    input_df.createOrReplaceTempView("test_table")
 
     spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
 
@@ -2977,7 +2978,7 @@ def test_with_expectations(
     se = SparkExpectations(
         product_id="product1",
         rules_df=rules_df,
-        stats_table=f"dq_spark_{uuid_spark}.test_dq_stats_table_{uuid_spark}",
+        stats_table=f"dq_spark_{uuid_spark}.test_dq_stats_table",
         stats_table_writer=writer,
         target_and_error_table_writer=writer,
         debugger=False,
@@ -2991,10 +2992,10 @@ def test_with_expectations(
 
     # Decorate the mock function with required args
     @se.with_expectations(
-        f"dq_spark_{uuid_spark}.test_final_table_{uuid_spark}",
+        f"dq_spark_{uuid_spark}.test_final_table",
         user_conf={
             user_config.se_notifications_on_fail: False,
-            user_config.se_dq_rules_params: {"table": "test_table", "env": "local", "uuid": f"{uuid_spark}"},
+            user_config.se_dq_rules_params: {"table": "test_table", "env": "local"},
         },
         write_to_table=write_to_table,
         write_to_temp_table=write_to_temp_table,
@@ -3031,7 +3032,7 @@ def test_with_expectations(
 
         if status.get("final_agg_dq_status") == "Failed" or status.get("final_query_dq_status") == "Failed":
             try:
-                spark.table(f"dq_spark_{uuid_spark}.test_final_table_{uuid_spark}")
+                spark.table(f"dq_spark_{uuid_spark}.test_final_table")
                 assert False
             except Exception as e:
                 assert True
@@ -3044,18 +3045,18 @@ def test_with_expectations(
                 "run_date", to_timestamp(lit("2022-12-27 10:00:00"))
             )
 
-            result_df = spark.table(f"dq_spark_{uuid_spark}.test_final_table_{uuid_spark}")
+            result_df = spark.table(f"dq_spark_{uuid_spark}.test_final_table")
             assert result_df.orderBy("col2").collect() == expected_output_df.orderBy("col2").collect()
 
-            if spark.catalog.tableExists(f"dq_spark_{uuid_spark}.test_final_table_error_{uuid_spark}"):
-                error_table = spark.table(f"dq_spark_{uuid_spark}.test_final_table_error_{uuid_spark}")
+            if spark.catalog.tableExists(f"dq_spark_{uuid_spark}.test_final_table_error"):
+                error_table = spark.table(f"dq_spark_{uuid_spark}.test_final_table_error")
                 assert error_table.count() == error_count
 
-    stats_table = spark.table(f"test_dq_stats_table_{uuid_spark}")
+    stats_table = spark.table(f"test_dq_stats_table")
     row = stats_table.first()
     assert stats_table.count() == 1
     assert row.product_id == "product1"
-    assert row.table_name == f"dq_spark_{uuid_spark}.test_final_table_{uuid_spark}"
+    assert row.table_name == f"dq_spark_{uuid_spark}.test_final_table"
     assert row.input_count == input_count
     assert row.error_count == error_count
     assert row.output_count == output_count
@@ -3110,8 +3111,9 @@ def test_with_expectations_patch(
     _fixture_df,
     _fixture_rules_df,
 ):
+    uuid_spark = spark.conf.get("uuid")
     decorated_func = _fixture_spark_expectations.with_expectations(
-        "dq_spark.test_final_table",
+        f"dq_spark_{uuid_spark}.test_final_table",
         user_conf={
             user_config.se_notifications_on_fail: False,
             user_config.se_enable_query_dq_detailed_result: True,
@@ -3130,9 +3132,10 @@ def test_with_expectations_overwrite_writers(
     _fixture_df,
     _fixture_rules_df,
 ):
+    uuid_spark = spark.conf.get("uuid")
     modified_writer = WrappedDataFrameWriter().mode("overwrite").format("iceberg")
     _fixture_spark_expectations.with_expectations(
-        "dq_spark.test_final_table",
+        f"dq_spark_{uuid_spark}.test_final_table",
         user_conf={user_config.se_notifications_on_fail: False},
         target_and_error_table_writer=modified_writer,
     )(Mock(return_value=_fixture_df))
@@ -3147,8 +3150,9 @@ def test_with_expectations_dataframe_not_returned_exception(
     _fixture_rules_df,
     _fixture_local_kafka_topic,
 ):
+    uuid_spark = spark.conf.get("uuid")
     partial_func = _fixture_spark_expectations.with_expectations(
-        "dq_spark.test_final_table",
+        f"dq_spark_{uuid_spark}.test_final_table",
         user_conf={user_config.se_notifications_on_fail: False},
     )
 
