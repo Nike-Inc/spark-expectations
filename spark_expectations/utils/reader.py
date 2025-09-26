@@ -165,7 +165,20 @@ class SparkExpectationsReader:
                         raise SparkExpectationsMiscException(
                             "All params/variables required for zoom notification is not configured or supplied"
                         )
-
+            
+            if _notification_dict.get(user_config.se_notifications_enable_pagerduty) is True:
+                if _notification_dict[user_config.se_notifications_pagerduty_integration_key]:
+                    self._context.set_enable_pagerduty(True)
+                    self._context.set_pagerduty_integration_key(
+                        str(_notification_dict[user_config.se_notifications_pagerduty_integration_key])
+                    )
+                    self._context.set_pagerduty_webhook_url(
+                        str(_notification_dict[user_config.se_notifications_pagerduty_webhook_url])
+                    )
+                else:
+                    raise SparkExpectationsMiscException(
+                        "All params/variables required for pagerduty notification is not configured or supplied"
+                    )
         except Exception as e:
             raise SparkExpectationsMiscException(f"error occurred while reading notification configurations {e}")
 
@@ -328,7 +341,8 @@ class SparkExpectationsReader:
                         "description": row["description"],
                         "enable_error_drop_alert": row["enable_error_drop_alert"],
                         "error_drop_threshold": row["error_drop_threshold"],
-                        "priority": row["priority"],
+                        # TODO Rules table "priority" column should be required when we start leveraging it for notifications. For now, setting a default value.
+                        "priority": row["priority"] if "priority" in row else "medium",
                     }
 
                     if row["rule_type"] == self._context.get_query_dq_rule_type_name:

@@ -32,6 +32,8 @@ class SparkExpectationsContext:
         self._custom_dataframe: DataFrame = None
         self._se_dq_obs_alert_flag: bool = False
         self._run_date: str = self.set_run_date()
+        self._basic_default_template: Optional[str] = None
+        self._custom_default_template: Optional[str] = None
         self._dq_stats_table_name: Optional[str] = None
         self._dq_detailed_stats_table_name: Optional[str] = None
         self._final_table_name: Optional[str] = None
@@ -77,6 +79,11 @@ class SparkExpectationsContext:
         self._enable_zoom: bool = False
         self._zoom_webhook_url: Optional[str] = None
         self._zoom_token: Optional[str] = None
+
+        self._enable_pagerduty: bool = False
+        self._pagerduty_webhook_url: Optional[str] = None
+        self._pagerduty_integration_key: Optional[str] = None
+        self._pagerduty_creds_dict: Dict[str, str] = {}
 
         self._table_name: Optional[str] = None
         self._input_count: int = 0
@@ -220,7 +227,7 @@ class SparkExpectationsContext:
     @property
     def get_dq_expectations(self) -> dict:
         """
-        Get dq_expectations to which has rule infromation
+        Get dq_expectations to which has rule information
 
         Returns:
             str: returns the rules_df
@@ -271,10 +278,10 @@ class SparkExpectationsContext:
     @staticmethod
     def set_run_date() -> str:
         """
-        This function is used to generate the current datatime in UTC
+        This function is used to generate the current datetime in UTC
 
         Returns:
-            str: Returns the current utc datatime in the format - "%Y-%m-%d %H:%M:%S"
+            str: Returns the current utc datetime in the format - "%Y-%m-%d %H:%M:%S"
 
         """
         current_datetime: datetime = datetime.now(timezone.utc)
@@ -809,6 +816,87 @@ class SparkExpectationsContext:
             """The spark expectations context is not set completely, please assign '_zoom_token' before 
             accessing it"""
         )
+
+    def set_enable_pagerduty(self, enable_pagerduty: bool) -> None:
+        """
+        Set whether to enable pagerduty notification or not
+
+        Args:
+            enable_pagerduty (bool): Whether to enable pagerduty incidents or not
+        """
+        self._enable_pagerduty = enable_pagerduty
+
+    @property
+    def get_enable_pagerduty(self) -> bool:
+        """
+        This function returns if pagerduty notifications are enabled or not.
+
+        Returns:
+            bool: Whether to enable pagerduty incidents or not
+        """
+        return self._enable_pagerduty
+
+    def set_pagerduty_integration_key(self, pagerduty_integration_key: str) -> None:
+        """
+        Set the pagerduty integration key manually.
+
+        Args:
+            pagerduty_integration_key (str): Integration key for PagerDuty when creating incidents.
+        """
+        self._pagerduty_integration_key = pagerduty_integration_key
+
+    @property
+    def get_pagerduty_integration_key(self) -> Optional[str]:
+        """
+        This function returns pagerduty integration key
+        Returns:
+            str: Returns _pagerduty_integration_key(str)
+
+        """
+        if self._pagerduty_integration_key:
+            return self._pagerduty_integration_key
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign '_pagerduty_integration_key' before 
+            accessing it"""
+        )
+
+    def set_pagerduty_webhook_url(self, pagerduty_webhook_url: str) -> None:
+        """
+        This function helps to set pagerduty webhook url
+        Args:
+            pagerduty_webhook_url (str): PagerDuty webhook url to create incidents
+        """
+        self._pagerduty_webhook_url = pagerduty_webhook_url
+
+    @property
+    def get_pagerduty_webhook_url(self) -> str:
+        """
+        This function returns pagerduty webhook url
+        Returns:
+            str: Returns _pagerduty_webhook_url(str)
+
+        """
+        if self._pagerduty_webhook_url:
+            return self._pagerduty_webhook_url
+        raise SparkExpectationsMiscException(
+            """The spark expectations context is not set completely, please assign '_pagerduty_webhook_url' before 
+            accessing it"""
+        )
+
+    def set_pagerduty_creds_dict(self, pagerduty_creds_dict: Dict[str, str]) -> None:
+        """
+        This function helps to set secret keys dict for pagerduty authentication
+        Args:
+            pagerduty_creds_dict (Dict[str, str]): Dictionary containing secrets for PagerDuty authentication
+        """
+        self._pagerduty_creds_dict = pagerduty_creds_dict
+
+    @property
+    def get_pagerduty_creds_dict(self) -> Dict[str, str]:
+        """
+        This function returns secret keys dict for pagerduty authentication
+        """
+        return self._pagerduty_creds_dict
 
     def set_table_name(self, table_name: str) -> None:
         self._table_name = table_name
