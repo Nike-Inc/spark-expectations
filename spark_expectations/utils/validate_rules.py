@@ -120,38 +120,86 @@ class SparkExpectationsValidateRules:
             )
 
     @staticmethod
-    # pylint: disable=unused-argument
-    def validate_query_dq_expectation(df: DataFrame, rule: Dict, spark: SparkSession) -> None:
-        """
-        Validates a query_dq expectation by ensuring it is a valid SQL query.
-        Args:
-            df (DataFrame): The input DataFrame.
-            rule (Dict): Rule containing the 'expectation' SQL.
-            spark (SparkSession): Spark session.
-        Raises:
-            SparkExpectationsInvalidQueryDQExpectationException: If the query is not valid SQL or fails to parse.
-        """
-        query = rule.get("expectation", "")
+    def validate_query_dq_expectation(_df: DataFrame, rule: Dict, _spark: SparkSession) -> None:
+        """Validate a query_dq expectation.
 
-        # 1. Ensure it's a SELECT ... FROM ... query
+        Supports two forms:
+          1. Simple single SELECT ... FROM ... query.
+          2. Composite (delimited) form:
+             <boolean_expr_using_{alias}>@alias1@<subquery1>@alias2@<subquery2>...
+             Example:
+               ((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b)) < 3@source_f1@select ...@target_f1@select ...
+
+        The boolean expression (first segment) can reference placeholders in Python format style: {source_f1}, {target_f1}.
+        Each alias/subquery pair after the first segment supplies the replacement SQL.
+        """
+        raw = rule.get("expectation", "")
+        delimiter = rule.get("query_dq_delimiter") or "@"
+
+        # Split on delimiter to detect composite pattern
+        parts = raw.split(delimiter)
+        composite_tail = parts[1:] if len(parts) > 1 else []
+        is_composite = len(composite_tail) >= 2 and len(composite_tail) % 2 == 0
+
+        if is_composite:
+            boolean_expr = parts[0].strip()
+            tail = [p.strip() for p in composite_tail]
+            alias_query_pairs = {tail[i]: tail[i + 1] for i in range(0, len(tail), 2)}
+
+            # Validate each subquery: must look like SELECT ... FROM ... and parse with sqlglot
+            for alias, subquery in alias_query_pairs.items():
+                if not re.search(r"\bselect\b.*\bfrom\b", subquery, re.IGNORECASE):
+                    raise SparkExpectationsInvalidQueryDQExpectationException(
+                        f"[query_dq] Subquery for alias '{alias}' is not a valid SELECT ... FROM: '{subquery}'"
+                    )
+                # Basic placeholder neutralization within subquery for parsing
+                sanitized_subquery = re.sub(r"\{[^}]+\}", "DUMMY_PLACEHOLDER", subquery)
+                try:
+                    sqlglot.parse_one(sanitized_subquery)
+                except ParseError as e:
+                    raise SparkExpectationsInvalidQueryDQExpectationException(
+                        f"[query_dq] Invalid SQL syntax in subquery '{alias}': {e}"
+                    )
+
+            # Format the boolean expression with injected subqueries (wrapped in parentheses if needed)
+            try:
+                formatted_boolean_expr = boolean_expr.format(
+                    **{a: (q if q.lstrip().startswith("(") else f"({q})") for a, q in alias_query_pairs.items()}
+                )
+            except KeyError as e:
+                raise SparkExpectationsInvalidQueryDQExpectationException(
+                    f"[query_dq] Missing alias referenced in boolean expression: {e}"
+                )
+            except Exception as e:
+                raise SparkExpectationsInvalidQueryDQExpectationException(
+                    f"[query_dq] Error formatting composite expectation: {e}"
+                )
+
+            # Replace any remaining {placeholders} (should not be any) to avoid parse errors
+            formatted_boolean_expr_sanitized = re.sub(r"\{[^}]+\}", "DUMMY_PLACEHOLDER", formatted_boolean_expr)
+
+            # For robust parsing, wrap expression into a SELECT statement
+            wrapper_query = f"SELECT CASE WHEN {formatted_boolean_expr_sanitized} THEN 1 ELSE 0 END AS dq_check"
+            try:
+                sqlglot.parse_one(wrapper_query)
+            except ParseError as e:
+                raise SparkExpectationsInvalidQueryDQExpectationException(
+                    f"[query_dq] Invalid composite expectation syntax after substitution: {e}"
+                )
+            return  # Composite path validated successfully
+
+        # --- Simple / legacy path ---
+        query = raw
         if not re.search(r"\bselect\b.*\bfrom\b", query, re.IGNORECASE):
             raise SparkExpectationsInvalidQueryDQExpectationException(
                 f"[query_dq] Expectation does not appear to be a valid SQL SELECT query: '{query}'"
             )
-
-        # 2. Use extract_table_names_from_sql to find all table names/placeholders
         table_names = SparkExpectationsValidateRules.extract_table_names_from_sql(query)
         temp_view_name = "dummy_table"
         query_for_validation = query
-
-        # 3. Replace each table name/placeholder with the dummy table name
         for table_name in table_names:
             query_for_validation = re.sub(rf"\b{re.escape(table_name)}\b", temp_view_name, query_for_validation)
-
-        # 4. Handle {table} and similar placeholders
-        query_for_validation = re.sub(r"\{[^\}]+\}", temp_view_name, query_for_validation)
-
-        # 5. Validate SQL syntax using sqlglot
+        query_for_validation = re.sub(r"\{[^}]+\}", temp_view_name, query_for_validation)
         try:
             sqlglot.parse_one(query_for_validation)
         except ParseError as e:
@@ -178,7 +226,9 @@ class SparkExpectationsValidateRules:
                     SparkExpectationsValidateRules.validate_row_dq_expectation(df, rule)
                 elif rule_type == RuleType.AGG_DQ:
                     SparkExpectationsValidateRules.validate_agg_dq_expectation(df, rule)
-                elif rule_type == RuleType.QUERY_DQ:
+                elif (
+                    rule_type == RuleType.QUERY_DQ
+                ):  # rule[expectation]= '((select count(*) from (select customer_id, count(*) from customer_source group by customer_id) a join (select customer_id, select customer_id, count(*) from order_source group by customer_id) b on a.customer_id = b.customer_id) - (select count(*) from (select customer_id, select customer_id, count(*) from order_source group by customer_id) a join (select customer_id, count(*) from order_target group by customer_id) b on a.customer_id = b.customer_id)) > (select count(*) from order_source)''
                     SparkExpectationsValidateRules.validate_query_dq_expectation(df, rule, spark)
             except Exception:
                 failed[rule_type].append(rule)
