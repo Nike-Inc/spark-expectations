@@ -78,6 +78,7 @@ def test_valid_agg_dq(sample_df, expectation, spark):
         "(select count(col1) from test_final_table_view) > 3",
         "(select count(case when col2>0 then 1 else 0 end) from test_final_table_view) > 10",
         "(select sum(col1) from {table}) > 10",
+        "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@target_f1@select distinct product_id,order_id from order_target",
         "(select count(*) from test_table) > 10",
     ],
 )
@@ -132,6 +133,9 @@ def test_invalid_agg_dq(sample_df, expectation, spark):
         "SELECT SUM(col1) > 5 AS result",             # syntax error
         "col1 > 20",                                  # not a valid query_dq
         "avg(col1) < 100",                            # not a valid query_dq
+        "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f2}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@target_f1@select distinct product_id,order_id from order_target",  # Place holder mismatch or missing
+        "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@@select distinct product_id,order_id from order_target",  # Place holder target_f1 missing
+       
     ],
 )
 def test_invalid_query_dq(sample_df, expectation, spark):
