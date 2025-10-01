@@ -39,3 +39,4 @@ Spark Expectation provides way to enable different behaviour and thresholds for 
 
 - [Slack](user_guide/notifications/slack_notifications/)
 - [Email](user_guide/notifications/email_notifications/)
+- [Pagerduty](user_guide/notifications/pagerduty_notifications/)
