@@ -28,7 +28,7 @@ By default Pagerduty notifications (or the ability to create incidents) are disa
     `Hover over each parameter to see a short description.`
 
     - <abbr title="Integration key that is generated from the Pagerduty Service">user_config.se_notifications_pagerduty_integration_key</abbr>
-    - <abbr title="Webhook url for agerduy, this should be sent to the events. This is usuall set to the events api url ">user_config.se_notifications_pagerduty_webhook_url</abbr>
+    - <abbr title="Webhook url for pagerduty, this should be sent to the events. This is usually set to the events api url ">user_config.se_notifications_pagerduty_webhook_url</abbr>
 
 
 ### User Configuration Example
