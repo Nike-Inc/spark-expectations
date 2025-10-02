@@ -121,85 +121,92 @@ class SparkExpectationsValidateRules:
 
     @staticmethod
     def validate_query_dq_expectation(_df: DataFrame, rule: Dict, _spark: SparkSession) -> None:
-        """Validate a query_dq expectation.
+        """
+        Validates a query_dq expectation by ensuring it is a valid SQL query.
+        Args:
+            df (DataFrame): The input DataFrame.
+            rule (Dict): Rule containing the 'expectation' SQL.
+            spark (SparkSession): Spark session.
+        Raises:
+            SparkExpectationsInvalidQueryDQExpectationException: If the query is not valid SQL or fails to parse.
 
-        Supports two forms:
-          1. Simple single SELECT ... FROM ... query.
-          2. Composite (delimited) form:
-             <boolean_expr_using_{alias}>@alias1@<subquery1>@alias2@<subquery2>...
-             Example:
-               ((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b)) < 3@source_f1@select ...@target_f1@select ...
+        It validates 2 types of queries:
+            1. Simple quey like single "SELECT ... FROM ..."
+            2. Composite query with place holder(s) {} , delimiter(s) and subqueries like "SELECT ... FROM  {key1}...{key2}@key1@<subquery1@key2@<subquery2..."
 
-        The boolean expression (first segment) can reference placeholders in Python format style: {source_f1}, {target_f1}.
-        Each alias/subquery pair after the first segment supplies the replacement SQL.
+            Example query: ((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b)) < 3@source_f1@select ...@target_f1@select ...
+
+            First part of the composite query is called static until the first delimiter with place holders{}. ((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b)) < 3.
+            Second part the compposite query is calleddynamic with delimiter(s)followed with subquerie(s).  @source_f1@select ...@target_f1@select ...
+            These subqueries will be placed in static query for the matching placeholder(s).
         """
         raw = rule.get("expectation", "")
         delimiter = rule.get("query_dq_delimiter") or "@"
 
         # Split on delimiter to detect composite pattern
-        parts = raw.split(delimiter)
-        composite_tail = parts[1:] if len(parts) > 1 else []
-        is_composite = len(composite_tail) >= 2 and len(composite_tail) % 2 == 0
+        delimited_query_list = raw.split(delimiter)
+        dynamic_query_list = delimited_query_list[1:] if len(delimited_query_list) > 1 else []
+        # List should be even length as each key should have a corresponding subquery
+        is_composite_query = len(dynamic_query_list) >= 2 and len(dynamic_query_list) % 2 == 0
 
-        if is_composite:
-            boolean_expr = parts[0].strip()
-            tail = [p.strip() for p in composite_tail]
-            alias_query_pairs = {tail[i]: tail[i + 1] for i in range(0, len(tail), 2)}
+        if is_composite_query:
+            # Split the dynamic sql into key-value pairs
+            dynamic_query_kv_pairs = {
+                dynamic_query_list[i].strip(): dynamic_query_list[i + 1].strip()
+                for i in range(0, len(dynamic_query_list), 2)
+            }
 
-            # Validate each subquery: must look like SELECT ... FROM ... and parse with sqlglot
-            for alias, subquery in alias_query_pairs.items():
+            # Validate each subquery and Ensure it's a SELECT ... FROM ... query
+            for key, subquery in dynamic_query_kv_pairs.items():
                 if not re.search(r"\bselect\b.*\bfrom\b", subquery, re.IGNORECASE):
                     raise SparkExpectationsInvalidQueryDQExpectationException(
-                        f"[query_dq] Subquery for alias '{alias}' is not a valid SELECT ... FROM: '{subquery}'"
-                    )
-                # Basic placeholder neutralization within subquery for parsing
-                sanitized_subquery = re.sub(r"\{[^}]+\}", "DUMMY_PLACEHOLDER", subquery)
-                try:
-                    sqlglot.parse_one(sanitized_subquery)
-                except ParseError as e:
-                    raise SparkExpectationsInvalidQueryDQExpectationException(
-                        f"[query_dq] Invalid SQL syntax in subquery '{alias}': {e}"
+                        f"[query_dq] Subquery '{subquery}' for key '{key}' is not a valid SELECT ... FROM:"
                     )
 
-            # Format the boolean expression with injected subqueries (wrapped in parentheses if needed)
+            # Insert subqueries into first part(static query) of the composite query for the matching placeholder(s).
             try:
-                formatted_boolean_expr = boolean_expr.format(
-                    **{a: (q if q.lstrip().startswith("(") else f"({q})") for a, q in alias_query_pairs.items()}
+                static_query = (
+                    delimited_query_list[0]
+                    .strip()
+                    .format(
+                        **{
+                            k: (v if v.lstrip().startswith("(") else f"({v})")
+                            for k, v in dynamic_query_kv_pairs.items()
+                        }
+                    )
                 )
             except KeyError as e:
                 raise SparkExpectationsInvalidQueryDQExpectationException(
-                    f"[query_dq] Missing alias referenced in boolean expression: {e}"
+                    f"[query_dq] Missing key referenced in composite static query: {e}"
                 )
             except Exception as e:
                 raise SparkExpectationsInvalidQueryDQExpectationException(
                     f"[query_dq] Error formatting composite expectation: {e}"
                 )
-
             # Replace any remaining {placeholders} (should not be any) to avoid parse errors
-            formatted_boolean_expr_sanitized = re.sub(r"\{[^}]+\}", "DUMMY_PLACEHOLDER", formatted_boolean_expr)
+            query = re.sub(r"\{[^}]+\}", "DUMMY_PLACEHOLDER", static_query)
 
-            # For robust parsing, wrap expression into a SELECT statement
-            wrapper_query = f"SELECT CASE WHEN {formatted_boolean_expr_sanitized} THEN 1 ELSE 0 END AS dq_check"
-            try:
-                sqlglot.parse_one(wrapper_query)
-            except ParseError as e:
+        else:
+            # --- Simple Query path with no place holders {} and delimiter(s) ---
+            query = raw
+            if not re.search(r"\bselect\b.*\bfrom\b", query, re.IGNORECASE):
                 raise SparkExpectationsInvalidQueryDQExpectationException(
-                    f"[query_dq] Invalid composite expectation syntax after substitution: {e}"
+                    f"[query_dq] Expectation does not appear to be a valid SQL SELECT query: '{query}'"
                 )
-            return  # Composite path validated successfully
 
-        # --- Simple / legacy path ---
-        query = raw
-        if not re.search(r"\bselect\b.*\bfrom\b", query, re.IGNORECASE):
-            raise SparkExpectationsInvalidQueryDQExpectationException(
-                f"[query_dq] Expectation does not appear to be a valid SQL SELECT query: '{query}'"
-            )
+        # Use extract_table_names_from_sql to find all table names/placeholders
         table_names = SparkExpectationsValidateRules.extract_table_names_from_sql(query)
         temp_view_name = "dummy_table"
         query_for_validation = query
+
+        # Replace each table name/placeholder with the dummy table name
         for table_name in table_names:
             query_for_validation = re.sub(rf"\b{re.escape(table_name)}\b", temp_view_name, query_for_validation)
+
+        # Handle {table} and similar placeholders
         query_for_validation = re.sub(r"\{[^}]+\}", temp_view_name, query_for_validation)
+
+        # Validate SQL syntax using sqlglot
         try:
             sqlglot.parse_one(query_for_validation)
         except ParseError as e:
