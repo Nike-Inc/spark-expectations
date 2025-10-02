@@ -8,6 +8,7 @@ from spark_expectations import _log
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.notifications import _notification_hook
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
+from functools import wraps
 
 
 @dataclass
@@ -49,6 +50,7 @@ class SparkExpectationsNotify:
         """
 
         def decorator(func: Any) -> Any:
+            @wraps(func)
             def wrapper(*args: List, **kwargs: Dict) -> DataFrame:
                 if self._context.get_notification_on_start is True:
                     _on_start()
