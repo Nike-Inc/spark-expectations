@@ -35,7 +35,8 @@ Check [User Guide / Data Quality Metrics](user_guide/data_quality_metrics/) for 
 
 #### Notifications
 
-Spark Expectation provides way to enable different behaviour and thresholds for data quality run notifications. Currently supported notifications are:
+Spark Expectation provides way to enable different behavior and thresholds for data quality run notifications. Currently supported notifications are:
 
 - [Slack](user_guide/notifications/slack_notifications/)
 - [Email](user_guide/notifications/email_notifications/)
+- [PagerDuty](user_guide/notifications/pagerduty_notifications/)
