@@ -7,14 +7,14 @@ By default PagerDuty notifications (or the ability to create incidents) are disa
 ### Notification Config Parameters
 
 !!! info "user_config.se_notifications_enable_pagerduty"
-    Master toggle to enable pagerduty notifications (this will create incidents for your service!)
+    Master toggle to enable PagerDuty notifications (this will create incidents for your service!)
 
 
 ??? info "Notification triggers"
     These parameters control **when** notifications are sent during Spark-Expectations runs. This would create a new incident per enabled trigger.  
     `Hover over each parameter to see a short description.`
        
-    - <abbr title="Master toggle to enable pagerduty notifications">user_config.se_notifications_enable_pagerduty</abbr>
+    - <abbr title="Master toggle to enable PagerDuty notifications">user_config.se_notifications_enable_pagerduty</abbr>
     - <abbr title="Enable notifications when job starts">user_config.se_notifications_on_start</abbr>
     - <abbr title="Enable notifications when job ends">user_config.se_notifications_on_completion</abbr>
     - <abbr title="Enable notifications on failure">user_config.se_notifications_on_fail</abbr>
@@ -28,7 +28,7 @@ By default PagerDuty notifications (or the ability to create incidents) are disa
     `Hover over each parameter to see a short description.`
 
     - <abbr title="Integration key that is generated from the PagerDuty Service">user_config.se_notifications_pagerduty_integration_key</abbr>
-    - <abbr title="Webhook url for pagerduty, this should be sent to the events. This is usually set to the events api url ">user_config.se_notifications_pagerduty_webhook_url</abbr>
+    - <abbr title="Webhook url for PagerDuty, this should be sent to the events. This is usually set to the events api url ">user_config.se_notifications_pagerduty_webhook_url</abbr>
 
 
 ### User Configuration Example
