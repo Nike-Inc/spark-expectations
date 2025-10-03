@@ -1,20 +1,20 @@
 # Define the product_id
+import os
 from typing import Dict, Union
 
-from pyspark.sql.types import StructType, StructField, IntegerType, StringType
-import os
-from spark_expectations.utils.reader import SparkExpectationsReader
-from spark_expectations.notifications.push.alert import SparkExpectationsAlert
-from spark_expectations.core.context import SparkExpectationsContext
-
 from pyspark.sql import DataFrame
+from pyspark.sql.types import StructType, StructField, IntegerType, StringType
+
 from spark_expectations import _log
-from spark_expectations.examples.base_setup import set_up_delta
+from spark_expectations.config.user_config import Constants as user_config
+from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.expectations import (
     SparkExpectations,
     WrappedDataFrameWriter,
 )
-from spark_expectations.config.user_config import Constants as user_config
+from spark_expectations.examples.base_setup import set_up_delta
+from spark_expectations.notifications.push.alert import SparkExpectationsAlert
+from spark_expectations.utils.reader import SparkExpectationsReader
 
 
 writer = WrappedDataFrameWriter().mode("append").format("delta")
