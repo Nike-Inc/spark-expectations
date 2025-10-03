@@ -185,7 +185,7 @@ class SparkExpectationsValidateRules:
             df (DataFrame): Input DataFrame to validate against.
             rules (list): List of rule dictionaries.
             spark (SparkSession): Spark session.
-pyted sp
+            
         Returns:
             dict: {RuleType: [failed_rule_dicts]}
         """
@@ -197,9 +197,7 @@ pyted sp
                     SparkExpectationsValidateRules.validate_row_dq_expectation(df, rule)
                 elif rule_type == RuleType.AGG_DQ:
                     SparkExpectationsValidateRules.validate_agg_dq_expectation(df, rule)
-                elif (
-                    rule_type == RuleType.QUERY_DQ
-                ):  # rule[expectation]= '((select count(*) from (select customer_id, count(*) from customer_source group by customer_id) a join (select customer_id, select customer_id, count(*) from order_source group by customer_id) b on a.customer_id = b.customer_id) - (select count(*) from (select customer_id, select customer_id, count(*) from order_source group by customer_id) a join (select customer_id, count(*) from order_target group by customer_id) b on a.customer_id = b.customer_id)) > (select count(*) from order_source)''
+                elif rule_type == RuleType.QUERY_DQ:
                     SparkExpectationsValidateRules.validate_query_dq_expectation(df, rule, spark)
             except Exception:
                 failed[rule_type].append(rule)
