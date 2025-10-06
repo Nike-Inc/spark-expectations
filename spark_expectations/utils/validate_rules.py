@@ -172,7 +172,7 @@ class SparkExpectationsValidateRules:
         # Handle {table} and similar placeholders
         query_for_validation = re.sub(r"\{[^}]+\}", temp_view_name, query_for_validation)
         
-        #Validate SQL syntax using sqlglot
+        # Validate SQL syntax using sqlglot
         try:
             sqlglot.parse_one(query_for_validation)
         except ParseError as e:
