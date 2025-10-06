@@ -111,14 +111,14 @@ class SparkExpectationsValidateRules:
             SparkExpectationsInvalidQueryDQExpectationException: If the query is not valid SQL or fails to parse.
         
         It validates 2 types of queries:
-            1. Simple quey like single "SELECT ... FROM ..."
-            2. Composite query with place holder(s) {} , delimiter(s) and subqueries like "SELECT ... FROM  {key1}...{key2}@key1@<subquery1@key2@<subquery2..."
+            1. Simple query like single "SELECT ... FROM ..."
+            2. Composite query with place holder(s) {}, delimiter(s), and subqueries like "SELECT ... FROM  {key1}...{key2}@key1@<subquery1@key2@<subquery2..."
             
             Example query: ((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b)) < 3@source_f1@select ...@target_f1@select ...
             
-            First part of the composite query is called static until the first delimiter with place holders{}. ((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b)) < 3. 
-            Second part the compposite query is calleddynamic with delimiter(s)followed with subquerie(s).  @source_f1@select ...@target_f1@select ...
-            These subqueries will be placed in static query for the matching placeholder(s).
+            First part of the composite query is called static until the first delimiter with place holders {}. ((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b)) < 3. 
+            Second part, the composite query, is called dynamic with delimiter(s) followed with subquerie(s):  @source_f1@select ...@target_f1@select ...
+            These subqueries will be placed in the static query for the matching placeholder(s).
         """
         raw = rule.get("expectation", "")
         delimiter = rule.get("query_dq_delimiter") or "@"
