@@ -165,7 +165,7 @@ class SparkExpectationsValidateRules:
         temp_view_name = "dummy_table"
         query_for_validation = query
         
-        #Replace each table name/placeholder with the dummy table name
+        # Replace each table name/placeholder with the dummy table name
         for table_name in table_names:
             query_for_validation = re.sub(rf"\b{re.escape(table_name)}\b", temp_view_name, query_for_validation)
         
