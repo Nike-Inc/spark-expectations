@@ -139,7 +139,7 @@ def test_invalid_agg_dq(sample_df, expectation, spark):
         "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@@select distinct product_id,order_id from order_target",  # Placeholder target_f1 missing
         "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@invalid_query_without_select_from@target_f1@select distinct product_id,order_id from order_target",  # Invalid subquery without SELECT FROM
         "((select count(*) from ({}) a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@target_f1@select distinct product_id,order_id from order_target",  # Missing key
-        "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@target_f1@{}",  # invalid_format Format in subquery
+        "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@target_f1@{}",  # Invalid format in subquery
         "((select count(*) from {source_f1=y} a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@target_f1@select distinct product_id,order_id from order_target",  # Invalid format spec
         "select count(*) from table_name where col1 = = = invalid",  # Invalid SQL syntax
     ],
