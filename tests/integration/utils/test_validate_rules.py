@@ -135,8 +135,8 @@ def test_invalid_agg_dq(sample_df, expectation, spark):
         "SELECT SUM(col1) > 5 AS result",             # syntax error
         "col1 > 20",                                  # not a valid query_dq
         "avg(col1) < 100",                            # not a valid query_dq
-        "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f2}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@target_f1@select distinct product_id,order_id from order_target",  # Place holder mismatch or missing
-        "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@@select distinct product_id,order_id from order_target",  # Place holder target_f1 missing
+        "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f2}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@target_f1@select distinct product_id,order_id from order_target",  # Placeholder mismatch or missing
+        "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@@select distinct product_id,order_id from order_target",  # Placeholder target_f1 missing
         "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@invalid_query_without_select_from@target_f1@select distinct product_id,order_id from order_target",  # Invalid subquery without SELECT FROM
         "((select count(*) from ({}) a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@target_f1@select distinct product_id,order_id from order_target",  # Missing key
         "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@target_f1@{}",  # invalid_format Format in subquery
