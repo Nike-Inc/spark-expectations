@@ -1,0 +1,34 @@
+name: "Publish GitHub Pages Docs"
+on: 
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version number to pass to docs command. Format: 'v1.23'"
+        required: false
+jobs:
+  publish-gh-pages:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v5
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'adopt'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: |
+              3.10
+              3.11
+              3.12
+          check-latest: true
+      - name: Install Hatch
+        uses: pypa/hatch@install
+      - name: Install dependencies
+        run: |
+          export PATH=$PATH:$HOME/.local/bin
+          make deploy_env_setup
+      - name: Publish Docs
+        run: make deploy-docs version=${{ github.event.inputs.version }}
