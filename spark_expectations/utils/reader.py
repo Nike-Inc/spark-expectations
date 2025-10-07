@@ -169,12 +169,28 @@ class SparkExpectationsReader:
             if _notification_dict.get(user_config.se_notifications_enable_pagerduty) is True:
                 if _notification_dict[user_config.se_notifications_pagerduty_integration_key]:
                     self._context.set_enable_pagerduty(True)
-                    self._context.set_pagerduty_integration_key(
-                        str(_notification_dict[user_config.se_notifications_pagerduty_integration_key])
-                    )
                     self._context.set_pagerduty_webhook_url(
                         str(_notification_dict[user_config.se_notifications_pagerduty_webhook_url])
                     )
+                    if (
+                        _notification_dict[user_config.se_notifications_pagerduty_integration_key]
+                        and _notification_dict[user_config.se_notifications_pagerduty_integration_key] != ""
+                    ):
+                        self._context.set_pagerduty_integration_key(
+                            str(_notification_dict[user_config.se_notifications_pagerduty_integration_key])
+                        )
+                    elif user_config.se_notifications_pagerduty_creds_dict in _notification_dict:
+                        pagerduty_creds_dict = _notification_dict[user_config.se_notifications_pagerduty_creds_dict]
+                        if isinstance(pagerduty_creds_dict, dict) and all(
+                            isinstance(k, str) and isinstance(v, str) for k, v in pagerduty_creds_dict.items()
+                        ):
+                            self._context.set_pagerduty_creds_dict(pagerduty_creds_dict)
+                        else:
+                            raise SparkExpectationsMiscException("PagerDuty creds dict contains non-string keys or values")
+                    else:
+                        raise SparkExpectationsMiscException(
+                            "PagerDuty integration key is not set or secret dict for its retrieval is not provided"
+                        )
                 else:
                     raise SparkExpectationsMiscException(
                         "All params/variables required for pagerduty notification is not configured or supplied"

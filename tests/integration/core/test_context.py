@@ -880,7 +880,7 @@ def test_get_zoom_webhook_url_exception():
 
 def test_get_pagerduty_webhook_url_exception():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context._pagerduty_webhook_url = False
+    context._pagerduty_webhook_url = None
     with pytest.raises(
         SparkExpectationsMiscException,
         match="The spark expectations context is not set completely, please assign "
