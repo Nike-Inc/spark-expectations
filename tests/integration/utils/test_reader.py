@@ -268,6 +268,10 @@ def fixture_product_rules_pipe():
                 "spark.expectations.notifications.pagerduty.enabled": True,
                 "spark.expectations.notifications.pagerduty.integration.key": "",
                 "spark.expectations.notifications.pagerduty.webhook.url": "",
+                    "spark.expectations.notifications.pagerduty.creds.dict": {
+                    "se.streaming.secret.type": 1,
+                    "se.streaming.databricks.url": True
+                },
             },
             SparkExpectationsMiscException,
         ),
@@ -276,17 +280,41 @@ def fixture_product_rules_pipe():
                 "spark.expectations.notifications.pagerduty.enabled": True,
                 "spark.expectations.notifications.pagerduty.integration.key": "",
                 "spark.expectations.notifications.pagerduty.webhook.url": "",
+                "spark.expectations.notifications.pagerduty.creds.dict": {
+                    "se.streaming.secret.type": "databricks",
+                    "se.streaming.databricks.url": "https://databricks.example.com",
+                },
             },
             SparkExpectationsMiscException,
         ),
         (
             {
                 "spark.expectations.notifications.pagerduty.enabled": True,
-                "spark.expectations.notifications.pagerduty.integration.key": "123",
+                "spark.expectations.notifications.pagerduty.integration.key": None,
+                "spark.expectations.notifications.pagerduty.webhook.url": "",
+                "spark.expectations.notifications.pagerduty.creds.dict": {
+                    "se.streaming.secret.type": "databricks",
+                    "se.streaming.databricks.url": "https://databricks.example.com",
+                    "se.streaming.databricks.secret.scope": "my_secret_scope",
+                    "spark.expectations.notifications.pagerduty.integration.key": None
+                },
+            },
+            SparkExpectationsMiscException,
+        ),
+        (
+            {
+                "spark.expectations.notifications.pagerduty.enabled": True,
+                "spark.expectations.notifications.pagerduty.integration.key": "key",
                 "spark.expectations.notifications.pagerduty.webhook.url": "https://test.url/",
+                "spark.expectations.notifications.pagerduty.creds.dict": {
+                    "se.streaming.secret.type": "databricks",
+                    "se.streaming.databricks.url": "https://databricks.example.com",
+                    "se.streaming.databricks.secret.scope": "my_secret_scope",
+                    "spark.expectations.notifications.pagerduty.integration.key": "key"
+                },
             },
             None,
-        )
+        ),
     ],
 )
 def test_set_notification_param(notification, expected_result):
@@ -376,12 +404,17 @@ def test_set_notification_param(notification, expected_result):
             mock_context.set_enable_pagerduty.assert_called_once_with(
                 notification.get("spark.expectations.notifications.pagerduty.enabled")
             )
-            mock_context.set_pagerduty_integration_key.assert_called_once_with(
-                notification.get("spark.expectations.notifications.pagerduty.integration.key")
-            )
             mock_context.set_pagerduty_webhook_url.assert_called_once_with(
                 notification.get("spark.expectations.notifications.pagerduty.webhook.url")
             )
+            if notification.get('spark.expectations.notifications.pagerduty.integration.key'):
+                mock_context.set_pagerduty_integration_key.assert_called_once_with(
+                    notification.get("spark.expectations.notifications.pagerduty.integration.key")
+                )
+            elif notification.get("spark.expectations.notifications.pagerduty.creds.dict"):
+                mock_context.set_pagerduty_creds_dict.assert_called_once_with(
+                    notification.get("spark.expectations.notifications.pagerduty.creds.dict")
+                )
     else:
         with pytest.raises(
             expected_result,

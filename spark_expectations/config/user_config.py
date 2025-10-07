@@ -54,6 +54,7 @@ class Constants:
     # For Pagerduty Services, your integration key is the routing key when making calls to the Events API v2.
     se_notifications_pagerduty_integration_key = "spark.expectations.notifications.pagerduty.integration.key"
     se_notifications_pagerduty_webhook_url = "spark.expectations.notifications.pagerduty.webhook.url"
+    se_notifications_pagerduty_creds_dict = "spark.expectations.notifications.pagerduty.creds.dict"
 
     se_notifications_on_start = "spark.expectations.notifications.on.start"
     se_notifications_on_completion = "spark.expectations.notifications.on.completion"

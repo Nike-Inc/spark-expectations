@@ -124,7 +124,13 @@ def mock_config_data():
                 "se.streaming.cerberus.url": 'https://cerberus.example.com',
                 'se.streaming.cerberus.sdb.path': 'your_sdb_path',
                 'spark.expectations.notifications.cerberus.smtp.password': 'your_smtp_password'
-            }
+            },
+            'spark.expectations.notifications.pagerduty.creds.dict': {
+                'se.streaming.secret.type': 'databricks',
+                'se.streaming.databricks.url': 'https://databricks.example.com',
+                'se.streaming.databricks.secret.scope': 'my_secret_scope',
+                'spark.expectations.notifications.pagerduty.integration.key': 'integration_key'
+            },
         }
     }
 

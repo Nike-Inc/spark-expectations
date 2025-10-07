@@ -30,7 +30,7 @@ def test_constants():
     assert user_config.se_notifications_enable_pagerduty == "spark.expectations.notifications.pagerduty.enabled"
 
     assert user_config.se_notifications_pagerduty_integration_key == "spark.expectations.notifications.pagerduty.integration.key"
-    
+
     assert user_config.se_notifications_pagerduty_webhook_url == "spark.expectations.notifications.pagerduty.webhook.url"
 
     assert user_config.se_notifications_on_start == "spark.expectations.notifications.on.start"

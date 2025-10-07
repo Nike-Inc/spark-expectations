@@ -94,6 +94,7 @@ class SparkExpectationsPagerDutyPluginImpl(SparkExpectationsNotification):
                 if _context.get_pagerduty_integration_key:
                     self._get_pd_integration_key(_context)
 
+                print(_context.get_pagerduty_integration_key)
                 # Sending request to PagerDuty Events API v2 > https://developer.pagerduty.com/docs/send-alert-event
                 # Severity Levels can be: critical, error, warning, or info
                 payload = {
@@ -108,6 +109,11 @@ class SparkExpectationsPagerDutyPluginImpl(SparkExpectationsNotification):
                 headers = {
                     "Content-Type": "application/json",
                 }
+                print(payload)
+                # print(dir(_context))
+                print(dir(self))
+                print(_context.get_pagerduty_webhook_url)
+                print(_config_args)
                 response = requests.post(
                     _context.get_pagerduty_webhook_url,
                     json=payload,
