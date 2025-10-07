@@ -79,7 +79,10 @@ jobs:
         with:
           java-version: '8'
           distribution: 'adopt'
-
+      - name: Configure Git User
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
       - name: Set up Python
         # https://github.com/actions/setup-python/blob/main/docs/advanced-usage.md#specifying-multiple-pythonpypy-versions
         uses: actions/setup-python@v5
@@ -106,3 +109,7 @@ jobs:
           export PATH=$PATH:$HOME/.local/bin
           make build
           twine upload dist/*
+      - name: Publish Docs
+        run: make deploy-docs
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
