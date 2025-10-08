@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version number to pass to docs command. Format: 'v1.23'"
+        description: "Version number to pass to docs command. Format: 'v1.2.3'"
         required: false
 jobs:
   publish-gh-pages:
@@ -11,6 +11,10 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v5
+      - name: Configure Git User
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
       - name: Set up JDK
         uses: actions/setup-java@v3
         with:
@@ -32,3 +36,5 @@ jobs:
           make deploy_env_setup
       - name: Publish Docs
         run: make deploy-docs version=${{ github.event.inputs.version }}
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
