@@ -78,6 +78,7 @@ def test_valid_agg_dq(sample_df, expectation, spark):
         "(select count(col1) from test_final_table_view) > 3",
         "(select count(case when col2>0 then 1 else 0 end) from test_final_table_view) > 10",
         "(select sum(col1) from {table}) > 10",
+        "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@target_f1@select distinct product_id,order_id from order_target",
         "(select count(*) from test_table) > 10",
     ],
 )
@@ -97,6 +98,7 @@ def test_valid_query_dq(sample_df, expectation, spark):
         "sum(col1) > 20",  # agg_dq expression, not allowed in row_dq
         "(select stddev(col2) from test_table) > 0",  # SQL query, not allowed in row_dq
         "non_existing_col > 20",  # column does not exist
+        "col1 = = = invalid",  # Invalid syntax that sqlglot can't parse
     ],
 )
 def test_invalid_row_dq(sample_df, expectation, spark):
@@ -114,6 +116,7 @@ def test_invalid_row_dq(sample_df, expectation, spark):
     [
         "sum(non_existing_col) > 20",  # non_existing_col does not exist
         "col1 > 20",                   # not an aggregate expression
+        "sum(col1) = = = invalid",   # Invalid syntax that sqlglot can't parse
     ],
 )
 def test_invalid_agg_dq(sample_df, expectation, spark):
@@ -132,6 +135,13 @@ def test_invalid_agg_dq(sample_df, expectation, spark):
         "SELECT SUM(col1) > 5 AS result",             # syntax error
         "col1 > 20",                                  # not a valid query_dq
         "avg(col1) < 100",                            # not a valid query_dq
+        "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f2}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@target_f1@select distinct product_id,order_id from order_target",  # Placeholder mismatch or missing
+        "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@@select distinct product_id,order_id from order_target",  # Placeholder target_f1 missing
+        "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@invalid_query_without_select_from@target_f1@select distinct product_id,order_id from order_target",  # Invalid subquery without SELECT FROM
+        "((select count(*) from ({}) a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@target_f1@select distinct product_id,order_id from order_target",  # Missing key
+        "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@target_f1@{}",  # Invalid format in subquery
+        "((select count(*) from {source_f1=y} a) - (select count(*) from ({target_f1}) b) ) < 3@source_f1@select distinct product_id,order_id from order_source@target_f1@select distinct product_id,order_id from order_target",  # Invalid format spec
+        "select count(*) from table_name where col1 = = = invalid",  # Invalid SQL syntax
     ],
 )
 def test_invalid_query_dq(sample_df, expectation, spark):

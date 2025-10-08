@@ -1,7 +1,9 @@
+from typing import Optional
+
 import pkg_resources
 from pyspark.sql import DataFrame
+
 from spark_expectations.core import get_spark_session
-from typing import Optional
 
 spark = get_spark_session()
 
