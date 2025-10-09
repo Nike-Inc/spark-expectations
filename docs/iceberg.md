@@ -55,7 +55,7 @@ se: SparkExpectations = SparkExpectations(
 #if smtp server needs to be authenticated, password can be passed directly with user config or set in a secure way like cerberus or databricks secret
 smtp_creds_dict = {
     user_config.secret_type: "cerberus",
-    user_config.cbs_url: "htpps://cerberus.example.com",
+    user_config.cbs_url: "https://cerberus.example.com",
     user_config.cbs_sdb_path: "",
     user_config.cbs_smtp_password: "",
     # user_config.secret_type: "databricks",
