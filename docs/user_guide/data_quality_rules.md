@@ -82,12 +82,18 @@ If other values are provided, the library may cause unforeseen errors.
 Please run the below command to add constraints to the above created rules table
 
 ```sql
-ALTER TABLE apla_nd_dq_rules ADD CONSTRAINT action CHECK 
-((rule_type = 'row_dq' and action_if_failed IN ('ignore', 'drop', 'fail')) or 
-(rule_type = 'agg_dq' and action_if_failed in ('ignore', 'fail')) or 
-(rule_type = 'query_dq' and action_if_failed in ('ignore', 'fail'))) and priority IN ('low', 'medium', 'high');
-```
+ALTER TABLE apla_nd_dq_rules
+ADD CONSTRAINT priority_constraint CHECK (
+    priority IN ('low', 'medium', 'high')
+);
 
+ALTER TABLE apla_nd_dq_rules
+ADD CONSTRAINT action CHECK (
+    (rule_type = 'row_dq' and action_if_failed IN ('ignore', 'drop', 'fail')) or 
+    (rule_type = 'agg_dq' and action_if_failed in ('ignore', 'fail')) or 
+    (rule_type = 'query_dq' and action_if_failed in ('ignore', 'fail'))
+);
+```
 
 ### Rule Types
 
