@@ -73,7 +73,7 @@ jobs:
         os: [ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4 # use latest version of the checkout action
+      - uses: actions/checkout@v5 # use latest version of the checkout action
         with:
           fetch-depth: 0 # fetch all commits/branches, needed for publish docs
       - name: Set up JDK
