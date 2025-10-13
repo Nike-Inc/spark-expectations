@@ -46,7 +46,7 @@ By default PagerDuty notifications (or the ability to create incidents) are disa
     ```
 
 ### Links to example notebooks
-An example notebook is available to use that sets up PD in a notebook [here]().
+An example notebook is available to use that sets up PD in a notebook [here](https://github.com/Nike-Inc/spark-expectations/blob/main/notebooks/spark_expectations_basic_pagerduty_notification.ipynb).
 
 This notebook will:
 
