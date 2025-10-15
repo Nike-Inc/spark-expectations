@@ -84,6 +84,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#slack-notifications" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -788,6 +793,19 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Slack
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
         
@@ -798,6 +816,99 @@
   
 
       </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    Prerequisites
+  </a>
+  
+    <nav class="md-nav" aria-label="Prerequisites">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#slack-webhook-url" class="md-nav__link">
+    Slack Webhook URL
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notification-config-parameters" class="md-nav__link">
+    Notification Config Parameters
+  </a>
+  
+    <nav class="md-nav" aria-label="Notification Config Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#required-parameters" class="md-nav__link">
+    Required Parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notification-triggers" class="md-nav__link">
+    Notification Triggers
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-example" class="md-nav__link">
+    Configuration Example
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#message-format" class="md-nav__link">
+    Message Format
+  </a>
+  
+    <nav class="md-nav" aria-label="Message Format">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#testing-slack-integration" class="md-nav__link">
+    Testing Slack Integration
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1951,6 +2062,90 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#prerequisites" class="md-nav__link">
+    Prerequisites
+  </a>
+  
+    <nav class="md-nav" aria-label="Prerequisites">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#slack-webhook-url" class="md-nav__link">
+    Slack Webhook URL
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#notification-config-parameters" class="md-nav__link">
+    Notification Config Parameters
+  </a>
+  
+    <nav class="md-nav" aria-label="Notification Config Parameters">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#required-parameters" class="md-nav__link">
+    Required Parameters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#notification-triggers" class="md-nav__link">
+    Notification Triggers
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-example" class="md-nav__link">
+    Configuration Example
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#message-format" class="md-nav__link">
+    Message Format
+  </a>
+  
+    <nav class="md-nav" aria-label="Message Format">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#testing-slack-integration" class="md-nav__link">
+    Testing Slack Integration
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1968,9 +2163,87 @@
   
 
 
-  <h1>Slack</h1>
-
-<p>TBD</p>
+<h1 id="slack-notifications">Slack Notifications<a class="headerlink" href="#slack-notifications" title="Permanent link">&para;</a></h1>
+<p>Spark Expectations supports sending notifications to Slack channels via webhooks when data quality checks are performed. This enables teams to stay informed about data quality issues in real-time.</p>
+<p>By default, Slack notifications are disabled. To enable them, you need to configure the required parameters and set up a Slack webhook URL.</p>
+<h2 id="prerequisites">Prerequisites<a class="headerlink" href="#prerequisites" title="Permanent link">&para;</a></h2>
+<p>Before configuring Slack notifications, you need:</p>
+<h3 id="slack-webhook-url">Slack Webhook URL<a class="headerlink" href="#slack-webhook-url" title="Permanent link">&para;</a></h3>
+<ol>
+<li>Go to <a href="https://api.slack.com/apps">https://api.slack.com/apps</a> and create a new app</li>
+<li>Enable <strong>"Incoming Webhooks"</strong> and add one to your workspace</li>
+<li>Select your target channel (public, private, or direct message)</li>
+<li>Copy the generated webhook URL:
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX
+</code></pre></div></li>
+</ol>
+<div class="admonition important">
+<p class="admonition-title">Security</p>
+<p>Store webhook URLs securely using environment variables - never commit them to code.</p>
+</div>
+<h2 id="notification-config-parameters">Notification Config Parameters<a class="headerlink" href="#notification-config-parameters" title="Permanent link">&para;</a></h2>
+<h3 id="required-parameters">Required Parameters<a class="headerlink" href="#required-parameters" title="Permanent link">&para;</a></h3>
+<div class="admonition info">
+<p class="admonition-title">user_config.se_notifications_enable_slack</p>
+<p>Master toggle to enable Slack notifications. Set to <code>True</code> to activate Slack notifications.</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title">user_config.se_notifications_slack_webhook_url</p>
+<p>The Slack webhook URL obtained from your Slack app configuration. This is where notifications will be sent.</p>
+</div>
+<h3 id="notification-triggers">Notification Triggers<a class="headerlink" href="#notification-triggers" title="Permanent link">&para;</a></h3>
+<p>These parameters control <strong>when</strong> Slack notifications are sent during Spark-Expectations runs:</p>
+<ul>
+<li><abbr title="Enable notifications when job starts">user_config.se_notifications_on_start</abbr></li>
+<li><abbr title="Enable notifications when job ends">user_config.se_notifications_on_completion</abbr> </li>
+<li><abbr title="Enable notifications on failure">user_config.se_notifications_on_fail</abbr></li>
+<li><abbr title="Notify if error drop threshold is breached">user_config.se_notifications_on_error_drop_exceeds_threshold_breach</abbr></li>
+<li><abbr title="Notify if rules with action 'ignore' fail">user_config.se_notifications_on_rules_action_if_failed_set_ignore</abbr></li>
+<li><abbr title="Threshold value for error drop notifications">user_config.se_notifications_on_error_drop_threshold</abbr></li>
+</ul>
+<h2 id="configuration-example">Configuration Example<a class="headerlink" href="#configuration-example" title="Permanent link">&para;</a></h2>
+<p>Here's how to configure Slack notifications in your Spark Expectations setup:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spark_expectations.config.user_config</span><span class="w"> </span><span class="kn">import</span> <span class="o">*</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c1"># Basic Slack configuration</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="n">user_configs</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="c1"># Enable Slack notifications</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="n">se_notifications_enable_slack</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>    <span class="c1"># Slack webhook URL (replace with your actual webhook URL)</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>    <span class="n">se_notifications_slack_webhook_url</span><span class="p">:</span> <span class="s2">&quot;https://hooks.slack.com/services/T00000000/B00000000/XXXXXXXXXXXXXXXXXXXXXXXX&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>    <span class="c1"># Configure when to send notifications</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>    <span class="n">se_notifications_on_start</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a>    <span class="n">se_notifications_on_completion</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> 
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>    <span class="n">se_notifications_on_fail</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>    <span class="n">se_notifications_on_error_drop_exceeds_threshold_breach</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a>    <span class="n">se_notifications_on_error_drop_threshold</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>    <span class="c1"># Other required configurations</span>
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a>    <span class="n">se_enable_error_table</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a>    <span class="n">se_dq_rules_params</span><span class="p">:</span> <span class="p">{</span>
+<a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a>        <span class="s2">&quot;env&quot;</span><span class="p">:</span> <span class="s2">&quot;dev&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a>        <span class="s2">&quot;table&quot;</span><span class="p">:</span> <span class="s2">&quot;your_table_name&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-23" name="__codelineno-1-23" href="#__codelineno-1-23"></a>        <span class="s2">&quot;data_object_name&quot;</span><span class="p">:</span> <span class="s2">&quot;your_data_object&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-24" name="__codelineno-1-24" href="#__codelineno-1-24"></a>        <span class="s2">&quot;data_source&quot;</span><span class="p">:</span> <span class="s2">&quot;your_data_source&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-25" name="__codelineno-1-25" href="#__codelineno-1-25"></a>    <span class="p">}</span>
+<a id="__codelineno-1-26" name="__codelineno-1-26" href="#__codelineno-1-26"></a><span class="p">}</span>
+</code></pre></div>
+<h2 id="message-format">Message Format<a class="headerlink" href="#message-format" title="Permanent link">&para;</a></h2>
+<p>Slack notifications sent by Spark Expectations include:</p>
+<ul>
+<li><strong>Job Status</strong>: Whether the data quality check started, completed, or failed</li>
+<li><strong>Data Quality Results</strong>: Summary of passed/failed expectations  </li>
+<li><strong>Error Details</strong>: Information about specific data quality issues</li>
+<li><strong>Metadata</strong>: Table name, environment, timestamp, and other contextual information</li>
+</ul>
+<h3 id="testing-slack-integration">Testing Slack Integration<a class="headerlink" href="#testing-slack-integration" title="Permanent link">&para;</a></h3>
+<p>You can test your Slack webhook configuration using curl:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>curl<span class="w"> </span>-X<span class="w"> </span>POST<span class="w"> </span>-H<span class="w"> </span><span class="s1">&#39;Content-type: application/json&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>--data<span class="w"> </span><span class="s1">&#39;{&quot;text&quot;:&quot;Test message from Spark Expectations&quot;}&#39;</span><span class="w"> </span><span class="se">\</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>YOUR_WEBHOOK_URL
+</code></pre></div>
 
 
 

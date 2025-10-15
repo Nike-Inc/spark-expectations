@@ -2,247 +2,247 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/Observability_examples/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/bigquery/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/delta/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/email_notifications/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/examples/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/github_copilot_chat_commands/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/iceberg/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/key_prompts_for_repo/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/actions/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/base_notification_plugin/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/base_setup/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/base_sink_plugin/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/context/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/core_init/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/email_plugin/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/exceptions/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/expectations/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/kafka_sink_plugin/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/notifications_decorater/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/notifications_init/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/pagerduty_plugin/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/reader/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/regulate_flow/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/sample_dq_bigquery/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/sample_dq_delta/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/sample_dq_iceberg/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/sinks_decorater/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/sinks_init/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/slack_plugin/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/teams_plugin/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/udf/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/writer/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/api/zoom_plugin/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/configurations/configurations_file/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/configurations/configure_rules/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/configurations/databricks_setup_guide/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/configurations/rules/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/developer_guide/contributing/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/developer_guide/setup/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/home/why_spark_expectations/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/user_guide/data_quality_metrics/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/user_guide/data_quality_rules/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/user_guide/getting_started/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/user_guide/quickstart/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/user_guide/user_config/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/user_guide/notifications/email_notifications/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/user_guide/notifications/pagerduty_notifications/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/latest/user_guide/notifications/slack_notifications/</loc>
-         <lastmod>2025-10-09</lastmod>
+         <lastmod>2025-10-15</lastmod>
          <changefreq>daily</changefreq>
     </url>
 </urlset>
