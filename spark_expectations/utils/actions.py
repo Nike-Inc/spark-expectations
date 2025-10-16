@@ -90,6 +90,7 @@ class SparkExpectationsActions:
                     "tag",
                     "description",
                     "column_name",
+                    "priority",
                 ]
             ]
         )
