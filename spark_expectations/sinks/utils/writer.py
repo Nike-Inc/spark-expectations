@@ -847,12 +847,13 @@ class SparkExpectationsWriter:
             df_res = (
                 df_explode.withColumn("rule_type", col("row_dq_res")["rule_type"])
                 .withColumn("rule", col("row_dq_res")["rule"])
+                .withColumn("priority", col("row_dq_res")["priority"])
                 .withColumn("description", col("row_dq_res")["description"])
                 .withColumn("tag", col("row_dq_res")["tag"])
                 .withColumn("action_if_failed", col("row_dq_res")["action_if_failed"])
                 .withColumn("column_name", col("row_dq_res")["column_name"])
-                .select("rule_type", "rule", "column_name", "description", "tag", "action_if_failed")
-                .groupBy("rule_type", "rule", "column_name", "description", "tag", "action_if_failed")
+                .select("rule_type", "rule", "priority", "column_name", "description", "tag", "action_if_failed")
+                .groupBy("rule_type", "rule", "priority", "column_name", "description", "tag", "action_if_failed")
                 .count()
                 .withColumnRenamed("count", "failed_row_count")
             )
@@ -860,6 +861,7 @@ class SparkExpectationsWriter:
                 {
                     "rule_type": row.rule_type,
                     "rule": row.rule,
+                    "priority": row.priority,
                     "column_name": row.column_name,
                     "description": row.description,
                     "tag": row.tag,
@@ -869,6 +871,7 @@ class SparkExpectationsWriter:
                 for row in df_res.select(
                     "rule_type",
                     "rule",
+                    "priority",
                     "column_name",
                     "description",
                     "tag",
@@ -889,13 +892,14 @@ class SparkExpectationsWriter:
                         if each_rule["rule"] not in failed_rule_list:
                             summarized_row_dq_list.append(
                                 {
+                                    "rule_type": each_rule["rule_type"],
+                                    "rule": each_rule["rule"],
+                                    "priority": each_rule["priority"],
+                                    "column_name": each_rule["column_name"],
                                     "description": each_rule["description"],
                                     "tag": each_rule["tag"],
-                                    "rule": each_rule["rule"],
                                     "action_if_failed": each_rule["action_if_failed"],
-                                    "rule_type": each_rule["rule_type"],
-                                    "column_name": each_rule["column_name"],
-                                    "failed_row_count": 0,
+                                    "failed_row_count": 0
                                 }
                             )
 
