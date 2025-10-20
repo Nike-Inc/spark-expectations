@@ -86,6 +86,7 @@ def fixture_context():
                 "description": "col1 should not be null",
                 "enable_error_drop_alert": False,
                 "error_drop_threshold": 0,
+                "priority": "medium"
             },
             {
                 "product_id": "product1",
@@ -101,6 +102,7 @@ def fixture_context():
                 "description": "col2 should start with A",
                 "enable_error_drop_alert": False,
                 "error_drop_threshold": 0,
+                "priority": "medium"
             },
         ]
     }
@@ -3485,6 +3487,7 @@ def test_write_error_records_final_dependent(
                             "column_name":"col1",
                             "tag": "validity",
                             "action_if_failed": "ignore",
+                            "priority": "medium"
                         },
                         {
                             "rule_type": "row_dq",
@@ -3493,6 +3496,7 @@ def test_write_error_records_final_dependent(
                             "column_name": "col2",
                             "tag": "validity",
                             "action_if_failed": "ignore",
+                            "priority": "medium"
                         },
                     ],
                     "meta_dq_run_id": "run_id",
@@ -3507,6 +3511,7 @@ def test_write_error_records_final_dependent(
                             "column_name": "col1",
                             "tag": "validity",
                             "action_if_failed": "ignore",
+                            "priority": "medium"
                         }
                     ],
                     "meta_dq_run_id": "run_id",
@@ -3521,6 +3526,7 @@ def test_write_error_records_final_dependent(
                             "column_name": "col2",
                             "tag": "validity",
                             "action_if_failed": "ignore",
+                            "priority": "medium"
                         }
                     ],
                     "meta_dq_run_id": "run_id",
@@ -3536,6 +3542,7 @@ def test_write_error_records_final_dependent(
                     "tag": "validity",
                     "action_if_failed": "ignore",
                     "failed_row_count": 2,
+                    "priority": "medium"
                 },
                 {
                     "rule_type": "row_dq",
@@ -3545,6 +3552,7 @@ def test_write_error_records_final_dependent(
                     "tag": "validity",
                     "action_if_failed": "ignore",
                     "failed_row_count": 2,
+                    "priority": "medium"
                 },
             ],
         ),
@@ -3559,6 +3567,7 @@ def test_write_error_records_final_dependent(
                             "column_name":"col1",
                             "tag": "validity",
                             "action_if_failed": "ignore",
+                            "priority": "medium"
                         }
                     ],
                     "meta_dq_run_id": "run_id",
@@ -3573,6 +3582,7 @@ def test_write_error_records_final_dependent(
                             "column_name": "col1",
                             "tag": "validity",
                             "action_if_failed": "ignore",
+                            "priority": "medium"
                         }
                     ],
                     "meta_dq_run_id": "run_id",
@@ -3588,6 +3598,7 @@ def test_write_error_records_final_dependent(
                     "tag": "validity",
                     "action_if_failed": "ignore",
                     "failed_row_count": 2,
+                    "priority": "medium"
                 },
                 {
                     "rule_type": "row_dq",
@@ -3597,6 +3608,7 @@ def test_write_error_records_final_dependent(
                     "tag": "validity",
                     "action_if_failed": "ignore",
                     "failed_row_count": 0,
+                    "priority": "medium"
                 },
             ],
         ),

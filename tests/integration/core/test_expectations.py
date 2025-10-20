@@ -994,11 +994,12 @@ def test_spark_session_initialization():
             0,  # output count
             [
                 {
+                    "action_if_failed": "ignore",
+                    "column_name": "col3",
                     "description": "sum col3 value must be greater than 20",  # source_ag_result
+                    "priority": "medium",
                     "rule": "sum_col3_threshold",
                     "rule_type": "agg_dq",
-                    "column_name": "col3",
-                    "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "strict",
                 }
@@ -1067,11 +1068,12 @@ def test_spark_session_initialization():
             0,  # output count
             [
                 {
+                    "action_if_failed": "fail",
+                    "column_name": "col3",
                     "description": "avg col3 value must be greater than 25",  # source_agg_result
+                    "priority": "medium",
                     "rule": "avg_col3_threshold",
                     "rule_type": "agg_dq",
-                    "column_name": "col3",
-                    "action_if_failed": "fail",
                     "status": "fail",
                     "tag": "strict",
                 }
@@ -1163,11 +1165,12 @@ def test_spark_session_initialization():
             None,  # source_agg-result
             [
                 {
+                    "action_if_failed": "ignore",
+                    "column_name": "col1",
                     "description": "min col1 value must be greater than 10",
+                    "priority": "medium",
                     "rule": "min_col1_threshold",
                     "rule_type": "agg_dq",
-                    "column_name": "col1",
-                    "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "strict",
                 }
@@ -1258,11 +1261,12 @@ def test_spark_session_initialization():
             None,  # source_agg_result
             [
                 {
+                    "action_if_failed": "fail",
+                    "column_name": "col3",
                     "description": "std col3 value must be greater than 10",
+                    "priority": "medium",
                     "rule": "std_col3_threshold",
                     "rule_type": "agg_dq",
-                    "column_name": "col3",
-                    "action_if_failed": "fail",
                     "status": "fail",
                     "tag": "strict",
                 }
@@ -1444,11 +1448,12 @@ def test_spark_session_initialization():
             3,  # output count
             [
                 {
+                    "action_if_failed": "ignore",
+                    "column_name": "col2",
                     "description": "distinct of col2 value must be greater than 4",
+                    "priority": "medium",
                     "rule": "distinct_col2_threshold",
                     "rule_type": "agg_dq",
-                    "column_name": "col2",
-                    "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "validity",
                 }
@@ -1561,11 +1566,12 @@ def test_spark_session_initialization():
             2,  # output count
             [
                 {
+                    "action_if_failed": "ignore",
+                    "column_name": "col1",
+                    "priority": "medium",
                     "description": "avg of col1 value must be greater than 4",
                     "rule": "avg_col1_threshold",
                     "rule_type": "agg_dq",
-                    "column_name": "col1",
-                    "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "accuracy",
                 }
@@ -1573,11 +1579,12 @@ def test_spark_session_initialization():
             # source_agg_dq
             [
                 {
+                    "action_if_failed": "ignore",
+                    "column_name": "col1",
                     "description": "avg of col1 value must be greater than 4",
+                    "priority": "medium",
                     "rule": "avg_col1_threshold",
                     "rule_type": "agg_dq",
-                    "column_name": "col1",
-                    "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "accuracy",
                 }
@@ -1708,20 +1715,22 @@ def test_spark_session_initialization():
             2,  # output count
             [
                 {
+                    "action_if_failed": "ignore",
+                    "column_name": "col1",
                     "description": "avg of col1 value must be greater than 4",
+                    "priority": "medium",
                     "rule": "avg_col1_threshold",
                     "rule_type": "agg_dq",
-                    "column_name": "col1",
-                    "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "validity",
                 },
                 {
                     "action_if_failed": "ignore",
+                    "column_name": "col3",
                     "description": "stddev of col3 value must be greater than one",
+                    "priority": "medium",
                     "rule": "stddev_col3_threshold",
                     "rule_type": "agg_dq",
-                    "column_name": "col3",
                     "status": "pass",
                     "tag": "validity",
                 },
@@ -1730,19 +1739,21 @@ def test_spark_session_initialization():
             [
                 {
                     "action_if_failed": "ignore",
+                    "column_name": "col1",
                     "description": "avg of col1 value must be greater than 4",
+                    "priority": "medium",
                     "rule": "avg_col1_threshold",
                     "rule_type": "agg_dq",
-                    "column_name": "col1",
                     "status": "fail",
                     "tag": "validity",
                 },
                 {
                     "action_if_failed": "ignore",
+                    "column_name": "col3",
                     "description": "stddev of col3 value must be greater than one",
+                    "priority": "medium",
                     "rule": "stddev_col3_threshold",
                     "rule_type": "agg_dq",
-                    "column_name": "col3",
                     "status": "fail",
                     "tag": "validity",
                 },
@@ -1836,20 +1847,22 @@ def test_spark_session_initialization():
             # final_agg_result
             [
                 {
+                    "action_if_failed": "ignore",
+                    "column_name": "col1",
                     "description": "sum of col1 value must be greater than 10",
+                    "priority": "medium",
                     "rule": "sum_col1_threshold",
                     "rule_type": "query_dq",
-                    "column_name": "col1",
-                    "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "validity",
                 },
                 {
                     "action_if_failed": "ignore",
+                    "column_name": "col3",
                     "description": "stddev of col3 value must be greater than 0",
+                    "priority": "medium",
                     "rule": "stddev_col3_threshold",
                     "rule_type": "query_dq",
-                    "column_name": "col3",
                     "status": "pass",
                     "tag": "validity",
                 },
@@ -1964,20 +1977,22 @@ def test_spark_session_initialization():
             None,  # source_query_dq_res
             [
                 {
+                    "action_if_failed": "ignore",
+                    "column_name": "col1",
                     "description": "max of col1 value must be greater than 10",
+                    "priority": "medium",
                     "rule": "max_col1_threshold",
                     "rule_type": "query_dq",
-                    "column_name": "col1",
-                    "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "strict",
                 },
                 {
                     "action_if_failed": "ignore",
+                    "column_name": "col3",
                     "description": "min of col3 value must be greater than 0",
+                    "priority": "medium",
                     "rule": "min_col3_threshold",
                     "rule_type": "query_dq",
-                    "column_name": "col3",
                     "status": "pass",
                     "tag": "validity",
                 },
@@ -2069,19 +2084,21 @@ def test_spark_session_initialization():
             [
                 {
                     "action_if_failed": "fail",
+                    "column_name": "col1",
                     "description": "min of col1 value must be greater than 10",
+                    "priority": "medium",
                     "rule": "min_col1_threshold",
                     "rule_type": "query_dq",
-                    "column_name": "col1",
                     "status": "fail",
                     "tag": "validity",
                 },
                 {
                     "action_if_failed": "ignore",
+                    "column_name": "col3",
                     "description": "stddev of col3 value must be greater than 0",
+                    "priority": "medium",
                     "rule": "stddev_col3_threshold",
                     "rule_type": "query_dq",
-                    "column_name": "col3",
                     "status": "fail",
                     "tag": "validity",
                 },
@@ -2191,20 +2208,22 @@ def test_spark_session_initialization():
             None,  # source_query_dq_res
             [
                 {
+                    "action_if_failed": "fail",
+                    "column_name": "col1",
                     "description": "max of col1 value must be greater than 10",
+                    "priority": "medium",
                     "rule": "max_col1_threshold",
                     "rule_type": "query_dq",
-                    "column_name": "col1",
-                    "action_if_failed": "fail",
                     "status": "fail",
                     "tag": "strict",
                 },
                 {
                     "action_if_failed": "ignore",
+                    "column_name": "col3",
                     "description": "min of col3 value must be greater than 0",
+                    "priority": "medium",
                     "rule": "min_col3_threshold",
                     "rule_type": "query_dq",
-                    "column_name": "col3",
                     "status": "pass",
                     "tag": "validity",
                 },
@@ -2337,11 +2356,12 @@ def test_spark_session_initialization():
             # final_agg_result
             [
                 {
+                    "action_if_failed": "ignore",
+                    "column_name": "col1",
                     "description": "min of col1 value must be greater than 10",
+                    "priority": "medium",
                     "rule": "min_col1_threshold",
                     "rule_type": "query_dq",
-                    "column_name": "col1",
-                    "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "strict",
                 }
@@ -2349,20 +2369,22 @@ def test_spark_session_initialization():
             # source_query_dq_res
             [
                 {
+                    "action_if_failed": "ignore",
+                    "column_name": "col1",
                     "description": "max of col1 value must be greater than 100",
+                    "priority": "medium",
                     "rule": "max_col1_threshold",
                     "rule_type": "query_dq",
-                    "column_name": "col1",
-                    "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "strict",
                 },
                 {
                     "action_if_failed": "fail",
+                    "column_name": "col3",
                     "description": "min of col3 value must be greater than 0",
+                    "priority": "medium",
                     "rule": "min_col3_threshold",
                     "rule_type": "query_dq",
-                    "column_name": "col3",
                     "status": "pass",
                     "tag": "validity",
                 },
@@ -2490,11 +2512,12 @@ def test_spark_session_initialization():
             # final_agg_result
             [
                 {
+                    "action_if_failed": "ignore",
+                    "column_name": "col1",
                     "description": "min of col1 value must be greater than 10",
+                    'priority': 'medium',
                     "rule": "min_col1_threshold",
                     "rule_type": "query_dq",
-                    "column_name": "col1",
-                    "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "strict",
                 }
@@ -2502,20 +2525,22 @@ def test_spark_session_initialization():
             # source_query_dq_res
             [
                 {
+                    "action_if_failed": "fail",
+                    "column_name": "col1",
                     "description": "max of col1 value must be greater than 100",
+                    'priority': 'medium',
                     "rule": "max_col1_threshold",
                     "rule_type": "query_dq",
-                    "column_name": "col1",
-                    "action_if_failed": "fail",
                     "status": "fail",
                     "tag": "strict",
                 },
                 {
                     "action_if_failed": "ignore",
+                    "column_name": "col3",
                     "description": "min of col3 value must be greater than 0",
+                    'priority': 'medium',
                     "rule": "min_col3_threshold",
                     "rule_type": "query_dq",
-                    "column_name": "col3",
                     "status": "pass",
                     "tag": "validity",
                 },
@@ -2647,10 +2672,11 @@ def test_spark_session_initialization():
             [
                 {
                     "action_if_failed": "fail",
+                    "column_name": "col3",
                     "description": "col3 mod must equals to 0",
+                    "priority": "medium",
                     "rule": "col3_max_value",
                     "rule_type": "agg_dq",
-                    "column_name": "col3",
                     "status": "pass",
                     "tag": "validity",
                 }
@@ -2658,10 +2684,11 @@ def test_spark_session_initialization():
             [
                 {
                     "action_if_failed": "fail",
+                    "column_name": "col3",
                     "description": "col3 mod must equals to 0",
+                    "priority": "medium",
                     "rule": "col3_max_value",
                     "rule_type": "agg_dq",
-                    "column_name": "col3",
                     "status": "pass",
                     "tag": "validity",
                 }
@@ -2669,11 +2696,12 @@ def test_spark_session_initialization():
             # final_agg_result
             [
                 {
+                    "action_if_failed": "ignore",
+                    "column_name": "col1",
                     "description": "count of col1 value must be greater than 3",
+                    "priority": "medium",
                     "rule": "count_col1_threshold",
                     "rule_type": "query_dq",
-                    "column_name": "col1",
-                    "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "strict",
                 }
@@ -2681,11 +2709,12 @@ def test_spark_session_initialization():
             # source_query_dq_res
             [
                 {
+                    "action_if_failed": "ignore",
+                    "column_name": "col1",
                     "description": "count of col3 positive value must be greater than 10",
+                    "priority": "medium",
                     "rule": "col3_positive_threshold",
                     "rule_type": "query_dq",
-                    "column_name": "col1",
-                    "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "strict",
                 }
@@ -2777,20 +2806,22 @@ def test_spark_session_initialization():
             # final_agg_result
             [
                 {
+                    "action_if_failed": "ignore",
+                    "column_name": "col1",
                     "description": "sum of col1 value must be greater than 10",
+                    "priority": "medium",
                     "rule": "sum_col1_threshold",
                     "rule_type": "query_dq",
-                    "column_name": "col1",
-                    "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "validity",
                 },
                 {
                     "action_if_failed": "ignore",
+                    "column_name": "col3",
                     "description": "stddev of col3 value must be greater than 0",
+                    "priority": "medium",
                     "rule": "stddev_col3_threshold",
                     "rule_type": "query_dq",
-                    "column_name": "col3",
                     "status": "pass",
                     "tag": "validity",
                 },
@@ -2859,11 +2890,12 @@ def test_spark_session_initialization():
             0,  # output count
             [
                 {
+                    "action_if_failed": "fail",
+                    "column_name": "col3",
                     "description": "avg col3 value must be greater than 18 and less than 25",  # source_agg_result
+                    "priority": "medium",
                     "rule": "avg_col3_range",
                     "rule_type": "agg_dq",
-                    "column_name": "col3",
-                    "action_if_failed": "fail",
                     "status": "fail",
                     "tag": "strict",
                 }
@@ -2933,11 +2965,12 @@ def test_spark_session_initialization():
             0,  # output count
             [
                 {
+                    "action_if_failed": "fail",
+                    "column_name": "col3",
                     "description": "avg col3 value must be greater than 18 and less than 25",  # source_agg_result
+                    "priority": "medium",
                     "rule": "avg_col3_range",
                     "rule_type": "agg_dq",
-                    "column_name": "col3",
-                    "action_if_failed": "fail",
                     "status": "fail",
                     "tag": "strict",
                 }
@@ -3503,6 +3536,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
                 {
                     "rule_type": "row_dq",
                     "rule": "value_must_be_greater_than_10",
+                    "priority": "medium",
                     "description": "value must be greater than 10",
                     "column_name": "value",
                     "tag": "strict",
@@ -3512,6 +3546,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
                 {
                     "rule": "count_of_records_must_be_greater_than_10",
                     "description": "count of records must be greater than 10",
+                    "priority": "medium",
                     "rule_type": "query_dq",
                     "column_name": "col3",
                     "tag": "strict",
@@ -3521,6 +3556,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
                 {
                     "rule": "sum_of_value_should_be_less_than_60",
                     "description": "desc_sum_of_value_should_be_less_than_60",
+                    "priority": "medium",
                     "rule_type": "agg_dq",
                     "column_name": "value",
                     "tag": "strict",
@@ -3530,6 +3566,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
                 {
                     "rule": "count_of_records_must_be_greater_than_10",
                     "description": "count of records must be greater than 10",
+                    "priority": "medium",
                     "rule_type": "query_dq",
                     "column_name": "col3",
                     "tag": "strict",
@@ -3539,6 +3576,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
                 {
                     "rule": "sum_of_value_should_be_less_than_60",
                     "description": "desc_sum_of_value_should_be_less_than_60",
+                    "priority": "medium",
                     "rule_type": "agg_dq",
                     "column_name": "value",
                     "tag": "strict",
