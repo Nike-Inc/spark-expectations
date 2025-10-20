@@ -133,6 +133,7 @@ def fixture_create_stats_table():
                         "description": "col1 value must be greater than 1",
                         "enable_error_drop_alert": True,
                         "error_drop_threshold": "10",
+                        "priority": "medium"
                     }
                 ],
                 "agg_dq_rules": [{}],
@@ -199,6 +200,7 @@ def fixture_create_stats_table():
                         "description": "col1 value must be greater than 1",
                         "enable_error_drop_alert": False,
                         "error_drop_threshold": "5",
+                        "priority": "medium"
                     }
                 ]
             },
@@ -259,6 +261,7 @@ def fixture_create_stats_table():
                         "description": "col1 value must be greater than 1",
                         "enable_error_drop_alert": False,
                         "error_drop_threshold": "3",
+                        "priority": "medium"
                     }
                 ],
             },
@@ -314,6 +317,7 @@ def fixture_create_stats_table():
                         "description": "col1 value must be greater than 1",
                         "enable_error_drop_alert": False,
                         "error_drop_threshold": "1",
+                        "priority": "medium"
                     },
                     {
                         "product_id": "product1",
@@ -325,6 +329,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "drop",
                         "tag": "validity",
                         "description": "col1 value must be greater than 2",
+                        "priority": "medium"
                     },
                 ],
             },
@@ -386,6 +391,7 @@ def fixture_create_stats_table():
                         "description": "col1 value must be greater than 1",
                         "enable_error_drop_alert": True,
                         "error_drop_threshold": "5",
+                        "priority": "medium"
                     },
                     {
                         "product_id": "product1",
@@ -399,6 +405,7 @@ def fixture_create_stats_table():
                         "description": "col1 value must be greater than 3",
                         "enable_error_drop_alert": True,
                         "error_drop_threshold": "10",
+                        "priority": "medium"
                     },
                 ],
                 "agg_dq_rules": [
@@ -414,6 +421,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "validity",
                         "description": "sum of col1 value must be greater than 10",
+                        "priority": "medium"
                     }
                 ],
             },
@@ -472,6 +480,7 @@ def fixture_create_stats_table():
                         "description": "col1 value must be greater than 1",
                         "enable_error_drop_alert": False,
                         "error_drop_threshold": "5",
+                        "priority": "medium"
                     },
                     {
                         "product_id": "product1",
@@ -485,6 +494,7 @@ def fixture_create_stats_table():
                         "description": "col1 value must be greater than 3",
                         "enable_error_drop_alert": True,
                         "error_drop_threshold": "5",
+                        "priority": "medium"
                     },
                 ],
                 "agg_dq_rules": [
@@ -500,6 +510,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "validity",
                         "description": "sum of col1 value must be greater than 10",
+                        "priority": "medium"
                     }
                 ],
             },
@@ -561,6 +572,7 @@ def fixture_create_stats_table():
                         "description": "col1 value must be greater than 1",
                         "enable_error_drop_alert": False,
                         "error_drop_threshold": "1",
+                        "priority": "medium"
                     },
                     {
                         "product_id": "product1",
@@ -574,6 +586,7 @@ def fixture_create_stats_table():
                         "description": "col1 value must be greater than 1",
                         "enable_error_drop_alert": True,
                         "error_drop_threshold": "10",
+                        "priority": "medium"
                     },
                     {
                         "product_id": "product1",
@@ -587,6 +600,7 @@ def fixture_create_stats_table():
                         "description": "col1 value must be greater than 3",
                         "enable_error_drop_alert": False,
                         "error_drop_threshold": "10",
+                        "priority": "medium"
                     },
                 ]
             },
@@ -643,6 +657,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "validity",
                         "description": "sum of col3 value must be greater than 1",
+                        "priority": "medium"
                     }
                 ]
             },
@@ -667,6 +682,7 @@ def fixture_create_stats_table():
                     "rule_type": "agg_dq",
                     "status": "pass",
                     "tag": "validity",
+                    "priority": "medium"
                 },
             ],  # expected agg dq result
             # status at different stages for given input
@@ -705,6 +721,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "fail",
                         "tag": "validity",
                         "description": "sum of col1 value must be greater than 1",
+                        "priority": "medium"
                     }
                 ]
             },
@@ -761,6 +778,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "validity",
                         "description": "distinct of col2 value must be greater than 4",
+                        "priority": "medium"
                     }
                 ]
             },
@@ -785,6 +803,7 @@ def fixture_create_stats_table():
                     "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "validity",
+                    "priority": "medium"
                 }
             ],
             # status at different stages for given input
@@ -824,6 +843,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "validity",
                         "description": "min of col3 value must be greater than 1",
+                        "priority": "medium"
                     }
                 ]
             },
@@ -848,6 +868,7 @@ def fixture_create_stats_table():
                     "rule_type": "agg_dq",
                     "status": "pass",
                     "tag": "validity",
+                    "priority": "medium"
                 },
             ],  # expected agg dq result
             # status at different stages for given input
@@ -887,6 +908,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "fail",
                         "tag": "validity",
                         "description": "max of col1 value must be greater than 100",
+                        "priority": "medium"
                     }
                 ]
             },
@@ -937,6 +959,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "validity",
                         "description": "average of col1 value must be greater than 25",
+                        "priority": "medium"
                     }
                 ]
             },
@@ -961,6 +984,7 @@ def fixture_create_stats_table():
                     "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "validity",
+                    "priority": "medium"
                 }
             ],
             # status at different stages for given input
@@ -1003,6 +1027,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "validity",
                         "description": "average of col1 value must be greater than 25",
+                        "priority": "medium"
                     },
                     {
                         "product_id": "product1",
@@ -1016,6 +1041,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "accuracy",
                         "description": "min of col3 value must be greater than 15",
+                        "priority": "medium"
                     },
                     {
                         "product_id": "product1",
@@ -1029,6 +1055,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "validity",
                         "description": "distinct count of col2 value must be greater than 5",
+                        "priority": "medium"
                     },
                 ]
             },
@@ -1053,6 +1080,7 @@ def fixture_create_stats_table():
                     "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "validity",
+                    "priority": "medium"
                 },
                 {
                     "description": "min of col3 value must be greater than 15",
@@ -1062,6 +1090,7 @@ def fixture_create_stats_table():
                     "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "accuracy",
+                    "priority": "medium"
                 },
                 {
                     "description": "distinct count of col2 value must be greater than 5",
@@ -1071,6 +1100,7 @@ def fixture_create_stats_table():
                     "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "validity",
+                    "priority": "medium"
                 },
             ],
             # status at different stages for given input
@@ -1112,6 +1142,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "validity",
                         "description": "average of col1 value must be greater than 25",
+                        "priority": "medium"
                     },
                     {
                         "product_id": "product1",
@@ -1125,6 +1156,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "validity",
                         "description": "min of col3 value must be greater than 15",
+                        "priority": "medium"
                     },
                     {
                         "product_id": "product1",
@@ -1138,6 +1170,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "accuracy",
                         "description": "distinct count of col2 value must be greater than 5",
+                        "priority": "medium"
                     },
                 ]
             },
@@ -1163,6 +1196,7 @@ def fixture_create_stats_table():
                     "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "validity",
+                    "priority": "medium"
                 },
                 {
                     "description": "min of col3 value must be greater than 15",
@@ -1172,6 +1206,7 @@ def fixture_create_stats_table():
                     "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "validity",
+                    "priority": "medium"
                 },
                 {
                     "description": "distinct count of col2 value must be greater than 5",
@@ -1181,6 +1216,7 @@ def fixture_create_stats_table():
                     "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "accuracy",
+                    "priority": "medium"
                 },
             ],
             # status at different stages for given input
@@ -1223,6 +1259,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "fail",
                         "tag": "validity",
                         "description": "average of col1 value must be greater than 25",
+                        "priority": "medium"
                     },
                     {
                         "product_id": "product1",
@@ -1236,6 +1273,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "validity",
                         "description": "min of col3 value must be greater than 15",
+                        "priority": "medium"
                     },
                     {
                         "product_id": "product1",
@@ -1249,6 +1287,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "fail",
                         "tag": "validity",
                         "description": "distinct count of col2 value must be greater than 2",
+                        "priority": "medium"
                     },
                 ]
             },
@@ -1273,6 +1312,7 @@ def fixture_create_stats_table():
                     "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "validity",
+                    "priority": "medium"
                 },
                 {
                     "description": "min of col3 value must be greater than 15",
@@ -1282,6 +1322,7 @@ def fixture_create_stats_table():
                     "action_if_failed": "ignore",
                     "status": "fail",
                     "tag": "validity",
+                    "priority": "medium"
                 },
             ],
             # status at different stages for given input
@@ -1292,6 +1333,7 @@ def fixture_create_stats_table():
                 "run_status": "Failed",
                 "source_query_dq_status": "Skipped",
                 "final_query_dq_status": "Skipped",
+                "priority": "medium"
             },
         ),
         (
@@ -1323,6 +1365,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "fail",
                         "tag": "validity",
                         "description": "average of col1 value must be less than 25",
+                        "priority": "medium"
                     },
                     {
                         "product_id": "product1",
@@ -1336,6 +1379,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "validity",
                         "description": "min of col3 value must be less than 15",
+                        "priority": "medium"
                     },
                     {
                         "product_id": "product1",
@@ -1349,6 +1393,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "fail",
                         "tag": "validity",
                         "description": "distinct count of col2 value must be greater than 2",
+                        "priority": "medium"
                     },
                 ]
             },
@@ -1372,6 +1417,7 @@ def fixture_create_stats_table():
                     "column_name": "col1",
                     "status": "pass",
                     "tag": "validity",
+                    "priority": "medium"
                 },
                 {
                     "action_if_failed": "ignore",
@@ -1381,6 +1427,7 @@ def fixture_create_stats_table():
                     "column_name": "col3",
                     "status": "pass",
                     "tag": "validity",
+                    "priority": "medium"
                 },
                 {
                     "action_if_failed": "fail",
@@ -1390,6 +1437,7 @@ def fixture_create_stats_table():
                     "rule_type": "agg_dq",
                     "status": "pass",
                     "tag": "validity",
+                    "priority": "medium"
                 },
             ],  # expected agg dq result
             # status at different stages for given input
@@ -1429,6 +1477,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "fail",
                         "tag": "validity",
                         "description": "average of col1 value must be greater than 25",
+                        "priority": "medium"
                     },
                     {
                         "product_id": "product1",
@@ -1442,6 +1491,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "fail",
                         "tag": "validity",
                         "description": "distinct count of col2 value must be greater than 2",
+                        "priority": "medium"
                     },
                 ]
             },
@@ -1465,6 +1515,7 @@ def fixture_create_stats_table():
                     "column_name": "col1",
                     "action_if_failed": "fail",
                     "tag": "validity",
+                    "priority": "medium"
                 },
             ],
             # status at different stages for given input
@@ -1506,6 +1557,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "validity",
                         "description": "distinct count of col2 value must be greater than 2",
+                        "priority": "medium"
                     }
                 ]
             },
@@ -1560,6 +1612,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "fail",
                         "tag": "validity",
                         "description": "sum of col1 value must be greater than 25",
+                        "priority": "medium"
                     },
                     {
                         "product_id": "product1",
@@ -1573,6 +1626,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "validity",
                         "description": "distinct count of col2 value must be greater than 2",
+                        "priority": "medium"
                     },
                 ]
             },
@@ -1596,6 +1650,7 @@ def fixture_create_stats_table():
                     "column_name": "col1",
                     "action_if_failed": "fail",
                     "tag": "validity",
+                    "priority": "medium"
                 },
             ],
             # status at different stages for given input
@@ -1635,6 +1690,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "validity",
                         "description": "avg of col3 value must be greater than 50",
+                        "priority": "medium"
                     }
                 ]
             },
@@ -1658,6 +1714,7 @@ def fixture_create_stats_table():
                     "column_name": "col1",
                     "action_if_failed": "ignore",
                     "tag": "validity",
+                    "priority": "medium"
                 },
             ],
             # status at different stages for given input
@@ -1698,6 +1755,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "validity",
                         "description": "avg of col3 value must be greater than 50",
+                        "priority": "medium"
                     },
                     {
                         "product_id": "product1",
@@ -1711,6 +1769,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "validity",
                         "description": "sum of col1 value must be greater than 2",
+                        "priority": "medium"
                     },
                 ],
                 "agg_dq_rules": [
@@ -1726,6 +1785,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "fail",
                         "tag": "validity",
                         "description": "average of col1 value must be greater than 25",
+                        "priority": "medium"
                     }
                 ],
             },
@@ -1749,6 +1809,7 @@ def fixture_create_stats_table():
                     "column_name": "col1",
                     "action_if_failed": "ignore",
                     "tag": "validity",
+                    "priority": "medium"
                 },
             ],
             # status at different stages for given input
@@ -1789,6 +1850,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "fail",
                         "tag": "validity",
                         "description": "avg of col3 value must be greater than 50",
+                        "priority": "medium"
                     },
                     {
                         "product_id": "product1",
@@ -1802,6 +1864,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "fail",
                         "tag": "validity",
                         "description": "sum of col1 value must be greater than 2",
+                        "priority": "medium"
                     },
                 ],
                 "agg_dq_rules": [{}],
@@ -1816,6 +1879,7 @@ def fixture_create_stats_table():
                         "action_if_failed": "ignore",
                         "tag": "validity",
                         "description": "col1 value must be greater than 1",
+                        "priority": "medium"
                     }
                 ],
             },
@@ -1839,6 +1903,7 @@ def fixture_create_stats_table():
                     "column_name": "col3",
                     "action_if_failed": "fail",
                     "tag": "validity",
+                    "priority": "medium"
                 },
             ],
             # status at different stages for given input

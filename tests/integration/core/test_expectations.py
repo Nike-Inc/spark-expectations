@@ -3536,6 +3536,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
                 {
                     "rule_type": "row_dq",
                     "rule": "value_must_be_greater_than_10",
+                    "priority": "medium",
                     "description": "value must be greater than 10",
                     "column_name": "value",
                     "tag": "strict",
@@ -3545,6 +3546,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
                 {
                     "rule": "count_of_records_must_be_greater_than_10",
                     "description": "count of records must be greater than 10",
+                    "priority": "medium",
                     "rule_type": "query_dq",
                     "column_name": "col3",
                     "tag": "strict",
@@ -3554,6 +3556,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
                 {
                     "rule": "sum_of_value_should_be_less_than_60",
                     "description": "desc_sum_of_value_should_be_less_than_60",
+                    "priority": "medium",
                     "rule_type": "agg_dq",
                     "column_name": "value",
                     "tag": "strict",
@@ -3563,6 +3566,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
                 {
                     "rule": "count_of_records_must_be_greater_than_10",
                     "description": "count of records must be greater than 10",
+                    "priority": "medium",
                     "rule_type": "query_dq",
                     "column_name": "col3",
                     "tag": "strict",
@@ -3572,6 +3576,7 @@ def test_se_notifications_on_rules_action_if_failed_set_ignore_sends_notificatio
                 {
                     "rule": "sum_of_value_should_be_less_than_60",
                     "description": "desc_sum_of_value_should_be_less_than_60",
+                    "priority": "medium",
                     "rule_type": "agg_dq",
                     "column_name": "value",
                     "tag": "strict",
