@@ -286,7 +286,7 @@ class SparkExpectationsContext:
     @property
     def get_min_priority_email(self) -> str:
         """
-        Returns the min prioirity for email notifications
+        Returns the min priority for email notifications
         Returns:
             str: The minimum priority for email notifications
         """
@@ -298,7 +298,7 @@ class SparkExpectationsContext:
     @property
     def get_min_priority_pagerduty(self) -> str:
         """
-        Returns the min prioirity for pagerduty notifications
+        Returns the min priority for pagerduty notifications
         Returns:
             str: The minimum priority for pagerduty notifications
         """
@@ -310,7 +310,7 @@ class SparkExpectationsContext:
     @property
     def get_min_priority_slack(self) -> str:
         """
-        Returns the min prioirity for slack notifications
+        Returns the min priority for slack notifications
         Returns:
             str: The minimum priority for slack notifications
         """
@@ -322,7 +322,7 @@ class SparkExpectationsContext:
     @property
     def get_min_priority_teams(self) -> str:
         """
-        Returns the min prioirity for teams notifications
+        Returns the min priority for teams notifications
         Returns:
             str: The minimum priority for teams notifications
         """
@@ -334,7 +334,7 @@ class SparkExpectationsContext:
     @property
     def get_min_priority_zoom(self) -> str:
         """
-        Returns the min prioirity for zoom notifications
+        Returns the min priority for zoom notifications
         Returns:
             str: The minimum priority for zoom notifications
         """
