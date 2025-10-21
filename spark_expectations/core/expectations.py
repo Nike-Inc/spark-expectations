@@ -313,7 +313,9 @@ class SparkExpectations:
             self._context.set_rules_execution_settings_config(rules_execution_settings)
             self._context.set_querydq_secondary_queries(dq_queries_dict)
             self._context.set_job_metadata(_job_metadata)
-            self._context.set_min_priority_slack(min_priority_slack)
+            self._context.set_min_priority_slack(
+                        str(_notification_dict[min_priority_slack])
+                    )
 
             @self._notification.send_notification_decorator
             @self._statistics_decorator.collect_stats_decorator
