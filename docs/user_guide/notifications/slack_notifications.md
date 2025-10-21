@@ -75,6 +75,19 @@ user_configs = {
 }
 ```
 
+## Example Notebook
+
+For a complete working example of Slack notifications implementation, see our example notebook:
+
+- [**Slack Notification Example**](../../../notebooks/spark_expectations_basic_slack_notification.ipynb) - Demonstrates how to set up and use Slack notifications with Spark Expectations
+
+This notebook includes:
+
+- Step-by-step configuration setup
+- Complete code examples with real Slack webhook integration
+- Sample data quality rules and notification triggers
+- Best practices for Slack notification implementation
+
 ## Message Format
 
 Slack notifications sent by Spark Expectations include:
