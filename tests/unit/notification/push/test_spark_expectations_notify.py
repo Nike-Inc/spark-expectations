@@ -445,19 +445,20 @@ def test_construct_message_for_each_rules(_fixture_mock_context):
     error_drop_percentage = 5.6
     set_error_drop_threshold = 2.5
     action = "Notify"
+    description = "Testing custom message for rule 1"
 
     # Call the method under test
     result = notify_handler.construct_message_for_each_rules(
         rule_name,
         failed_row_count,
         error_drop_percentage,
-        set_error_drop_threshold,
         action,
+        description
     )
 
     # Assert the constructed notification message
     expected_message = (
-        "Rule 1 has been exceeded above the threshold value(2.5%) for `row_data` quality validation\n"
+        f"{description} \n"
         "product_id: product_id1\n"
         f"table_name: {_fixture_mock_context.get_table_name}\n"
         f"run_id: {_fixture_mock_context.get_run_id}\n"
