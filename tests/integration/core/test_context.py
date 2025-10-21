@@ -188,11 +188,6 @@ def test_context_properties():
     assert context._dq_project_env_name == "APLAD-5063"
     assert context._dq_config_file_name == "dq_spark_expectations_config.ini"
     assert context._dq_config_abs_path == "sparkexpectations/config.ini"
-    assert context._min_priority_email == "low"
-    assert context._min_priority_pagerduty == "low"
-    assert context._min_priority_slack == "low"
-    assert context._min_priority_teams == "low"
-    assert context._min_priority_zoom == "low"
     assert context._mail_smtp_server == "abc"
     assert context.get_mail_smtp_port == 25
     assert context._mail_smtp_password == "test_password"
@@ -2407,6 +2402,7 @@ def test_set_min_priority_email():
 
 def test_get_min_priority_email():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_min_priority_email("low")
     assert context.get_min_priority_email == "low"  # default value
 
 
@@ -2419,6 +2415,7 @@ def test_set_min_priority_pagerduty():
 
 def test_get_min_priority_pagerduty():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_min_priority_pagerduty("low")
     assert context.get_min_priority_pagerduty == "low"  # default value
 
 
@@ -2431,6 +2428,7 @@ def test_set_min_priority_slack():
 
 def test_get_min_priority_slack():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_min_priority_slack("low")
     assert context.get_min_priority_slack == "low"  # default value
 
 
@@ -2443,6 +2441,7 @@ def test_set_min_priority_teams():
 
 def test_get_min_priority_teams():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_min_priority_teams("low")
     assert context.get_min_priority_teams == "low"  # default value
 
 
@@ -2455,4 +2454,5 @@ def test_set_min_priority_zoom():
 
 def test_get_min_priority_zoom():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_min_priority_zoom("low")
     assert context.get_min_priority_zoom == "low"  # default value

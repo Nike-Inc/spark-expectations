@@ -301,7 +301,7 @@ class SparkExpectations:
                 notifications_on_error_drop_threshold if isinstance(notifications_on_error_drop_threshold, int) else 100
             )
 
-            min_priority_slack = user_config.min_priority_slack
+            min_priority_slack = user_config.se_notifications_min_priority_slack
 
             self.reader.set_notification_param(user_conf)
             self._context.set_notification_on_start(_notification_on_start)

@@ -55,11 +55,11 @@ class SparkExpectationsContext:
         self._dq_config_file_name = "dq_spark_expectations_config.ini"
         self._dq_config_abs_path: Optional[str] = None
 
-        self._min_priority_email = "low"
-        self._min_priority_pagerduty = "low"
-        self._min_priority_slack = "low"
-        self._min_priority_teams = "low"
-        self._min_priority_zoom = "low"
+        self._min_priority_email: str
+        self._min_priority_pagerduty: str
+        self._min_priority_slack: str
+        self._min_priority_teams: str
+        self._min_priority_zoom: str
 
         self._enable_mail: bool = False
         self._enable_smtp_server_auth: bool = False
