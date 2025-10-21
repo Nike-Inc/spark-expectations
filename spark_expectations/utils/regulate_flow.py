@@ -118,6 +118,7 @@ class SparkExpectationsRegulateFlow:
                         _context.get_row_dq_rule_type_name,
                     )
                     if _context.get_summarized_row_dq_res:
+                        _notification.notify_on_failed_dq()
                         _notification.notify_rules_exceeds_threshold(expectations)
                         _writer.generate_rules_exceeds_threshold(expectations)
 
