@@ -301,6 +301,8 @@ class SparkExpectations:
                 notifications_on_error_drop_threshold if isinstance(notifications_on_error_drop_threshold, int) else 100
             )
 
+            min_priority_slack = user_config.min_priority_slack
+
             self.reader.set_notification_param(user_conf)
             self._context.set_notification_on_start(_notification_on_start)
             self._context.set_notification_on_completion(_notification_on_completion)
@@ -311,6 +313,7 @@ class SparkExpectations:
             self._context.set_rules_execution_settings_config(rules_execution_settings)
             self._context.set_querydq_secondary_queries(dq_queries_dict)
             self._context.set_job_metadata(_job_metadata)
+            self._context.set_min_priority_slack(min_priority_slack)
 
             @self._notification.send_notification_decorator
             @self._statistics_decorator.collect_stats_decorator

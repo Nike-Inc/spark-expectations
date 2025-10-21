@@ -108,3 +108,5 @@ class Constants:
     se_agg_dq_expectation_range_regex_pattern = (
         allowed_functions + operator_with_value + and_clause + allowed_functions + operator_with_value
     )
+
+    min_priority_slack = "low"
