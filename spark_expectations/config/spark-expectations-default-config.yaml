@@ -13,6 +13,7 @@ spark.expectations.notifications.email.to.other.mail.com: ""
 spark.expectations.notifications.email.subject: "spark-expectations-testing"
 spark.expectations.notifications.slack.enabled: false
 spark.expectations.notifications.slack.webhook.url: ""
+spark.expectations.notifications.slack.min.priority: "low" 
 spark.expectations.notifications.teams.enabled: false
 spark.expectations.notifications.teams.webhook.url: ""
 spark.expectations.notifications.zoom.enabled: false

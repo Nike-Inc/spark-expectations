@@ -65,7 +65,7 @@ class Constants:
         "spark.expectations.notifications.on.rules.action.if.failed.set.ignore"
     )
     se_notifications_on_error_drop_threshold = "spark.expectations.notifications.error.drop.threshold"
-    se_notifications_min_priority_slack = "low"
+    se_notifications_min_priority_slack = "spark.expectations.notifications.slack.min.priority"
 
     se_enable_streaming = "se.streaming.enable"
     se_enable_error_table = "se.enable.error.table"
