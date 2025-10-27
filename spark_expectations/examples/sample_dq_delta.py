@@ -1,6 +1,10 @@
 # Define the product_id
 import os
 from typing import Dict, Union
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
+print(sys.path)
+# Define the product_id
 
 from pyspark.sql import DataFrame
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType
@@ -94,14 +98,14 @@ def build_new() -> DataFrame:
     _df_order_source: DataFrame = (
         spark.read.option("header", "true")
         .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/order_s.csv"))
+        .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
     )
     _df_order_source.createOrReplaceTempView("order_source")
 
     _df_order_target: DataFrame = (
         spark.read.option("header", "true")
         .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "resources/order_t.csv"))
+        .csv(os.path.join(os.path.dirname(__file__), "resources/order.csv"))
     )
     _df_order_target.createOrReplaceTempView("order_target")
 
