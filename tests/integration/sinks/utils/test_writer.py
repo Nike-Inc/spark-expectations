@@ -42,15 +42,15 @@ def fixture_setup_local_kafka_topic():
 
     if os.getenv("UNIT_TESTING_ENV") != "spark_expectations_unit_testing_on_github_actions":
         # remove if docker conatiner is running
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
+        os.system(f"sh {current_dir}/../../../../containers/kafka/scripts/docker_kafka_stop_script.sh")
 
         # start docker container and create the topic
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
+        os.system(f"sh {current_dir}/../../../../containers/kafka/scripts/docker_kafka_start_script.sh")
 
         yield "docker container started"
 
         # remove docker container
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
+        os.system(f"sh {current_dir}/../../../../containers/kafka/scripts/docker_kafka_stop_script.sh")
 
     else:
         yield (

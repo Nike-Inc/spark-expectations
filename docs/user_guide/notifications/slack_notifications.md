@@ -79,7 +79,7 @@ user_configs = {
 
 For a complete working example of Slack notifications implementation, see our example notebook:
 
-- [**Slack Notification Example**](../../../notebooks/spark_expectations_basic_slack_notification.ipynb) - Demonstrates how to set up and use Slack notifications with Spark Expectations
+- [**Slack Notification Example**](../../../examples/notebooks/spark_expectations_basic_slack_notification.ipynb) - Demonstrates how to set up and use Slack notifications with Spark Expectations
 
 This notebook includes:
 
