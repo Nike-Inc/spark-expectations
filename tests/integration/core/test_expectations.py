@@ -21,6 +21,7 @@ from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.expectations import (
     SparkExpectations,
     WrappedDataFrameWriter,
+    WrappedDataFrameStreamWriter,
     check_if_pyspark_connect_is_supported,
     get_spark_minor_version,
 )
@@ -3878,3 +3879,84 @@ def test_agg_rule_for_non_int_column():
         assert True  # Assert that the method runs without exceptions
     except Exception as e:
         assert False, f"Method raised an exception: {e}"
+
+
+# [Unit Tests for WrappedDataFrameStreamWriter class]
+
+
+def test_stream_writer_output_mode():
+    assert WrappedDataFrameStreamWriter().outputMode("append")._output_mode == "append"
+
+
+def test_stream_writer_format():
+    assert WrappedDataFrameStreamWriter().format("delta")._format == "delta"
+
+
+def test_stream_writer_query_name():
+    assert WrappedDataFrameStreamWriter().queryName("test_query")._query_name == "test_query"
+
+
+def test_stream_writer_trigger():
+    writer = WrappedDataFrameStreamWriter().trigger(processingTime="10 seconds")
+    assert writer._trigger == {"processingTime": "10 seconds"}
+
+
+def test_stream_writer_partition_by():
+    assert WrappedDataFrameStreamWriter().partitionBy("date", "region")._partition_by == [
+        "date",
+        "region",
+    ]
+
+
+def test_stream_writer_option():
+    assert WrappedDataFrameStreamWriter().option("checkpointLocation", "/path/to/checkpoint")._options == {
+        "checkpointLocation": "/path/to/checkpoint"
+    }
+
+
+def test_stream_writer_options():
+    assert WrappedDataFrameStreamWriter().options(
+        checkpointLocation="/path/to/checkpoint", maxFilesPerTrigger="100"
+    )._options == {
+        "checkpointLocation": "/path/to/checkpoint",
+        "maxFilesPerTrigger": "100",
+    }
+
+
+def test_stream_writer_build():
+    writer = (
+        WrappedDataFrameStreamWriter()
+        .outputMode("append")
+        .format("delta")
+        .queryName("test_query")
+        .trigger(processingTime="10 seconds")
+        .option("checkpointLocation", "/path/to/checkpoint")
+        .options(maxFilesPerTrigger="100")
+        .partitionBy("date", "region")
+    )
+    expected_config = {
+        "outputMode": "append",
+        "format": "delta",
+        "queryName": "test_query",
+        "trigger": {"processingTime": "10 seconds"},
+        "partitionBy": ["date", "region"],
+        "options": {
+            "checkpointLocation": "/path/to/checkpoint",
+            "maxFilesPerTrigger": "100",
+        },
+    }
+    assert writer.build() == expected_config
+
+
+def test_stream_writer_build_some_values():
+    writer = WrappedDataFrameStreamWriter().outputMode("append").format("delta")
+
+    expected_config = {
+        "outputMode": "append",
+        "format": "delta",
+        "queryName": None,
+        "trigger": None,
+        "partitionBy": [],
+        "options": {},
+    }
+    assert writer.build() == expected_config
