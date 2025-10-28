@@ -97,9 +97,6 @@ class SparkExpectationsContext:
 
         self._env: Optional[str] = None
 
-        self._se_streaming_stats_topic_name: str = "dq-sparkexpectations-stats"
-        self._se_streaming_row_dq_res_topic_name: str = "dq-sparkexpectations-row-dq-results"
-
         self._source_agg_dq_result: Optional[List[Dict[str, str]]] = None
         self._final_agg_dq_result: Optional[List[Dict[str, str]]] = None
         self._source_query_dq_result: Optional[List[Dict[str, str]]] = None
@@ -124,6 +121,9 @@ class SparkExpectationsContext:
         self._se_streaming_stats_dict: Dict[str, str]
         self._enable_se_streaming: bool = False
         self._se_streaming_secret_env: str = ""
+        self._se_streaming_stats_kafka_custom_config_enable: bool = False
+        self._se_streaming_stats_topic_name: str = ""
+        self._se_streaming_stats_kafka_bootstrap_server: str = ""
 
         self._debugger_mode: bool = False
         self._supported_df_query_dq: DataFrame = self.set_supported_df_query_dq()
@@ -1363,11 +1363,17 @@ class SparkExpectationsContext:
         Returns:
             topic name key / path in Optional[str]
         """
+        
         _topic_name: Optional[str] = (
-            self._se_streaming_stats_dict.get(user_config.cbs_topic_name)
-            if self.get_secret_type == "cerberus"
-            else self._se_streaming_stats_dict.get(user_config.dbx_topic_name)
+            self._se_streaming_stats_dict.get(user_config.se_streaming_stats_topic_name)
+            if self.get_se_streaming_stats_kafka_custom_config_enable or self.get_env == "local"
+            else (
+                self._se_streaming_stats_dict.get(user_config.cbs_topic_name)
+                if self.get_secret_type == "cerberus"
+                else self._se_streaming_stats_dict.get(user_config.dbx_topic_name)
+            )
         )
+        
         if _topic_name:
             return _topic_name
         raise SparkExpectationsMiscException(
@@ -1375,23 +1381,39 @@ class SparkExpectationsContext:
             'UserConfig.cbs_topic_name' before 
             accessing it"""
         )
-
-    def set_se_streaming_stats_topic_name(self, se_streaming_stats_topic_name: str) -> None:
-        self._se_streaming_stats_topic_name = se_streaming_stats_topic_name
+    
+    def set_se_streaming_stats_kafka_custom_config_enable(self, se_streaming_stats_kafka_config_enable: bool) -> None:
+        self._se_streaming_stats_kafka_custom_config_enable = se_streaming_stats_kafka_config_enable
 
     @property
-    def get_se_streaming_stats_topic_name(self) -> str:
+    def get_se_streaming_stats_kafka_custom_config_enable(self) -> str:
         """
-        This function returns kafka topic name
+        This function returns whether it's enabled to use the custom kafka config
         Returns:
-            str: Returns _se_streaming_stats_topic_name
+            bool: Returns _se_streaming_stats_kafka_custom_config_enable
 
         """
-        if self._se_streaming_stats_topic_name:
-            return self._se_streaming_stats_topic_name
+        if self._se_streaming_stats_kafka_custom_config_enable:
+            return self._se_streaming_stats_kafka_custom_config_enable
+        return False
+
+    
+    def set_se_streaming_stats_kafka_bootstrap_server(self, se_streaming_stats_kafka_server: str) -> None:
+        self._se_streaming_stats_kafka_bootstrap_server = se_streaming_stats_kafka_server
+
+    @property
+    def get_se_streaming_stats_kafka_bootstrap_server(self) -> str:
+        """
+        This function returns kafka bootstrap server that was specified in custom config
+        Returns:
+            str: Returns _se_streaming_stats_kafka_bootstrap_server
+
+        """
+        if self._se_streaming_stats_kafka_bootstrap_server:
+            return self._se_streaming_stats_kafka_bootstrap_server
         raise SparkExpectationsMiscException(
             """The spark expectations context is not set completely, please assign 
-            '_se_streaming_stats_topic_name' before 
+            'se_streaming_stats_kafka_bootstrap_server' before 
             accessing it"""
         )
 

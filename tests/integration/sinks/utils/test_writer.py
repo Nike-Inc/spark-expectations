@@ -2026,7 +2026,6 @@ def test_write_error_stats(
         ),
     )
     setattr(_mock_context, "get_env", "local")
-    setattr(_mock_context, "get_se_streaming_stats_topic_name", "dq-sparkexpectations-stats")
     setattr(
         _mock_context,
         "get_source_query_dq_result",
@@ -2178,6 +2177,7 @@ def test_write_error_stats(
         "get_job_metadata",
         '{"dag": "dag1", "task": "task1", "team": "my_squad"}',
     )
+    setattr(_mock_context, "get_topic_name", "dq-sparkexpectations-stats")
 
     if writer_config is None:
         setattr(
@@ -3885,7 +3885,7 @@ def test_generate_rules_exceeds_threshold_exception():
             "local",
             {
                 "kafka.bootstrap.servers": "localhost:9092",
-                "topic": "dq-sparkexpectations-stats",
+                "topic": "test-topic",
                 "failOnDataLoss": "true",
             },
         ),

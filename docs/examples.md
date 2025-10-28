@@ -73,6 +73,7 @@ se_user_conf = {
 
 In case of SMTP server authentication, the password can be passed directly with the user config or set in a secure way like Cerberus or Databricks secret.
 If it is preferred to use Cerberus for secure password storage, the `user_config.se_notifications_smtp_creds_dict` parameter can be used to specify the credentials for the SMTP server in the following way:
+
 ```python
 from spark_expectations.config.user_config import Constants as user_config
 
@@ -83,12 +84,14 @@ smtp_creds_dict = {
     user_config.cbs_smtp_password: "your_smtp_password", # (4)!
     }
 ```
+
 1. The `user_config.secret_type` used to define type of secret store and takes two values (`databricks`, `cerberus`)
 2. The `user_config.cbs_url` used to pass Cerberus URL 
 3. The `user_config.cbs_sdb_path` captures Cerberus secure data store path 
 4. The `user_config.cbs_smtp_password` captures key for smtp_password in the Cerberus sdb
 
 Similarly, if it is preferred to use Databricks for secure password storage, the `user_config.se_notifications_smtp_creds_dict` parameter can be used to specify the credentials for the SMTP server in the following way:
+
 ```python
 from spark_expectations.config.user_config import Constants as user_config
 
@@ -99,6 +102,7 @@ smtp_creds_dict = {
     user_config.dbx_smtp_password: "your_password", # (4)!
     }
 ```
+
 1. The `user_config.secret_type` used to define type of secret store and takes two values (`databricks`, `cerberus`)
 2. The `user_config.dbx_workspace_url` used to pass Databricks workspace in the format `https://<workspace_name>.cloud.databricks.com`
 3. The `user_config.dbx_secret_scope` captures name of the secret scope
@@ -109,9 +113,10 @@ smtp_creds_dict = {
 
 For all the below examples the below import and SparkExpectations class instantiation is mandatory
 
-When store for sensitive details is Databricks secret scope,construct config dictionary for authentication of Kafka and 
+When store for sensitive details is Databricks secret scope, construct config dictionary for authentication of Kafka and 
 avoid duplicate construction every time your project is initialized, you can create a dictionary with the following keys and their appropriate values. 
 This dictionary can be placed in the __init__.py file of your project or declared as a global variable.
+
 ```python
 from typing import Dict, Union
 from spark_expectations.config.user_config import Constants as user_config
@@ -163,10 +168,31 @@ stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
 3. The `user_config.cbs_url` used to pass Cerberus URL
 4. The `user_config.cbs_sdb_path` captures Cerberus secure data store path
 5. The `user_config.cbs_kafka_server_url` captures path where Kafka URL stored in the Cerberus sdb
-6. The ` user_config.cbs_secret_token_url` captures path where Kafka authentication app stored in the Cerberus sdb
+6. The `user_config.cbs_secret_token_url` captures path where Kafka authentication app stored in the Cerberus sdb
 7. The `user_config.cbs_secret_app_name` captures path where Kafka authentication app name stored in the Cerberus sdb
 8. The `user_config.cbs_secret_token` captures path where Kafka authentication app name secret token stored in the Cerberus sdb
 9. The `user_config.cbs_topic_name`  captures path where Kafka topic name stored in the Cerberus sdb
+
+If you are running locally or not using Cerberus or Databricks and want to specify the streaming topic name and Kafka bootstrap server you can enable these custom options by setting `user_config.se_streaming_stats_kafka_custom_config_enable` to True and then providing the below parameters to specify the topic name and server. If `user_config.se_streaming_stats_kafka_custom_config_enable` is set to True but no options are specified, the defaults from `spark_expectations/config/spark-expectations-default-config.yaml` will be used.
+
+Please note that the specified streaming topic and Kafka bootstrap server have to exist when running Spark Expectations (they will not be generated for you).
+
+```python
+from typing import Dict, Union
+from spark_expectations.config.user_config import Constants as user_config
+
+stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
+    user_config.se_enable_streaming: True, # (1)!
+    user_config.se_streaming_stats_kafka_custom_config_enable: True, # (2)!
+    user_config.se_streaming_stats_topic_name: "dq-sparkexpectations-stats", # (3)!
+    user_config.se_streaming_stats_kafka_bootstrap_server: "localhost:9092", # (4)!
+}
+```
+
+1. The `user_config.se_enable_streaming` parameter is used to control the enabling or disabling of Spark Expectations (SE) streaming functionality. When enabled, SE streaming stores the statistics of every batch run into Kafka.
+2. The `user_config.se_streaming_stats_kafka_custom_config_enable` is an optional parameter that, when set to True, enables using `user_config.se_streaming_stats_topic_name` to set the streaming topic name and `user_config.se_streaming_stats_kafka_bootstrap_server` to set the Kafka bootstrap server. If this parameter is set to True but no values are set for the topic name or the bootstrap server, defaults from `spark_expectations/config/spark-expectations-default-config.yaml` will be used.
+3. The `user_config.se_streaming_stats_topic_name` parameter is used to set the streaming topic name when enabled with setting `user_config.se_streaming_stats_kafka_custom_config_enable` to True.
+4. The `user_config.se_streaming_stats_kafka_bootstrap_server` parameter is used to set the kafka bootstrap server when enabled with setting `user_config.se_streaming_stats_kafka_custom_config_enable` to True.
 
 You can disable the streaming functionality by setting the `user_config.se_enable_streaming` parameter to `False` 
 
