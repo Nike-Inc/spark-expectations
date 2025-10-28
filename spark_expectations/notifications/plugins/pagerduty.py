@@ -74,6 +74,38 @@ class SparkExpectationsPagerDutyPluginImpl(SparkExpectationsNotification):
         if integration_key is None:
             raise SparkExpectationsPagerDutyException("PagerDuty integration key is not set.")
 
+    def _is_failure_notification(self, message: str) -> bool:
+        """
+        Check if the notification message indicates a failure or error condition.
+        PagerDuty incidents should only be created for failure scenarios.
+        
+        Args:
+            message: The notification message content
+            
+        Returns:
+            bool: True if this is a failure-related notification, False otherwise
+        """
+        if not message:
+            return False
+            
+        # Convert to lowercase for case-insensitive matching
+        message_lower = message.lower()
+        
+        # Exclude informational notifications about ignored rules - these should NOT create PagerDuty incidents
+        if "action_if_failed are set to ignore" in message_lower:
+            return False
+        
+        # Define failure indicators - only create incidents for actual failures
+        failure_patterns = [
+            "has been failed",  # Job failure
+            "failed",
+            "error percentage has been exceeded above the threshold",  # Error threshold breach
+            "dropped error percentage has been exceeded above the threshold",  # Error drop threshold breach
+        ]
+        
+        # Check if any failure pattern is present in the message
+        return any(pattern in message_lower for pattern in failure_patterns)
+
     @spark_expectations_notification_impl
     def send_notification(
         self,
@@ -90,14 +122,26 @@ class SparkExpectationsPagerDutyPluginImpl(SparkExpectationsNotification):
         try:
             if _context.get_enable_pagerduty is True:
                 message = _config_args.get("message")
+                
+                # Only send PagerDuty notifications for failure scenarios
+                if not self._is_failure_notification(str(message)):
+                    _log.info("PagerDuty notification skipped - not a failure scenario")
+                    return
 
-                if _context.get_pagerduty_integration_key:
+                if not _context.get_pagerduty_integration_key:
                     self._get_pd_integration_key(_context)
+
+                # Generate a deduplication key to consolidate multiple incidents into one
+                # Using table name and product ID to ensure same failure creates only one incident
+                table_name = _context.get_table_name or "unknown_table"
+                product_id = _context.product_id or "unknown_product"
+                dedup_key = f"spark_expectations_{product_id}_{table_name}_failure"
 
                 # Sending request to PagerDuty Events API v2 > https://developer.pagerduty.com/docs/send-alert-event
                 # Severity Levels can be: critical, error, warning, or info
                 payload = {
                     "routing_key": _context.get_pagerduty_integration_key,
+                    "dedup_key": dedup_key,
                     "event_action": "trigger",
                     "payload": {
                         "summary": message,
