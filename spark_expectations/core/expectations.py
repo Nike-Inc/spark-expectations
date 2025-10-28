@@ -191,6 +191,10 @@ class SparkExpectations:
                 {**self.stats_streaming_options} if self.stats_streaming_options else _default_stats_streaming_dict
             )
 
+            if 'se.streaming.stats.topic.name' in _se_stats_streaming_dict:
+                self._context.set_se_streaming_stats_topic_name(str(_se_stats_streaming_dict['se.streaming.stats.topic.name']))
+                # if this is not set here the default value gets set in context.py
+
             enable_error_table = _notification_dict.get(user_config.se_enable_error_table, True)
             self._context.set_se_enable_error_table(
                 enable_error_table if isinstance(enable_error_table, bool) else True

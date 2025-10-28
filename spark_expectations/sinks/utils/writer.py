@@ -548,7 +548,7 @@ class SparkExpectationsWriter:
         if self._context.get_env == "local":
             return {
                 "kafka.bootstrap.servers": "localhost:9092",
-                "topic": "dq-sparkexpectations-stats",
+                "topic": self._context.get_se_streaming_stats_topic_name,
                 "failOnDataLoss": "true",
             }
 
