@@ -50,11 +50,16 @@ class SparkExpectationsContext:
         self._dq_expectations: Optional[Dict[str, str]] = None
         self._se_enable_error_table: bool = True
         self._dq_rules_params: Dict[str, str] = {}
-
         # above configuration variable value has to be set to python
         self._dq_project_env_name = "spark_expectations"
         self._dq_config_file_name = "dq_spark_expectations_config.ini"
         self._dq_config_abs_path: Optional[str] = None
+
+        self._min_priority_email: str
+        self._min_priority_pagerduty: str
+        self._min_priority_slack: str
+        self._min_priority_teams: str
+        self._min_priority_zoom: str
 
         self._enable_mail: bool = False
         self._enable_smtp_server_auth: bool = False
@@ -278,6 +283,66 @@ class SparkExpectationsContext:
             """The spark expectations context is not set completely, please assign '_error_table_name' before 
             accessing it"""
         )
+    
+    def set_min_priority_email(self, min_priority_email: str) -> None:
+        self._min_priority_email = min_priority_email
+    
+    @property
+    def get_min_priority_email(self) -> str:
+        """
+        Returns the min priority for email notifications
+        Returns:
+            str: The minimum priority for email notifications
+        """
+        return self._min_priority_email
+    
+    def set_min_priority_pagerduty(self, min_priority_pagerduty: str) -> None:
+        self._min_priority_pagerduty = min_priority_pagerduty
+    
+    @property
+    def get_min_priority_pagerduty(self) -> str:
+        """
+        Returns the min priority for pagerduty notifications
+        Returns:
+            str: The minimum priority for pagerduty notifications
+        """
+        return self._min_priority_pagerduty
+    
+    def set_min_priority_slack(self, min_priority_slack: str) -> None:
+        self._min_priority_slack = min_priority_slack
+    
+    @property
+    def get_min_priority_slack(self) -> str:
+        """
+        Returns the min priority for slack notifications
+        Returns:
+            str: The minimum priority for slack notifications
+        """
+        return self._min_priority_slack
+    
+    def set_min_priority_teams(self, min_priority_teams: str) -> None:
+        self._min_priority_teams = min_priority_teams
+
+    @property
+    def get_min_priority_teams(self) -> str:
+        """
+        Returns the min priority for teams notifications
+        Returns:
+            str: The minimum priority for teams notifications
+        """
+        return self._min_priority_teams
+    
+    def set_min_priority_zoom(self, min_priority_zoom: str) -> None:
+        self._min_priority_zoom = min_priority_zoom
+    
+    @property
+    def get_min_priority_zoom(self) -> str:
+        """
+        Returns the min priority for zoom notifications
+        Returns:
+            str: The minimum priority for zoom notifications
+        """
+        return self._min_priority_zoom
 
     @staticmethod
     def set_run_date() -> str:

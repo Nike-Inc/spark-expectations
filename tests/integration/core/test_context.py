@@ -50,6 +50,13 @@ def test_context_properties():
     context._dq_project_env_name = "APLAD-5063"
     context._dq_config_file_name = "dq_spark_expectations_config.ini"
     context._dq_config_abs_path = "sparkexpectations/config.ini"
+
+    context._min_priority_email = "low"
+    context._min_priority_pagerduty = "low"
+    context._min_priority_slack = "low"
+    context._min_priority_teams = "low"
+    context._min_priority_zoom = "low"
+
     context._mail_smtp_server = "abc"
     context._mail_smtp_port = 25
     context._mail_smtp_password = "test_password"
@@ -2555,3 +2562,66 @@ def test_streaming_writer_config():
     assert retrieved_config["partitionBy"] == ["date", "hour"]
     assert retrieved_config["options"]["checkpointLocation"] == "/path/to/checkpoint"
     assert retrieved_config["options"]["maxFilesPerTrigger"] == "100"
+def test_set_min_priority_email():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_min_priority_email("high")
+    assert context._min_priority_email == "high"
+    assert context.get_min_priority_email == "high"
+
+
+def test_get_min_priority_email():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_min_priority_email("low")
+    assert context.get_min_priority_email == "low"  # default value
+
+
+def test_set_min_priority_pagerduty():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_min_priority_pagerduty("medium")
+    assert context._min_priority_pagerduty == "medium"
+    assert context.get_min_priority_pagerduty == "medium"
+
+
+def test_get_min_priority_pagerduty():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_min_priority_pagerduty("low")
+    assert context.get_min_priority_pagerduty == "low"  # default value
+
+
+def test_set_min_priority_slack():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_min_priority_slack("high")
+    assert context._min_priority_slack == "high"
+    assert context.get_min_priority_slack == "high"
+
+
+def test_get_min_priority_slack():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_min_priority_slack("low")
+    assert context.get_min_priority_slack == "low"  # default value
+
+
+def test_set_min_priority_teams():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_min_priority_teams("medium")
+    assert context._min_priority_teams == "medium"
+    assert context.get_min_priority_teams == "medium"
+
+
+def test_get_min_priority_teams():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_min_priority_teams("low")
+    assert context.get_min_priority_teams == "low"  # default value
+
+
+def test_set_min_priority_zoom():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_min_priority_zoom("high")
+    assert context._min_priority_zoom == "high"
+    assert context.get_min_priority_zoom == "high"
+
+
+def test_get_min_priority_zoom():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_min_priority_zoom("low")
+    assert context.get_min_priority_zoom == "low"  # default value
