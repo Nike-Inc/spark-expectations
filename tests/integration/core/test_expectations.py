@@ -3852,7 +3852,7 @@ def test_agg_rule_for_non_int_column():
         stats_table_writer=writer,
         target_and_error_table_writer=writer,
         stats_streaming_options={SeUserConfig.se_enable_streaming: False},
-        spark = spark
+        #spark = spark
     )
 
     se_user_conf={
