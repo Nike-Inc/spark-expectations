@@ -3960,3 +3960,154 @@ def test_stream_writer_build_some_values():
         "options": {},
     }
     assert writer.build() == expected_config
+
+
+# [Unit Tests for SparkExpectations writer type initialization]
+
+
+def test_spark_expectations_with_batch_writers(_fixture_rules_df):
+    """Test SparkExpectations initialization with WrappedDataFrameWriter for both writers"""
+    batch_writer = WrappedDataFrameWriter().mode("append").format("delta")
+    
+    se = SparkExpectations(
+        product_id="test_product",
+        rules_df=_fixture_rules_df,
+        stats_table="dq_spark.test_stats",
+        stats_table_writer=batch_writer,
+        target_and_error_table_writer=batch_writer,
+        debugger=False,
+    )
+    
+    # Verify that streaming type is not set for batch writers
+    # The context should have default (non-streaming) configuration
+    assert se._context.get_target_and_error_table_writer_config == batch_writer.build()
+    assert se._context.get_stats_table_writer_config == batch_writer.build()
+
+
+def test_spark_expectations_with_streaming_target_and_error_writer(_fixture_rules_df):
+    """Test SparkExpectations initialization with WrappedDataFrameStreamWriter for target_and_error_table_writer"""
+    stream_writer = WrappedDataFrameStreamWriter().outputMode("append").format("delta").option("checkpointLocation", "/tmp/checkpoint1")
+    batch_writer = WrappedDataFrameWriter().mode("append").format("delta")
+    
+    se = SparkExpectations(
+        product_id="test_product",
+        rules_df=_fixture_rules_df,
+        stats_table="dq_spark.test_stats",
+        stats_table_writer=batch_writer,
+        target_and_error_table_writer=stream_writer,
+        debugger=False,
+    )
+    
+    # Verify that streaming type is set for target_and_error_table_writer
+    assert se._context.get_target_and_error_table_writer_config == stream_writer.build()
+    assert se._context.get_stats_table_writer_config == batch_writer.build()
+    # Verify the writer type was set to streaming
+    assert isinstance(se.target_and_error_table_writer, WrappedDataFrameStreamWriter)
+
+
+def test_spark_expectations_with_streaming_stats_writer(_fixture_rules_df):
+    """Test SparkExpectations initialization with WrappedDataFrameStreamWriter for stats_table_writer"""
+    stream_writer = WrappedDataFrameStreamWriter().outputMode("append").format("delta").option("checkpointLocation", "/tmp/checkpoint2")
+    batch_writer = WrappedDataFrameWriter().mode("append").format("delta")
+    
+    se = SparkExpectations(
+        product_id="test_product",
+        rules_df=_fixture_rules_df,
+        stats_table="dq_spark.test_stats",
+        stats_table_writer=stream_writer,
+        target_and_error_table_writer=batch_writer,
+        debugger=False,
+    )
+    
+    # Verify that streaming type is set for stats_table_writer
+    assert se._context.get_target_and_error_table_writer_config == batch_writer.build()
+    assert se._context.get_stats_table_writer_config == stream_writer.build()
+    # Verify the writer type was set to streaming
+    assert isinstance(se.stats_table_writer, WrappedDataFrameStreamWriter)
+
+
+def test_spark_expectations_with_both_streaming_writers(_fixture_rules_df):
+    """Test SparkExpectations initialization with WrappedDataFrameStreamWriter for both writers"""
+    stream_writer_target = WrappedDataFrameStreamWriter().outputMode("append").format("delta").option("checkpointLocation", "/tmp/checkpoint3")
+    stream_writer_stats = WrappedDataFrameStreamWriter().outputMode("complete").format("delta").option("checkpointLocation", "/tmp/checkpoint4")
+    
+    se = SparkExpectations(
+        product_id="test_product",
+        rules_df=_fixture_rules_df,
+        stats_table="dq_spark.test_stats",
+        stats_table_writer=stream_writer_stats,
+        target_and_error_table_writer=stream_writer_target,
+        debugger=False,
+    )
+    
+    # Verify that streaming type is set for both writers
+    assert se._context.get_target_and_error_table_writer_config == stream_writer_target.build()
+    assert se._context.get_stats_table_writer_config == stream_writer_stats.build()
+    # Verify both writer types were set to streaming
+    assert isinstance(se.target_and_error_table_writer, WrappedDataFrameStreamWriter)
+    assert isinstance(se.stats_table_writer, WrappedDataFrameStreamWriter)
+
+
+def test_spark_expectations_writer_type_mixed_configurations(_fixture_rules_df):
+    """Test SparkExpectations with different writer configurations"""
+    # Test case 1: Stream target, batch stats
+    stream_writer = WrappedDataFrameStreamWriter().outputMode("append").format("delta")
+    batch_writer = WrappedDataFrameWriter().mode("overwrite").format("parquet")
+    
+    se1 = SparkExpectations(
+        product_id="test_product_1",
+        rules_df=_fixture_rules_df,
+        stats_table="dq_spark.test_stats_1",
+        stats_table_writer=batch_writer,
+        target_and_error_table_writer=stream_writer,
+        debugger=False,
+    )
+    
+    assert se1._context.get_target_and_error_table_writer_config["outputMode"] == "append"
+    assert se1._context.get_stats_table_writer_config["mode"] == "overwrite"
+    
+    # Test case 2: Batch target, stream stats
+    se2 = SparkExpectations(
+        product_id="test_product_2",
+        rules_df=_fixture_rules_df,
+        stats_table="dq_spark.test_stats_2",
+        stats_table_writer=stream_writer,
+        target_and_error_table_writer=batch_writer,
+        debugger=False,
+    )
+    
+    assert se2._context.get_target_and_error_table_writer_config["mode"] == "overwrite"
+    assert se2._context.get_stats_table_writer_config["outputMode"] == "append"
+
+
+def test_spark_expectations_writer_configs_are_correctly_set(_fixture_rules_df):
+    """Test that writer configurations are properly stored in context during initialization"""
+    # Create writers with specific configurations
+    target_writer = WrappedDataFrameWriter().mode("append").format("delta").partitionBy("date", "region")
+    stats_writer = WrappedDataFrameStreamWriter().outputMode("complete").format("kafka").option("topic", "test-topic")
+    
+    se = SparkExpectations(
+        product_id="test_product",
+        rules_df=_fixture_rules_df,
+        stats_table="dq_spark.test_stats",
+        stats_table_writer=stats_writer,
+        target_and_error_table_writer=target_writer,
+        debugger=False,
+    )
+    
+    # Verify target writer config
+    target_config = se._context.get_target_and_error_table_writer_config
+    assert target_config["mode"] == "append"
+    assert target_config["format"] == "delta"
+    assert target_config["partitionBy"] == ["date", "region"]
+    
+    # Verify stats writer config
+    stats_config = se._context.get_stats_table_writer_config
+    assert stats_config["outputMode"] == "complete"
+    assert stats_config["format"] == "kafka"
+    assert stats_config["options"]["topic"] == "test-topic"
+    
+    # Verify detailed stats writer config is also set
+    detailed_stats_config = se._context.get_detailed_stats_table_writer_config
+    assert detailed_stats_config["outputMode"] == "complete"
+    assert detailed_stats_config["format"] == "kafka"

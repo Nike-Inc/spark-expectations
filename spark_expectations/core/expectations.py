@@ -95,7 +95,7 @@ class SparkExpectations:
     stats_table_writer: Union["WrappedDataFrameWriter", "WrappedDataFrameStreamWriter"]
     debugger: bool = False
     stats_streaming_options: Optional[Dict[str, Union[str, bool]]] = None
-    spark: Optional["SparkSession"] = None
+    #spark: Optional["SparkSession"] = None
 
     def __post_init__(self) -> None:
         if isinstance(self.rules_df, DataFrame):  # type: ignore
