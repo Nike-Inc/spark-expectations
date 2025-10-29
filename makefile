@@ -36,7 +36,7 @@ dev:
 	@hatch env create
 	@hatch env show dev
 	@hatch run $(DEFAULT_HATCH_ENV):uv pip install --upgrade uv pip
-	@hatch run $(DEFAULT_HATCH_ENV):uv pip install .[$(HATCH_FEATURES)]
+	@hatch run $(DEFAULT_HATCH_ENV):uv pip install -e .[$(HATCH_FEATURES)]
 	@hatch run dev:uv pip freeze
 	@hatch run $(DEFAULT_HATCH_ENV):setup-hooks
 
@@ -65,16 +65,16 @@ get-version:
 
 kafka-cluster-start:
                    ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_github_actions)
-	                   . ./spark_expectations/examples/docker_scripts/kafka_cluster_start.sh
+	                   . ./containers/kafka/scripts/kafka_cluster_start.sh
 	                   sleep 30
-	                   . ./spark_expectations/examples/docker_scripts/delete_kafka_topic.sh
-	                   . ./spark_expectations/examples/docker_scripts/create_kafka_topic.sh
+	                   . ./containers/kafka/scripts/delete_kafka_topic.sh
+	                   . ./containers/kafka/scripts/create_kafka_topic.sh
                    endif
 
 kafka-cluster-stop:
                   ifeq ($(UNIT_TESTING_ENV), spark_expectations_unit_testing_on_github_actions)
-	                   . ./spark_expectations/examples/docker_scripts/delete_kafka_topic.sh
-	                   . ./spark_expectations/examples/docker_scripts/kafka_cluster_stop.sh
+	                   . ./containers/kafka/scripts/delete_kafka_topic.sh
+	                   . ./containers/kafka/scripts/kafka_cluster_stop.sh
 	                   rm -rf /tmp/kafka-logs
                    endif
 
@@ -92,7 +92,7 @@ local-se-server-stop:
 
 local-kafka-cluster-start:
 	@echo "Starting local Kafka cluster..."
-	. ./spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh
+	. ./containers/kafka/scripts/docker_kafka_start_script.sh
 
 mypy:
 	hatch run $(DEFAULT_HATCH_ENV):type-check

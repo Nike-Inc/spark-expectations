@@ -1,8 +1,8 @@
 ### Example - Write to Delta 
 
 Setup SparkSession for Delta Lake to test in your local environment. Configure accordingly for higher environments.
-Refer to Examples in [base_setup.py](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/examples/base_setup.py) and 
-[delta.py](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/examples/sample_dq_delta.py)
+Refer to Examples in [base_setup.py](https://github.com/Nike-Inc/spark-expectations/blob/main/examples/scripts/base_setup.py) and 
+[delta.py](https://github.com/Nike-Inc/spark-expectations/blob/main/examples/scripts/sample_dq_delta.py)
 
 ```python title="spark_session"
 from pyspark.sql import SparkSession

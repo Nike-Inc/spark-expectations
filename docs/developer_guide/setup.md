@@ -107,10 +107,10 @@ make cov
 
 !!! warning
     Previous command will spin up docker container needed to execute some tests so make sure docker is running.
-    Checkout `./spark_expectations/examples/docker_scripts` and test fixtures to better understand what is being spin up.
+    Checkout `./containers/kafka/scripts` and test fixtures to better understand what is being spin up.
     For Example
     ```sh
-      sh ./spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh  
+      sh ./containers/kafka/scripts/docker_kafka_start_script.sh  
     ```
     This script will:
 
@@ -158,7 +158,7 @@ make cov
                     "args": [
                         "run",
                         "--source=spark_expectations",
-                        "--omit=spark_expectations/examples/*",
+                        "--omit=examples/*",
                         "-m", "pytest",
                         "-v",
                         "-x"
@@ -174,7 +174,7 @@ make cov
                     "args": [
                         "run",
                         "--source=spark_expectations",
-                        "--omit=spark_expectations/examples/*",
+                        "--omit=examples/*",
                         "-m", "pytest",
                         "-v",
                         "-x",
@@ -192,7 +192,7 @@ make cov
 
 To enable trusted SSL/TLS communication during Spark-Expectations testing, you may need to provide custom Certificate Authority (CA) certificates.
 
-Place any required `.crt` files in the `spark_expectations/examples/docker_scripts/certs` directory. 
+Place any required `.crt` files in the `containers/certs` directory. 
 
 During test container startup, all certificates in this folder will be automatically imported into the container’s trusted certificate store, ensuring that your Spark jobs and dependencies can establish secure connections as needed.
 
