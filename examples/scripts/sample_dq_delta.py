@@ -3,7 +3,6 @@
 import os
 from typing import Dict, Union
 
-
 from pyspark.sql import DataFrame
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType
 
