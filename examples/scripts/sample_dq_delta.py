@@ -2,10 +2,7 @@
 
 import os
 from typing import Dict, Union
-import sys
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
-print(sys.path)
-# Define the product_id
+
 
 from pyspark.sql import DataFrame
 from pyspark.sql.types import StructType, StructField, IntegerType, StringType
