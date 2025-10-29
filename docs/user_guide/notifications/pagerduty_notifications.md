@@ -9,17 +9,36 @@ By default PagerDuty notifications (or the ability to create incidents) are disa
 !!! info "user_config.se_notifications_enable_pagerduty"
     Master toggle to enable PagerDuty notifications (this will create incidents for your service!)
 
+!!! warning "PagerDuty Failure-Only Behavior"
+    **PagerDuty incidents are only created for critical failure scenarios**, regardless of which notification triggers are enabled. This ensures PagerDuty is used appropriately for alerting on issues that require immediate attention, rather than routine status updates or informational notifications.
+    
+    PagerDuty incidents will be triggered for:
+    
+    - **Job failures** (`se_notifications_on_fail`)
+    - **Error threshold breaches** (`se_notifications_on_error_drop_exceeds_threshold_breach`) 
+    
+    PagerDuty incidents will **NOT** be triggered for:
+    
+    - Job start notifications (`se_notifications_on_start`)
+    - Job completion notifications (`se_notifications_on_completion`)
+    - **Rules with 'ignore' action that fail** (`se_notifications_on_rules_action_if_failed_set_ignore`) - These are informational only
+    
+    !!! note "Rules with 'ignore' action"
+        When `se_notifications_on_rules_action_if_failed_set_ignore` is enabled, notifications will be sent to other channels (email, Slack, Teams, etc.) for informational purposes, but **PagerDuty incidents will NOT be created**. Rules marked with `action_if_failed='ignore'` are not considered critical failures requiring immediate incident response.
+    
+    Other notification channels (email, Slack, Teams, etc.) will continue to respect all configured triggers.
+
 
 ??? info "Notification triggers"
-    These parameters control **when** notifications are sent during Spark-Expectations runs. This would create a new incident per enabled trigger.  
+    These parameters control **when** notifications are sent during Spark-Expectations runs. **Note: PagerDuty will only create incidents for failure-related triggers**, regardless of which triggers are enabled.
     `Hover over each parameter to see a short description.`
        
     - <abbr title="Master toggle to enable PagerDuty notifications">user_config.se_notifications_enable_pagerduty</abbr>
-    - <abbr title="Enable notifications when job starts">user_config.se_notifications_on_start</abbr>
-    - <abbr title="Enable notifications when job ends">user_config.se_notifications_on_completion</abbr>
-    - <abbr title="Enable notifications on failure">user_config.se_notifications_on_fail</abbr>
-    - <abbr title="Notify if error drop threshold is breached">user_config.se_notifications_on_error_drop_exceeds_threshold_breach</abbr>
-    - <abbr title="Notify if rules with action 'ignore' fail">user_config.se_notifications_on_rules_action_if_failed_set_ignore</abbr>
+    - <abbr title="Enable notifications when job starts (PagerDuty will ignore this)">user_config.se_notifications_on_start</abbr>
+    - <abbr title="Enable notifications when job ends (PagerDuty will ignore this)">user_config.se_notifications_on_completion</abbr>
+    - <abbr title="Enable notifications on failure (PagerDuty will create incident)">user_config.se_notifications_on_fail</abbr>
+    - <abbr title="Notify if error drop threshold is breached (PagerDuty will create incident)">user_config.se_notifications_on_error_drop_exceeds_threshold_breach</abbr>
+    - <abbr title="Notify if rules with action 'ignore' fail (PagerDuty will NOT create incident - informational only)">user_config.se_notifications_on_rules_action_if_failed_set_ignore</abbr>
     - <abbr title="Threshold value for error drop notifications">user_config.se_notifications_on_error_drop_threshold</abbr>
 
 
