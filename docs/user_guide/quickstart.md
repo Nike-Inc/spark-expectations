@@ -157,7 +157,7 @@ user_config = {}
 
 #### Run SparkExpectations job
 
-Please reference [Spark Expectation notebooks](https://github.com/Nike-Inc/spark-expectations/tree/main/notebooks) for fully functioning examples. 
+Please reference [Spark Expectation notebooks](https://github.com/Nike-Inc/spark-expectations/tree/main/examples/notebooks) for fully functioning examples. 
 
 !!! note
     Spark-Expectation repository itself provides [docker compose yaml file](https://github.com/Nike-Inc/spark-expectations/blob/main/containers/compose.yaml) for running those notebooks.

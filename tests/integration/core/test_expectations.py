@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 from pyspark.sql import DataFrame, SparkSession
 from spark_expectations.config.user_config import Constants as SeUserConfig
-from spark_expectations.examples.base_setup import RULES_TABLE_SCHEMA, set_up_delta
+from examples.scripts.base_setup import RULES_TABLE_SCHEMA, set_up_delta
 
 
 try:
@@ -41,15 +41,15 @@ def fixture_setup_local_kafka_topic():
 
     if os.getenv("UNIT_TESTING_ENV") != "spark_expectations_unit_testing_on_github_actions":
         # remove if docker container is running
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
+        os.system(f"sh {current_dir}/../../../containers/kafka/scripts/docker_kafka_stop_script.sh")
 
         # start docker container and create the topic
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_start_script.sh")
+        os.system(f"sh {current_dir}/../../../containers/kafka/scripts/docker_kafka_start_script.sh")
 
         yield "docker container started"
 
         # remove docker container
-        os.system(f"sh {current_dir}/../../../spark_expectations/examples/docker_scripts/docker_kafka_stop_script.sh")
+        os.system(f"sh {current_dir}/../../../containers/kafka/scripts/docker_kafka_stop_script.sh")
 
     else:
         yield (

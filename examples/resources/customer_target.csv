@@ -1,0 +1,6 @@
+customer_id,customer_name,segment,country,city,state,postal_code,region
+CG-12520,Claire Gute,Consumer,United States,Henderson,Kentucky,42420,South
+DV-13045,Darrin Van Huff,Corporate,United States,Los Angeles,California,90036,West
+SO-20335,Sean O'Donnell,Consumer,United States,Fort Lauderdale,Florida,33311,South
+BH-11710,Brosina Hoffman,Consumer,United States,Los Angeles,California,90032,West
+AA-10480,Andrew Allen,Consumer,United States,Concord,North Carolina,28027,South
