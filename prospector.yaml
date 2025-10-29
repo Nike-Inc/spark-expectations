@@ -8,7 +8,7 @@ ignore-paths:
   - .eggs
   - .mypy_cache
   - htmlcov
-  - spark_expectations/examples/
+  - examples/
   - tests  #commented until test scripts corrected
   - containers
 
