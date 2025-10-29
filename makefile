@@ -27,7 +27,7 @@ deploy_env_setup:
 	@hatch env create
 	@hatch env create dev
 	@hatch run $(DEFAULT_HATCH_ENV):uv pip install --upgrade uv pip
-	@hatch run $(DEFAULT_HATCH_ENV):uv pip install -e .[$(HATCH_FEATURES)]
+	@hatch run $(DEFAULT_HATCH_ENV):uv pip install .[$(HATCH_FEATURES)]
 	@hatch run $(DEFAULT_HATCH_ENV):uv pip freeze
 
 dev:
