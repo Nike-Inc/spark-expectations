@@ -1,7 +1,8 @@
 from dataclasses import dataclass
-from typing import Dict, Optional, Tuple, List
+from typing import Dict, Optional, Tuple, List, Any
 from datetime import datetime, timezone
 from pyspark.sql import DataFrame
+from pyspark.sql.streaming import StreamingQuery
 from pyspark.sql.functions import (
     lit,
     expr,
@@ -41,9 +42,10 @@ class SparkExpectationsWriter:
     def __post_init__(self) -> None:
         self.spark = self._context.spark
 
-    def save_df_as_table(self, df: DataFrame, table_name: str, config: dict, stats_table: bool = False) -> None:
+    def save_df_as_table(self, df: DataFrame, table_name: str, config: dict, stats_table: bool = False) -> Optional[StreamingQuery]:
         """
-        This function takes a dataframe and writes into a table
+        This function takes a dataframe and writes into a table. It automatically detects if the DataFrame 
+        is streaming and uses the appropriate write method (writeStream or write).
 
         Args:
             df: Provide the dataframe which need to be written as a table
@@ -52,55 +54,136 @@ class SparkExpectationsWriter:
             stats_table: Provide if this is for writing stats table
 
         Returns:
-            None:
+            Optional[StreamingQuery]: Returns StreamingQuery for streaming DataFrames, None for batch DataFrames
 
         """
         try:
+            # Add metadata columns for non-stats tables
             if not stats_table:
                 df = df.withColumn(self._context.get_run_id_name, lit(f"{self._context.get_run_id}")).withColumn(
                     self._context.get_run_date_time_name,
                     to_timestamp(lit(f"{self._context.get_run_date}"), "yyyy-MM-dd HH:mm:ss"),
                 )
-            _log.info("_save_df_as_table started")
 
-            _df_writer = df.write
-
-            if config["mode"] is not None:
-                _df_writer = _df_writer.mode(config["mode"])
-            if config["format"] is not None:
-                _df_writer = _df_writer.format(config["format"])
-            if config["partitionBy"] is not None and config["partitionBy"] != []:
-                _df_writer = _df_writer.partitionBy(config["partitionBy"])
-            if config["sortBy"] is not None and config["sortBy"] != []:
-                _df_writer = _df_writer.sortBy(config["sortBy"])
-            if config["bucketBy"] is not None and config["bucketBy"] != {}:
-                bucket_by_config = config["bucketBy"]
-                _df_writer = _df_writer.bucketBy(bucket_by_config["numBuckets"], bucket_by_config["colName"])
-            if config["options"] is not None and config["options"] != {}:
-                _df_writer = _df_writer.options(**config["options"])
-
-            _log.info(f"Writing records to table: {table_name}")
-
-            if config["format"] == "bigquery":
-                _df_writer.option("table", table_name).save()
-            else:
-                _df_writer.saveAsTable(name=table_name)
-                _log.info(f"finished writing records to table: {table_name}")
-                if not stats_table:
-                    # Fetch table properties
-                    table_properties = self.spark.sql(f"SHOW TBLPROPERTIES {table_name}").collect()
-                    table_properties_dict = {row["key"]: row["value"] for row in table_properties}
-
-                    # Set product_id in table properties
-                    if (
-                        table_properties_dict.get("product_id") is None
-                        or table_properties_dict.get("product_id") != self._context.product_id
-                    ):
-                        _log.info(f"product_id is not set for table {table_name} in tableproperties, setting it now")
-                        self.spark.sql(
-                            f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = "
-                            f"'{self._context.product_id}')"
+            # Automatically detect if DataFrame is streaming and use appropriate write method
+            if df.isStreaming:
+                _log.info("Detected streaming DataFrame, using writeStream")
+                
+                _df_stream_writer = df.writeStream
+                
+                if config.get("outputMode") is not None:
+                    _df_stream_writer = _df_stream_writer.outputMode(config["outputMode"])
+                
+                if config.get("format") is not None:
+                    _df_stream_writer = _df_stream_writer.format(config["format"])
+                
+                if config.get("queryName") is not None:
+                    _df_stream_writer = _df_stream_writer.queryName(config["queryName"])
+                
+                if config.get("partitionBy") is not None and config["partitionBy"] != []:
+                    _df_stream_writer = _df_stream_writer.partitionBy(config["partitionBy"])
+                
+                if config.get("options") is not None and config["options"] != {}:
+                    if "checkpointLocation" in config["options"]:
+                        checkpoint_location = config["options"]["checkpointLocation"]
+                        config["options"]["checkpointLocation"] = f"{checkpoint_location}/{table_name}"
+                        _log.info(f"Using checkpoint location: {config['options']['checkpointLocation']}")
+                    else:
+                        _log.warning(
+                            "⚠️  PRODUCTION WARNING: No checkpointLocation specified for streaming DataFrame. "
+                            "For production workloads, it is strongly recommended to set a dedicated checkpoint "
+                            "location in the 'options' config when using Spark Expectations (SE) to write in "
+                            "streaming fashion to target tables. This ensures fault tolerance and exactly-once "
+                            "processing guarantees. Example: config['options']['checkpointLocation'] = '/path/to/checkpoint'"
                         )
+                    _df_stream_writer = _df_stream_writer.options(**config["options"])
+
+                # Set trigger configuration if provided
+                if config.get("trigger"):
+                    trigger_config = config["trigger"]
+                    if "processingTime" in trigger_config:
+                        #from pyspark.sql.streaming import Trigger
+                        _df_stream_writer = _df_stream_writer.trigger(processingTime=trigger_config["processingTime"])
+                    elif "once" in trigger_config and trigger_config["once"]:
+                        #from pyspark.sql.streaming import Trigger
+                        _df_stream_writer = _df_stream_writer.trigger(once=True)
+                    elif "continuous" in trigger_config:
+                        #from pyspark.sql.streaming import Trigger
+                        _df_stream_writer = _df_stream_writer.trigger(continuous=trigger_config["continuous"])
+
+                _log.info(f"Writing streaming records to table: {table_name}")
+                streaming_query = _df_stream_writer.toTable(table_name)
+                _log.info(f"Successfully started streaming write to table: {table_name}")
+                
+                # Set table properties for non-stats tables
+                if not stats_table:
+                    try:
+                        # Wait a moment for table to be created
+                        import time
+                        time.sleep(2)
+                        
+                        # Check if table exists and set properties
+                        table_properties = self.spark.sql(f"SHOW TBLPROPERTIES {table_name}").collect()
+                        table_properties_dict = {row["key"]: row["value"] for row in table_properties}
+
+                        if (
+                            table_properties_dict.get("product_id") is None
+                            or table_properties_dict.get("product_id") != self._context.product_id
+                        ):
+                            _log.info(f"product_id is not set for table {table_name} in tableproperties, setting it now")
+                            self.spark.sql(
+                                f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = "
+                                f"'{self._context.product_id}')"
+                            )
+                    except Exception as table_prop_error:
+                        _log.warning(f"Could not set table properties for streaming table {table_name}: {table_prop_error}")
+
+                return streaming_query
+            else:
+                _log.info("Detected batch DataFrame, using write")
+                
+                # Batch DataFrame logic
+                _df_writer = df.write
+
+                if config.get("mode") is not None:
+                    _df_writer = _df_writer.mode(config["mode"])
+                if config.get("format") is not None:
+                    _df_writer = _df_writer.format(config["format"])
+                if config.get("partitionBy") is not None and config["partitionBy"] != []:
+                    _df_writer = _df_writer.partitionBy(config["partitionBy"])
+                if config.get("sortBy") is not None and config["sortBy"] != []:
+                    _df_writer = _df_writer.sortBy(config["sortBy"])
+                if config.get("bucketBy") is not None and config["bucketBy"] != {}:
+                    bucket_by_config = config["bucketBy"]
+                    _df_writer = _df_writer.bucketBy(bucket_by_config["numBuckets"], bucket_by_config["colName"])
+                if config.get("options") is not None and config["options"] != {}:
+                    _df_writer = _df_writer.options(**config["options"])
+
+                _log.info(f"Writing records to table: {table_name}")
+
+                if config.get("format") == "bigquery":
+                    _df_writer.option("table", table_name).save()
+                else:
+                    _df_writer.saveAsTable(name=table_name)
+                    _log.info(f"finished writing records to table: {table_name}")
+                    
+                    if not stats_table:
+                        # Fetch table properties
+                        table_properties = self.spark.sql(f"SHOW TBLPROPERTIES {table_name}").collect()
+                        table_properties_dict = {row["key"]: row["value"] for row in table_properties}
+
+                        # Set product_id in table properties
+                        if (
+                            table_properties_dict.get("product_id") is None
+                            or table_properties_dict.get("product_id") != self._context.product_id
+                        ):
+                            _log.info(f"product_id is not set for table {table_name} in tableproperties, setting it now")
+                            self.spark.sql(
+                                f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = "
+                                f"'{self._context.product_id}')"
+                            )
+
+                return None
 
         except Exception as e:
             raise SparkExpectationsUserInputOrConfigInvalidException(
@@ -958,3 +1041,80 @@ class SparkExpectationsWriter:
 
         except Exception as e:
             raise SparkExpectationsMiscException(f"An error occurred while creating error threshold list : {e}")
+
+    def get_streaming_query_status(self, streaming_query: StreamingQuery) -> Dict[str, Any]:
+        """
+        Get status information for a streaming query
+        
+        Args:
+            streaming_query: The streaming query to check
+            
+        Returns:
+            Dict[str, Any]: Status information including query details
+        """
+        try:
+            if streaming_query is None:
+                return {"status": "not_running", "message": "No streaming query provided"}
+                
+            status = {
+                "query_id": streaming_query.id,
+                "run_id": streaming_query.runId,
+                "name": streaming_query.name,
+                "is_active": streaming_query.isActive,
+                "status": "active" if streaming_query.isActive else "inactive"
+            }
+            
+            if streaming_query.isActive:
+                progress = streaming_query.lastProgress
+                if progress:
+                    status.update({
+                        "batch_id": progress.get("batchId", -1),
+                        "input_rows_per_second": progress.get("inputRowsPerSecond", 0),
+                        "processed_rows_per_second": progress.get("processedRowsPerSecond", 0),
+                        "batch_duration": progress.get("batchDuration", 0),
+                        "timestamp": progress.get("timestamp", "unknown")
+                    })
+            else:
+                # Query is not active, check for exception
+                try:
+                    exception = streaming_query.exception()
+                    if exception:
+                        status["error"] = str(exception)
+                except Exception:
+                    pass
+                    
+            return status
+            
+        except Exception as e:
+            return {"status": "error", "message": f"Error getting query status: {e}"}
+
+    def stop_streaming_query(self, streaming_query: StreamingQuery, timeout: Optional[int] = None) -> bool:
+        """
+        Stop a streaming query gracefully
+        
+        Args:
+            streaming_query: The streaming query to stop
+            timeout: Optional timeout in seconds
+            
+        Returns:
+            bool: True if stopped successfully, False otherwise
+        """
+        try:
+            if streaming_query is None or not streaming_query.isActive:
+                _log.info("Streaming query is not active or None")
+                return True
+                
+            _log.info(f"Stopping streaming query: {streaming_query.id}")
+            
+            if timeout:
+                streaming_query.stop()
+                streaming_query.awaitTermination(timeout)
+            else:
+                streaming_query.stop()
+                
+            _log.info(f"Successfully stopped streaming query: {streaming_query.id}")
+            return True
+            
+        except Exception as e:
+            _log.error(f"Error stopping streaming query: {e}")
+            return False
