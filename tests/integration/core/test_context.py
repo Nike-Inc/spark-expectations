@@ -2393,6 +2393,175 @@ def test_get_df_dq_obs_report_dataframe():
         assert context.get_df_dq_obs_report_dataframe.collect() == df.collect()
 
 
+# [Unit Tests for writer type and config methods]
+
+
+def test_set_target_and_error_table_writer_type():
+    """Test setting target and error table writer type"""
+    context = SparkExpectationsContext(
+        product_id="product1",
+        spark=spark,
+    )
+    context.set_target_and_error_table_writer_type("streaming")
+    assert context.get_target_and_error_table_writer_type == "streaming"
+
+
+def test_get_target_and_error_table_writer_type_default():
+    """Test getting default target and error table writer type"""
+    context = SparkExpectationsContext(
+        product_id="product1",
+        spark=spark,
+    )
+    # Default should be "batch"
+    assert context.get_target_and_error_table_writer_type == "batch"
+
+
+def test_set_stats_table_writer_type():
+    """Test setting stats table writer type"""
+    context = SparkExpectationsContext(
+        product_id="product1",
+        spark=spark,
+    )
+    context.set_stats_table_writer_type("streaming")
+    assert context.get_stats_table_writer_type == "streaming"
+
+
+def test_get_stats_table_writer_type_default():
+    """Test getting default stats table writer type"""
+    context = SparkExpectationsContext(
+        product_id="product1",
+        spark=spark,
+    )
+    # Default should be "batch"
+    assert context.get_stats_table_writer_type == "batch"
+
+
+def test_set_target_and_error_table_writer_config():
+    """Test setting target and error table writer config"""
+    context = SparkExpectationsContext(
+        product_id="product1",
+        spark=spark,
+    )
+    config = {
+        "mode": "append",
+        "format": "delta",
+        "partitionBy": ["date"],
+        "options": {"checkpointLocation": "/path/to/checkpoint"},
+    }
+    context.set_target_and_error_table_writer_config(config)
+    assert context.get_target_and_error_table_writer_config == config
+
+
+def test_get_target_and_error_table_writer_config_default():
+    """Test getting default target and error table writer config"""
+    context = SparkExpectationsContext(
+        product_id="product1",
+        spark=spark,
+    )
+    # Default should be empty dict
+    assert context.get_target_and_error_table_writer_config == {}
+
+
+def test_set_stats_table_writer_config():
+    """Test setting stats table writer config"""
+    context = SparkExpectationsContext(
+        product_id="product1",
+        spark=spark,
+    )
+    config = {
+        "outputMode": "append",
+        "format": "delta",
+        "queryName": "test_query",
+        "trigger": {"processingTime": "10 seconds"},
+        "partitionBy": ["date"],
+        "options": {"checkpointLocation": "/path/to/checkpoint"},
+    }
+    context.set_stats_table_writer_config(config)
+    assert context.get_stats_table_writer_config == config
+
+
+def test_get_stats_table_writer_config_default():
+    """Test getting default stats table writer config"""
+    context = SparkExpectationsContext(
+        product_id="product1",
+        spark=spark,
+    )
+    # Default should be empty dict
+    assert context.get_stats_table_writer_config == {}
+
+
+def test_writer_type_batch_to_streaming_transition():
+    """Test transitioning writer type from batch to streaming"""
+    context = SparkExpectationsContext(
+        product_id="product1",
+        spark=spark,
+    )
+    # Default is batch
+    assert context.get_target_and_error_table_writer_type == "batch"
+    assert context.get_stats_table_writer_type == "batch"
+    
+    # Change to streaming
+    context.set_target_and_error_table_writer_type("streaming")
+    context.set_stats_table_writer_type("streaming")
+    
+    assert context.get_target_and_error_table_writer_type == "streaming"
+    assert context.get_stats_table_writer_type == "streaming"
+
+
+def test_writer_config_update():
+    """Test updating writer config"""
+    context = SparkExpectationsContext(
+        product_id="product1",
+        spark=spark,
+    )
+    
+    # Set initial config
+    initial_config = {
+        "mode": "append",
+        "format": "delta",
+    }
+    context.set_target_and_error_table_writer_config(initial_config)
+    assert context.get_target_and_error_table_writer_config == initial_config
+    
+    # Update config
+    updated_config = {
+        "mode": "overwrite",
+        "format": "parquet",
+        "partitionBy": ["date", "region"],
+    }
+    context.set_target_and_error_table_writer_config(updated_config)
+    assert context.get_target_and_error_table_writer_config == updated_config
+
+
+def test_streaming_writer_config():
+    """Test setting streaming writer config with all options"""
+    context = SparkExpectationsContext(
+        product_id="product1",
+        spark=spark,
+    )
+    
+    streaming_config = {
+        "outputMode": "append",
+        "format": "delta",
+        "queryName": "my_streaming_query",
+        "trigger": {"processingTime": "10 seconds"},
+        "partitionBy": ["date", "hour"],
+        "options": {
+            "checkpointLocation": "/path/to/checkpoint",
+            "maxFilesPerTrigger": "100",
+        },
+    }
+    
+    context.set_stats_table_writer_config(streaming_config)
+    retrieved_config = context.get_stats_table_writer_config
+    
+    assert retrieved_config["outputMode"] == "append"
+    assert retrieved_config["format"] == "delta"
+    assert retrieved_config["queryName"] == "my_streaming_query"
+    assert retrieved_config["trigger"]["processingTime"] == "10 seconds"
+    assert retrieved_config["partitionBy"] == ["date", "hour"]
+    assert retrieved_config["options"]["checkpointLocation"] == "/path/to/checkpoint"
+    assert retrieved_config["options"]["maxFilesPerTrigger"] == "100"
 def test_set_min_priority_email():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_min_priority_email("high")
