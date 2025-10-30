@@ -102,13 +102,10 @@ class SparkExpectationsWriter:
                 if config.get("trigger"):
                     trigger_config = config["trigger"]
                     if "processingTime" in trigger_config:
-                        #from pyspark.sql.streaming import Trigger
                         _df_stream_writer = _df_stream_writer.trigger(processingTime=trigger_config["processingTime"])
                     elif "once" in trigger_config and trigger_config["once"]:
-                        #from pyspark.sql.streaming import Trigger
                         _df_stream_writer = _df_stream_writer.trigger(once=True)
                     elif "continuous" in trigger_config:
-                        #from pyspark.sql.streaming import Trigger
                         _df_stream_writer = _df_stream_writer.trigger(continuous=trigger_config["continuous"])
 
                 _log.info(f"Writing streaming records to table: {table_name}")
@@ -904,7 +901,7 @@ class SparkExpectationsWriter:
                     self._context.get_target_and_error_table_writer_config,
                 )
 
-            _error_count = error_df.count()
+            _error_count = error_df.count() if not error_df.isStreaming else 0
             # if _error_count > 0:
             self.generate_summarized_row_dq_res(error_df, rule_type)
 
