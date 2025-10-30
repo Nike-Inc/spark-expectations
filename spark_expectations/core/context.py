@@ -161,6 +161,9 @@ class SparkExpectationsContext:
         self._summarized_row_dq_res: Optional[List[Dict[str, str]]] = None
         self._rules_error_per: Optional[List[dict]] = None
 
+        # The below config is used to set the type of the writer for the target and error table and stats table
+        self._target_and_error_table_writer_type: str = "batch"
+        self._stats_table_writer_type: str = "batch"
         self._target_and_error_table_writer_config: dict = {}
         self._stats_table_writer_config: dict = {}
 
@@ -178,6 +181,7 @@ class SparkExpectationsContext:
         self._query_dq_output_custom_table_name: str
 
         self._stats_dict: List[dict] = []
+
 
     @property
     def get_dbr_version(self) -> Optional[float]:
@@ -1883,6 +1887,45 @@ class SparkExpectationsContext:
         This function returns error percentage for each rule
         """
         return self._rules_error_per
+
+    def set_target_and_error_table_writer_type(self, writer_type: str) -> None:
+        """
+        This function returns target and error table writer type
+        Args:
+            writer_type: str
+        Returns:
+            str: Returns target_and_error_table_writer_type which in str
+        """
+        self._target_and_error_table_writer_type = writer_type
+
+    @property
+    def get_target_and_error_table_writer_type(self) -> str:
+        """
+        This function returns target and error table writer type
+        Returns:
+            str: Returns target_and_error_table_writer_type which in str
+        """
+        return self._target_and_error_table_writer_type
+
+    def set_stats_table_writer_type(self, writer_type: str) -> None:
+        """
+        This function returns stats table writer type
+        Args:
+            writer_type: str
+        Returns:
+            str: Returns stats_table_writer_type which in str
+        """
+        self._stats_table_writer_type = writer_type
+
+    @property
+    def get_stats_table_writer_type(self) -> str:
+        """
+        This function returns stats table writer type
+        Returns:
+            str: Returns stats_table_writer_type which in str
+        """
+        return self._stats_table_writer_type    
+
 
     def set_target_and_error_table_writer_config(self, config: dict) -> None:
         """

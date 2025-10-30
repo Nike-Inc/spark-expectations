@@ -28,7 +28,7 @@ mkdir -p /home/spark/.local/share/jupyter && \
 # Copy your JupyterLab config files and notebooks 
 COPY containers/jupyterlab/config/jupyter_lab_config.py /home/spark/.jupyter/jupyter_lab_config.py
 COPY containers/jupyterlab/config/themes.jupyterlab-settings /home/spark/.jupyter/lab/user-settings/@jupyterlab/apputils-extension/themes.jupyterlab-settings
-COPY notebooks/ /app/notebooks
+COPY examples/notebooks/ /app/notebooks
 
 ARG INSTALL_FROM_LOCAL=true    
 

@@ -1,7 +1,7 @@
 import functools
 import importlib
 from dataclasses import dataclass
-from typing import Dict, Optional, Any, Union, List
+from typing import Dict, Optional, Any, Union, List, TypeAlias, overload
 
 from pyspark.version import __version__ as spark_version
 from pyspark import StorageLevel
@@ -63,17 +63,14 @@ if check_if_pyspark_connect_is_supported():
     from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
     from pyspark.sql.connect.session import SparkSession as ConnectSparkSession
 
-    DataFrame = Union[sql.DataFrame, ConnectDataFrame]  # type: ignore
-    SparkSession = Union[sql.SparkSession, ConnectSparkSession]  # type: ignore
-else:
-    # Otherwise, use the default PySpark classes
-    from pyspark.sql.dataframe import DataFrame  # type: ignore
-    from pyspark.sql.session import SparkSession  # type: ignore
+DataFrame: TypeAlias = Union[sql.DataFrame, ConnectDataFrame]  # type: ignore
+SparkSession: TypeAlias = Union[sql.SparkSession, ConnectSparkSession]  # type: ignore
 
 
 __all__ = [
     "SparkExpectations",
     "WrappedDataFrameWriter",
+    "WrappedDataFrameStreamWriter"
 ]
 
 
@@ -92,13 +89,13 @@ class SparkExpectations:
     """
 
     product_id: str
-    rules_df: DataFrame
+    rules_df: "DataFrame"
     stats_table: str
-    target_and_error_table_writer: "WrappedDataFrameWriter"
-    stats_table_writer: "WrappedDataFrameWriter"
+    target_and_error_table_writer: Union["WrappedDataFrameWriter", "WrappedDataFrameStreamWriter"]
+    stats_table_writer: Union["WrappedDataFrameWriter", "WrappedDataFrameStreamWriter"]
     debugger: bool = False
     stats_streaming_options: Optional[Dict[str, Union[str, bool]]] = None
-    spark: Optional[SparkSession] = None
+    #spark: Optional["SparkSession"] = None
 
     def __post_init__(self) -> None:
         if isinstance(self.rules_df, DataFrame):  # type: ignore
@@ -138,6 +135,12 @@ class SparkExpectations:
         )
         self.reader = SparkExpectationsReader(_context=self._context)
 
+        if isinstance(self.target_and_error_table_writer, WrappedDataFrameStreamWriter):
+            self._context.set_target_and_error_table_writer_type("streaming")
+
+        if isinstance(self.stats_table_writer, WrappedDataFrameStreamWriter):
+            self._context.set_stats_table_writer_type("streaming")
+
         self._context.set_target_and_error_table_writer_config(self.target_and_error_table_writer.build())
         self._context.set_stats_table_writer_config(self.stats_table_writer.build())
         self._context.set_detailed_stats_table_writer_config(self.stats_table_writer.build())
@@ -155,7 +158,7 @@ class SparkExpectations:
         write_to_temp_table: bool = False,
         user_conf: Optional[Dict[str, Union[str, int, bool, Dict[str, str]]]] = None,
         target_table_view: Optional[str] = None,
-        target_and_error_table_writer: Optional["WrappedDataFrameWriter"] = None,
+        target_and_error_table_writer: Optional[Union["WrappedDataFrameWriter", "WrappedDataFrameStreamWriter"]] = None,
     ) -> Any:
         """
         This decorator helps to wrap a function which returns dataframe and apply dataframe rules on it
@@ -340,7 +343,7 @@ class SparkExpectations:
                         raise SparkExpectationsMiscException(f"Validation failed for rules: {failed_rules}")
                     _log.info("Validation for rules completed successfully")
 
-                    _input_count = _df.count()
+                    _input_count = _df.count() if not _df.isStreaming else 0
                     _log.info(f"data frame input record count: {_input_count}")
                     _output_count: int = 0
                     _error_count: int = 0
@@ -496,7 +499,7 @@ class SparkExpectations:
 
                             _row_dq_df.createOrReplaceTempView(_target_table_view)
 
-                            _output_count = _row_dq_df.count() if _row_dq_df else 0
+                            _output_count = _row_dq_df.count() if not _row_dq_df.isStreaming else 0
                             self._context.set_output_count(_output_count)
 
                             self._context.set_row_dq_status(status)
@@ -737,19 +740,108 @@ class WrappedDataFrameWriter:
             "sortBy": self._sort_by,
         }
 
-        # config = {}
-        #
-        # if cls._mode:
-        #     config["mode"] = cls._mode
-        # if cls._format:
-        #     config["format"] = cls._format
-        # if cls._partition_by:
-        #     config["partitionBy"] = cls._partition_by
-        # if cls._options:
-        #     config["options"] = cls._options
-        # if cls._bucket_by:
-        #     config["bucketBy"] = cls._bucket_by
-        # if cls._sort_by:
-        #     config["sortBy"] = cls._sort_by
-        #
-        # return config
+
+class WrappedDataFrameStreamWriter:
+    """
+    A builder pattern class that mimics the functions of PySpark's DataStreamWriter.
+
+    This class allows for chaining methods to set configurations for streaming writes like
+    output mode, format, query name, trigger, options, and partitioning. It does not require
+    a DataFrame object and is designed purely to collect and return configurations.
+
+    Example usage:
+    --------------
+    stream_writer = WrappedDataFrameStreamWriter().outputMode("append")\
+                                   .format("delta")\
+                                   .queryName("my_streaming_query")\
+                                   .trigger(processingTime="10 seconds")\
+                                   .option("checkpointLocation", "/path/to/checkpoint")\
+                                   .partitionBy("date")
+
+    config = stream_writer.build()
+    print(config)
+
+    Attributes:
+    -----------
+    _output_mode : str
+        The output mode for streaming (e.g., "append", "complete", "update").
+    _format : str
+        The format for writing (e.g., "delta", "parquet", "kafka").
+    _query_name : str
+        The name of the streaming query.
+    _trigger : dict
+        The trigger configuration (e.g., {"processingTime": "10 seconds"}).
+    _partition_by : list
+        Columns by which the data should be partitioned.
+    _options : dict
+        Additional options for writing (e.g., checkpointLocation).
+    """
+
+    def __init__(self) -> None:
+        self._output_mode: Optional[str] = None
+        self._format: Optional[str] = None
+        self._query_name: Optional[str] = None
+        self._trigger: Dict[str, str] = {}
+        self._partition_by: list = []
+        self._options: dict[str, str] = {}
+
+    def outputMode(self, output_mode: str) -> "WrappedDataFrameStreamWriter":  # noqa: N802
+        """Set the output mode for streaming (append, complete, or update)."""
+        self._output_mode = output_mode
+        return self
+
+    def format(self, source: str) -> "WrappedDataFrameStreamWriter":
+        """Set the format for writing."""
+        self._format = source
+        return self
+
+    def queryName(self, query_name: str) -> "WrappedDataFrameStreamWriter":  # noqa: N802
+        """Set the name of the streaming query."""
+        self._query_name = query_name
+        return self
+
+    def trigger(self, **trigger_options: str) -> "WrappedDataFrameStreamWriter":
+        """
+        Set the trigger for the streaming query.
+        
+        Common trigger types:
+        - processingTime: "10 seconds" (process every 10 seconds)
+        - once: True (process available data once and stop)
+        - continuous: "1 second" (continuous processing with 1 second checkpoints)
+        """
+        self._trigger.update(trigger_options)
+        return self
+    @overload  
+    def partitionBy(self, *cols: str) -> "WrappedDataFrameStreamWriter": ... # noqa: N802
+    
+    @overload  # type: ignore   
+    def partitionBy(self, __cols: list[str]) -> "WrappedDataFrameStreamWriter": ... # noqa: N802
+    
+    def partitionBy(self, *columns: str | List[str]) -> "WrappedDataFrameStreamWriter":  # noqa: N802
+        """Set the columns by which the data should be partitioned."""
+        if isinstance(columns, list):
+            self._partition_by.extend(columns)
+        else:
+            self._partition_by.extend(columns)
+        return self
+
+    def option(self, key: str, value: str) -> "WrappedDataFrameStreamWriter":
+        """Set a single option for writing."""
+        self._options[key] = value
+        return self
+
+    def options(self, **options: str) -> "WrappedDataFrameStreamWriter":
+        """Set multiple options for writing."""
+        self._options.update(options)
+        return self
+
+    def build(self) -> Dict[str, Union[str, list, dict, None]]:
+        """Return the collected configurations."""
+        return {
+            "outputMode": self._output_mode,
+            "format": self._format,
+            "queryName": self._query_name,
+            "trigger": self._trigger if self._trigger else None,
+            "partitionBy": self._partition_by,
+            "options": self._options,
+        }

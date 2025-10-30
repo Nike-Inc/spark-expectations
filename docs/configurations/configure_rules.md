@@ -1,6 +1,6 @@
 ### Configure Rules in the **`catalog`.`schema`.`{product}_rules`**  
 
-Please find the data set which used for the data quality rules setup [order.csv](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/examples/resources/order.csv)
+Please find the data set which used for the data quality rules setup [order.csv](https://github.com/Nike-Inc/spark-expectations/blob/main/examples/resources/order.csv)
 
 ##### Example Of Row, Aggregation And Query Rules For Data Quality 
 

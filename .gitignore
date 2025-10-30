@@ -359,8 +359,12 @@ cython_debug/
 [Ll]ib
 [Ll]ib64
 [Ll]ocal
-# Ignore any scripts/|Scripts/ directories or files 
+# Ignore any scripts/|Scripts/ directories or files (but not our project scripts)
 [Ss]cripts
+!containers/kafka/scripts/
+!examples/scripts/
+# But ignore __pycache__ in examples/scripts
+examples/scripts/__pycache__/
 pyvenv.cfg
 pip-selfcheck.json
 
