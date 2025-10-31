@@ -42,6 +42,87 @@ class SparkExpectationsWriter:
     def __post_init__(self) -> None:
         self.spark = self._context.spark
 
+    def _set_table_properties_with_retry(
+        self, 
+        table_name: str, 
+        max_retries: int = 5, 
+        initial_wait: float = 0.5,
+        max_wait: float = 10.0
+    ) -> None:
+        """
+        Set table properties with retry logic and exponential backoff.
+        
+        This method waits for the streaming table to be created and then sets the product_id
+        property. Uses exponential backoff to avoid blocking while waiting for table creation.
+        
+        Args:
+            table_name: Name of the table to set properties on
+            max_retries: Maximum number of retry attempts (default: 5)
+            initial_wait: Initial wait time in seconds (default: 0.5)
+            max_wait: Maximum wait time between retries in seconds (default: 10.0)
+            
+        Returns:
+            None
+        """
+        import time
+        
+        wait_time = initial_wait
+        
+        for attempt in range(max_retries):
+            try:
+                # Check if table exists
+                if not self.spark.catalog.tableExists(table_name):
+                    if attempt < max_retries - 1:
+                        _log.debug(
+                            f"Table {table_name} not yet available, "
+                            f"retrying in {wait_time:.2f}s (attempt {attempt + 1}/{max_retries})"
+                        )
+                        time.sleep(wait_time)
+                        wait_time = min(wait_time * 2, max_wait)  # Exponential backoff with cap
+                        continue
+                    
+                    _log.warning(
+                        f"Table {table_name} not available after {max_retries} attempts, "
+                        "skipping table properties"
+                    )
+                    return
+                
+                # Table exists, get properties
+                table_properties = self.spark.sql(f"SHOW TBLPROPERTIES {table_name}").collect()
+                table_properties_dict = {row["key"]: row["value"] for row in table_properties}
+
+                # Set product_id if not set or different
+                if (
+                    table_properties_dict.get("product_id") is None
+                    or table_properties_dict.get("product_id") != self._context.product_id
+                ):
+                    _log.info(f"Setting product_id for table {table_name} in tableproperties")
+                    self.spark.sql(
+                        f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = "
+                        f"'{self._context.product_id}')"
+                    )
+                    _log.info(f"Successfully set product_id for table {table_name}")
+                else:
+                    _log.debug(f"product_id already set for table {table_name}")
+                
+                # Success - exit retry loop
+                return
+                
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    _log.warning(
+                        f"Error setting table properties for {table_name} (attempt {attempt + 1}/{max_retries}): {e}. "
+                        f"Retrying in {wait_time:.2f}s..."
+                    )
+                    time.sleep(wait_time)
+                    wait_time = min(wait_time * 2, max_wait)  # Exponential backoff
+                else:
+                    _log.warning(
+                        f"Could not set table properties for streaming table {table_name} "
+                        f"after {max_retries} attempts: {e}"
+                    )
+                    return
+
     def save_df_as_table(self, df: DataFrame, table_name: str, config: dict, stats_table: bool = False) -> Optional[StreamingQuery]:
         """
         This function takes a dataframe and writes into a table. It automatically detects if the DataFrame 
@@ -83,20 +164,32 @@ class SparkExpectationsWriter:
                 if config.get("partitionBy") is not None and config["partitionBy"] != []:
                     _df_stream_writer = _df_stream_writer.partitionBy(config["partitionBy"])
                 
-                if config.get("options") is not None and config["options"] != {}:
+                # Check for checkpoint location - critical for production streaming
+                has_checkpoint = (
+                    config.get("options") is not None 
+                    and isinstance(config.get("options"), dict)
+                    and "checkpointLocation" in config["options"]
+                )
+                
+                if not has_checkpoint:
+                    _log.warning(
+                        "⚠️  PRODUCTION WARNING: No checkpointLocation specified for streaming DataFrame. "
+                        "For production workloads, it is strongly recommended to set a dedicated checkpoint "
+                        "location in the 'options' config when using Spark Expectations (SE) to write in "
+                        "streaming fashion to target tables. This ensures fault tolerance and exactly-once "
+                        "processing guarantees. Example: config['options']['checkpointLocation'] = '/path/to/checkpoint'"
+                    )
+                
+                # Apply options if they exist
+                if config.get("options") is not None and isinstance(config.get("options"), dict):
                     if "checkpointLocation" in config["options"]:
                         checkpoint_location = config["options"]["checkpointLocation"]
                         config["options"]["checkpointLocation"] = f"{checkpoint_location}/{table_name}"
                         _log.info(f"Using checkpoint location: {config['options']['checkpointLocation']}")
-                    else:
-                        _log.warning(
-                            "⚠️  PRODUCTION WARNING: No checkpointLocation specified for streaming DataFrame. "
-                            "For production workloads, it is strongly recommended to set a dedicated checkpoint "
-                            "location in the 'options' config when using Spark Expectations (SE) to write in "
-                            "streaming fashion to target tables. This ensures fault tolerance and exactly-once "
-                            "processing guarantees. Example: config['options']['checkpointLocation'] = '/path/to/checkpoint'"
-                        )
-                    _df_stream_writer = _df_stream_writer.options(**config["options"])
+                    
+                    # Only apply options if dict is not empty
+                    if config["options"]:
+                        _df_stream_writer = _df_stream_writer.options(**config["options"])
 
                 # Set trigger configuration if provided
                 if config.get("trigger"):
@@ -114,26 +207,7 @@ class SparkExpectationsWriter:
                 
                 # Set table properties for non-stats tables
                 if not stats_table:
-                    try:
-                        # Wait a moment for table to be created
-                        import time
-                        time.sleep(2)
-                        
-                        # Check if table exists and set properties
-                        table_properties = self.spark.sql(f"SHOW TBLPROPERTIES {table_name}").collect()
-                        table_properties_dict = {row["key"]: row["value"] for row in table_properties}
-
-                        if (
-                            table_properties_dict.get("product_id") is None
-                            or table_properties_dict.get("product_id") != self._context.product_id
-                        ):
-                            _log.info(f"product_id is not set for table {table_name} in tableproperties, setting it now")
-                            self.spark.sql(
-                                f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = "
-                                f"'{self._context.product_id}')"
-                            )
-                    except Exception as table_prop_error:
-                        _log.warning(f"Could not set table properties for streaming table {table_name}: {table_prop_error}")
+                    self._set_table_properties_with_retry(table_name)
 
                 return streaming_query
             else:
@@ -1047,7 +1121,25 @@ class SparkExpectationsWriter:
             streaming_query: The streaming query to check
             
         Returns:
-            Dict[str, Any]: Status information including query details
+            Dict[str, Any]: Status information including query details. Always includes:
+                - query_id: Unique identifier for the query
+                - run_id: Run identifier for the query
+                - name: Name of the query
+                - is_active: Boolean indicating if query is active
+                - status: "active", "inactive", "not_running", or "error"
+                
+            For active queries with progress data, may also include:
+                - batch_id: Non-negative integer representing the batch number
+                - input_rows_per_second: Input rate
+                - processed_rows_per_second: Processing rate
+                - batch_duration: Duration of the batch in milliseconds
+                - timestamp: Timestamp of the progress update
+                
+            For inactive queries with errors:
+                - error: Error message from the query exception
+                
+            Note: Progress fields are only included when actually present in the
+            streaming query progress. Batch IDs are always non-negative integers.
         """
         try:
             if streaming_query is None:
@@ -1064,13 +1156,22 @@ class SparkExpectationsWriter:
             if streaming_query.isActive:
                 progress = streaming_query.lastProgress
                 if progress:
-                    status.update({
-                        "batch_id": progress.get("batchId", -1),
-                        "input_rows_per_second": progress.get("inputRowsPerSecond", 0),
-                        "processed_rows_per_second": progress.get("processedRowsPerSecond", 0),
-                        "batch_duration": progress.get("batchDuration", 0),
-                        "timestamp": progress.get("timestamp", "unknown")
-                    })
+                    # Only include fields that are actually present in progress
+                    # Batch IDs are always non-negative, so we use None for missing values
+                    if "batchId" in progress:
+                        status["batch_id"] = progress["batchId"]
+                    
+                    if "inputRowsPerSecond" in progress:
+                        status["input_rows_per_second"] = progress["inputRowsPerSecond"]
+                    
+                    if "processedRowsPerSecond" in progress:
+                        status["processed_rows_per_second"] = progress["processedRowsPerSecond"]
+                    
+                    if "batchDuration" in progress:
+                        status["batch_duration"] = progress["batchDuration"]
+                    
+                    if "timestamp" in progress:
+                        status["timestamp"] = progress["timestamp"]
             else:
                 # Query is not active, check for exception
                 try:
