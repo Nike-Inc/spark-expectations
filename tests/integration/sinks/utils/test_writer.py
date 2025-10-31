@@ -3885,7 +3885,7 @@ def test_generate_rules_exceeds_threshold_exception():
             "local",
             {
                 "kafka.bootstrap.servers": "localhost:9092",
-                "topic": "dq-sparkexpectations-stats",
+                "topic": "test-topic",
                 "failOnDataLoss": "true",
             },
         ),
