@@ -30,7 +30,7 @@ By default PagerDuty notifications (or the ability to create incidents) are disa
 
 
 ??? info "Notification triggers"
-    These parameters control **when** notifications are sent during Spark-Expectations runs. **Note: PagerDuty will only create incidents for failure-related triggers**, regardless of which triggers are enabled.
+    These parameters control **when** notifications are sent during Spark-Expectations runs. **Note: PagerDuty will only create incidents for failure-related triggers(when enabled)**
     `Hover over each parameter to see a short description.`
        
     - <abbr title="Master toggle to enable PagerDuty notifications">user_config.se_notifications_enable_pagerduty</abbr>
