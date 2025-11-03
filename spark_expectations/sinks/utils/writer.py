@@ -883,7 +883,7 @@ class SparkExpectationsWriter:
             )
 
             self._context.set_stats_dict(df)
-            _log.info("Writing metrics to the stats table: {self._context.get_dq_stats_table_name}, started")
+            _log.info(f"Writing metrics to the stats table: {self._context.get_dq_stats_table_name}, started")
             if self._context.get_stats_table_writer_config["format"] == "bigquery":
                 df = df.withColumn("dq_rules", to_json(df["dq_rules"]))
 
@@ -894,12 +894,13 @@ class SparkExpectationsWriter:
                 stats_table=True,
             )
 
-            _log.info("Writing metrics to the stats table: {self._context.get_dq_stats_table_name}, ended")
+            _log.info(f"Writing metrics to the stats table: {self._context.get_dq_stats_table_name}, ended")
 
             if (
                 self._context.get_agg_dq_detailed_stats_status is True
                 or self._context.get_query_dq_detailed_stats_status is True
             ):
+                _log.info("starting write detailed stats!!!!")
                 self.write_detailed_stats()
 
                 # TODO Implement the below function for writing the custom query dq stats
