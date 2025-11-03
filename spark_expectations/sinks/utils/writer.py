@@ -996,6 +996,9 @@ class SparkExpectationsWriter:
             None
 
         """
+        if df.isStreaming:
+            print("testing the df type in code")
+            print(df.type)
         try:
             df_explode = df.select(explode(f"meta_{rule_type}_results").alias("row_dq_res"))
             df_res = (
