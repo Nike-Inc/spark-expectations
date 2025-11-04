@@ -2,7 +2,7 @@ from unittest.mock import Mock
 from unittest.mock import patch
 
 import pytest
-from pyspark.sql.functions import lit, struct, array, udf
+from pyspark.sql.functions import lit, struct, array, udf, create_map
 
 from spark_expectations.core import get_spark_session
 from spark_expectations.core.context import SparkExpectationsContext
@@ -1107,6 +1107,15 @@ def test_agg_query_dq_detailed_result_type_error(_fixture_agg_dq_rule, _fixture_
         )
 
 
+def test_agg_query_dq_detailed_result_streaming_skip(_fixture_agg_dq_rule, _fixture_mock_context):
+    """Test line 163-167: streaming DataFrame skips detailed aggregation results"""
+    streaming_df = spark.readStream.format("rate").option("rowsPerSecond", "1").load()
+    result_out, result_df = SparkExpectationsActions.agg_query_dq_detailed_result(
+        _fixture_mock_context, _fixture_agg_dq_rule, streaming_df, []
+    )
+    assert result_out == [] and result_df is None
+
+
 @pytest.mark.parametrize(
     "input_df, rule_type_name, expected_output",
     # input_df
@@ -1194,6 +1203,12 @@ def test_create_agg_dq_results_exception(input_df, _fixture_mock_context):
             input_df,
             "<test>",
         )
+
+
+def test_create_agg_dq_results_streaming_skip(_fixture_mock_context):
+    """Test line 449-454: streaming DataFrame skips aggregation results collection"""
+    streaming_df = spark.readStream.format("rate").option("rowsPerSecond", "1").load()
+    assert SparkExpectationsActions().create_agg_dq_results(_fixture_mock_context, streaming_df, "agg_dq") is None
 
 @pytest.mark.parametrize(
     "input_df, table_name, input_count, error_count, output_count, "
@@ -1907,4 +1922,16 @@ def test_action_on_rules_exception(
         SparkExpectationsActions.action_on_rules(
             _fixture_mock_context, input_df, table_name, input_count, error_count, output_count, rule_type, row_dq_flag
         )
+
+
+def test_action_on_rules_streaming_skip(_fixture_mock_context):
+    """Test line 663: streaming DataFrame handles streaming mode safely"""
+    streaming_df = spark.readStream.format("rate").option("rowsPerSecond", "1").load()
+    streaming_df = streaming_df.withColumn(
+        "meta_row_dq_results", array(create_map(lit("status"), lit("pass"), lit("action_if_failed"), lit("ignore")))
+    ).withColumn("col1", lit(1))
+    result_df = SparkExpectationsActions.action_on_rules(
+        _fixture_mock_context, streaming_df, 10, 0, 0, "row_dq", True
+    )
+    assert result_df.isStreaming is True
 

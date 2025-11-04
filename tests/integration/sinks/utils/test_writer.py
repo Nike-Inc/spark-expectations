@@ -3824,6 +3824,13 @@ def test_generate_summarized_row_dq_res_exception(test_data, _fixture_writer):
         _fixture_writer.generate_summarized_row_dq_res(test_df, "row_dq")
 
 
+def test_generate_summarized_row_dq_res_streaming_skip(_fixture_writer):
+    """Test line 1011-1013: streaming DataFrame skips generation"""
+    streaming_df = spark.readStream.format("rate").option("rowsPerSecond", "1").load()
+    _fixture_writer.generate_summarized_row_dq_res(streaming_df, "row_dq")
+    _fixture_writer._context.set_summarized_row_dq_res.assert_not_called()
+
+
 def test_save_df_as_table_exception(_fixture_employee, _fixture_writer):
     with pytest.raises(
         SparkExpectationsUserInputOrConfigInvalidException,
