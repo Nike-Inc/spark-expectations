@@ -1,6 +1,9 @@
 # Define the product_id
 
 import os
+import sys
+print(sys.path)
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../..")))
 from typing import Dict, Union
 
 from pyspark.sql import DataFrame
@@ -33,8 +36,8 @@ dic_job_info = {
 job_info = str(dic_job_info)
 
 CONFIG ={}
-CONFIG["product_id"] = "testProductid"
-CONFIG["target_table"] = "testTargetTable"
+CONFIG["product_id"] = "your_product"
+CONFIG["target_table"] = "dq_spark_dev.customer_order"
 
 
 
@@ -66,8 +69,8 @@ rules_data = [
         "rule_type": "row_dq",
         "rule": "age_range_valid",
         "column_name": "age",
-        "expectation": "age BETWEEN 10 AND 100",
-        "action_if_failed": "ignore",
+        "expectation": "age BETWEEN 1 AND 30",  # More restrictive to catch more records
+        "action_if_failed": "drop",
         "tag": "validity",
         "description": "Age must be between 10 and 100",
         "enable_for_source_dq_validation": True,
@@ -158,7 +161,7 @@ def build_new() -> DataFrame:
     streaming_df = (
         streaming_source
         .withColumn("id", col("value"))
-        .withColumn("age", (col("value") % 50) + 10)  # Age between 10-59
+        .withColumn("age", (col("value") % 100) + 10)  # Age between 10-109 (to get ages > 50)
         .withColumn(
             "email",
             when(col("value") % 10 == 0, lit(None))  # Every 10th record has null email
@@ -190,13 +193,13 @@ if __name__ == "__main__":
             _log.info("   Running for 30 seconds...")
             
             # Monitor for 30 seconds
-            for i in range(2):
+            for i in range(15):  # Increased to allow more records (up to 75 seconds of data)
                 if query.isActive:
                     progress = query.lastProgress
                     if progress:
                         batch_id = progress.get('batchId', 'N/A')
                         _log.info(f"   📊 Processing batch: {batch_id}")
-                    #time.sleep(5)
+                    time.sleep(5)  # Enabled sleep to allow time between batches
                 else:
                     break
             
@@ -204,6 +207,24 @@ if __name__ == "__main__":
             _log.info("🏁 Streaming query stopped successfully")
         else:
             _log.info("✅ Processed as batch DataFrame")
+        
+        # Display DQ stats tables
+        spark.sql("use dq_spark_dev")
+        spark.sql("show tables").show(truncate=False)
+        
+        # Helper function to safely show table
+        def safe_show_table(table_name):
+            try:
+                _log.info(f"📊 Showing table: {table_name}")
+                spark.sql(f"select * from {table_name}").show(truncate=False)
+            except Exception as e:
+                _log.warning(f"⚠️  Table {table_name} not found or error: {e}")
+        
+        safe_show_table("dq_spark_dev.dq_stats")
+        safe_show_table("dq_spark_dev.dq_stats_detailed")
+        safe_show_table("dq_spark_dev.dq_stats_querydq_output")
+        safe_show_table("dq_spark_dev.customer_order")
+        safe_show_table("dq_spark_dev.customer_order_error")
             
     except Exception as e:
         _log.error(f"❌ Example failed: {e}")

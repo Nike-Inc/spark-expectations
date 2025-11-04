@@ -901,7 +901,7 @@ class SparkExpectationsWriter:
                 or self._context.get_query_dq_detailed_stats_status is True
             ):
                 _log.info("starting write detailed stats!!!!")
-                print("Print: starting write detailed stats!!!!")
+
                 self.write_detailed_stats()
 
                 # TODO Implement the below function for writing the custom query dq stats
@@ -999,11 +999,9 @@ class SparkExpectationsWriter:
 
         """
         if df.isStreaming:
-            _log.info("testing the df type in code - streaming")
-            _log.info(f"DataFrame isStreaming from if block: {df.isStreaming}")
-        else:
-            _log.info("testing the df type in code - batch")
-            _log.info(f"DataFrame isStreaming from else block: {df.isStreaming}")
+            _log.info("Skipping summarized row dq res generation for streaming DataFrame")
+            return
+        
         try:
             df_explode = df.select(explode(f"meta_{rule_type}_results").alias("row_dq_res"))
             df_res = (
