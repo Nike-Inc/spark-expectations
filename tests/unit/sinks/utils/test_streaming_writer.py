@@ -379,7 +379,7 @@ class TestSaveDataFrameAsTableStreaming:
     def test_streaming_df_checkpoint_location_appends_table_name(
         self, _fixture_writer, _fixture_streaming_df, _fixture_cleanup_streaming_tables
     ):
-        """Test that checkpoint location correctly appends table name"""
+        """Test that checkpoint location correctly appends table name with dots replaced by underscores"""
         table_name = "dq_spark.test_checkpoint_append"
         base_checkpoint = "/tmp/streaming_test_checkpoint/base"
         config = {
@@ -398,11 +398,12 @@ class TestSaveDataFrameAsTableStreaming:
                 config
             )
             
-            # Verify the checkpoint location was modified
-            expected_checkpoint = f"{base_checkpoint}/{table_name}"
+            # Verify checkpoint location has safe table name (dots replaced with underscores)
+            safe_table_name = table_name.replace(".", "_")
+            expected_checkpoint = f"{base_checkpoint}/{safe_table_name}"
             info_calls = [str(call) for call in mock_log.info.call_args_list]
-            checkpoint_logged = any(expected_checkpoint in call for call in info_calls)
-            assert checkpoint_logged, f"Should log checkpoint location with table name appended"
+            checkpoint_logged = any(f"Using checkpoint location: {expected_checkpoint}" in str(call) for call in info_calls)
+            assert checkpoint_logged, f"Should log checkpoint location with safe table name appended"
             
             result.stop()
             time.sleep(1)
