@@ -181,15 +181,26 @@ class SparkExpectationsWriter:
                     )
                 
                 # Apply options if they exist
+                # Create a copy to avoid mutating the original config (which may be reused for multiple tables)
+                stream_options = {}
                 if config.get("options") is not None and isinstance(config.get("options"), dict):
-                    if "checkpointLocation" in config["options"]:
-                        checkpoint_location = config["options"]["checkpointLocation"]
-                        config["options"]["checkpointLocation"] = f"{checkpoint_location}/{table_name}"
-                        _log.info(f"Using checkpoint location: {config['options']['checkpointLocation']}")
+                    stream_options = config["options"].copy()
+                    
+                    if "checkpointLocation" in stream_options:
+                        checkpoint_location = stream_options["checkpointLocation"].rstrip("/")
+                        # Replace dots with underscores for path safety (table names like "db.table" become "db_table")
+                        safe_table_name = table_name.replace(".", "_")
+                        
+                        # Only append table_name if it's not already the last segment of the path
+                        # This prevents duplicate appends when the same config is reused
+                        checkpoint_parts = checkpoint_location.split("/")
+                        if not checkpoint_parts or checkpoint_parts[-1] != safe_table_name:
+                            stream_options["checkpointLocation"] = f"{checkpoint_location}/{safe_table_name}"
+                        _log.info(f"Using checkpoint location: {stream_options['checkpointLocation']}")
                     
                     # Only apply options if dict is not empty
-                    if config["options"]:
-                        _df_stream_writer = _df_stream_writer.options(**config["options"])
+                    if stream_options:
+                        _df_stream_writer = _df_stream_writer.options(**stream_options)
 
                 # Set trigger configuration if provided
                 if config.get("trigger"):
@@ -900,7 +911,6 @@ class SparkExpectationsWriter:
                 self._context.get_agg_dq_detailed_stats_status is True
                 or self._context.get_query_dq_detailed_stats_status is True
             ):
-                _log.info("starting write detailed stats!!!!")
 
                 self.write_detailed_stats()
 
