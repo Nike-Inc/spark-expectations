@@ -1386,7 +1386,7 @@ class SparkExpectationsContext:
         self._se_streaming_stats_kafka_custom_config_enable = se_streaming_stats_kafka_config_enable
 
     @property
-    def get_se_streaming_stats_kafka_custom_config_enable(self) -> str:
+    def get_se_streaming_stats_kafka_custom_config_enable(self) -> bool:
         """
         This function returns whether it's enabled to use the custom kafka config
         Returns:
