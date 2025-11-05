@@ -1773,32 +1773,32 @@ def test_get_topic_name_exception():
     ):
         context.get_topic_name
 
-
-def test_set_se_streaming_stats_topic_name():
+def test_set_se_streaming_stats_kafka_custom_config_enable():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_topic_name("test_topic")
+    context.set_se_streaming_stats_kafka_custom_config_enable(True)
+    assert context.get_se_streaming_stats_kafka_custom_config_enable is True
 
-    assert context.get_se_streaming_stats_topic_name == "test_topic"
-
-
-def test_get_se_streaming_stats_topic_name():
+def test_get_se_streaming_stats_kafka_custom_config_enable_default():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_topic_name("test_topic")
-
-    assert context.get_se_streaming_stats_topic_name == context.get_se_streaming_stats_topic_name
+    assert context.get_se_streaming_stats_kafka_custom_config_enable is False
 
 
-def test_get_se_streaming_stats_topic_name_exception():
+def test_get_se_streaming_stats_kafka_bootstrap_server():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
-    context.set_se_streaming_stats_topic_name("")
+    context.set_se_streaming_stats_kafka_bootstrap_server("test-kafka-server")
+    assert context.get_se_streaming_stats_kafka_bootstrap_server == "test-kafka-server"
+
+
+def test_get_se_streaming_stats_kafka_bootstrap_server_exception():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
 
     with pytest.raises(
         SparkExpectationsMiscException,
         match="""The spark expectations context is not set completely, please assign 
-            '_se_streaming_stats_topic_name' before 
+            'se_streaming_stats_kafka_bootstrap_server' before 
             accessing it""",
     ):
-        context.get_se_streaming_stats_topic_name
+        context.get_se_streaming_stats_kafka_bootstrap_server
 
 
 def test_set_rules_exceeds_threshold():

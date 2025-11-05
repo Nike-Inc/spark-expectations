@@ -715,13 +715,23 @@ class SparkExpectationsWriter:
         if self._context.get_env == "local":
             return {
                 "kafka.bootstrap.servers": "localhost:9092",
-                "topic": "dq-sparkexpectations-stats",
+                "topic": f"{self._context.get_topic_name}",
                 "failOnDataLoss": "true",
             }
-
+        
         secret_handler = SparkExpectationsSecretsBackend(se_stats_dict)
+        
+        if self._context.get_se_streaming_stats_kafka_custom_config_enable:
+            options = {
+                "kafka.bootstrap.servers": f"{self._context.get_se_streaming_stats_kafka_bootstrap_server}",
+                "kafka.security.protocol": "SASL_SSL",
+                "kafka.sasl.mechanism": "OAUTHBEARER",
+                "kafka.sasl.jaas.config": f"""kafkashaded.org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="{secret_handler.get_secret(self._context.get_client_id)}" clientSecret="{secret_handler.get_secret(self._context.get_token)}";""",
+                "kafka.sasl.login.callback.handler.class": "kafkashaded.org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler",
+                "topic": f"{self._context.get_topic_name}",
+            }
 
-        if self._context.get_dbr_version and self._context.get_dbr_version >= 13.3:
+        elif self._context.get_dbr_version and self._context.get_dbr_version >= 13.3:
             options = {
                 "kafka.bootstrap.servers": f"{secret_handler.get_secret(self._context.get_server_url_key)}",
                 "kafka.security.protocol": "SASL_SSL",

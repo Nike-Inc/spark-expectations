@@ -29,6 +29,9 @@ spark.expectations.agg.dq.detailed.stats: false
 spark.expectations.query.dq.detailed.stats: false
 spark.expectations.job.metadata: None
 se.streaming.enable: true
+se.streaming.stats.kafka.custom.config.enable: false
+se.streaming.stats.topic.name: "dq-sparkexpectations-stats"
+se.streaming.stats.kafka.bootstrap.server: "localhost:9092"
 se.streaming.secret.type: "databricks"
 se.streaming.dbx.workspace.url: "https://workspace.cloud.databricks.com"
 se.streaming.dbx.secret.scope: "secret_scope"

@@ -70,6 +70,9 @@ class Constants:
     se_enable_streaming = "se.streaming.enable"
     se_enable_error_table = "se.enable.error.table"
     se_dq_rules_params = "se.dq.rules.params"
+    se_streaming_stats_kafka_custom_config_enable = "se.streaming.stats.kafka.custom.config.enable"
+    se_streaming_stats_topic_name = "se.streaming.stats.topic.name"
+    se_streaming_stats_kafka_bootstrap_server = "se.streaming.stats.kafka.bootstrap.server"
 
     secret_type = "se.streaming.secret.type"
 

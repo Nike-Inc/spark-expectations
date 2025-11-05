@@ -2027,7 +2027,6 @@ def test_write_error_stats(
         ),
     )
     setattr(_mock_context, "get_env", "local")
-    setattr(_mock_context, "get_se_streaming_stats_topic_name", "dq-sparkexpectations-stats")
     setattr(
         _mock_context,
         "get_source_query_dq_result",
@@ -2179,6 +2178,7 @@ def test_write_error_stats(
         "get_job_metadata",
         '{"dag": "dag1", "task": "task1", "team": "my_squad"}',
     )
+    setattr(_mock_context, "get_topic_name", "dq-sparkexpectations-stats")
 
     if writer_config is None:
         setattr(
@@ -3893,7 +3893,7 @@ def test_generate_rules_exceeds_threshold_exception():
             "local",
             {
                 "kafka.bootstrap.servers": "localhost:9092",
-                "topic": "dq-sparkexpectations-stats",
+                "topic": "test-topic",
                 "failOnDataLoss": "true",
             },
         ),
@@ -3979,3 +3979,51 @@ def test_get_streaming_query_status_active_path_entry(_fixture_writer):
     mock_query.isActive, mock_query.lastProgress = True, {}
     status = _fixture_writer.get_streaming_query_status(mock_query)
     assert status["status"] == "active" and status["is_active"] is True
+def test_get_kafka_write_options_custom():
+    """Test the Kafka write options generation for custom Kafka config option"""
+    context = SparkExpectationsContext("product1", spark)
+    context._env = "test"
+
+    expected_options = {
+                "kafka.bootstrap.servers": "test-server",
+                "kafka.security.protocol": "SASL_SSL",
+                "kafka.sasl.mechanism": "OAUTHBEARER",
+                "kafka.sasl.jaas.config": """kafkashaded.org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="test-client-id" clientSecret="test-token";""",
+                "kafka.sasl.login.callback.handler.class": "kafkashaded.org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler",
+                "topic": "test-topic",
+            }
+
+    # Mock runtime environment check and secrets handler
+    with (
+        patch(
+            "spark_expectations.secrets.SparkExpectationsSecretsBackend.get_secret"
+        ) as mock_get_secret,
+        patch(
+            "spark_expectations.core.context.SparkExpectationsContext.get_client_id",
+            new_callable=Mock(return_value="test-client-id"),
+        ),
+        patch(
+            "spark_expectations.core.context.SparkExpectationsContext.get_token",
+            new_callable=Mock(return_value="test-token"),
+        ),
+        patch(
+            "spark_expectations.core.context.SparkExpectationsContext.get_se_streaming_stats_kafka_custom_config_enable",
+            new_callable=Mock(return_value=True),
+        ),
+        patch(
+            "spark_expectations.core.context.SparkExpectationsContext.get_se_streaming_stats_kafka_bootstrap_server",
+            new_callable=Mock(return_value="test-server"),
+        ),
+        patch(
+            "spark_expectations.core.context.SparkExpectationsContext.get_topic_name",
+            new_callable=Mock(return_value="test-topic"),
+        ),
+    ):
+        # Configure mock to return the value passed to get_secret
+        mock_get_secret.side_effect = lambda x: x
+
+        writer = SparkExpectationsWriter(context)
+        actual_options = writer.get_kafka_write_options(
+            {}
+        )  # Empty dict since we mock everything
+        assert actual_options == expected_options
