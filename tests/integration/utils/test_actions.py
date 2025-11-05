@@ -1935,3 +1935,16 @@ def test_action_on_rules_streaming_skip(_fixture_mock_context):
     )
     assert result_df.isStreaming is True
 
+
+def test_agg_query_dq_detailed_result_type_error_line_210(_fixture_agg_dq_rule, _fixture_mock_context):
+    """Test line 210: TypeError for unexpected aggregation result type"""
+    df = spark.createDataFrame([{"col1": 1}])
+    with patch.object(df, 'agg') as mock_agg:
+        mock_result = Mock()
+        mock_result.collect.return_value = [[[]]]  # Return list to trigger TypeError
+        mock_agg.return_value = mock_result
+        with pytest.raises(SparkExpectationsMiscException, match="error occurred while running agg_query_dq_detailed_result .*"):
+            SparkExpectationsActions.agg_query_dq_detailed_result(
+                _fixture_mock_context, _fixture_agg_dq_rule, df, []
+            )
+
