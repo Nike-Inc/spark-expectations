@@ -70,8 +70,13 @@ class SparkExpectationsWriter:
         
         for attempt in range(max_retries):
             try:
-                # Check if table exists
-                if not self.spark.catalog.tableExists(table_name):
+                # Check if table exists - backward compatible with Spark < 3.3
+                # Try to access table properties to check if table exists
+                # This works in all Spark versions (Spark 2.x, 3.x, 3.3+)
+                try:
+                    table_properties = self.spark.sql(f"SHOW TBLPROPERTIES {table_name}").collect()
+                except Exception:
+                    # Table doesn't exist yet
                     if attempt < max_retries - 1:
                         _log.debug(
                             f"Table {table_name} not yet available, "
@@ -86,9 +91,6 @@ class SparkExpectationsWriter:
                         "skipping table properties"
                     )
                     return
-                
-                # Table exists, get properties
-                table_properties = self.spark.sql(f"SHOW TBLPROPERTIES {table_name}").collect()
                 table_properties_dict = {row["key"]: row["value"] for row in table_properties}
 
                 # Set product_id if not set or different

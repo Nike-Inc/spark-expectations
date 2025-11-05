@@ -1454,7 +1454,8 @@ class TestTablePropertiesRetryMechanism:
         """Test that exponential backoff is applied correctly"""
         table_name = "dq_spark.test_backoff_table"
         
-        with patch.object(_fixture_writer.spark.catalog, 'tableExists', return_value=False):
+        # Mock spark.sql to raise exception (table doesn't exist) - backward compatible approach
+        with patch.object(_fixture_writer.spark, 'sql', side_effect=Exception("Table not found")):
             with patch('time.sleep') as mock_sleep:
                 with patch('spark_expectations.sinks.utils.writer._log'):
                     _fixture_writer._set_table_properties_with_retry(
@@ -1477,7 +1478,8 @@ class TestTablePropertiesRetryMechanism:
         """Test that wait time is capped at max_wait"""
         table_name = "dq_spark.test_max_wait_table"
         
-        with patch.object(_fixture_writer.spark.catalog, 'tableExists', return_value=False):
+        # Mock spark.sql to raise exception (table doesn't exist) - backward compatible approach
+        with patch.object(_fixture_writer.spark, 'sql', side_effect=Exception("Table not found")):
             with patch('time.sleep') as mock_sleep:
                 with patch('spark_expectations.sinks.utils.writer._log'):
                     _fixture_writer._set_table_properties_with_retry(
@@ -1548,7 +1550,8 @@ class TestTablePropertiesRetryMechanism:
         """Test custom retry configuration"""
         table_name = "dq_spark.test_custom_retries"
         
-        with patch.object(_fixture_writer.spark.catalog, 'tableExists', return_value=False):
+        # Mock spark.sql to raise exception (table doesn't exist) - backward compatible approach
+        with patch.object(_fixture_writer.spark, 'sql', side_effect=Exception("Table not found")):
             with patch('time.sleep') as mock_sleep:
                 with patch('spark_expectations.sinks.utils.writer._log') as mock_log:
                     _fixture_writer._set_table_properties_with_retry(
@@ -1598,22 +1601,25 @@ class TestTablePropertiesRetryMechanism:
         """Test that retry mechanism succeeds when table becomes available"""
         table_name = "dq_spark.test_eventually_succeeds"
         
-        # Mock tableExists to return False first 2 times, then True
-        call_count = {'count': 0}
+        # Create table first
+        spark.sql(f"CREATE TABLE {table_name} (id INT) USING delta")
         
-        def table_exists_side_effect(name):
+        # Mock spark.sql to raise exception first 2 times (table doesn't exist), then succeed
+        call_count = {'count': 0}
+        original_sql = _fixture_writer.spark.sql
+        
+        def sql_side_effect(query):
             call_count['count'] += 1
-            if call_count['count'] <= 2:
-                return False
-            # Create table on third attempt
-            if call_count['count'] == 3:
-                spark.sql(f"CREATE TABLE {table_name} (id INT) USING delta")
-            return True
+            # First two calls fail (table doesn't exist check via SHOW TBLPROPERTIES)
+            if call_count['count'] <= 2 and "SHOW TBLPROPERTIES" in query:
+                raise Exception("Table not found")
+            # From third call onwards, use real spark.sql
+            return original_sql(query)
         
         with patch.object(
-            _fixture_writer.spark.catalog, 
-            'tableExists', 
-            side_effect=table_exists_side_effect
+            _fixture_writer.spark, 
+            'sql', 
+            side_effect=sql_side_effect
         ):
             with patch('spark_expectations.sinks.utils.writer._log') as mock_log:
                 _fixture_writer._set_table_properties_with_retry(
