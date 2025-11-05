@@ -54,8 +54,8 @@ create table if not exists `catalog`.`schema`.`{product}_rules` (
     Fail: job fails if the rule fails. Applies for all 3 rule types.
 8. `tag` provide some tag name to dq rule example:  completeness, validity, uniqueness etc. 
 9. `description`  Long description for the rule
-10. `enable_for_source_dq_validation` flag to run the agg rule
-11. `enable_for_target_dq_validation` flag to run the query rule
+10. `enable_for_source_dq_validation` when true, agg_dq and query_dq will run on the dataset before row_dq rules get excuted (and filter down the dataset).
+11. `enable_for_target_dq_validation` when true, agg_dq and query_dq will run on the dataset after row_dq rules ran.
 12. `is_active` true or false to indicate if the rule is active or not. 
 13. `enable_error_drop_alert` true or false. This determines if an alert notification should be sent out if row(s) is(are) dropped from the data set
 14. `error_drop_threshold` Threshold for the alert notification that gets triggered when row(s) is(are) dropped from the data set
@@ -68,7 +68,7 @@ The Spark Expectation process consists of three phases:
 
 1. When enable_for_source_dq_validation is true, execute agg_dq and query_dq on the source Dataframe
 2. If the first step is successful, proceed to run row_dq
-3. When enable_for_target_dq_validation is true, execute agg_dq and query_dq on the Dataframe resulting from row_dq
+3. When enable_for_target_dq_validation is true, execute agg_dq and query_dq on the Dataframe resulting from row_dq. If the Dataframe does not cosists any records after phase 2, this step will not run.
 
 ### Action If Failed Configuration For Data Quality Rules
 
