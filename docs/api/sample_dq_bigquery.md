@@ -1,5 +1,5 @@
 
-::: spark_expectations.examples.sample_dq_bigquery
+::: examples.scripts.sample_dq_bigquery
     handler: python
     options:
         filters:
