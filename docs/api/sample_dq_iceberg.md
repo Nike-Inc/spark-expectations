@@ -1,5 +1,5 @@
 
-::: spark_expectations.examples.sample_dq_iceberg
+::: examples.scripts.sample_dq_iceberg
     handler: python
     options:
         filters:

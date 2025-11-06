@@ -1,5 +1,5 @@
 
-::: spark_expectations.examples.sample_dq_delta
+::: examples.scripts.sample_dq_delta
     handler: python
     options:
         filters:
