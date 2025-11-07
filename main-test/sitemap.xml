@@ -221,17 +221,7 @@
          <changefreq>daily</changefreq>
     </url>
     <url>
-         <loc>https://engineering.nike.com/spark-expectations/main-test/user_guide/kafka_custom_config/</loc>
-         <lastmod>2025-11-07</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
          <loc>https://engineering.nike.com/spark-expectations/main-test/user_guide/quickstart/</loc>
-         <lastmod>2025-11-07</lastmod>
-         <changefreq>daily</changefreq>
-    </url>
-    <url>
-         <loc>https://engineering.nike.com/spark-expectations/main-test/user_guide/user_config/</loc>
          <lastmod>2025-11-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
@@ -247,6 +237,16 @@
     </url>
     <url>
          <loc>https://engineering.nike.com/spark-expectations/main-test/user_guide/notifications/slack_notifications/</loc>
+         <lastmod>2025-11-07</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://engineering.nike.com/spark-expectations/main-test/user_guide/user_config/kafka_custom_config/</loc>
+         <lastmod>2025-11-07</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://engineering.nike.com/spark-expectations/main-test/user_guide/user_config/user_config/</loc>
          <lastmod>2025-11-07</lastmod>
          <changefreq>daily</changefreq>
     </url>
