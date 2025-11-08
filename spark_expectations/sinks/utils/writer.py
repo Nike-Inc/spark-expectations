@@ -43,9 +43,9 @@ class SparkExpectationsWriter:
         self.spark = self._context.spark
 
     def _set_table_properties_with_retry(
-        self, 
-        table_name: str, 
-        max_retries: int = 5, 
+        self,
+        table_name: str,
+        max_retries: int = 3,
         initial_wait: float = 0.5,
         max_wait: float = 10.0
     ) -> None:
@@ -120,7 +120,7 @@ class SparkExpectationsWriter:
                     wait_time = min(wait_time * 2, max_wait)  # Exponential backoff
                 else:
                     _log.warning(
-                        f"Could not set table properties for streaming table {table_name} "
+                        f"Could not set table properties for the table {table_name} "
                         f"after {max_retries} attempts: {e}"
                     )
                     return

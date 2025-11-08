@@ -252,6 +252,9 @@ success = writer.stop_streaming_query(streaming_query, timeout=60)
 if success:
     print("Stream stopped successfully")
 ```
+## Checkout more on example notebook for usage
+
+[spark_expectation_streaming_dbx.ipynb](../../examples/notebooks/spark_expectation_streaming_dbx.ipynb)
 
 ## Implementation Details
 

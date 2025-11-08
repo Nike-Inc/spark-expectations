@@ -1948,3 +1948,41 @@ def test_agg_query_dq_detailed_result_type_error_line_210(_fixture_agg_dq_rule, 
                 _fixture_mock_context, _fixture_agg_dq_rule, df, []
             )
 
+
+def test_run_dq_rules_streaming_none_tuple_handling(_fixture_mock_context):
+    """Test line 548-549: handle None _agg_query_dq_output_tuple for streaming DataFrames"""
+    streaming_df = spark.readStream.format("rate").option("rowsPerSecond", "1").load()
+    streaming_df = streaming_df.withColumn("col1", lit(1))
+
+    expectations = {
+        "agg_dq_rules": [
+            {
+                "product_id": "product_1",
+                "rule_type": "agg_dq",
+                "rule": "col1_sum_gt_eq_6",
+                "column_name": "col1",
+                "expectation": "sum(col1)>=6",
+                "action_if_failed": "ignore",
+                "table_name": "test_table",
+                "tag": "validity",
+                "enable_for_source_dq_validation": True,
+                "enable_for_target_dq_validation": False,
+                "description": "col1 sum gt 1",
+                "priority": "medium"
+            }
+        ]
+    }
+
+    # This should not raise an error - the None tuple should be handled gracefully
+    result_df = SparkExpectationsActions.run_dq_rules(
+        _fixture_mock_context,
+        streaming_df,
+        expectations,
+        "agg_dq",
+        _source_dq_enabled=True,
+        _target_dq_enabled=False,
+    )
+
+    # Verify streaming DataFrame is returned
+    assert result_df.isStreaming is True
+

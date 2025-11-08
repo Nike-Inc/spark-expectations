@@ -545,7 +545,7 @@ class SparkExpectationsActions:
                         )
                         current_date = datetime.now()
                         dq_end_time = datetime.strftime(current_date, "%Y-%m-%d %H:%M:%S")
-                        _agg_query_dq_output_list = list(_agg_query_dq_output_tuple)
+                        _agg_query_dq_output_list = list(_agg_query_dq_output_tuple) if _agg_query_dq_output_tuple else []
                         _agg_query_dq_output_list.extend([dq_start_time, dq_end_time])
                         _agg_query_dq_output_tuple = tuple(_agg_query_dq_output_list)
                         _agg_query_dq_results.append(_agg_query_dq_output_tuple)
