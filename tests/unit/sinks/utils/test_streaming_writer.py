@@ -111,6 +111,10 @@ class TestSaveDataFrameAsTableStreaming:
     ):
         """Test that streaming DataFrames are correctly detected and written"""
         table_name = "dq_spark.test_streaming_table_basic"
+        # Ensure table doesn't exist before creating it
+        spark.sql(f"DROP TABLE IF EXISTS {table_name}")
+        time.sleep(0.5)  # Brief wait to ensure cleanup completes
+        
         config = {
             "outputMode": "append",
             "format": "delta",
@@ -275,24 +279,71 @@ class TestSaveDataFrameAsTableStreaming:
             # Continuous mode may not be supported in test environment
             pytest.skip(f"Continuous mode not supported in test environment: {e}")
     
-    def test_checkpoint_warning_scenarios(self, _fixture_writer, _fixture_streaming_df):
-        """Test checkpoint warning in key scenarios"""
+    def test_streaming_df_without_checkpoint_location_warning(
+        self, _fixture_writer, _fixture_streaming_df, _fixture_cleanup_streaming_tables, caplog
+    ):
+        """Test that warning is logged when checkpoint location is missing"""
+        table_name = "dq_spark.test_streaming_no_checkpoint"
+        config = {
+            "outputMode": "append",
+            "format": "delta",
+            "queryName": "test_no_checkpoint_query",
+            "options": {
+                "maxFilesPerTrigger": "50"
+                # No checkpointLocation
+            }
+        }
+        
+        # This should log a warning but still work (Spark may use default checkpoint)
         with patch('spark_expectations.sinks.utils.writer._log') as mock_log:
-            # Missing options key - should warn
+            try:
+                result = _fixture_writer.save_df_as_table(
+                    _fixture_streaming_df,
+                    table_name,
+                    config
+                )
+                
+                # Verify warning was logged
+                warning_calls = [call for call in mock_log.warning.call_args_list 
+                               if "PRODUCTION WARNING" in str(call)]
+                assert len(warning_calls) > 0, "Should log production warning"
+                
+                if result is not None and result.isActive:
+                    result.stop()
+                    time.sleep(1)
+            except Exception as e:
+                # May fail without checkpoint in some configurations
+                assert "checkpoint" in str(e).lower() or "PRODUCTION WARNING" in caplog.text
+    
+    def test_checkpoint_warning_comprehensive(self, _fixture_writer, _fixture_streaming_df):
+        """Comprehensive test for checkpoint warning in all scenarios"""
+        
+        # Scenario 1: options=None (missing) - SHOULD WARN
+        with patch('spark_expectations.sinks.utils.writer._log') as mock_log:
             config1 = {"outputMode": "append", "format": "delta", "queryName": "test1"}
             try:
                 _fixture_writer.save_df_as_table(_fixture_streaming_df, "test.table1", config1)
             except Exception:
-                pass
+                pass  # May fail, but warning should be logged
             
-            # Empty options - should warn
+            warnings = [str(c) for c in mock_log.warning.call_args_list]
+            assert any("PRODUCTION WARNING" in w and "checkpointLocation" in w for w in warnings), \
+                "Should warn when options key is missing"
+        
+        # Scenario 2: options={} (empty) - SHOULD WARN
+        with patch('spark_expectations.sinks.utils.writer._log') as mock_log:
             config2 = {"outputMode": "append", "format": "delta", "queryName": "test2", "options": {}}
             try:
                 _fixture_writer.save_df_as_table(_fixture_streaming_df, "test.table2", config2)
             except Exception:
                 pass
             
-            # Options without checkpoint - should warn
+            warnings = [str(c) for c in mock_log.warning.call_args_list]
+            assert any("PRODUCTION WARNING" in w and "checkpointLocation" in w for w in warnings), \
+                "Should warn when options is empty dict"
+        
+        # Scenario 3: options with other keys but no checkpoint - SHOULD WARN
+        with patch('spark_expectations.sinks.utils.writer._log') as mock_log:
             config3 = {
                 "outputMode": "append", 
                 "format": "delta",
@@ -306,7 +357,28 @@ class TestSaveDataFrameAsTableStreaming:
             
             warnings = [str(c) for c in mock_log.warning.call_args_list]
             assert any("PRODUCTION WARNING" in w and "checkpointLocation" in w for w in warnings), \
-                "Should warn when checkpoint is missing"
+                "Should warn when options has other keys but no checkpoint"
+        
+        # Scenario 4: options with checkpoint - SHOULD NOT WARN
+        with patch('spark_expectations.sinks.utils.writer._log') as mock_log:
+            config4 = {
+                "outputMode": "append",
+                "format": "delta", 
+                "queryName": "test4",
+                "trigger": {"once": True},
+                "options": {"checkpointLocation": "/tmp/checkpoint_test"}
+            }
+            try:
+                query = _fixture_writer.save_df_as_table(_fixture_streaming_df, "test.table4", config4)
+                if query:
+                    query.awaitTermination(5)
+            except Exception:
+                pass
+            
+            warnings = [str(c) for c in mock_log.warning.call_args_list 
+                       if "PRODUCTION WARNING" in c and "checkpointLocation" in c]
+            assert len(warnings) == 0, \
+                "Should NOT warn when checkpoint is provided"
     
     def test_streaming_df_checkpoint_location_appends_table_name(
         self, _fixture_writer, _fixture_streaming_df, _fixture_cleanup_streaming_tables
@@ -340,6 +412,75 @@ class TestSaveDataFrameAsTableStreaming:
             result.stop()
             time.sleep(1)
     
+    def test_streaming_df_with_empty_options(
+        self, _fixture_writer, _fixture_streaming_df, _fixture_cleanup_streaming_tables
+    ):
+        """Test streaming write with empty options dict - should warn about missing checkpoint"""
+        table_name = "dq_spark.test_streaming_empty_options"
+        config = {
+            "outputMode": "append",
+            "format": "delta",
+            "queryName": "test_empty_options_query",
+            "options": {}  # Empty options - should trigger warning
+        }
+        
+        with patch('spark_expectations.sinks.utils.writer._log') as mock_log:
+            try:
+                result = _fixture_writer.save_df_as_table(
+                    _fixture_streaming_df,
+                    table_name,
+                    config
+                )
+                
+                # MUST log warning about missing checkpoint for empty options dict
+                warning_calls = [str(call) for call in mock_log.warning.call_args_list]
+                assert any("PRODUCTION WARNING" in call and "checkpointLocation" in call 
+                          for call in warning_calls), \
+                    "Should warn about missing checkpoint when options dict is empty"
+                
+                if result and result.isActive:
+                    result.stop()
+                    time.sleep(1)
+            except Exception as e:
+                # May fail in some environments without checkpoint, but warning should still be logged
+                warning_calls = [str(call) for call in mock_log.warning.call_args_list]
+                assert any("PRODUCTION WARNING" in call for call in warning_calls), \
+                    f"Should warn about missing checkpoint even if query fails: {e}"
+    
+    def test_streaming_df_without_options_key(
+        self, _fixture_writer, _fixture_streaming_df, _fixture_cleanup_streaming_tables
+    ):
+        """Test streaming write without options key in config - should warn about missing checkpoint"""
+        table_name = "dq_spark.test_streaming_no_options_key"
+        config = {
+            "outputMode": "append",
+            "format": "delta",
+            "queryName": "test_no_options_key_query"
+            # No options key at all - should trigger warning
+        }
+        
+        with patch('spark_expectations.sinks.utils.writer._log') as mock_log:
+            try:
+                result = _fixture_writer.save_df_as_table(
+                    _fixture_streaming_df,
+                    table_name,
+                    config
+                )
+                
+                # MUST log warning about missing checkpoint when options key is absent
+                warning_calls = [str(call) for call in mock_log.warning.call_args_list]
+                assert any("PRODUCTION WARNING" in call and "checkpointLocation" in call 
+                          for call in warning_calls), \
+                    "Should warn about missing checkpoint when options key is missing"
+                
+                if result and result.isActive:
+                    result.stop()
+                    time.sleep(1)
+            except Exception as e:
+                # May fail without checkpoint, but warning should still be logged
+                warning_calls = [str(call) for call in mock_log.warning.call_args_list]
+                assert any("PRODUCTION WARNING" in call for call in warning_calls), \
+                    f"Should warn about missing checkpoint even if query fails: {e}"
     
     def test_streaming_df_with_partition_by(
         self, _fixture_writer, _fixture_streaming_df, _fixture_cleanup_streaming_tables
@@ -662,6 +803,43 @@ class TestStreamingQueryManagement:
         assert status["is_active"] is False
         assert "error" in status
     
+    def test_get_streaming_query_status_batch_id_non_negative(
+        self, _fixture_writer, _fixture_streaming_df, _fixture_cleanup_streaming_tables
+    ):
+        """Test that batch_id is never negative and only included when available"""
+        table_name = "dq_spark.test_batch_id_validation"
+        config = {
+            "outputMode": "append",
+            "format": "delta",
+            "queryName": "test_batch_id_query",
+            "options": {
+                "checkpointLocation": "/tmp/streaming_test_checkpoint/batch_id_test"
+            }
+        }
+        
+        query = _fixture_writer.save_df_as_table(
+            _fixture_streaming_df,
+            table_name,
+            config
+        )
+        
+        # Wait for at least one batch
+        time.sleep(3)
+        
+        status = _fixture_writer.get_streaming_query_status(query)
+        
+        # If batch_id is present, it must be non-negative
+        if "batch_id" in status:
+            assert status["batch_id"] >= 0, "Batch ID must be non-negative (>=0)"
+            assert isinstance(status["batch_id"], int), "Batch ID must be an integer"
+        
+        # Verify it's not -1 (the old misleading default)
+        if "batch_id" in status:
+            assert status["batch_id"] != -1, "Batch ID should never be -1"
+        
+        query.stop()
+        time.sleep(1)
+    
     def test_get_streaming_query_status_progress_fields_optional(
         self, _fixture_writer
     ):
@@ -672,13 +850,96 @@ class TestStreamingQueryManagement:
         mock_query.runId = "run_002"
         mock_query.name = "no_progress_query"
         mock_query.isActive = True
-        mock_query.lastProgress = None
+        mock_query.lastProgress = None  # No progress yet
         
         status = _fixture_writer.get_streaming_query_status(mock_query)
         
+        # Should have basic fields
         assert status["status"] == "active"
         assert status["is_active"] is True
+        
+        # Should NOT have progress fields
         assert "batch_id" not in status
+        assert "input_rows_per_second" not in status
+        assert "processed_rows_per_second" not in status
+        assert "batch_duration" not in status
+        assert "timestamp" not in status
+    
+    def test_get_streaming_query_status_partial_progress_data(
+        self, _fixture_writer
+    ):
+        """Test handling of partial progress data (some fields missing)"""
+        # Mock a query with partial progress data
+        mock_query = Mock(spec=StreamingQuery)
+        mock_query.id = "test_partial_progress"
+        mock_query.runId = "run_003"
+        mock_query.name = "partial_progress_query"
+        mock_query.isActive = True
+        mock_query.lastProgress = {
+            "batchId": 5,
+            "timestamp": "2024-10-31T10:00:00.000Z"
+            # Missing inputRowsPerSecond, processedRowsPerSecond, batchDuration
+        }
+        
+        status = _fixture_writer.get_streaming_query_status(mock_query)
+        
+        # Should include fields that are present
+        assert "batch_id" in status
+        assert status["batch_id"] == 5
+        assert "timestamp" in status
+        assert status["timestamp"] == "2024-10-31T10:00:00.000Z"
+        
+        # Should NOT include fields that are missing
+        assert "input_rows_per_second" not in status
+        assert "processed_rows_per_second" not in status
+        assert "batch_duration" not in status
+    
+    def test_get_streaming_query_status_with_batch_duration(
+        self, _fixture_writer
+    ):
+        """Test line 1199: get_streaming_query_status includes batch_duration when present"""
+        # Mock a query with batchDuration in progress
+        mock_query = Mock(spec=StreamingQuery)
+        mock_query.id = "test_batch_duration"
+        mock_query.runId = "run_004"
+        mock_query.name = "batch_duration_query"
+        mock_query.isActive = True
+        mock_query.lastProgress = {
+            "batchId": 10,
+            "batchDuration": 5000,  # 5 seconds
+            "timestamp": "2024-10-31T10:00:00.000Z"
+        }
+        
+        status = _fixture_writer.get_streaming_query_status(mock_query)
+        
+        # Should include batch_duration when present
+        assert "batch_duration" in status
+        assert status["batch_duration"] == 5000
+        assert status["status"] == "active"
+        assert status["is_active"] is True
+    
+    def test_get_streaming_query_status_exception_handling(
+        self, _fixture_writer
+    ):
+        """Test lines 1209-1210: get_streaming_query_status handles exception() raising exception"""
+        # Mock a query where exception() method itself raises an exception
+        mock_query = Mock(spec=StreamingQuery)
+        mock_query.id = "test_exception_handling"
+        mock_query.runId = "run_005"
+        mock_query.name = "exception_handling_query"
+        mock_query.isActive = False
+        mock_query.lastProgress = None
+        # Make exception() method raise an exception instead of returning one
+        mock_query.exception.side_effect = Exception("Error calling exception()")
+        
+        # Should not raise, should handle gracefully
+        status = _fixture_writer.get_streaming_query_status(mock_query)
+        
+        assert status is not None
+        assert status["is_active"] is False
+        assert status["status"] == "inactive"
+        # Should not have error field since exception() call failed
+        assert "error" not in status
     
     def test_stop_streaming_query_active_query_without_timeout(
         self, _fixture_writer, _fixture_streaming_df, _fixture_cleanup_streaming_tables
@@ -916,6 +1177,78 @@ class TestStreamingEdgeCases:
         result.stop()
         time.sleep(1)
     
+    def test_streaming_with_none_values_in_config(
+        self, _fixture_writer, _fixture_streaming_df, _fixture_cleanup_streaming_tables
+    ):
+        """Test streaming with None values in configuration"""
+        table_name = "dq_spark.test_none_config_values"
+        config = {
+            "outputMode": "append",
+            "format": "delta",
+            "queryName": None,  # None
+            "partitionBy": None,  # None
+            "options": {
+                "checkpointLocation": "/tmp/streaming_test_checkpoint/none_values"
+            }
+        }
+        
+        result = _fixture_writer.save_df_as_table(
+            _fixture_streaming_df,
+            table_name,
+            config
+        )
+        
+        assert result is not None
+        assert result.isActive
+        
+        result.stop()
+        time.sleep(1)
+    
+    def test_multiple_streaming_queries_simultaneously(
+        self, _fixture_writer, _fixture_streaming_df, _fixture_cleanup_streaming_tables
+    ):
+        """Test managing multiple streaming queries simultaneously"""
+        queries = []
+        
+        for i in range(3):
+            table_name = f"dq_spark.test_multiple_query_{i}"
+            config = {
+                "outputMode": "append",
+                "format": "delta",
+                "queryName": f"test_multi_query_{i}",
+                "options": {
+                    "checkpointLocation": f"/tmp/streaming_test_checkpoint/multi_{i}"
+                }
+            }
+            
+            query = _fixture_writer.save_df_as_table(
+                _fixture_streaming_df,
+                table_name,
+                config
+            )
+            queries.append(query)
+        
+        time.sleep(3)
+        
+        # Verify all queries are active
+        for query in queries:
+            assert query.isActive
+            
+            # Get status
+            status = _fixture_writer.get_streaming_query_status(query)
+            assert status["is_active"] is True
+        
+        # Stop all queries
+        for query in queries:
+            result = _fixture_writer.stop_streaming_query(query)
+            assert result is True
+        
+        time.sleep(2)
+        
+        # Verify all stopped
+        for query in queries:
+            assert not query.isActive
+    
     def test_streaming_query_lifecycle_complete(
         self, _fixture_writer, _fixture_streaming_df, _fixture_cleanup_streaming_tables
     ):
@@ -930,6 +1263,7 @@ class TestStreamingEdgeCases:
             }
         }
         
+        # 1. Create streaming query
         query = _fixture_writer.save_df_as_table(
             _fixture_streaming_df,
             table_name,
@@ -938,16 +1272,23 @@ class TestStreamingEdgeCases:
         assert query is not None
         assert query.isActive
         
-        time.sleep(2)
-        status = _fixture_writer.get_streaming_query_status(query)
-        assert status["status"] == "active"
+        # 2. Monitor - let it run and check status multiple times
+        for _ in range(3):
+            time.sleep(2)
+            status = _fixture_writer.get_streaming_query_status(query)
+            assert status["status"] == "active"
+            assert status["is_active"] is True
         
+        # 3. Stop gracefully
         stop_result = _fixture_writer.stop_streaming_query(query, timeout=5)
         assert stop_result is True
         
         time.sleep(1)
+        
+        # 4. Verify stopped
         final_status = _fixture_writer.get_streaming_query_status(query)
         assert final_status["status"] == "inactive"
+        assert final_status["is_active"] is False
 
 
 class TestStreamingIntegrationWithContext:
@@ -1025,6 +1366,80 @@ class TestStreamingIntegrationWithContext:
 
 
 # Performance and stress tests
+class TestStreamingPerformance:
+    """Test suite for streaming performance and stress scenarios"""
+    
+    def test_streaming_high_volume_data(
+        self, _fixture_writer, _fixture_cleanup_streaming_tables
+    ):
+        """Test streaming with higher volume data generation"""
+        # Create a higher volume streaming source
+        high_volume_df = (
+            spark.readStream
+            .format("rate")
+            .option("rowsPerSecond", "100")  # Higher rate
+            .option("numPartitions", "4")
+            .load()
+            .withColumn("id", col("value"))
+            .withColumn("data", lit("test_data"))
+        )
+        
+        table_name = "dq_spark.test_high_volume"
+        config = {
+            "outputMode": "append",
+            "format": "delta",
+            "queryName": "test_high_volume_query",
+            "trigger": {"processingTime": "2 seconds"},
+            "options": {
+                "checkpointLocation": "/tmp/streaming_test_checkpoint/high_volume",
+                "maxFilesPerTrigger": "10"
+            }
+        }
+        
+        query = _fixture_writer.save_df_as_table(
+            high_volume_df,
+            table_name,
+            config
+        )
+        
+        # Let it run for a bit to process multiple batches
+        time.sleep(8)
+        
+        # Verify query is still active and processing
+        assert query.isActive
+        status = _fixture_writer.get_streaming_query_status(query)
+        assert status["is_active"] is True
+        
+        # Stop the query
+        _fixture_writer.stop_streaming_query(query)
+        time.sleep(1)
+    
+    def test_streaming_rapid_start_stop_cycles(
+        self, _fixture_writer, _fixture_streaming_df, _fixture_cleanup_streaming_tables
+    ):
+        """Test rapid start and stop cycles"""
+        for i in range(5):
+            table_name = f"dq_spark.test_rapid_cycle_{i}"
+            config = {
+                "outputMode": "append",
+                "format": "delta",
+                "queryName": f"test_rapid_query_{i}",
+                "trigger": {"once": True},
+                "options": {
+                    "checkpointLocation": f"/tmp/streaming_test_checkpoint/rapid_{i}"
+                }
+            }
+            
+            query = _fixture_writer.save_df_as_table(
+                _fixture_streaming_df,
+                table_name,
+                config
+            )
+            
+            # Stop immediately
+            query.awaitTermination(5)
+            
+            assert not query.isActive
 
 
 class TestTablePropertiesRetryMechanism:
@@ -1084,12 +1499,13 @@ class TestTablePropertiesRetryMechanism:
             warning_calls = [str(call) for call in mock_log.warning.call_args_list]
             assert any("not available after" in call for call in warning_calls)
     
-    def test_set_table_properties_with_retry_backoff_and_cap(
+    def test_set_table_properties_with_retry_exponential_backoff(
         self, _fixture_writer
     ):
-        """Test exponential backoff and max_wait cap"""
+        """Test that exponential backoff is applied correctly"""
         table_name = "dq_spark.test_backoff_table"
         
+        # Mock spark.sql to raise exception (table doesn't exist) - backward compatible approach
         with patch.object(_fixture_writer.spark, 'sql', side_effect=Exception("Table not found")):
             with patch('time.sleep') as mock_sleep:
                 with patch('spark_expectations.sinks.utils.writer._log'):
@@ -1100,25 +1516,62 @@ class TestTablePropertiesRetryMechanism:
                         max_wait=5.0
                     )
                     
+                    # Verify exponential backoff: 0.5, 1.0, 2.0
                     sleep_calls = [call[0][0] for call in mock_sleep.call_args_list]
                     assert len(sleep_calls) >= 3
                     assert sleep_calls[0] == 0.5
+                    assert sleep_calls[1] == 1.0
+                    assert sleep_calls[2] == 2.0
+    
+    def test_set_table_properties_with_retry_max_wait_cap(
+        self, _fixture_writer
+    ):
+        """Test that wait time is capped at max_wait"""
+        table_name = "dq_spark.test_max_wait_table"
+        
+        # Mock spark.sql to raise exception (table doesn't exist) - backward compatible approach
+        with patch.object(_fixture_writer.spark, 'sql', side_effect=Exception("Table not found")):
+            with patch('time.sleep') as mock_sleep:
+                with patch('spark_expectations.sinks.utils.writer._log'):
+                    _fixture_writer._set_table_properties_with_retry(
+                        table_name,
+                        max_retries=6,
+                        initial_wait=2.0,
+                        max_wait=5.0
+                    )
+                    
+                    # Verify wait time doesn't exceed max_wait
+                    sleep_calls = [call[0][0] for call in mock_sleep.call_args_list]
                     for sleep_time in sleep_calls:
                         assert sleep_time <= 5.0
     
     def test_set_table_properties_with_retry_exception_handling(
         self, _fixture_writer, _fixture_cleanup_streaming_tables
     ):
-        """Test exception handling during table properties setting"""
+        """Test exception handling during table properties setting and lines 122-126: exhausted retries"""
         table_name = "dq_spark.test_exception_handling"
         
         # Create a table first
         spark.sql(f"CREATE TABLE {table_name} (id INT) USING delta")
         
-        # Mock to raise exception on SHOW TBLPROPERTIES
-        with patch.object(_fixture_writer.spark, 'sql') as mock_sql:
-            mock_sql.side_effect = Exception("Simulated SQL error")
-            
+        # Mock to raise exception on ALTER TABLE (not SHOW TBLPROPERTIES)
+        # This ensures the exception reaches the outer exception handler (lines 113-126)
+        def sql_side_effect(query):
+            if "SHOW TBLPROPERTIES" in query:
+                # Return a mock DataFrame for SHOW TBLPROPERTIES
+                from pyspark.sql import Row
+                mock_rows = [Row(key="product_id", value="different_value")]
+                mock_df = spark.createDataFrame(mock_rows)
+                return mock_df
+            elif "ALTER TABLE" in query:
+                # Raise exception on ALTER TABLE to trigger retry logic
+                raise Exception("Simulated SQL error")
+            else:
+                # For any other queries (shouldn't happen in this test, but handle gracefully)
+                # Use the global spark session as fallback
+                return spark.sql(query)
+        
+        with patch.object(_fixture_writer.spark, 'sql', side_effect=sql_side_effect):
             with patch('spark_expectations.sinks.utils.writer._log') as mock_log:
                 # Should not raise, just log warning
                 _fixture_writer._set_table_properties_with_retry(
@@ -1129,6 +1582,15 @@ class TestTablePropertiesRetryMechanism:
                 
                 # Verify warning was logged
                 assert mock_log.warning.called
+                
+                # Verify the specific warning message for exhausted retries (lines 122-125)
+                warning_calls = [call.args[0] for call in mock_log.warning.call_args_list]
+                exhausted_warning = any(
+                    "Could not set table properties for the table" in msg and
+                    "after 2 attempts" in msg
+                    for msg in warning_calls
+                )
+                assert exhausted_warning, "Expected warning message for exhausted retries not found"
         
         # Cleanup
         spark.sql(f"DROP TABLE IF EXISTS {table_name}")
@@ -1156,23 +1618,98 @@ class TestTablePropertiesRetryMechanism:
         # Cleanup
         spark.sql(f"DROP TABLE IF EXISTS {table_name}")
     
+    def test_set_table_properties_with_retry_custom_retries(
+        self, _fixture_writer
+    ):
+        """Test custom retry configuration"""
+        table_name = "dq_spark.test_custom_retries"
+        
+        # Mock spark.sql to raise exception (table doesn't exist) - backward compatible approach
+        with patch.object(_fixture_writer.spark, 'sql', side_effect=Exception("Table not found")):
+            with patch('time.sleep') as mock_sleep:
+                with patch('spark_expectations.sinks.utils.writer._log') as mock_log:
+                    _fixture_writer._set_table_properties_with_retry(
+                        table_name,
+                        max_retries=2,
+                        initial_wait=0.2,
+                        max_wait=1.0
+                    )
+                    
+                    # Should only retry once (max_retries=2 means 2 attempts total)
+                    assert mock_sleep.call_count == 1
+                    
+                    # Verify custom initial_wait was used
+                    assert mock_sleep.call_args_list[0][0][0] == 0.2
+    
     def test_set_table_properties_updates_different_product_id(
         self, _fixture_writer, _fixture_cleanup_streaming_tables
     ):
         """Test updating product_id when it's set to a different value"""
         table_name = "dq_spark.test_update_product_id"
         
+        # Create table with different product_id
         spark.sql(f"CREATE TABLE {table_name} (id INT) USING delta")
         spark.sql(
             f"ALTER TABLE {table_name} SET TBLPROPERTIES "
             f"('product_id' = 'different_product')"
         )
         
-        _fixture_writer._set_table_properties_with_retry(table_name)
+        with patch('spark_expectations.sinks.utils.writer._log') as mock_log:
+            _fixture_writer._set_table_properties_with_retry(table_name)
+            
+            # Should log info about setting product_id
+            info_calls = [str(call) for call in mock_log.info.call_args_list]
+            assert any("Setting product_id" in call for call in info_calls)
         
+        # Verify it was updated
         props_df = spark.sql(f"SHOW TBLPROPERTIES {table_name}")
         props_dict = {row['key']: row['value'] for row in props_df.collect()}
         assert props_dict.get('product_id') == 'streaming_test_product'
         
+        # Cleanup
         spark.sql(f"DROP TABLE IF EXISTS {table_name}")
+    
+    def test_set_table_properties_retry_eventually_succeeds(
+        self, _fixture_writer, _fixture_cleanup_streaming_tables
+    ):
+        """Test that retry mechanism succeeds when table becomes available"""
+        table_name = "dq_spark.test_eventually_succeeds"
+        
+        # Create table first
+        spark.sql(f"CREATE TABLE {table_name} (id INT) USING delta")
+        
+        # Mock spark.sql to raise exception first 2 times (table doesn't exist), then succeed
+        call_count = {'count': 0}
+        original_sql = _fixture_writer.spark.sql
+        
+        def sql_side_effect(query):
+            call_count['count'] += 1
+            # First two calls fail (table doesn't exist check via SHOW TBLPROPERTIES)
+            if call_count['count'] <= 2 and "SHOW TBLPROPERTIES" in query:
+                raise Exception("Table not found")
+            # From third call onwards, use real spark.sql
+            return original_sql(query)
+        
+        with patch.object(
+            _fixture_writer.spark, 
+            'sql', 
+            side_effect=sql_side_effect
+        ):
+            with patch('spark_expectations.sinks.utils.writer._log') as mock_log:
+                _fixture_writer._set_table_properties_with_retry(
+                    table_name,
+                    max_retries=5,
+                    initial_wait=0.1
+                )
+                
+                # Should eventually succeed
+                info_calls = [str(call) for call in mock_log.info.call_args_list]
+                success_logged = any("Successfully set product_id" in call for call in info_calls)
+                assert success_logged or call_count['count'] >= 3
+        
+        # Cleanup
+        try:
+            spark.sql(f"DROP TABLE IF EXISTS {table_name}")
+        except Exception:
+            pass
 

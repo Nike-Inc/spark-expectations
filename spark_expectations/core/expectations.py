@@ -827,9 +827,11 @@ class WrappedDataFrameStreamWriter:
     
     def partitionBy(self, *columns: str | List[str]) -> "WrappedDataFrameStreamWriter":  # noqa: N802
         """Set the columns by which the data should be partitioned."""
-        if isinstance(columns, list):
-            self._partition_by.extend(columns)
+        # Handle case where a single list is passed: partitionBy(["col1", "col2"])
+        if len(columns) == 1 and isinstance(columns[0], list):
+            self._partition_by.extend(columns[0])
         else:
+            # Handle case where multiple strings are passed: partitionBy("col1", "col2")
             self._partition_by.extend(columns)
         return self
 
