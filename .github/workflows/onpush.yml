@@ -6,7 +6,7 @@ on:
   push:
     branches: [ main ]
   release:
-    types: [ created ]
+    types: [ published, prereleased ]
 
 jobs:
   unittesting:
@@ -103,7 +103,17 @@ jobs:
 
       - name: Install wheel and twine
         run: python -m pip install wheel twine
-      - name: Build and publish
+      - name: Build and publish to TestPyPI (pre-release)
+        if: github.event.action == 'prereleased'
+        env:
+          TWINE_USERNAME: ${{ secrets.TEST_PYPI_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_PASSWORD }}
+        run: |
+          export PATH=$PATH:$HOME/.local/bin
+          make build
+          twine upload --repository-url https://test.pypi.org/legacy/ dist/*
+      - name: Build and publish to PyPI (production)
+        if: github.event.action == 'published'
         env:
           TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
           TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
@@ -112,6 +122,7 @@ jobs:
           make build
           twine upload dist/*
       - name: Publish Docs
+        if: github.event.action == 'published'
         run: make deploy-docs
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
