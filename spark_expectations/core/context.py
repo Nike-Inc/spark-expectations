@@ -536,7 +536,7 @@ class SparkExpectationsContext:
         """
         This function returns the Kafka write status
         Returns:
-            str: Returns _kafka_write_status ("Success", "Failed", "Disabled")
+            str: _kafka_write_status ("Success", "Failed", "Disabled")
         """
         return getattr(self, "_kafka_write_status", "Disabled")
 
