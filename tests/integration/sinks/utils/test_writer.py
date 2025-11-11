@@ -3470,6 +3470,7 @@ def test_write_error_stats_kafka_success():
     from spark_expectations.core.context import SparkExpectationsContext
     from spark_expectations.config.user_config import Constants as user_config
     from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
+    from spark_expectations.core.expectations import WrappedDataFrameWriter
     
     # Create context
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
@@ -3480,6 +3481,18 @@ def test_write_error_stats_kafka_success():
     context.set_input_count(100)
     context.set_error_count(5)
     context.set_output_count(95)
+    
+    # Set up required stats table configuration
+    context.set_dq_stats_table_name("test_dq_stats_table")
+    context._stats_table_writer_config = WrappedDataFrameWriter().mode("overwrite").format("delta").build()
+    
+    # Set up DQ rules params (required for environment variable access)
+    context.set_dq_rules_params({"env": "test"})
+    
+    # Set up run ID and date (setting internal attributes directly)
+    context._run_id = "test_run_id"
+    context._run_date = "2023-01-01 10:00:00"
+    
     # Mock the attributes that don't have setters but are expected by write_error_stats
     context._source_agg_dq_result = []
     context._final_agg_dq_result = []
@@ -3502,6 +3515,17 @@ def test_write_error_stats_kafka_success():
     context._final_query_dq_run_time = 2.0
     context._num_row_dq_rules = 5
     context._num_dq_rules = 10
+    # Set up dictionary format for agg and query dq rules
+    context._num_agg_dq_rules = {
+        "num_source_agg_dq_rules": 2,
+        "num_agg_dq_rules": 3,
+        "num_final_agg_dq_rules": 1,
+    }
+    context._num_query_dq_rules = {
+        "num_source_query_dq_rules": 1,
+        "num_query_dq_rules": 2,
+        "num_final_query_dq_rules": 1,
+    }
     
     writer = SparkExpectationsWriter(context)
     
@@ -3532,6 +3556,7 @@ def test_write_error_stats_kafka_failure():
     from spark_expectations.config.user_config import Constants as user_config
     from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
     from spark_expectations.core.exceptions import SparkExpectationsMiscException
+    from spark_expectations.core.expectations import WrappedDataFrameWriter
     
     # Create context
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
@@ -3542,6 +3567,18 @@ def test_write_error_stats_kafka_failure():
     context.set_input_count(100)
     context.set_error_count(5)
     context.set_output_count(95)
+    
+    # Set up required stats table configuration
+    context.set_dq_stats_table_name("test_dq_stats_table")
+    context._stats_table_writer_config = WrappedDataFrameWriter().mode("overwrite").format("delta").build()
+    
+    # Set up DQ rules params (required for environment variable access)
+    context.set_dq_rules_params({"env": "test"})
+    
+    # Set up run ID and date (setting internal attributes directly)
+    context._run_id = "test_run_id"
+    context._run_date = "2023-01-01 10:00:00"
+    
     # Mock the attributes that don't have setters but are expected by write_error_stats
     context._source_agg_dq_result = []
     context._final_agg_dq_result = []
@@ -3563,6 +3600,17 @@ def test_write_error_stats_kafka_failure():
     context._final_query_dq_run_time = 2.0
     context._num_row_dq_rules = 5
     context._num_dq_rules = 10
+    # Set up dictionary format for agg and query dq rules
+    context._num_agg_dq_rules = {
+        "num_source_agg_dq_rules": 2,
+        "num_agg_dq_rules": 3,
+        "num_final_agg_dq_rules": 1,
+    }
+    context._num_query_dq_rules = {
+        "num_source_query_dq_rules": 1,
+        "num_query_dq_rules": 2,
+        "num_final_query_dq_rules": 1,
+    }
     
     writer = SparkExpectationsWriter(context)
     
@@ -3593,6 +3641,7 @@ def test_write_error_stats_kafka_disabled():
     from spark_expectations.core.context import SparkExpectationsContext
     from spark_expectations.config.user_config import Constants as user_config
     from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
+    from spark_expectations.core.expectations import WrappedDataFrameWriter
     
     # Create context with Kafka disabled
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
@@ -3603,6 +3652,18 @@ def test_write_error_stats_kafka_disabled():
     context.set_input_count(100)
     context.set_error_count(5)
     context.set_output_count(95)
+    
+    # Set up required stats table configuration
+    context.set_dq_stats_table_name("test_dq_stats_table")
+    context._stats_table_writer_config = WrappedDataFrameWriter().mode("overwrite").format("delta").build()
+    
+    # Set up DQ rules params (required for environment variable access)
+    context.set_dq_rules_params({"env": "test"})
+    
+    # Set up run ID and date (setting internal attributes directly)
+    context._run_id = "test_run_id"
+    context._run_date = "2023-01-01 10:00:00"
+    
     # Mock the attributes that don't have setters but are expected by write_error_stats
     context._source_agg_dq_result = []
     context._final_agg_dq_result = []
@@ -3624,6 +3685,17 @@ def test_write_error_stats_kafka_disabled():
     context._final_query_dq_run_time = 2.0
     context._num_row_dq_rules = 5
     context._num_dq_rules = 10
+    # Set up dictionary format for agg and query dq rules
+    context._num_agg_dq_rules = {
+        "num_source_agg_dq_rules": 2,
+        "num_agg_dq_rules": 3,
+        "num_final_agg_dq_rules": 1,
+    }
+    context._num_query_dq_rules = {
+        "num_source_query_dq_rules": 1,
+        "num_query_dq_rules": 2,
+        "num_final_query_dq_rules": 1,
+    }
     
     writer = SparkExpectationsWriter(context)
     
