@@ -449,7 +449,7 @@ class SparkExpectationsWriter:
 
         """
         try:
-            self.spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
+            # self.spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
 
             _source_aggdq_detailed_stats_result = self._get_detailed_stats_result(
                 self._context.get_agg_dq_detailed_stats_status,
@@ -598,7 +598,7 @@ class SparkExpectationsWriter:
 
         """
         try:
-            self.spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
+            # self.spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
             from datetime import date
 
             table_name: str = self._context.get_table_name
