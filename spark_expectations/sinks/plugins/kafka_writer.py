@@ -37,12 +37,25 @@ class SparkExpectationsKafkaWritePluginImpl(SparkExpectationsSinkWriter):
                 _log.info("started write stats data into kafka stats topic")
 
                 df: DataFrame = _write_args.get("stats_df")
+                kafka_options = _write_args.get("kafka_write_options")
+                
+                # Log Kafka connection details (mask sensitive info)
+                masked_options = {k: (v if "password" not in k.lower() and "secret" not in k.lower() and "token" not in k.lower() else "***MASKED***") for k, v in kafka_options.items()}
+                _log.info(f"Writing to Kafka with options: {masked_options}")
 
                 df.selectExpr("to_json(struct(*)) AS value").write.format("kafka").mode("append").options(
-                    **_write_args.get("kafka_write_options")
+                    **kafka_options
                 ).save()
 
                 _log.info("ended writing stats data into kafka stats topic")
 
         except Exception as e:
-            raise SparkExpectationsMiscException(f"error occurred while saving data into kafka {e}")
+            # Log detailed error information
+            kafka_options = _write_args.get("kafka_write_options", {})
+            topic = kafka_options.get("topic", "unknown")
+            bootstrap_servers = kafka_options.get("kafka.bootstrap.servers", "unknown")
+            
+            error_details = f"Failed to write to Kafka topic '{topic}' on servers '{bootstrap_servers}'. Error: {str(e)}"
+            _log.error(f"Kafka write failure: {error_details}")
+            
+            raise SparkExpectationsMiscException(f"error occurred while saving data into kafka: {error_details}")

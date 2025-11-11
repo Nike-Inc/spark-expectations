@@ -194,6 +194,14 @@ class SparkExpectations:
                 {**self.stats_streaming_options} if self.stats_streaming_options else _default_stats_streaming_dict
             )
 
+            enable_kafka_custom_config = _se_stats_streaming_dict.get('se.streaming.stats.kafka.custom.config.enable', False)
+            self._context.set_se_streaming_stats_kafka_custom_config_enable(
+                enable_kafka_custom_config if isinstance(enable_kafka_custom_config, bool) else False
+            )
+            
+            if 'se.streaming.stats.kafka.bootstrap.server' in _se_stats_streaming_dict:
+                self._context.set_se_streaming_stats_kafka_bootstrap_server(str(_se_stats_streaming_dict['se.streaming.stats.kafka.bootstrap.server']))
+
             enable_error_table = _notification_dict.get(user_config.se_enable_error_table, True)
             self._context.set_se_enable_error_table(
                 enable_error_table if isinstance(enable_error_table, bool) else True
