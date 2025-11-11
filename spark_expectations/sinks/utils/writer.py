@@ -765,6 +765,7 @@ class SparkExpectationsWriter:
             # TODO check if streaming_stats is set to off, if it's enabled only then this should run
 
             _se_stats_dict = self._context.get_se_streaming_stats_dict
+            print(f"Streaming stats dict: {_se_stats_dict}")
             if _se_stats_dict[user_config.se_enable_streaming]:
                 _log.info("Streaming stats to kafka is enabled, proceeding with writing to kafka")
                 kafka_write_options: dict = self.get_kafka_write_options(_se_stats_dict)
