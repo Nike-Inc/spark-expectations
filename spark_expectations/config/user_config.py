@@ -55,16 +55,16 @@ class Constants:
     # se_notifications_pagerduty_integration_key = "spark.expectations.notifications.pagerduty.integration.key"
     # se_notifications_pagerduty_webhook_url = "spark.expectations.notifications.pagerduty.webhook.url"
 
-    # se_notifications_on_start = "spark.expectations.notifications.on.start"
-    # se_notifications_on_completion = "spark.expectations.notifications.on.completion"
-    # se_notifications_on_fail = "spark.expectations.notifications.on.fail"
+    se_notifications_on_start = "spark.expectations.notifications.on.start"
+    se_notifications_on_completion = "spark.expectations.notifications.on.completion"
+    se_notifications_on_fail = "spark.expectations.notifications.on.fail"
     # se_notifications_on_error_drop_exceeds_threshold_breach = (
     #     "spark.expectations.notifications.on.error.drop.exceeds.threshold.breach"
     # )
-    # se_notifications_on_rules_action_if_failed_set_ignore = (
-    #     "spark.expectations.notifications.on.rules.action.if.failed.set.ignore"
-    # )
-    # se_notifications_on_error_drop_threshold = "spark.expectations.notifications.error.drop.threshold"
+    se_notifications_on_rules_action_if_failed_set_ignore = (
+        "spark.expectations.notifications.on.rules.action.if.failed.set.ignore"
+    )
+    se_notifications_on_error_drop_threshold = "spark.expectations.notifications.error.drop.threshold"
     # se_notifications_min_priority_slack = "spark.expectations.notifications.slack.min.priority"
 
     # se_enable_streaming = "se.streaming.enable"
