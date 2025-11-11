@@ -766,7 +766,9 @@ class SparkExpectationsWriter:
 
             _se_stats_dict = self._context.get_se_streaming_stats_dict
             if _se_stats_dict[user_config.se_enable_streaming]:
+                _log.info("Streaming stats to kafka is enabled, proceeding with writing to kafka")
                 kafka_write_options: dict = self.get_kafka_write_options(_se_stats_dict)
+                print("Preparing to write streaming stats to Kafka", kafka_write_options)
                 _sink_hook.writer(
                     _write_args={
                         "product_id": self._context.product_id,
