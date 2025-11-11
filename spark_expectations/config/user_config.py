@@ -67,7 +67,7 @@ class Constants:
     se_notifications_on_error_drop_threshold = "spark.expectations.notifications.error.drop.threshold"
     se_notifications_min_priority_slack = "spark.expectations.notifications.slack.min.priority"
 
-    # se_enable_streaming = "se.streaming.enable"
+    se_enable_streaming = "se.streaming.enable"
     se_enable_error_table = "se.enable.error.table"
     se_dq_rules_params = "se.dq.rules.params"
     # se_streaming_stats_kafka_custom_config_enable = "se.streaming.stats.kafka.custom.config.enable"
