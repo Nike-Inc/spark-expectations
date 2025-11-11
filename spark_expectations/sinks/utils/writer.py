@@ -766,17 +766,30 @@ class SparkExpectationsWriter:
 
             _se_stats_dict = self._context.get_se_streaming_stats_dict
             if _se_stats_dict[user_config.se_enable_streaming]:
-                kafka_write_options: dict = self.get_kafka_write_options(_se_stats_dict)
-                _sink_hook.writer(
-                    _write_args={
-                        "product_id": self._context.product_id,
-                        "enable_se_streaming": _se_stats_dict[user_config.se_enable_streaming],
-                        "kafka_write_options": kafka_write_options,
-                        "stats_df": df,
-                    }
-                )
+                try:
+                    _log.info("Attempting to write stats to Kafka...")
+                    kafka_write_options: dict = self.get_kafka_write_options(_se_stats_dict)
+                    _sink_hook.writer(
+                        _write_args={
+                            "product_id": self._context.product_id,
+                            "enable_se_streaming": _se_stats_dict[user_config.se_enable_streaming],
+                            "kafka_write_options": kafka_write_options,
+                            "stats_df": df,
+                        }
+                    )
+                    self._context.set_kafka_write_status("Success")
+                    _log.info("Successfully wrote stats to Kafka")
+                except Exception as kafka_error:
+                    # Log the detailed error and set status for notifications
+                    error_message = str(kafka_error)
+                    _log.error(f"Failed to write stats to Kafka: {error_message}")
+                    self._context.set_kafka_write_status("Failed")
+                    self._context.set_kafka_write_error_message(error_message)
+                    # Re-raise the exception to fail the job with enhanced error message
+                    raise kafka_error
             else:
                 _log.info("Streaming stats to kafka is disabled, hence skipping writing to kafka")
+                self._context.set_kafka_write_status("Disabled")
 
         except Exception as e:
             raise SparkExpectationsMiscException(f"error occurred while saving the data into the stats table {e}")
