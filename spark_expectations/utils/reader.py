@@ -35,9 +35,11 @@ class SparkExpectationsReader:
 
         """
         try:
-            _default_notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = json.loads(
-                self.spark.conf.get("default_notification_dict")
-            )
+            # _default_notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = json.loads(
+            #     self.spark.conf.get("default_notification_dict")
+            # ). # commented for Serverless
+
+            _default_notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = {} # for Serverless
 
             _notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = (
                 {**_default_notification_dict, **notification} if notification else _default_notification_dict
