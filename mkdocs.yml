@@ -87,7 +87,9 @@ nav:
           - Base_Notification_plugin: api/base_notification_plugin.md
           - Email_Notification_plugin: api/email_plugin.md
           - Slack_Notification_plugin: api/slack_plugin.md
+          - Teams_Notification_plugin: api/teams_plugin.md
           - PagerDuty_Notification_plugin: api/pagerduty_plugin.md
+          - Zoom_Notification_plugin: api/zoom_plugin.md
           - Push:
               - Notification_Decorater: api/notifications_decorater.md
       - Utils:
@@ -97,6 +99,9 @@ nav:
           - Udf: api/udf.md
       - Examples:
           - Base_Setup: api/base_setup.md
+          - Sample_DQ_BigQuery: api/sample_dq_bigquery.md
+          - Sample_DQ_Delta: api/sample_dq_delta.md
+          - Sample_DQ_Iceberg: api/sample_dq_iceberg.md
 
 plugins:
   - search:
@@ -104,7 +109,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: [ "spark_expectations" ]
+          paths: [ "." ]
           options:
             show_source: true
             show_root_heading: false
