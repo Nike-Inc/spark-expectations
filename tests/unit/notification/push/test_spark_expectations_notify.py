@@ -29,6 +29,8 @@ def fixture_mock_context():
     _context_mock.get_row_dq_rule_type_name = "row_dq"
     _context_mock.product_id = "product_id1"
     _context_mock.get_enable_custom_email_body = False
+    _context_mock.get_kafka_write_status = "Success"
+    _context_mock.get_kafka_write_error_message = ""
 
     return _context_mock
 
@@ -55,6 +57,7 @@ def fixture_notify_completion_expected_result():
         "error_percentage: 10.0\n"
         "output_percentage: 90.0\n"
         "success_percentage: 100.0\n"
+        "kafka_write_status: Success\n"
         "status: source_agg_dq_status = pass\n"
         "            source_query_dq_status = pass\n"
         "            row_dq_status = fail\n"
@@ -140,6 +143,7 @@ def fixture_notify_fail_expected_result():
         "input_count: 1000\n"
         "error_percentage: 10.0\n"
         "output_percentage: 90.0\n"
+        "kafka_write_status: Success\n"
         "status: source_agg_dq_status = pass\n"
         "            source_query_dq_status = pass\n"
         "            row_dq_status = fail\n"
@@ -411,6 +415,44 @@ def test_notify_on_failure_success(
             _context=_fixture_mock_context,
             _config_args={"message": _fixture_notify_fail_expected_result},
         )
+
+
+@patch(
+    "spark_expectations.notifications.push.spark_expectations_notify._notification_hook",
+    autospec=True,
+    spec_set=True,
+)
+def test_notify_on_failure_with_kafka_error(_mock_notification_hook, _fixture_mock_context):
+    # Set up context with Kafka failure
+    _fixture_mock_context.get_kafka_write_status = "Failed"
+    _fixture_mock_context.get_kafka_write_error_message = "Connection timeout to Kafka broker"
+    
+    expected_message = (
+        "Spark expectations job has been failed  \n\n"
+        "product_id: product_id1\n"
+        "table_name: test_table\n"
+        "run_id: test_run_id\n"
+        "run_date: test_run_date\n"
+        "input_count: 1000\n"
+        "error_percentage: 10.0\n"
+        "output_percentage: 90.0\n"
+        "kafka_write_status: Failed\n"
+        "kafka_write_error: Connection timeout to Kafka broker\n"
+        "status: source_agg_dq_status = pass\n"
+        "            source_query_dq_status = pass\n"
+        "            row_dq_status = fail\n"
+        "            final_agg_dq_status = skipped\n"
+        "            final_query_dq_status = skipped\n"
+        "            run_status = fail"
+    )
+
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
+    notify_handler.notify_on_failure("exception")
+
+    _mock_notification_hook.send_notification.assert_called_once_with(
+        _context=_fixture_mock_context,
+        _config_args={"message": expected_message, "content_type": "plain"},
+    )
 
 
 def test_notify_on_start_completion_failure_exception(_fixture_mock_context):
