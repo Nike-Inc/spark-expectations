@@ -2625,3 +2625,43 @@ def test_get_min_priority_zoom():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_min_priority_zoom("low")
     assert context.get_min_priority_zoom == "low"  # default value
+
+
+def test_set_kafka_write_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_kafka_write_status("Success")
+    assert context._kafka_write_status == "Success"
+    assert context.get_kafka_write_status == "Success"
+
+
+def test_get_kafka_write_status():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    context.set_kafka_write_status("Failed")
+    assert context.get_kafka_write_status == "Failed"
+
+
+def test_get_kafka_write_status_default():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    # Test default value when attribute not set
+    assert context.get_kafka_write_status == "Disabled"
+
+
+def test_set_kafka_write_error_message():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    error_msg = "Connection refused: kafka broker not available"
+    context.set_kafka_write_error_message(error_msg)
+    assert context._kafka_write_error_message == error_msg
+    assert context.get_kafka_write_error_message == error_msg
+
+
+def test_get_kafka_write_error_message():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    error_msg = "Kafka write timeout"
+    context.set_kafka_write_error_message(error_msg)
+    assert context.get_kafka_write_error_message == error_msg
+
+
+def test_get_kafka_write_error_message_default():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    # Test default value when attribute not set
+    assert context.get_kafka_write_error_message == ""
