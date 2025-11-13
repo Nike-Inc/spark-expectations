@@ -29,6 +29,8 @@ def fixture_mock_context():
     _context_mock.get_row_dq_rule_type_name = "row_dq"
     _context_mock.product_id = "product_id1"
     _context_mock.get_enable_custom_email_body = False
+    _context_mock.get_kafka_write_status = "Success"
+    _context_mock.get_kafka_write_error_message = ""
 
     return _context_mock
 
@@ -55,6 +57,7 @@ def fixture_notify_completion_expected_result():
         "error_percentage: 10.0\n"
         "output_percentage: 90.0\n"
         "success_percentage: 100.0\n"
+        "kafka_write_status: Success\n"
         "status: source_agg_dq_status = pass\n"
         "            source_query_dq_status = pass\n"
         "            row_dq_status = fail\n"
@@ -140,6 +143,7 @@ def fixture_notify_fail_expected_result():
         "input_count: 1000\n"
         "error_percentage: 10.0\n"
         "output_percentage: 90.0\n"
+        "kafka_write_status: Success\n"
         "status: source_agg_dq_status = pass\n"
         "            source_query_dq_status = pass\n"
         "            row_dq_status = fail\n"
@@ -411,6 +415,44 @@ def test_notify_on_failure_success(
             _context=_fixture_mock_context,
             _config_args={"message": _fixture_notify_fail_expected_result},
         )
+
+
+@patch(
+    "spark_expectations.notifications.push.spark_expectations_notify._notification_hook",
+    autospec=True,
+    spec_set=True,
+)
+def test_notify_on_failure_with_kafka_error(_mock_notification_hook, _fixture_mock_context):
+    # Set up context with Kafka failure
+    _fixture_mock_context.get_kafka_write_status = "Failed"
+    _fixture_mock_context.get_kafka_write_error_message = "Connection timeout to Kafka broker"
+    
+    expected_message = (
+        "Spark expectations job has been failed  \n\n"
+        "product_id: product_id1\n"
+        "table_name: test_table\n"
+        "run_id: test_run_id\n"
+        "run_date: test_run_date\n"
+        "input_count: 1000\n"
+        "error_percentage: 10.0\n"
+        "output_percentage: 90.0\n"
+        "kafka_write_status: Failed\n"
+        "kafka_write_error: Connection timeout to Kafka broker\n"
+        "status: source_agg_dq_status = pass\n"
+        "            source_query_dq_status = pass\n"
+        "            row_dq_status = fail\n"
+        "            final_agg_dq_status = skipped\n"
+        "            final_query_dq_status = skipped\n"
+        "            run_status = fail"
+    )
+
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
+    notify_handler.notify_on_failure("exception")
+
+    _mock_notification_hook.send_notification.assert_called_once_with(
+        _context=_fixture_mock_context,
+        _config_args={"message": expected_message, "content_type": "plain"},
+    )
 
 
 def test_notify_on_start_completion_failure_exception(_fixture_mock_context):
@@ -960,3 +1002,181 @@ def test_notify_on_failed_dq_priority_filtering_parametrized(
     
     # Verify the expected number of notifications were sent
     assert mock_notification_hook.send_notification.call_count == expected_rule_count
+
+
+# New tests to improve coverage
+
+def test_serialize_date_with_datetime():
+    """Test serialize_date method with datetime object"""
+    from datetime import datetime
+    test_datetime = datetime(2023, 11, 12, 14, 30, 45)
+    
+    result = SparkExpectationsNotify.serialize_date(test_datetime)
+    
+    assert result == "2023-11-12T14:30:45"
+
+
+def test_serialize_date_with_date():
+    """Test serialize_date method with date object"""
+    from datetime import date
+    test_date = date(2023, 11, 12)
+    
+    result = SparkExpectationsNotify.serialize_date(test_date)
+    
+    assert result == "2023-11-12"
+
+
+def test_serialize_date_with_none():
+    """Test serialize_date method with None value"""
+    result = SparkExpectationsNotify.serialize_date(None)
+    
+    assert result is None
+
+
+def test_serialize_date_with_string():
+    """Test serialize_date method with string value"""
+    test_string = "2023-11-12"
+    
+    result = SparkExpectationsNotify.serialize_date(test_string)
+    
+    assert result is None
+
+
+@patch("spark_expectations.notifications.push.spark_expectations_notify._notification_hook")
+def test_notify_on_start_completion_failure_on_start_enabled(_mock_notification_hook, _fixture_mock_context):
+    """Test decorator when notification_on_start is enabled"""
+    _fixture_mock_context.get_notification_on_start = True
+    _fixture_mock_context.get_notification_on_completion = False
+    _fixture_mock_context.get_notification_on_fail = False
+    
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
+    
+    # Create a mock function to decorate
+    @notify_handler.send_notification_decorator
+    def test_function():
+        return "success"
+    
+    result = test_function()
+    
+    assert result == "success"
+    # Verify on_start was called via the notification hook
+    _mock_notification_hook.send_notification.assert_called()
+
+
+@patch("spark_expectations.notifications.push.spark_expectations_notify._notification_hook")
+def test_notify_on_start_completion_failure_on_completion_enabled(_mock_notification_hook, _fixture_mock_context):
+    """Test decorator when notification_on_completion is enabled"""
+    _fixture_mock_context.get_notification_on_start = False
+    _fixture_mock_context.get_notification_on_completion = True
+    _fixture_mock_context.get_notification_on_fail = False
+    
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
+    
+    # Create a mock function to decorate
+    @notify_handler.send_notification_decorator
+    def test_function():
+        return "success"
+    
+    result = test_function()
+    
+    assert result == "success"
+    # Verify on_completion was called via the notification hook
+    _mock_notification_hook.send_notification.assert_called()
+
+
+@patch("spark_expectations.notifications.push.spark_expectations_notify._notification_hook")
+def test_notify_on_start_completion_failure_on_fail_enabled(_mock_notification_hook, _fixture_mock_context):
+    """Test decorator when notification_on_fail is enabled and exception occurs"""
+    _fixture_mock_context.get_notification_on_start = False
+    _fixture_mock_context.get_notification_on_completion = False
+    _fixture_mock_context.get_notification_on_fail = True
+    
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
+    
+    # Create a mock function that raises an exception
+    @notify_handler.send_notification_decorator
+    def test_function():
+        raise ValueError("Test error")
+    
+    with pytest.raises(SparkExpectationsMiscException):
+        test_function()
+    
+    # Verify on_failure was called via the notification hook
+    _mock_notification_hook.send_notification.assert_called()
+
+
+@patch("spark_expectations.notifications.push.spark_expectations_notify._notification_hook")
+def test_notify_on_start_completion_failure_all_disabled(_mock_notification_hook, _fixture_mock_context):
+    """Test decorator when all notifications are disabled"""
+    _fixture_mock_context.get_notification_on_start = False
+    _fixture_mock_context.get_notification_on_completion = False
+    _fixture_mock_context.get_notification_on_fail = False
+    
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
+    
+    # Create a mock function to decorate
+    @notify_handler.send_notification_decorator
+    def test_function():
+        return "success"
+    
+    result = test_function()
+    
+    assert result == "success"
+    # Verify no notifications were sent
+    _mock_notification_hook.send_notification.assert_not_called()
+
+
+@patch("spark_expectations.notifications.push.spark_expectations_notify._notification_hook")
+def test_notify_on_start_completion_failure_exception_with_fail_disabled(_mock_notification_hook, _fixture_mock_context):
+    """Test decorator when exception occurs but notification_on_fail is disabled"""
+    _fixture_mock_context.get_notification_on_start = False
+    _fixture_mock_context.get_notification_on_completion = False
+    _fixture_mock_context.get_notification_on_fail = False
+    
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
+    
+    # Create a mock function that raises an exception
+    @notify_handler.send_notification_decorator
+    def test_function():
+        raise ValueError("Test error")
+    
+    with pytest.raises(SparkExpectationsMiscException):
+        test_function()
+    
+    # Verify no notifications were sent
+    _mock_notification_hook.send_notification.assert_not_called()
+
+
+def test_get_custom_notification_with_missing_key(_fixture_mock_context):
+    """Test get_custom_notification when some keys are missing from stats dict"""
+    _fixture_mock_context.get_stats_dict = [{"key1": "value1"}]  # Missing key2
+    _fixture_mock_context.get_email_custom_body = "Template with 'key1': {} and 'key2': {}"
+    
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
+    
+    # This should work but log a warning for missing key2
+    with patch("spark_expectations.notifications.push.spark_expectations_notify._log") as mock_log:
+        result = notify_handler.get_custom_notification()
+        
+        assert "CUSTOM EMAIL" in result
+        assert '"key1": "value1"' in result
+        mock_log.warning.assert_called_once()
+
+
+def test_get_custom_notification_with_serializable_date(_fixture_mock_context):
+    """Test get_custom_notification with date values that need serialization"""
+    from datetime import datetime, date
+    
+    test_datetime = datetime(2023, 11, 12, 14, 30, 45)
+    test_date = date(2023, 11, 12)
+    
+    _fixture_mock_context.get_stats_dict = [{"datetime_key": test_datetime, "date_key": test_date}]
+    _fixture_mock_context.get_email_custom_body = "Template with 'datetime_key': {} and 'date_key': {}"
+    
+    notify_handler = SparkExpectationsNotify(_fixture_mock_context)
+    
+    result = notify_handler.get_custom_notification()
+    
+    assert "CUSTOM EMAIL" in result
+    assert "2023-11-12T14:30:45" in result
+    assert "2023-11-12" in result
