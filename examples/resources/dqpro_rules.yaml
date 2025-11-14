@@ -1,0 +1,378 @@
+# Comprehensive Data Quality Rules
+# Format matches se_dq_simlab_msc.yaml structure
+
+rule_1:
+  product_id: my_product
+  table_name: development.team_dq_pro.customers
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: row_dq
+  action_if_failed: drop
+  column_name: customer_id
+  description: Customer ID must not be null
+  expectation: customer_id IS NOT NULL
+  rule: customer_id_not_null
+  tag: completeness
+
+rule_2:
+  product_id: my_product
+  table_name: development.team_dq_pro.customers
+  enable_error_drop_alert: true
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 5
+  is_active: true
+  rule_type: row_dq
+  action_if_failed: drop
+  column_name: email
+  description: Email must be in valid format
+  expectation: email rlike '^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$'
+  rule: email_valid_format
+  tag: validity
+
+rule_3:
+  product_id: my_product
+  table_name: development.team_dq_pro.customers
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: row_dq
+  action_if_failed: drop
+  column_name: email
+  description: Email cannot be null or empty
+  expectation: email IS NOT NULL AND email != ''
+  rule: email_not_empty
+  tag: completeness
+
+rule_4:
+  product_id: my_product
+  table_name: development.team_dq_pro.orders
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: false
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: row_dq
+  action_if_failed: ignore
+  column_name: sales
+  description: Sales value must be positive
+  expectation: sales > 0
+  rule: sales_greater_than_zero
+  tag: accuracy
+
+rule_5:
+  product_id: my_product
+  table_name: development.team_dq_pro.orders
+  enable_error_drop_alert: true
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 10
+  is_active: true
+  rule_type: row_dq
+  action_if_failed: drop
+  column_name: discount
+  description: Discount must be between 0 and 1
+  expectation: discount BETWEEN 0 AND 1
+  rule: discount_range
+  tag: accuracy
+
+rule_6:
+  product_id: my_product
+  table_name: development.team_dq_pro.orders
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: row_dq
+  action_if_failed: drop
+  column_name: quantity
+  description: Quantity must be positive
+  expectation: quantity > 0
+  rule: quantity_positive
+  tag: accuracy
+
+rule_7:
+  product_id: my_product
+  table_name: development.team_dq_pro.orders
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: row_dq
+  action_if_failed: drop
+  column_name: order_date
+  description: Order date cannot be in future
+  expectation: order_date <= current_timestamp()
+  rule: order_date_not_future
+  tag: timeliness
+
+rule_8:
+  product_id: my_product
+  table_name: development.team_dq_pro.orders
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: row_dq
+  action_if_failed: drop
+  column_name: ship_date
+  description: Ship date must be after or equal to order date
+  expectation: ship_date >= order_date
+  rule: ship_date_after_order
+  tag: consistency
+
+rule_9:
+  product_id: my_product
+  table_name: development.team_dq_pro.orders
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: row_dq
+  action_if_failed: drop
+  column_name: order_id
+  description: Order ID must be unique
+  expectation: count(*) over(partition by order_id order by 1) = 1
+  rule: unique_order_id
+  tag: uniqueness
+
+rule_10:
+  product_id: my_product
+  table_name: development.team_dq_pro.orders
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: row_dq
+  action_if_failed: drop
+  column_name: ship_mode
+  description: Ship mode must be in predefined list
+  expectation: lower(trim(ship_mode)) in('first class', 'second class', 'standard class')
+  rule: ship_mode_valid_values
+  tag: validity
+
+rule_11:
+  product_id: my_product
+  table_name: development.team_dq_pro.products
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: row_dq
+  action_if_failed: drop
+  column_name: product_name
+  description: Product name cannot be empty
+  expectation: product_name IS NOT NULL AND length(trim(product_name)) > 0
+  rule: product_name_not_empty
+  tag: completeness
+
+rule_12:
+  product_id: my_product
+  table_name: development.team_dq_pro.products
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: row_dq
+  action_if_failed: drop
+  column_name: price
+  description: Product price must be positive
+  expectation: price > 0
+  rule: product_price_positive
+  tag: accuracy
+
+rule_13:
+  product_id: my_product
+  table_name: development.team_dq_pro.orders
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: agg_dq
+  action_if_failed: fail
+  column_name: sales
+  description: Total sales must be within expected range
+  expectation: sum(sales) BETWEEN 100000 AND 10000000
+  rule: total_sales_range
+  tag: consistency
+
+rule_14:
+  product_id: my_product
+  table_name: development.team_dq_pro.orders
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: agg_dq
+  action_if_failed: ignore
+  column_name: sales
+  description: Average sale must be reasonable
+  expectation: avg(sales) BETWEEN 50 AND 5000
+  rule: average_sales_check
+  tag: consistency
+
+rule_15:
+  product_id: my_product
+  table_name: development.team_dq_pro.orders
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: agg_dq
+  action_if_failed: ignore
+  column_name: sales
+  description: Median sales should be between $100 and $1000
+  expectation: percentile_approx(sales, 0.5) BETWEEN 100 AND 1000
+  rule: median_sales
+  tag: consistency
+
+rule_16:
+  product_id: my_product
+  table_name: development.team_dq_pro.orders
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: agg_dq
+  action_if_failed: fail
+  column_name: "*"
+  description: Must have at least 1000 orders
+  expectation: count(*) > 1000
+  rule: row_count_minimum
+  tag: completeness
+
+rule_17:
+  product_id: my_product
+  table_name: development.team_dq_pro.orders
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: agg_dq
+  action_if_failed: ignore
+  column_name: customer_id
+  description: Distinct customer count should be in range
+  expectation: count(distinct customer_id) BETWEEN 100 AND 50000
+  rule: distinct_customers
+  tag: accuracy
+
+rule_18:
+  product_id: my_product
+  table_name: development.team_dq_pro.orders
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: agg_dq
+  action_if_failed: ignore
+  column_name: product_id
+  description: Distinct products should be in range
+  expectation: count(distinct product_id) BETWEEN 50 AND 10000
+  rule: distinct_products
+  tag: accuracy
+
+rule_19:
+  product_id: my_product
+  table_name: development.team_dq_pro.orders
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: agg_dq
+  action_if_failed: fail
+  column_name: discount
+  description: Maximum discount should not exceed 50%
+  expectation: max(discount) <= 0.5
+  rule: max_discount
+  tag: accuracy
+
+rule_20:
+  product_id: my_product
+  table_name: development.team_dq_pro.orders
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: query_dq
+  action_if_failed: fail
+  column_name: "*"
+  description: Order count must exceed threshold
+  expectation: (select count(*) from order_source) > 10
+  rule: order_count_check
+  tag: completeness
+  query_dq_delimiter: null
+  enable_querydq_custom_output: true
+
+rule_21:
+  product_id: my_product
+  table_name: development.team_dq_pro.products
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: query_dq
+  action_if_failed: ignore
+  column_name: "*"
+  description: Product categories should be less than 20
+  expectation: (select count(distinct category) from {table}) < 20
+  rule: category_count
+  tag: validity
+  query_dq_delimiter: null
+  enable_querydq_custom_output: true
+
+rule_22:
+  product_id: my_product
+  table_name: development.team_dq_pro.orders
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: query_dq
+  action_if_failed: fail
+  column_name: "*"
+  description: Source and target counts must match within threshold
+  expectation: ((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b)) < 10@source_f1@select distinct product_id, order_id from order_source@target_f1@select distinct product_id, order_id from order_target
+  rule: source_target_count_match
+  tag: consistency
+  query_dq_delimiter: "@"
+  enable_querydq_custom_output: true
+
+rule_23:
+  product_id: my_product
+  table_name: development.team_dq_pro.orders
+  enable_error_drop_alert: false
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  error_drop_threshold: 0
+  is_active: true
+  rule_type: query_dq
+  action_if_failed: fail
+  column_name: "*"
+  description: Revenue must reconcile between source and target
+  expectation: abs(({source_f1}) - ({target_f1})) < 1000@source_f1@select sum(revenue) from order_source@target_f1@select sum(revenue) from order_target
+  rule: revenue_reconciliation
+  tag: consistency
+  query_dq_delimiter: "@"
+  enable_querydq_custom_output: true

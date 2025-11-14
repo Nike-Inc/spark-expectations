@@ -8,8 +8,9 @@ services:
       dockerfile: containers/jupyterlab/Dockerfile.notebook
     ports:
       - "8888:8888"
-    # volumes:
-    #   - ./notebooks:/app/notebooks
+    volumes:
+      - ../examples/notebooks:/app/notebooks
+      - ../examples/resources:/app/notebooks/resources
     environment:
       - SPARK_EXPECTATIONS_CONFIG_PATH=/app/notebooks/config
       - SPARK_EXPECTATIONS_LOG_LEVEL=DEBUG
