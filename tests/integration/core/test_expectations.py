@@ -3908,6 +3908,24 @@ def test_stream_writer_partition_by():
     ]
 
 
+def test_stream_writer_partition_by_with_list():
+    """Test partitionBy with a list argument"""
+    assert WrappedDataFrameStreamWriter().partitionBy(["date", "region"])._partition_by == [
+        "date",
+        "region",
+    ]
+
+
+def test_stream_writer_partition_by_chained():
+    """Test partitionBy can be chained and handles both string args and list args"""
+    writer = (
+        WrappedDataFrameStreamWriter()
+        .partitionBy("date")
+        .partitionBy(["region", "country"])
+    )
+    assert writer._partition_by == ["date", "region", "country"]
+
+
 def test_stream_writer_option():
     assert WrappedDataFrameStreamWriter().option("checkpointLocation", "/path/to/checkpoint")._options == {
         "checkpointLocation": "/path/to/checkpoint"

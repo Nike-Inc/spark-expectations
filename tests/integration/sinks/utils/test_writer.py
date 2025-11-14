@@ -7,6 +7,7 @@ import pytest
 from unittest.mock import Mock, patch
 from pyspark.sql.functions import col
 from pyspark.sql.functions import lit, to_timestamp
+from pyspark.sql.streaming import StreamingQuery
 from spark_expectations.core import get_spark_session
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
@@ -4249,6 +4250,13 @@ def test_generate_summarized_row_dq_res_exception(test_data, _fixture_writer):
         _fixture_writer.generate_summarized_row_dq_res(test_df, "row_dq")
 
 
+def test_generate_summarized_row_dq_res_streaming_skip(_fixture_writer):
+    """Test line 1011-1013: streaming DataFrame skips generation"""
+    streaming_df = spark.readStream.format("rate").option("rowsPerSecond", "1").load()
+    _fixture_writer.generate_summarized_row_dq_res(streaming_df, "row_dq")
+    _fixture_writer._context.set_summarized_row_dq_res.assert_not_called()
+
+
 def test_save_df_as_table_exception(_fixture_employee, _fixture_writer):
     with pytest.raises(
         SparkExpectationsUserInputOrConfigInvalidException,
@@ -4373,6 +4381,30 @@ def test_get_kafka_write_options(dbr_version, env, expected_options):
         )  # Empty dict since we mock everything
         assert actual_options == expected_options
 
+
+def test_get_streaming_query_status_input_rows_per_second(_fixture_writer):
+    """Test line 1181: input_rows_per_second is set when present in progress"""
+    mock_query = Mock(spec=StreamingQuery)
+    mock_query.id, mock_query.runId, mock_query.name = "test_input_rows", "run_004", "input_rows_query"
+    mock_query.isActive, mock_query.lastProgress = True, {"inputRowsPerSecond": 100.5}
+    assert _fixture_writer.get_streaming_query_status(mock_query)["input_rows_per_second"] == 100.5
+
+
+def test_get_streaming_query_status_processed_rows_per_second(_fixture_writer):
+    """Test line 1183: processed_rows_per_second is set when present in progress"""
+    mock_query = Mock(spec=StreamingQuery)
+    mock_query.id, mock_query.runId, mock_query.name = "test_processed_rows", "run_005", "processed_rows_query"
+    mock_query.isActive, mock_query.lastProgress = True, {"processedRowsPerSecond": 200.7}
+    assert _fixture_writer.get_streaming_query_status(mock_query)["processed_rows_per_second"] == 200.7
+
+
+def test_get_streaming_query_status_active_path_entry(_fixture_writer):
+    """Test line 1172: active query path is entered correctly"""
+    mock_query = Mock(spec=StreamingQuery)
+    mock_query.id, mock_query.runId, mock_query.name = "test_active", "run_006", "active_query"
+    mock_query.isActive, mock_query.lastProgress = True, {}
+    status = _fixture_writer.get_streaming_query_status(mock_query)
+    assert status["status"] == "active" and status["is_active"] is True
 def test_get_kafka_write_options_custom():
     """Test the Kafka write options generation for custom Kafka config option"""
     context = SparkExpectationsContext("product1", spark)
