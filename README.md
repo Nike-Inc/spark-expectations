@@ -35,7 +35,7 @@ We're delighted that you're interested in contributing to our project! To get st
 please carefully read and follow the guidelines provided in our [contributing](https://github.com/Nike-Inc/spark-expectations/blob/main/CONTRIBUTING.md) document
 
 ### Change Log
-Most recent updates will be listed in the [Change log](https://github.com/Nike-Inc/spark-expectations/blob/main/CHANGELOG.md)
+Most recent updates can be found in the [GitHub Releases](https://github.com/Nike-Inc/spark-expectations/releases)
 
 # What is Spark Expectations?
 #### Spark Expectations is a Data quality framework built in PySpark as a solution for the following problem statements:
