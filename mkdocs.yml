@@ -59,6 +59,7 @@ nav:
               - Email: user_guide/notifications/email_notifications.md
               - Slack: user_guide/notifications/slack_notifications.md
               - PagerDuty: user_guide/notifications/pagerduty_notifications.md
+          - Observability: Observability_examples.md
   - Developer Guide:
       - Contributing: developer_guide/contributing.md
       - Setup: developer_guide/setup.md
