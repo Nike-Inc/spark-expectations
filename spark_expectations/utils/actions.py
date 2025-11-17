@@ -15,6 +15,7 @@ from pyspark.sql.functions import (
     when,
 )
 
+from spark_expectations import _log
 from spark_expectations.config.user_config import Constants as constant_config
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.exceptions import (
@@ -157,6 +158,14 @@ class SparkExpectationsActions:
 
         # pylint: disable=too-many-nested-blocks
         try:
+            # Skip detailed stats for streaming DataFrames - .agg().collect() and .count() not supported
+            if df.isStreaming:
+                _log.warning(
+                    f"Streaming DataFrame detected in agg_query_dq_detailed_result for {_dq_rule.get('rule_type', 'unknown')}. "
+                    "Skipping detailed aggregation results collection for streaming DataFrames."
+                )
+                return querydq_output, None
+            
             if (
                 _dq_rule["rule_type"] == _context.get_agg_dq_rule_type_name
                 and _context.get_agg_dq_detailed_stats_status is True
@@ -436,6 +445,14 @@ class SparkExpectationsActions:
 
         """
         try:
+            # Skip for streaming DataFrames - .first() is not supported
+            if _df.isStreaming:
+                _log.warning(
+                    f"Streaming DataFrame detected in create_agg_dq_results for {_rule_type_name}. "
+                    "Skipping aggregation results collection for streaming DataFrames."
+                )
+                return None
+            
             first_row = _df.first()
             if first_row is not None and f"meta_{_rule_type_name}_results" in _df.columns:
                 meta_results = first_row[f"meta_{_rule_type_name}_results"]
@@ -528,7 +545,7 @@ class SparkExpectationsActions:
                         )
                         current_date = datetime.now()
                         dq_end_time = datetime.strftime(current_date, "%Y-%m-%d %H:%M:%S")
-                        _agg_query_dq_output_list = list(_agg_query_dq_output_tuple)
+                        _agg_query_dq_output_list = list(_agg_query_dq_output_tuple) if _agg_query_dq_output_tuple else []
                         _agg_query_dq_output_list.extend([dq_start_time, dq_end_time])
                         _agg_query_dq_output_tuple = tuple(_agg_query_dq_output_list)
                         _agg_query_dq_results.append(_agg_query_dq_output_tuple)
@@ -641,25 +658,37 @@ class SparkExpectationsActions:
                 _df_dq_columns
             )
 
-            if not _df_dq.filter(array_contains(_df_dq.action_if_failed, "fail")).count() > 0:
+            # Handle streaming DataFrames safely - cannot use .count() on streaming DataFrames
+            if _df_dq.isStreaming:
+                _log.warning(
+                    f"Streaming DataFrame detected for {_rule_type} rules. "
+                    "Filtering out 'drop' actions, but 'fail' actions cannot be checked in streaming mode. "
+                    "Consider using 'drop' or 'ignore' actions for streaming DataFrames."
+                )
+                # For streaming, just filter out "drop" actions
+                # Note: "fail" actions cannot be enforced in streaming mode without counting
                 _df_dq = _df_dq.filter(~array_contains(_df_dq.action_if_failed, "drop"))
             else:
-                if _row_dq_flag:
-                    _context.set_row_dq_status("Failed")
-                elif _source_agg_dq_flag:
-                    _context.set_source_agg_dq_status("Failed")
-                elif _final_agg_dq_flag:
-                    _context.set_final_agg_dq_status("Failed")
-                elif _source_query_dq_flag:
-                    _context.set_source_query_dq_status("Failed")
-                elif _final_query_dq_flag:
-                    _context.set_final_query_dq_status("Failed")
+                # Batch DataFrame - can use .count() safely
+                if not _df_dq.filter(array_contains(_df_dq.action_if_failed, "fail")).count() > 0:
+                    _df_dq = _df_dq.filter(~array_contains(_df_dq.action_if_failed, "drop"))
+                else:
+                    if _row_dq_flag:
+                        _context.set_row_dq_status("Failed")
+                    elif _source_agg_dq_flag:
+                        _context.set_source_agg_dq_status("Failed")
+                    elif _final_agg_dq_flag:
+                        _context.set_final_agg_dq_status("Failed")
+                    elif _source_query_dq_flag:
+                        _context.set_source_query_dq_status("Failed")
+                    elif _final_query_dq_flag:
+                        _context.set_final_query_dq_status("Failed")
 
-                raise SparkExpectOrFailException(
-                    f"Job failed, as there is a data quality issue at {_rule_type} "
-                    f"expectations and the action_if_failed "
-                    "suggested to fail"
-                )
+                    raise SparkExpectOrFailException(
+                        f"Job failed, as there is a data quality issue at {_rule_type} "
+                        f"expectations and the action_if_failed "
+                        "suggested to fail"
+                    )
             return _df_dq.select(_df_dq_columns[:-1])
 
         except Exception as e:
