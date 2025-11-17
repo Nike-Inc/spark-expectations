@@ -207,6 +207,64 @@ stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
 
 1. The `user_config.se_enable_streaming` parameter is used to control the enabling or disabling of Spark Expectations (SE) streaming functionality. When enabled, SE streaming stores the statistics of every batch run into Kafka.
 
+## Enhanced Kafka Error Handling
+
+Spark Expectations now provides comprehensive error handling for Kafka streaming operations with enhanced notifications. When Kafka write operations fail, detailed error information is captured and included in all notifications to help with troubleshooting.
+
+### Kafka Write Status Tracking
+
+The framework automatically tracks the status of Kafka write operations and provides detailed error information:
+
+- **kafka_write_status**: Reports the current state of Kafka operations
+  - `Success`: Statistics were successfully written to Kafka
+  - `Failed`: Write operation failed (detailed error included)
+  - `Disabled`: Kafka streaming is disabled in configuration
+
+- **kafka_write_error**: When status is `Failed`, provides specific error details such as:
+  - Connection timeout errors
+  - Authentication failures
+  - Topic not found errors
+  - Broker unavailability
+
+### Enhanced Notification Content
+
+All notification channels (email, Slack, PagerDuty, Teams, Zoom) now include Kafka status information in their messages. This enhancement helps teams quickly distinguish between data quality issues and Kafka infrastructure problems.
+
+**Example notification content:**
+```
+Spark expectations job has been failed
+
+product_id: your-product-id
+table_name: customer_orders
+run_id: run_20241117_143022
+run_date: 2024-11-17 14:30:22
+input_count: 10000
+error_percentage: 5.2
+kafka_write_status: Failed
+kafka_write_error: Connection timeout to Kafka broker at localhost:9092
+status: row_dq_status = fail
+        run_status = fail
+```
+
+### Common Kafka Error Scenarios
+
+| Error Pattern | Likely Cause | Recommended Solution |
+|---------------|--------------|---------------------|
+| `Connection timeout` | Network issues or broker unavailable | Verify broker URLs and network connectivity |
+| `Authentication failed` | Invalid credentials | Check authentication tokens and certificates |
+| `Topic not found` | Missing topic | Create the topic or verify topic name |
+| `Broker unavailable` | Kafka service issues | Check Kafka cluster health and restart if needed |
+
+### Troubleshooting Best Practices
+
+1. **Monitor notifications** - Check `kafka_write_status` and `kafka_write_error` in job notifications
+2. **Validate configuration** - Test Kafka connectivity before deploying to production
+3. **Infrastructure monitoring** - Set up alerts based on `kafka_write_status` to catch issues early
+4. **Error recovery** - Implement appropriate retry mechanisms for transient Kafka failures
+5. **Separate concerns** - Use Kafka status to distinguish between DQ failures and infrastructure issues
+
+This enhanced error handling significantly improves the observability and reliability of your data quality pipelines.
+
 ```python
 from spark_expectations.core.expectations import SparkExpectations
 
