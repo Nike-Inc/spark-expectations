@@ -218,6 +218,41 @@ Example:
    Solution: Use unique checkpoint paths for each streaming job
    ```
 
+4. **Kafka Streaming Errors**
+   
+   Spark Expectations now provides enhanced error handling for Kafka streaming operations. When Kafka write operations fail during streaming jobs, detailed error information is captured and reported.
+
+   **Error Status Tracking:**
+   - **kafka_write_status**: Tracks current state (`Success`, `Failed`, `Disabled`)
+   - **kafka_write_error**: Provides specific error details when failures occur
+
+   **Common Kafka Streaming Issues:**
+
+   | Error Pattern | Likely Cause | Solution |
+   |---------------|--------------|----------|
+   | `Connection timeout` | Network/broker unavailable | Verify broker URLs and network connectivity |
+   | `Authentication failed` | Invalid credentials | Check authentication tokens and certificates |
+   | `Topic not found` | Missing topic | Create topic or verify topic name |
+   | `Broker unavailable` | Kafka service issues | Check Kafka cluster health |
+
+   **Enhanced Notifications:**
+   All streaming job notifications now include Kafka status information to help distinguish between data quality issues and infrastructure problems.
+
+   **Troubleshooting Steps:**
+   ```
+   1. Check notifications for kafka_write_status and kafka_write_error details
+   2. Verify Kafka configuration parameters
+   3. Test connectivity to Kafka brokers from streaming environment
+   4. Validate credentials and authentication setup
+   5. Ensure topics exist before starting streaming jobs
+   ```
+
+   **Best Practices:**
+   - Monitor kafka_write_status in streaming job notifications
+   - Set up infrastructure alerts based on Kafka status
+   - Use appropriate retry mechanisms for transient failures
+   - Test Kafka connectivity before production deployment
+
 ## Complete Production Example
 
 ```python
