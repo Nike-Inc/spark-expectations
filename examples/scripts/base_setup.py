@@ -85,6 +85,7 @@ def set_up_iceberg() -> SparkSession:
     ).getOrCreate()
 
     os.system("rm -rf /tmp/hive/warehouse/dq_spark_local")
+    os.system("rm -rf /tmp/checkpoint") #remove checkpoint directory for delta lake for streaming           
 
     spark.sql("create database if not exists spark_catalog.dq_spark_local")
     spark.sql(" use spark_catalog.dq_spark_local")

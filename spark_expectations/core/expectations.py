@@ -629,9 +629,10 @@ class SparkExpectations:
 
                         # TODO if row_dq is False and source_agg/source_query is True then we need to write the
                         #  dataframe into the target table
+                        streaming_query = None
                         if write_to_table:
                             _log.info("Writing into the final table started")
-                            self._writer.save_df_as_table(
+                            streaming_query = self._writer.save_df_as_table(
                                 _row_dq_df,
                                 f"{table_name}",
                                 self._context.get_target_and_error_table_writer_config,
@@ -645,7 +646,8 @@ class SparkExpectations:
                         )
                     # self.spark.catalog.clearCache()
 
-                    return _row_dq_df
+                    # Return streaming query if available (for streaming DataFrames), otherwise return DataFrame
+                    return streaming_query if streaming_query is not None else _row_dq_df
 
                 except Exception as e:
                     raise SparkExpectationsMiscException(f"error occurred while processing spark expectations {e}")
@@ -827,9 +829,11 @@ class WrappedDataFrameStreamWriter:
     
     def partitionBy(self, *columns: str | List[str]) -> "WrappedDataFrameStreamWriter":  # noqa: N802
         """Set the columns by which the data should be partitioned."""
-        if isinstance(columns, list):
-            self._partition_by.extend(columns)
+        # Handle case where a single list is passed: partitionBy(["col1", "col2"])
+        if len(columns) == 1 and isinstance(columns[0], list):
+            self._partition_by.extend(columns[0])
         else:
+            # Handle case where multiple strings are passed: partitionBy("col1", "col2")
             self._partition_by.extend(columns)
         return self
 
