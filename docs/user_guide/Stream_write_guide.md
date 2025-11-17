@@ -278,12 +278,15 @@ The updated `save_df_as_table` method:
 **row_dq expectations with StreamWriter**
 - Got the slack and email notifications for spark job start, completion, and also the dropped error percentage exceeding the threshold value
 - Got the pagerduty notifications for dropped error percentage, no notifications for spark job start and complete (as expected) <br>
+
 **agg_dq expectations with StreamWriter**
 - Streaming DataFrame detected for agg_dq. Skipping aggregation results collection for streaming DataFrame. Status set to 'Passed' <br>
+
 **query_dq expectations with streamwriter**
 - Streaming DataFrame detected for query_dq. Skipping dq process execution for streaming DataFrame. Status set to 'Passed' <br>
-**For row_dq with streaming dataframe, it can only apply rules with 'drop' and 'ignore' actions. 'fail' actions do not result in failure of the job** <br>
-**To enable any notifications, they need to be specified in the user config that is passed to the SE decorator**
+
+- **For row_dq with streaming dataframe, it can only apply rules with 'drop' and 'ignore' actions. 'fail' actions do not result in failure of the job** <br>
+- **To enable any notifications, they need to be specified in the user config that is passed to the SE decorator**
 
 
 ## Key Takeaways
