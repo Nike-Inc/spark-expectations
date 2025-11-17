@@ -272,6 +272,7 @@ The updated `save_df_as_table` method:
 6. **Manages Table Properties**: Sets product_id and other metadata for both streaming and batch tables
 7. **Handles Errors Gracefully**: Comprehensive exception handling and logging
 
+
 ## Notification Integration
 
 **row_dq expectations with StreamWriter**
