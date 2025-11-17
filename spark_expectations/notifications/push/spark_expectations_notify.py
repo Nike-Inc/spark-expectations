@@ -197,6 +197,7 @@ class SparkExpectationsNotify:
             f"error_percentage: {self._context.get_error_percentage}\n"
             f"output_percentage: {self._context.get_output_percentage}\n"
             f"success_percentage: {self._context.get_success_percentage}\n"
+            f"kafka_write_status: {self._context.get_kafka_write_status}\n"
             f"status: source_agg_dq_status = {self._context.get_source_agg_dq_status}\n"
             f"            source_query_dq_status = {self._context.get_source_query_dq_status}\n"
             f"            row_dq_status = {self._context.get_row_dq_status}\n"
@@ -220,6 +221,10 @@ class SparkExpectationsNotify:
 
         """
 
+        _kafka_status_info = f"kafka_write_status: {self._context.get_kafka_write_status}\n"
+        if self._context.get_kafka_write_status == "Failed":
+            _kafka_status_info += f"kafka_write_error: {self._context.get_kafka_write_error_message}\n"
+
         _notification_message = (
             "Spark expectations job has been failed  \n\n"
             f"product_id: {self._context.product_id}\n"
@@ -229,6 +234,7 @@ class SparkExpectationsNotify:
             f"input_count: {self._context.get_input_count}\n"
             f"error_percentage: {self._context.get_error_percentage}\n"
             f"output_percentage: {self._context.get_output_percentage}\n"
+            f"{_kafka_status_info}"
             f"status: source_agg_dq_status = {self._context.get_source_agg_dq_status}\n"
             f"            source_query_dq_status = {self._context.get_source_query_dq_status}\n"
             f"            row_dq_status = {self._context.get_row_dq_status}\n"

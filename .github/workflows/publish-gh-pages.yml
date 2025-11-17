@@ -4,7 +4,7 @@ on:
     inputs:
       version:
         description: "Version number to pass to docs command. Format: 'v1.2.3'"
-        required: false
+        required: true
 jobs:
   publish-gh-pages:
     runs-on: ubuntu-latest

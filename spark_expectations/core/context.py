@@ -182,6 +182,10 @@ class SparkExpectationsContext:
 
         self._stats_dict: List[dict] = []
 
+        # Kafka write status tracking
+        self._kafka_write_status: str = "Disabled"
+        self._kafka_write_error_message: str = ""
+
 
     @property
     def get_dbr_version(self) -> Optional[float]:
@@ -517,6 +521,42 @@ class SparkExpectationsContext:
             """The spark expectations context is not set completely, please assign '_dq_run_status' before 
             accessing it"""
         )
+
+    def set_kafka_write_status(self, kafka_write_status: str = "Disabled") -> None:
+        """
+        This function sets the Kafka write status
+        Args:
+            kafka_write_status: Status of Kafka write operation ("Success", "Failed", "Disabled")
+        Returns: None
+        """
+        self._kafka_write_status = kafka_write_status
+
+    @property
+    def get_kafka_write_status(self) -> str:
+        """
+        This function returns the Kafka write status
+        Returns:
+            str: _kafka_write_status ("Success", "Failed", "Disabled")
+        """
+        return getattr(self, "_kafka_write_status", "Disabled")
+
+    def set_kafka_write_error_message(self, error_message: str = "") -> None:
+        """
+        This function sets the Kafka write error message
+        Args:
+            error_message: Error message from Kafka write failure
+        Returns: None
+        """
+        self._kafka_write_error_message = error_message
+
+    @property
+    def get_kafka_write_error_message(self) -> str:
+        """
+        This function returns the Kafka write error message
+        Returns:
+            str: Returns _kafka_write_error_message
+        """
+        return getattr(self, "_kafka_write_error_message", "")
 
     @property
     def get_config_file_path(self) -> str:
