@@ -112,6 +112,9 @@ jobs:
           make build
           twine upload dist/*
       - name: Publish Docs
-        run: make deploy-docs
+        run: |
+          export PATH=$PATH:$HOME/.local/bin
+          VERSION=$(hatch version)
+          make deploy-docs version=$VERSION
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -4,7 +4,7 @@ Spark Expectations can send three kinds of emails.
 
 ## 1. Data Quality Report Emails
 
-Please see the [Observability Examples doc](Observability_examples) for more detailed information on emails that contain the DQ report.
+Please see the [Observability Examples doc](Observability_examples.md) for more detailed information on emails that contain the DQ report.
 
 
 ## 2. Basic Email Notifications/Alerts

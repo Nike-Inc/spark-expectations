@@ -25,7 +25,7 @@ dependencies = [
 include = ["spark_expectations"]
 
 [tool.hatch.build.targets.sdist]
-include = ["spark_expectations","docs","tests"]
+include = ["spark_expectations","docs","tests","containers","README.md","LICENSE.txt","CONTRIBUTORS.md","CONTRIBUTING.md"]
 
 [tool.hatch.version]
 source = "vcs"
