@@ -57,6 +57,9 @@ success = writer.stop_streaming_query(streaming_query, timeout=30)
 
 ## 🚨 Production Best Practices
 
+- Disable all notifications for start, completion, failure, error drop threshold
+- Set se_enable_streaming to False to disable streaming stats to Kafka (for streaming jobs stats are not calculated)
+
 ### Checkpoint Location (CRITICAL)
 
 When using Spark Expectations (SE) with streaming DataFrames, configuring a proper checkpoint location is **critical** for production workloads. The updated `SparkExpectationsWriter` now includes built-in warnings to help ensure proper configuration.
