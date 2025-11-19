@@ -627,6 +627,8 @@
       
         
       
+        
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -824,6 +826,26 @@
           </ul>
         </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Observability_examples/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Observability
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -1651,6 +1673,10 @@
       
         
       
+        
+      
+        
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1767,11 +1793,51 @@
   
   
     <li class="md-nav__item">
+      <a href="../teams_plugin/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Teams_Notification_plugin
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../pagerduty_plugin/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
     PagerDuty_Notification_plugin
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zoom_plugin/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Zoom_Notification_plugin
   </span>
   
 
@@ -1801,9 +1867,9 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_3_6" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_3_8" >
         
-          <label class="md-nav__link" for="__nav_5_3_6" id="__nav_5_3_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_3_8" id="__nav_5_3_8_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -1814,8 +1880,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_3_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_3_6">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_3_8">
             <span class="md-nav__icon md-icon"></span>
             Push
           </label>
@@ -2001,6 +2067,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -2042,6 +2114,66 @@
   
   <span class="md-ellipsis">
     Base_Setup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sample_dq_bigquery/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sample_DQ_BigQuery
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sample_dq_delta/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sample_DQ_Delta
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../sample_dq_iceberg/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sample_DQ_Iceberg
   </span>
   
 
@@ -3149,7 +3281,9 @@ this will take precedence over the class level writer</p>
 <span class="normal"><a href="#__codelineno-0-652">652</a></span>
 <span class="normal"><a href="#__codelineno-0-653">653</a></span>
 <span class="normal"><a href="#__codelineno-0-654">654</a></span>
-<span class="normal"><a href="#__codelineno-0-655">655</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-154" name="__codelineno-0-154"></a><span class="k">def</span><span class="w"> </span><span class="nf">with_expectations</span><span class="p">(</span>
+<span class="normal"><a href="#__codelineno-0-655">655</a></span>
+<span class="normal"><a href="#__codelineno-0-656">656</a></span>
+<span class="normal"><a href="#__codelineno-0-657">657</a></span></pre></div></td><td class="code"><div><pre><span></span><code><a id="__codelineno-0-154" name="__codelineno-0-154"></a><span class="k">def</span><span class="w"> </span><span class="nf">with_expectations</span><span class="p">(</span>
 <a id="__codelineno-0-155" name="__codelineno-0-155"></a>    <span class="bp">self</span><span class="p">,</span>
 <a id="__codelineno-0-156" name="__codelineno-0-156"></a>    <span class="n">target_table</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
 <a id="__codelineno-0-157" name="__codelineno-0-157"></a>    <span class="n">write_to_table</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
@@ -3627,30 +3761,32 @@ this will take precedence over the class level writer</p>
 <a id="__codelineno-0-629" name="__codelineno-0-629"></a>
 <a id="__codelineno-0-630" name="__codelineno-0-630"></a>                    <span class="c1"># TODO if row_dq is False and source_agg/source_query is True then we need to write the</span>
 <a id="__codelineno-0-631" name="__codelineno-0-631"></a>                    <span class="c1">#  dataframe into the target table</span>
-<a id="__codelineno-0-632" name="__codelineno-0-632"></a>                    <span class="k">if</span> <span class="n">write_to_table</span><span class="p">:</span>
-<a id="__codelineno-0-633" name="__codelineno-0-633"></a>                        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Writing into the final table started&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-634" name="__codelineno-0-634"></a>                        <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">save_df_as_table</span><span class="p">(</span>
-<a id="__codelineno-0-635" name="__codelineno-0-635"></a>                            <span class="n">_row_dq_df</span><span class="p">,</span>
-<a id="__codelineno-0-636" name="__codelineno-0-636"></a>                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
-<a id="__codelineno-0-637" name="__codelineno-0-637"></a>                            <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">get_target_and_error_table_writer_config</span><span class="p">,</span>
-<a id="__codelineno-0-638" name="__codelineno-0-638"></a>                        <span class="p">)</span>
-<a id="__codelineno-0-639" name="__codelineno-0-639"></a>                        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Writing into the final table ended&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-640" name="__codelineno-0-640"></a>
-<a id="__codelineno-0-641" name="__codelineno-0-641"></a>                <span class="k">else</span><span class="p">:</span>
-<a id="__codelineno-0-642" name="__codelineno-0-642"></a>                    <span class="k">raise</span> <span class="n">SparkExpectationsDataframeNotReturnedException</span><span class="p">(</span>
-<a id="__codelineno-0-643" name="__codelineno-0-643"></a>                        <span class="s2">&quot;error occurred while processing spark &quot;</span>
-<a id="__codelineno-0-644" name="__codelineno-0-644"></a>                        <span class="s2">&quot;expectations due to given dataframe is not type of dataframe&quot;</span>
-<a id="__codelineno-0-645" name="__codelineno-0-645"></a>                    <span class="p">)</span>
-<a id="__codelineno-0-646" name="__codelineno-0-646"></a>                <span class="c1"># self.spark.catalog.clearCache()</span>
-<a id="__codelineno-0-647" name="__codelineno-0-647"></a>
-<a id="__codelineno-0-648" name="__codelineno-0-648"></a>                <span class="k">return</span> <span class="n">_row_dq_df</span>
-<a id="__codelineno-0-649" name="__codelineno-0-649"></a>
-<a id="__codelineno-0-650" name="__codelineno-0-650"></a>            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
-<a id="__codelineno-0-651" name="__codelineno-0-651"></a>                <span class="k">raise</span> <span class="n">SparkExpectationsMiscException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;error occurred while processing spark expectations </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
-<a id="__codelineno-0-652" name="__codelineno-0-652"></a>
-<a id="__codelineno-0-653" name="__codelineno-0-653"></a>        <span class="k">return</span> <span class="n">wrapper</span>
+<a id="__codelineno-0-632" name="__codelineno-0-632"></a>                    <span class="n">streaming_query</span> <span class="o">=</span> <span class="kc">None</span>
+<a id="__codelineno-0-633" name="__codelineno-0-633"></a>                    <span class="k">if</span> <span class="n">write_to_table</span><span class="p">:</span>
+<a id="__codelineno-0-634" name="__codelineno-0-634"></a>                        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Writing into the final table started&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-635" name="__codelineno-0-635"></a>                        <span class="n">streaming_query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_writer</span><span class="o">.</span><span class="n">save_df_as_table</span><span class="p">(</span>
+<a id="__codelineno-0-636" name="__codelineno-0-636"></a>                            <span class="n">_row_dq_df</span><span class="p">,</span>
+<a id="__codelineno-0-637" name="__codelineno-0-637"></a>                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-638" name="__codelineno-0-638"></a>                            <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">get_target_and_error_table_writer_config</span><span class="p">,</span>
+<a id="__codelineno-0-639" name="__codelineno-0-639"></a>                        <span class="p">)</span>
+<a id="__codelineno-0-640" name="__codelineno-0-640"></a>                        <span class="n">_log</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Writing into the final table ended&quot;</span><span class="p">)</span>
+<a id="__codelineno-0-641" name="__codelineno-0-641"></a>
+<a id="__codelineno-0-642" name="__codelineno-0-642"></a>                <span class="k">else</span><span class="p">:</span>
+<a id="__codelineno-0-643" name="__codelineno-0-643"></a>                    <span class="k">raise</span> <span class="n">SparkExpectationsDataframeNotReturnedException</span><span class="p">(</span>
+<a id="__codelineno-0-644" name="__codelineno-0-644"></a>                        <span class="s2">&quot;error occurred while processing spark &quot;</span>
+<a id="__codelineno-0-645" name="__codelineno-0-645"></a>                        <span class="s2">&quot;expectations due to given dataframe is not type of dataframe&quot;</span>
+<a id="__codelineno-0-646" name="__codelineno-0-646"></a>                    <span class="p">)</span>
+<a id="__codelineno-0-647" name="__codelineno-0-647"></a>                <span class="c1"># self.spark.catalog.clearCache()</span>
+<a id="__codelineno-0-648" name="__codelineno-0-648"></a>
+<a id="__codelineno-0-649" name="__codelineno-0-649"></a>                <span class="c1"># Return streaming query if available (for streaming DataFrames), otherwise return DataFrame</span>
+<a id="__codelineno-0-650" name="__codelineno-0-650"></a>                <span class="k">return</span> <span class="n">streaming_query</span> <span class="k">if</span> <span class="n">streaming_query</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">_row_dq_df</span>
+<a id="__codelineno-0-651" name="__codelineno-0-651"></a>
+<a id="__codelineno-0-652" name="__codelineno-0-652"></a>            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+<a id="__codelineno-0-653" name="__codelineno-0-653"></a>                <span class="k">raise</span> <span class="n">SparkExpectationsMiscException</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;error occurred while processing spark expectations </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
 <a id="__codelineno-0-654" name="__codelineno-0-654"></a>
-<a id="__codelineno-0-655" name="__codelineno-0-655"></a>    <span class="k">return</span> <span class="n">_except</span>
+<a id="__codelineno-0-655" name="__codelineno-0-655"></a>        <span class="k">return</span> <span class="n">wrapper</span>
+<a id="__codelineno-0-656" name="__codelineno-0-656"></a>
+<a id="__codelineno-0-657" name="__codelineno-0-657"></a>    <span class="k">return</span> <span class="n">_except</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>

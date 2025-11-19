@@ -12,13 +12,9 @@
         <meta name="author" content="Ashok Singamaneni">
       
       
-        <link rel="canonical" href="https://engineering.nike.com/spark-expectations/main/developer_guide/contributing/">
+        <link rel="canonical" href="https://engineering.nike.com/spark-expectations/main/user_guide/Stream_write_guide/">
       
       
-        <link rel="prev" href="../../Observability_examples/">
-      
-      
-        <link rel="next" href="../setup/">
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
@@ -26,7 +22,7 @@
     
     
       
-        <title>Contributing - Spark-Expectations</title>
+        <title>Spark Expectations Streaming Writer Guide - Spark-Expectations</title>
       
     
     
@@ -84,6 +80,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#spark-expectations-streaming-writer-guide" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -120,7 +121,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Contributing
+              Spark Expectations Streaming Writer Guide
             
           </span>
         </div>
@@ -253,7 +254,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../user_guide/getting_started/" class="md-tabs__link">
+        <a href="../getting_started/" class="md-tabs__link">
           
   
     
@@ -272,13 +273,11 @@
         
   
   
-    
-  
   
     
     
-      <li class="md-tabs__item md-tabs__item--active">
-        <a href="./" class="md-tabs__link">
+      <li class="md-tabs__item">
+        <a href="../../developer_guide/contributing/" class="md-tabs__link">
           
   
     
@@ -562,7 +561,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user_guide/getting_started/" class="md-nav__link">
+      <a href="../getting_started/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -582,7 +581,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user_guide/quickstart/" class="md-nav__link">
+      <a href="../quickstart/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -658,7 +657,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user_guide/data_quality_rules/" class="md-nav__link">
+      <a href="../data_quality_rules/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -678,7 +677,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user_guide/data_quality_metrics/" class="md-nav__link">
+      <a href="../data_quality_metrics/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -698,7 +697,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user_guide/user_config/" class="md-nav__link">
+      <a href="../user_config/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -762,7 +761,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user_guide/notifications/email_notifications/" class="md-nav__link">
+      <a href="../notifications/email_notifications/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -782,7 +781,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user_guide/notifications/slack_notifications/" class="md-nav__link">
+      <a href="../notifications/slack_notifications/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -802,7 +801,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../user_guide/notifications/pagerduty_notifications/" class="md-nav__link">
+      <a href="../notifications/pagerduty_notifications/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -863,8 +862,6 @@
       
   
   
-    
-  
   
     
     
@@ -875,13 +872,15 @@
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" checked>
+          
+        
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_3" >
         
           <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
             
@@ -894,7 +893,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_3">
             <span class="md-nav__icon md-icon"></span>
             Developer Guide
@@ -905,16 +904,9 @@
                 
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../developer_guide/contributing/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -923,7 +915,6 @@
   
 
       </a>
-      
     </li>
   
 
@@ -935,7 +926,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../setup/" class="md-nav__link">
+      <a href="../../developer_guide/setup/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
@@ -2081,6 +2072,261 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#key-features" class="md-nav__link">
+    Key Features
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage-examples" class="md-nav__link">
+    Usage Examples
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-usage-batch-dataframe" class="md-nav__link">
+    Basic Usage (Batch DataFrame)
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#streaming-dataframe-usage" class="md-nav__link">
+    Streaming DataFrame Usage
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#managing-streaming-queries" class="md-nav__link">
+    Managing Streaming Queries
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#production-best-practices" class="md-nav__link">
+    🚨 Production Best Practices
+  </a>
+  
+    <nav class="md-nav" aria-label="🚨 Production Best Practices">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#checkpoint-location-critical" class="md-nav__link">
+    Checkpoint Location (CRITICAL)
+  </a>
+  
+    <nav class="md-nav" aria-label="Checkpoint Location (CRITICAL)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-checkpoint-location-matters" class="md-nav__link">
+    Why Checkpoint Location Matters
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#warning-system" class="md-nav__link">
+    Warning System
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#correct-configuration" class="md-nav__link">
+    ✅ Correct Configuration
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#avoid-these-patterns" class="md-nav__link">
+    ❌ Avoid These Patterns
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-options" class="md-nav__link">
+    Configuration Options
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Options">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#streaming-specific-options" class="md-nav__link">
+    Streaming-Specific Options
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#common-options-both-batch-and-streaming" class="md-nav__link">
+    Common Options (Both Batch and Streaming)
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checkpoint-location-guidelines" class="md-nav__link">
+    Checkpoint Location Guidelines
+  </a>
+  
+    <nav class="md-nav" aria-label="Checkpoint Location Guidelines">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-dedicated-paths" class="md-nav__link">
+    1. Dedicated Paths
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-persistent-storage" class="md-nav__link">
+    2. Persistent Storage
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-naming-conventions" class="md-nav__link">
+    3. Naming Conventions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#4-access-permissions" class="md-nav__link">
+    4. Access Permissions
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#monitoring-and-maintenance" class="md-nav__link">
+    Monitoring and Maintenance
+  </a>
+  
+    <nav class="md-nav" aria-label="Monitoring and Maintenance">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1-monitor-checkpoint-size" class="md-nav__link">
+    1. Monitor Checkpoint Size
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#2-backup-critical-checkpoints" class="md-nav__link">
+    2. Backup Critical Checkpoints
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#3-version-compatibility" class="md-nav__link">
+    3. Version Compatibility
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    Troubleshooting
+  </a>
+  
+    <nav class="md-nav" aria-label="Troubleshooting">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#common-issues" class="md-nav__link">
+    Common Issues
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#complete-production-example" class="md-nav__link">
+    Complete Production Example
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#checkout-more-on-example-notebook-for-usage" class="md-nav__link">
+    Checkout more on example notebook for usage
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#implementation-details" class="md-nav__link">
+    Implementation Details
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#key-takeaways" class="md-nav__link">
+    Key Takeaways
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -2098,11 +2344,258 @@
   
 
 
-  <h1>Contributing</h1>
-
+<h1 id="spark-expectations-streaming-writer-guide">Spark Expectations Streaming Writer Guide<a class="headerlink" href="#spark-expectations-streaming-writer-guide" title="Permanent link">&para;</a></h1>
+<p>This comprehensive guide covers the updated <code>SparkExpectationsWriter</code> class that now supports both batch and streaming DataFrames with automatic detection and built-in best practice warnings.</p>
+<h2 id="key-features">Key Features<a class="headerlink" href="#key-features" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Automatic Detection</strong>: The <code>save_df_as_table</code> method automatically detects if a DataFrame is streaming using <code>df.isStreaming</code></li>
+<li><strong>Unified API</strong>: Single method handles both batch and streaming DataFrames</li>
+<li><strong>Streaming Configuration</strong>: Supports all streaming-specific configurations like triggers, checkpoints, and output modes</li>
+<li><strong>Query Management</strong>: Helper methods for monitoring and stopping streaming queries</li>
+<li><strong>Built-in Warnings</strong>: Production-ready warning system for checkpoint location best practices</li>
+</ol>
+<h2 id="usage-examples">Usage Examples<a class="headerlink" href="#usage-examples" title="Permanent link">&para;</a></h2>
+<h3 id="basic-usage-batch-dataframe">Basic Usage (Batch DataFrame)<a class="headerlink" href="#basic-usage-batch-dataframe" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spark_expectations.sinks.utils.writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">SparkExpectationsWriter</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="c1"># For batch DataFrames, it automatically uses df.write</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    <span class="s2">&quot;mode&quot;</span><span class="p">:</span> <span class="s2">&quot;overwrite&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>    <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;delta&quot;</span><span class="p">,</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>    <span class="s2">&quot;partitionBy&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;date&quot;</span><span class="p">]</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="p">}</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="c1"># Returns None for batch DataFrames</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="n">result</span> <span class="o">=</span> <span class="n">writer</span><span class="o">.</span><span class="n">save_df_as_table</span><span class="p">(</span><span class="n">batch_df</span><span class="p">,</span> <span class="s2">&quot;my_table&quot;</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="streaming-dataframe-usage">Streaming DataFrame Usage<a class="headerlink" href="#streaming-dataframe-usage" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># For streaming DataFrames, it automatically uses df.writeStream</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">streaming_config</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>    <span class="s2">&quot;outputMode&quot;</span><span class="p">:</span> <span class="s2">&quot;append&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>    <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;delta&quot;</span><span class="p">,</span> 
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>    <span class="s2">&quot;queryName&quot;</span><span class="p">:</span> <span class="s2">&quot;my_streaming_query&quot;</span><span class="p">,</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>    <span class="s2">&quot;trigger&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;processingTime&quot;</span><span class="p">:</span> <span class="s2">&quot;10 seconds&quot;</span><span class="p">},</span>
+<a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>    <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">{</span>
+<a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>        <span class="s2">&quot;checkpointLocation&quot;</span><span class="p">:</span> <span class="s2">&quot;/path/to/checkpoint&quot;</span><span class="p">,</span>  <span class="c1"># REQUIRED for production!</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>        <span class="s2">&quot;maxFilesPerTrigger&quot;</span><span class="p">:</span> <span class="s2">&quot;100&quot;</span>
+<a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>    <span class="p">}</span>
+<a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="p">}</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="c1"># Returns StreamingQuery for streaming DataFrames</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="n">streaming_query</span> <span class="o">=</span> <span class="n">writer</span><span class="o">.</span><span class="n">save_df_as_table</span><span class="p">(</span><span class="n">streaming_df</span><span class="p">,</span> <span class="s2">&quot;my_streaming_table&quot;</span><span class="p">,</span> <span class="n">streaming_config</span><span class="p">)</span>
+</code></pre></div>
+<h3 id="managing-streaming-queries">Managing Streaming Queries<a class="headerlink" href="#managing-streaming-queries" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Check streaming query status</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">status</span> <span class="o">=</span> <span class="n">writer</span><span class="o">.</span><span class="n">get_streaming_query_status</span><span class="p">(</span><span class="n">streaming_query</span><span class="p">)</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Query status: </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="c1"># Stop streaming query gracefully</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="n">success</span> <span class="o">=</span> <span class="n">writer</span><span class="o">.</span><span class="n">stop_streaming_query</span><span class="p">(</span><span class="n">streaming_query</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="production-best-practices">🚨 Production Best Practices<a class="headerlink" href="#production-best-practices" title="Permanent link">&para;</a></h2>
 <ul>
-<li><a href="https://github.com/Nike-Inc/spark-expectations/blob/main/CONTRIBUTING.md">Guidelines</a></li>
+<li>Disable all notifications for start, completion, failure, error drop threshold</li>
+<li>Set se_enable_streaming to False to disable streaming stats to Kafka (for streaming jobs stats are not calculated)</li>
 </ul>
+<h3 id="checkpoint-location-critical">Checkpoint Location (CRITICAL)<a class="headerlink" href="#checkpoint-location-critical" title="Permanent link">&para;</a></h3>
+<p>When using Spark Expectations (SE) with streaming DataFrames, configuring a proper checkpoint location is <strong>critical</strong> for production workloads. The updated <code>SparkExpectationsWriter</code> now includes built-in warnings to help ensure proper configuration.</p>
+<h4 id="why-checkpoint-location-matters">Why Checkpoint Location Matters<a class="headerlink" href="#why-checkpoint-location-matters" title="Permanent link">&para;</a></h4>
+<p><strong>1. Fault Tolerance</strong>
+- Enables recovery from driver failures
+- Maintains processing state across restarts
+- Prevents data loss during unexpected shutdowns</p>
+<p><strong>2. Exactly-Once Processing</strong>
+- Ensures each record is processed exactly once
+- Prevents duplicate data in target tables
+- Maintains data consistency and integrity</p>
+<p><strong>3. Progress Tracking</strong>
+- Tracks which batches have been processed
+- Enables resuming from the last processed offset
+- Prevents reprocessing of already handled data</p>
+<h4 id="warning-system">Warning System<a class="headerlink" href="#warning-system" title="Permanent link">&para;</a></h4>
+<p>The <code>SparkExpectationsWriter</code> provides two levels of warnings:</p>
+<p><strong>Early Detection Warning</strong> (triggered when streaming DataFrame detected without checkpoint):
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>🚨 PRODUCTION BEST PRACTICE WARNING: Streaming DataFrame detected without checkpointLocation!
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>For production workloads with Spark Expectations (SE), always configure a dedicated
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>checkpoint location to ensure fault tolerance, exactly-once processing, and proper
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>recovery after failures. Add &#39;checkpointLocation&#39; to your streaming config options.
+</code></pre></div></p>
+<p><strong>Configuration Processing Warning</strong> (triggered during options processing):
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>⚠️  PRODUCTION WARNING: No checkpointLocation specified for streaming DataFrame.
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>For production workloads, it is strongly recommended to set a dedicated checkpoint
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>location in the &#39;options&#39; config when using Spark Expectations (SE) to write in
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>streaming fashion to target tables.
+</code></pre></div></p>
+<h4 id="correct-configuration">✅ Correct Configuration<a class="headerlink" href="#correct-configuration" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="n">streaming_config</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>    <span class="s2">&quot;outputMode&quot;</span><span class="p">:</span> <span class="s2">&quot;append&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>    <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;delta&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>    <span class="s2">&quot;queryName&quot;</span><span class="p">:</span> <span class="s2">&quot;my_data_quality_stream&quot;</span><span class="p">,</span> 
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>    <span class="s2">&quot;trigger&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;processingTime&quot;</span><span class="p">:</span> <span class="s2">&quot;30 seconds&quot;</span><span class="p">},</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>    <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">{</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>        <span class="s2">&quot;checkpointLocation&quot;</span><span class="p">:</span> <span class="s2">&quot;/dedicated/checkpoints/my_table_dq_stream&quot;</span><span class="p">,</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a>        <span class="s2">&quot;maxFilesPerTrigger&quot;</span><span class="p">:</span> <span class="s2">&quot;1000&quot;</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>    <span class="p">}</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="p">}</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="c1"># This will log: &quot;Using checkpoint location: /dedicated/checkpoints/my_table_dq_stream/my_table&quot;</span>
+<a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="n">streaming_query</span> <span class="o">=</span> <span class="n">writer</span><span class="o">.</span><span class="n">save_df_as_table</span><span class="p">(</span><span class="n">streaming_df</span><span class="p">,</span> <span class="s2">&quot;my_table&quot;</span><span class="p">,</span> <span class="n">streaming_config</span><span class="p">)</span>
+</code></pre></div>
+<h4 id="avoid-these-patterns">❌ Avoid These Patterns<a class="headerlink" href="#avoid-these-patterns" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># Missing checkpoint location entirely</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">bad_config</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>    <span class="s2">&quot;outputMode&quot;</span><span class="p">:</span> <span class="s2">&quot;append&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>    <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;delta&quot;</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>    <span class="c1"># No options with checkpointLocation!</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="p">}</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="c1"># Empty options</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="n">bad_config2</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a>    <span class="s2">&quot;outputMode&quot;</span><span class="p">:</span> <span class="s2">&quot;append&quot;</span><span class="p">,</span> 
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>    <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;delta&quot;</span><span class="p">,</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a>    <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">{}</span>  <span class="c1"># No checkpointLocation!</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="p">}</span>
+</code></pre></div>
+<h2 id="configuration-options">Configuration Options<a class="headerlink" href="#configuration-options" title="Permanent link">&para;</a></h2>
+<h3 id="streaming-specific-options">Streaming-Specific Options<a class="headerlink" href="#streaming-specific-options" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>outputMode</code>: "append", "complete", or "update"</li>
+<li><code>queryName</code>: Name for the streaming query</li>
+<li><code>trigger</code>: Processing trigger configuration</li>
+<li><code>{"processingTime": "10 seconds"}</code> </li>
+<li><code>{"once": True}</code></li>
+<li><code>{"continuous": "1 second"}</code></li>
+<li><code>checkpointLocation</code>: Automatically appends table name to path</li>
+</ul>
+<h3 id="common-options-both-batch-and-streaming">Common Options (Both Batch and Streaming)<a class="headerlink" href="#common-options-both-batch-and-streaming" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>format</code>: "delta", "parquet", "json", etc.</li>
+<li><code>partitionBy</code>: List of partition columns</li>
+<li><code>options</code>: Additional writer options</li>
+</ul>
+<h2 id="checkpoint-location-guidelines">Checkpoint Location Guidelines<a class="headerlink" href="#checkpoint-location-guidelines" title="Permanent link">&para;</a></h2>
+<h3 id="1-dedicated-paths">1. Dedicated Paths<a class="headerlink" href="#1-dedicated-paths" title="Permanent link">&para;</a></h3>
+<p>Use unique checkpoint paths for each streaming job:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>/checkpoints/spark_expectations/
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>├── customer_data_quality/
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>├── orders_data_quality/
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>└── inventory_data_quality/
+</code></pre></div></p>
+<h3 id="2-persistent-storage">2. Persistent Storage<a class="headerlink" href="#2-persistent-storage" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Use reliable, persistent storage (HDFS, S3, Azure Data Lake)</li>
+<li>Avoid local filesystems in distributed environments</li>
+<li>Ensure checkpoint location survives cluster restarts</li>
+</ul>
+<h3 id="3-naming-conventions">3. Naming Conventions<a class="headerlink" href="#3-naming-conventions" title="Permanent link">&para;</a></h3>
+<p>Include meaningful identifiers:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>/checkpoints/spark_expectations/{environment}/{dataset}_dq_stream/
+</code></pre></div></p>
+<p>Example:
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>/checkpoints/spark_expectations/prod/customer_orders_dq_stream/
+</code></pre></div></p>
+<h3 id="4-access-permissions">4. Access Permissions<a class="headerlink" href="#4-access-permissions" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Ensure Spark has read/write access to checkpoint location</li>
+<li>Use appropriate IAM roles/permissions for cloud storage</li>
+<li>Test checkpoint accessibility before production deployment</li>
+</ul>
+<h2 id="monitoring-and-maintenance">Monitoring and Maintenance<a class="headerlink" href="#monitoring-and-maintenance" title="Permanent link">&para;</a></h2>
+<h3 id="1-monitor-checkpoint-size">1. Monitor Checkpoint Size<a class="headerlink" href="#1-monitor-checkpoint-size" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Checkpoint directories grow over time</li>
+<li>Implement retention policies for old checkpoint data</li>
+<li>Monitor storage usage</li>
+</ul>
+<h3 id="2-backup-critical-checkpoints">2. Backup Critical Checkpoints<a class="headerlink" href="#2-backup-critical-checkpoints" title="Permanent link">&para;</a></h3>
+<ul>
+<li>For mission-critical streams, consider checkpoint backups</li>
+<li>Document recovery procedures</li>
+<li>Test recovery scenarios</li>
+</ul>
+<h3 id="3-version-compatibility">3. Version Compatibility<a class="headerlink" href="#3-version-compatibility" title="Permanent link">&para;</a></h3>
+<ul>
+<li>Checkpoint format can change between Spark versions</li>
+<li>Plan for checkpoint migration during upgrades</li>
+<li>Test compatibility before version updates</li>
+</ul>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<h3 id="common-issues">Common Issues<a class="headerlink" href="#common-issues" title="Permanent link">&para;</a></h3>
+<ol>
+<li>
+<p><strong>Permission Errors</strong>
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>Solution: Verify Spark has write access to checkpoint location
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Checkpoint Corruption</strong>
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>Solution: Delete corrupted checkpoint (will restart from beginning)
+</code></pre></div></p>
+</li>
+<li>
+<p><strong>Path Conflicts</strong>
+   <div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>Solution: Use unique checkpoint paths for each streaming job
+</code></pre></div></p>
+</li>
+</ol>
+<h2 id="complete-production-example">Complete Production Example<a class="headerlink" href="#complete-production-example" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="kn">from</span><span class="w"> </span><span class="nn">spark_expectations.sinks.utils.writer</span><span class="w"> </span><span class="kn">import</span> <span class="n">SparkExpectationsWriter</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="c1"># Production-ready streaming configuration</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="n">production_config</span> <span class="o">=</span> <span class="p">{</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a>    <span class="s2">&quot;outputMode&quot;</span><span class="p">:</span> <span class="s2">&quot;append&quot;</span><span class="p">,</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a>    <span class="s2">&quot;format&quot;</span><span class="p">:</span> <span class="s2">&quot;delta&quot;</span><span class="p">,</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a>    <span class="s2">&quot;queryName&quot;</span><span class="p">:</span> <span class="s2">&quot;customer_data_quality_stream&quot;</span><span class="p">,</span>
+<a id="__codelineno-13-8" name="__codelineno-13-8" href="#__codelineno-13-8"></a>    <span class="s2">&quot;trigger&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;processingTime&quot;</span><span class="p">:</span> <span class="s2">&quot;1 minute&quot;</span><span class="p">},</span>
+<a id="__codelineno-13-9" name="__codelineno-13-9" href="#__codelineno-13-9"></a>    <span class="s2">&quot;options&quot;</span><span class="p">:</span> <span class="p">{</span>
+<a id="__codelineno-13-10" name="__codelineno-13-10" href="#__codelineno-13-10"></a>        <span class="s2">&quot;checkpointLocation&quot;</span><span class="p">:</span> <span class="s2">&quot;s3a://my-bucket/checkpoints/spark-expectations/prod/customers_dq&quot;</span><span class="p">,</span>
+<a id="__codelineno-13-11" name="__codelineno-13-11" href="#__codelineno-13-11"></a>        <span class="s2">&quot;maxFilesPerTrigger&quot;</span><span class="p">:</span> <span class="s2">&quot;500&quot;</span><span class="p">,</span>
+<a id="__codelineno-13-12" name="__codelineno-13-12" href="#__codelineno-13-12"></a>        <span class="s2">&quot;maxBytesPerTrigger&quot;</span><span class="p">:</span> <span class="s2">&quot;1g&quot;</span>
+<a id="__codelineno-13-13" name="__codelineno-13-13" href="#__codelineno-13-13"></a>    <span class="p">}</span>
+<a id="__codelineno-13-14" name="__codelineno-13-14" href="#__codelineno-13-14"></a><span class="p">}</span>
+<a id="__codelineno-13-15" name="__codelineno-13-15" href="#__codelineno-13-15"></a>
+<a id="__codelineno-13-16" name="__codelineno-13-16" href="#__codelineno-13-16"></a><span class="c1"># This configuration will NOT trigger warnings</span>
+<a id="__codelineno-13-17" name="__codelineno-13-17" href="#__codelineno-13-17"></a><span class="n">streaming_query</span> <span class="o">=</span> <span class="n">writer</span><span class="o">.</span><span class="n">save_df_as_table</span><span class="p">(</span>
+<a id="__codelineno-13-18" name="__codelineno-13-18" href="#__codelineno-13-18"></a>    <span class="n">streaming_df</span><span class="o">=</span><span class="n">customer_stream</span><span class="p">,</span>
+<a id="__codelineno-13-19" name="__codelineno-13-19" href="#__codelineno-13-19"></a>    <span class="n">table_name</span><span class="o">=</span><span class="s2">&quot;customers_with_dq&quot;</span><span class="p">,</span> 
+<a id="__codelineno-13-20" name="__codelineno-13-20" href="#__codelineno-13-20"></a>    <span class="n">config</span><span class="o">=</span><span class="n">production_config</span>
+<a id="__codelineno-13-21" name="__codelineno-13-21" href="#__codelineno-13-21"></a><span class="p">)</span>
+<a id="__codelineno-13-22" name="__codelineno-13-22" href="#__codelineno-13-22"></a>
+<a id="__codelineno-13-23" name="__codelineno-13-23" href="#__codelineno-13-23"></a><span class="c1"># Monitor the stream</span>
+<a id="__codelineno-13-24" name="__codelineno-13-24" href="#__codelineno-13-24"></a><span class="n">status</span> <span class="o">=</span> <span class="n">writer</span><span class="o">.</span><span class="n">get_streaming_query_status</span><span class="p">(</span><span class="n">streaming_query</span><span class="p">)</span>
+<a id="__codelineno-13-25" name="__codelineno-13-25" href="#__codelineno-13-25"></a><span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Stream status: </span><span class="si">{</span><span class="n">status</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<a id="__codelineno-13-26" name="__codelineno-13-26" href="#__codelineno-13-26"></a>
+<a id="__codelineno-13-27" name="__codelineno-13-27" href="#__codelineno-13-27"></a><span class="c1"># Graceful shutdown when needed</span>
+<a id="__codelineno-13-28" name="__codelineno-13-28" href="#__codelineno-13-28"></a><span class="n">success</span> <span class="o">=</span> <span class="n">writer</span><span class="o">.</span><span class="n">stop_streaming_query</span><span class="p">(</span><span class="n">streaming_query</span><span class="p">,</span> <span class="n">timeout</span><span class="o">=</span><span class="mi">60</span><span class="p">)</span>
+<a id="__codelineno-13-29" name="__codelineno-13-29" href="#__codelineno-13-29"></a><span class="k">if</span> <span class="n">success</span><span class="p">:</span>
+<a id="__codelineno-13-30" name="__codelineno-13-30" href="#__codelineno-13-30"></a>    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Stream stopped successfully&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="checkout-more-on-example-notebook-for-usage">Checkout more on example notebook for usage<a class="headerlink" href="#checkout-more-on-example-notebook-for-usage" title="Permanent link">&para;</a></h2>
+<p><a href="../../examples/notebooks/spark_expectation_streaming_dbx.ipynb">spark_expectation_streaming_dbx.ipynb</a></p>
+<h2 id="implementation-details">Implementation Details<a class="headerlink" href="#implementation-details" title="Permanent link">&para;</a></h2>
+<p>The updated <code>save_df_as_table</code> method:</p>
+<ol>
+<li><strong>Detects DataFrame Type</strong>: Checks <code>df.isStreaming</code> to determine if DataFrame is streaming</li>
+<li><strong>Issues Warnings</strong>: Logs warnings if checkpoint location is missing for streaming DataFrames</li>
+<li><strong>Uses Appropriate Writer</strong>: </li>
+<li><code>df.writeStream</code> for streaming DataFrames</li>
+<li><code>df.write</code> for batch DataFrames</li>
+<li><strong>Applies Configuration</strong>: Handles streaming-specific options like triggers and output modes</li>
+<li><strong>Returns Appropriate Type</strong>: </li>
+<li><code>StreamingQuery</code> for streaming DataFrames</li>
+<li><code>None</code> for batch DataFrames</li>
+<li><strong>Manages Table Properties</strong>: Sets product_id and other metadata for both streaming and batch tables</li>
+<li><strong>Handles Errors Gracefully</strong>: Comprehensive exception handling and logging</li>
+</ol>
+<h2 id="key-takeaways">Key Takeaways<a class="headerlink" href="#key-takeaways" title="Permanent link">&para;</a></h2>
+<ul>
+<li>✅ <strong>Always configure checkpoint locations</strong> for production streaming workloads</li>
+<li>✅ <strong>Use dedicated checkpoint paths</strong> for each streaming job</li>
+<li>✅ <strong>Monitor checkpoint health</strong> and implement retention policies</li>
+<li>✅ <strong>Test recovery scenarios</strong> before production deployment</li>
+<li>✅ <strong>Pay attention to warnings</strong> - they help prevent production issues</li>
+</ul>
+<p><strong>Remember: Checkpoint locations are not optional for production streaming workloads with Spark Expectations!</strong></p>
 
 
 

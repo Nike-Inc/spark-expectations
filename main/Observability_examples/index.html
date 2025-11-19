@@ -15,6 +15,10 @@
         <link rel="canonical" href="https://engineering.nike.com/spark-expectations/main/Observability_examples/">
       
       
+        <link rel="prev" href="../user_guide/notifications/pagerduty_notifications/">
+      
+      
+        <link rel="next" href="../developer_guide/contributing/">
       
       
       <link rel="icon" href="../assets/images/favicon.png">
@@ -22,7 +26,7 @@
     
     
       
-        <title>Spark Expectations Observability Features - Spark-Expectations</title>
+        <title>Observability - Spark-Expectations</title>
       
     
     
@@ -121,7 +125,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Spark Expectations Observability Features
+              Observability
             
           </span>
         </div>
@@ -244,16 +248,20 @@
         
   
   
+    
+  
   
     
     
       
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="../user_guide/getting_started/" class="md-tabs__link">
           
   
@@ -475,6 +483,8 @@
       
   
   
+    
+  
   
     
     
@@ -485,15 +495,13 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
         
           <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
             
@@ -506,7 +514,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2">
             <span class="md-nav__icon md-icon"></span>
             User Guide
@@ -607,6 +615,8 @@
                 
   
   
+    
+  
   
     
     
@@ -619,17 +629,17 @@
       
         
       
+        
+      
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
         
         
-          
-        
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_2_2" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_2" checked>
         
           <label class="md-nav__link" for="__nav_2_2" id="__nav_2_2_label" tabindex="0">
             
@@ -642,7 +652,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_2_2">
             <span class="md-nav__icon md-icon"></span>
             Reference
@@ -815,6 +825,128 @@
             
           </ul>
         </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    Observability
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    Observability
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    Overview
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#required-attributes-for-enabling-observability-in-sample-dq-delta" class="md-nav__link">
+    Required Attributes for Enabling Observability in Sample DQ Delta
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#currently-our-observability-system-supports-2-flows" class="md-nav__link">
+    Currently our observability system supports 2 flows:
+  </a>
+  
+    <nav class="md-nav" aria-label="Currently our observability system supports 2 flows:">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#flow-1-dq-report-generation" class="md-nav__link">
+    Flow 1: DQ Report Generation
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#flow-2-dq-report-generation-with-email-alerts" class="md-nav__link">
+    Flow 2: DQ Report Generation with Email Alerts
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#key-highlights" class="md-nav__link">
+    Key Highlights:
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#template-options-for-report-table-rendering" class="md-nav__link">
+    Template Options for Report Table Rendering
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#sample-for-the-alert-received-in-the-mail" class="md-nav__link">
+    Sample for the alert received in the mail
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
       
     </li>
   
@@ -1508,6 +1640,10 @@
       
         
       
+        
+      
+        
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1624,11 +1760,51 @@
   
   
     <li class="md-nav__item">
+      <a href="../api/teams_plugin/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Teams_Notification_plugin
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../api/pagerduty_plugin/" class="md-nav__link">
         
   
   <span class="md-ellipsis">
     PagerDuty_Notification_plugin
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/zoom_plugin/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Zoom_Notification_plugin
   </span>
   
 
@@ -1658,9 +1834,9 @@
         
           
         
-        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_3_6" >
+        <input class="md-nav__toggle md-toggle md-toggle--indeterminate" type="checkbox" id="__nav_5_3_8" >
         
-          <label class="md-nav__link" for="__nav_5_3_6" id="__nav_5_3_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5_3_8" id="__nav_5_3_8_label" tabindex="0">
             
   
   <span class="md-ellipsis">
@@ -1671,8 +1847,8 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_3_6_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_5_3_6">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_5_3_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5_3_8">
             <span class="md-nav__icon md-icon"></span>
             Push
           </label>
@@ -1858,6 +2034,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     <li class="md-nav__item md-nav__item--nested">
@@ -1899,6 +2081,66 @@
   
   <span class="md-ellipsis">
     Base_Setup
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/sample_dq_bigquery/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sample_DQ_BigQuery
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/sample_dq_delta/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sample_DQ_Delta
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/sample_dq_iceberg/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Sample_DQ_Iceberg
   </span>
   
 
