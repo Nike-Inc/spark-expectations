@@ -159,12 +159,6 @@ class SparkExpectationsActions:
         # pylint: disable=too-many-nested-blocks
         try:
             # Skip detailed stats for streaming DataFrames - .agg().collect() and .count() not supported
-            if df.isStreaming:
-                _log.warning(
-                    f"Streaming DataFrame detected in agg_query_dq_detailed_result for {_dq_rule.get('rule_type', 'unknown')}. "
-                    "Skipping detailed aggregation results collection for streaming DataFrames."
-                )
-                return querydq_output, None
             
             if (
                 _dq_rule["rule_type"] == _context.get_agg_dq_rule_type_name
