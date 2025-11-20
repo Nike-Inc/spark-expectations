@@ -257,7 +257,7 @@ if success:
 ```
 ## Checkout more on example notebook for usage
 
-[spark_expectation_streaming_dbx.ipynb](../../examples/notebooks/spark_expectation_streaming_dbx.ipynb)
+[spark_expectation_streaming_dbx.ipynb](https://github.com/Nike-Inc/spark-expectations/blob/main/examples/notebooks/spark_expectation_streaming_dbx.ipynb)
 
 ## Implementation Details
 
