@@ -158,7 +158,6 @@ class SparkExpectationsActions:
 
         # pylint: disable=too-many-nested-blocks
         try:
-            # Skip detailed stats for streaming DataFrames - .agg().collect() and .count() not supported
             
             if (
                 _dq_rule["rule_type"] == _context.get_agg_dq_rule_type_name

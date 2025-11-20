@@ -429,6 +429,9 @@ class SparkExpectations:
                             _input_count=_input_count,
                         )
 
+                        if _df.isStreaming:
+                            _log.info("Streaming dataframe detected. Only row_dq checks applicable.")
+
                         if _source_agg_dq is True and not _df.isStreaming:
                             _log.info(
                                 "started processing data quality rules for agg level expectations on soure dataframe"
