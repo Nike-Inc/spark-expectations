@@ -4143,47 +4143,46 @@ def test_streaming_dataframe_detection_log():
     stream_writer = WrappedDataFrameStreamWriter().outputMode("append").format("delta").option("checkpointLocation", "/tmp/checkpoint1")
     batch_writer = WrappedDataFrameWriter().mode("append").format("delta")
     
-    # Mock the logger to capture the log message
-    with patch('spark_expectations.core.expectations._log') as mock_log:
 
-        rules_df = spark.createDataFrame([
-            {
-                "product_id": "test_product",
-                "table_name": "test_table",
-                "rule_type": "agg_dq",
-                "rule": "data_existing",
-                "column_name": "sales",
-                "expectation": "count(*) > 0",
-                "action_if_failed": "fail",
-                "tag": "completeness",
-                "description": "Data should be present",
-                "enable_for_source_dq_validation": True,
-                "enable_for_target_dq_validation": True,
-                "is_active": True,
-                "enable_error_drop_alert": False,
-                "error_drop_threshold": 0,
-            }
-        ])
+    rules_df = spark.createDataFrame([
+        {
+            "product_id": "test_product",
+            "table_name": "test_table",
+            "rule_type": "agg_dq",
+            "rule": "data_existing",
+            "column_name": "sales",
+            "expectation": "count(*) > 0",
+            "action_if_failed": "fail",
+            "tag": "completeness",
+            "description": "Data should be present",
+            "enable_for_source_dq_validation": True,
+            "enable_for_target_dq_validation": True,
+            "is_active": True,
+            "enable_error_drop_alert": False,
+            "error_drop_threshold": 0,
+        }
+    ])
         
-        # Create SparkExpectations instance
-        se = SparkExpectations(
-            product_id="test_product",
-            rules_df=rules_df,
-            stats_table="test_stats_table",
-            target_and_error_table_writer=stream_writer,
-            stats_table_writer= batch_writer
-        )
+    # Create SparkExpectations instance
+    se = SparkExpectations(
+        product_id="test_product",
+        rules_df=rules_df,
+        stats_table="test_stats_table",
+        target_and_error_table_writer=stream_writer,
+        stats_table_writer= batch_writer
+    )
              
-        @se.with_expectations(
-            target_table="test_target_table",
-            write_to_table=False
-        )
-        def streaming_data_function():
-            return streaming_df
+    @se.with_expectations(
+        target_table="test_target_table",
+        write_to_table=False
+    )
+    def streaming_data_function():
+        return streaming_df
+    
+    with patch('spark_expectations.core.expectations._log') as mock_log,\
+         patch.object(se._process, 'execute_dq_process', return_value=(streaming_df, [], 0, {})) as mock_process_exec, \
+         patch('spark_expectations.sinks.utils.writer.SparkExpectationsWriter.write_error_stats', return_value=None) as mock_write_error:
         
-        try:
             result = streaming_data_function()
-        except:
-            pass
         
-        mock_log.info.assert_any_call("Streaming dataframe detected. Only row_dq checks applicable.")
+            mock_log.info.assert_any_call("Streaming dataframe detected. Only row_dq checks applicable.")
