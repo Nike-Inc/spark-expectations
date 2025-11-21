@@ -429,7 +429,14 @@ class SparkExpectations:
                             _input_count=_input_count,
                         )
 
-                        if _source_agg_dq is True:
+                        if _df.isStreaming:
+                            _log.info("Streaming dataframe detected. Only row_dq checks applicable.")
+                            if _source_agg_dq is True:
+                                _log.info("agg_dq expectations provided. Not applicable for streaming dataframe.")
+                            if _source_query_dq:
+                                _log.info("query_dq expectations provided. Not applicable for streaming dataframe.")
+
+                        if _source_agg_dq is True and not _df.isStreaming:
                             _log.info(
                                 "started processing data quality rules for agg level expectations on soure dataframe"
                             )
@@ -459,7 +466,7 @@ class SparkExpectations:
                                 "ended processing data quality rules for agg level expectations on source dataframe"
                             )
 
-                        if _source_query_dq is True:
+                        if _source_query_dq is True and not _df.isStreaming:
                             _log.info(
                                 "started processing data quality rules for query level expectations on soure dataframe"
                             )
@@ -539,7 +546,7 @@ class SparkExpectations:
                                 # )
                             _log.info("ended processing data quality rules for row level expectations")
 
-                        if _row_dq is True and _target_agg_dq is True:
+                        if _row_dq is True and _target_agg_dq is True and not _df.isStreaming:
                             _log.info(
                                 "started processing data quality rules for agg level expectations on final dataframe"
                             )
@@ -570,7 +577,7 @@ class SparkExpectations:
                                 "ended processing data quality rules for agg level expectations on final dataframe"
                             )
 
-                        if _row_dq is True and _target_query_dq is True:
+                        if _row_dq is True and _target_query_dq is True and not _df.isStreaming:
                             _log.info(
                                 "started processing data quality rules for query level expectations on final dataframe"
                             )

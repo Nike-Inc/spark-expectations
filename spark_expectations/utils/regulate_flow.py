@@ -89,13 +89,6 @@ class SparkExpectationsRegulateFlow:
                     )
                 )
 
-                if df.isStreaming and (source_agg_dq_flag or final_agg_dq_flag or source_query_dq_flag or final_query_dq_flag):
-                    _log.warning(
-                        f"Streaming DataFrame detected in execute_dq_process for {_running_rule_type_name}. Skipping dq process execution for steaming dataframe "
-                    )
-                    return df , None, _error_count, "Passed"
-
-
                 _log.info("The data quality dataframe is getting created for expectations")
 
                 _df_dq: DataFrame = _actions.run_dq_rules(
