@@ -1,157 +1,157 @@
 # Spark Expectations Rules - Converted from RULES_DATA
 # This file contains all the data quality rules in YAML format
 
- rule_1:
-   product_id: your_product
-   table_name: dq_spark_dev.customer_order
-   rule_type: row_dq
-   rule: sales_greater_than_zero
-   column_name: sales
-   expectation: sales > 2
-   action_if_failed: ignore
-   tag: accuracy
-   description: sales value should be greater than zero
-   enable_for_source_dq_validation: false
-   enable_for_target_dq_validation: true
-   is_active: true
-   enable_error_drop_alert: false
-   error_drop_threshold: 0
-   query_dq_delimiter: null
-   enable_querydq_custom_output: null
-   priority: medium
+rule_1:
+  product_id: your_product
+  table_name: dq_spark_dev.customer_order
+  rule_type: row_dq
+  rule: sales_greater_than_zero
+  column_name: sales
+  expectation: sales > 2
+  action_if_failed: ignore
+  tag: accuracy
+  description: sales value should be greater than zero
+  enable_for_source_dq_validation: false
+  enable_for_target_dq_validation: true
+  is_active: true
+  enable_error_drop_alert: false
+  error_drop_threshold: 0
+  query_dq_delimiter: null
+  enable_querydq_custom_output: null
+  priority: medium
 
- rule_2:
-   product_id: your_product
-   table_name: dq_spark_{env}.customer_order
-   rule_type: row_dq
-   rule: discount_threshold
-   column_name: discount
-   expectation: discount*100 < 60
-   action_if_failed: drop
-   tag: validity
-   description: discount should be less than 40
-   enable_for_source_dq_validation: true
-   enable_for_target_dq_validation: true
-   is_active: true
-   enable_error_drop_alert: false
-   error_drop_threshold: 0
-   query_dq_delimiter: null
-   enable_querydq_custom_output: null
-   priority: medium
+rule_2:
+  product_id: your_product
+  table_name: dq_spark_{env}.customer_order
+  rule_type: row_dq
+  rule: discount_threshold
+  column_name: discount
+  expectation: discount*100 < 60
+  action_if_failed: drop
+  tag: validity
+  description: discount should be less than 40
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  is_active: true
+  enable_error_drop_alert: false
+  error_drop_threshold: 0
+  query_dq_delimiter: null
+  enable_querydq_custom_output: null
+  priority: medium
 
- rule_3:
-   product_id: your_product
-   table_name: dq_spark_{env}.customer_order
-   rule_type: row_dq
-   rule: ship_mode_in_set
-   column_name: ship_mode
-   expectation: lower(trim(ship_mode)) in('second class', 'standard class', 'standard class')
-   action_if_failed: drop
-   tag: validity
-   description: ship_mode mode belongs in the sets
-   enable_for_source_dq_validation: true
-   enable_for_target_dq_validation: true
-   is_active: true
-   enable_error_drop_alert: false
-   error_drop_threshold: 0
-   query_dq_delimiter: null
-   enable_querydq_custom_output: null
-   priority: medium
+rule_3:
+  product_id: your_product
+  table_name: dq_spark_{env}.customer_order
+  rule_type: row_dq
+  rule: ship_mode_in_set
+  column_name: ship_mode
+  expectation: lower(trim(ship_mode)) in('second class', 'standard class', 'standard class')
+  action_if_failed: drop
+  tag: validity
+  description: ship_mode mode belongs in the sets
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  is_active: true
+  enable_error_drop_alert: false
+  error_drop_threshold: 0
+  query_dq_delimiter: null
+  enable_querydq_custom_output: null
+  priority: medium
 
- rule_4:
-   product_id: your_product
-   table_name: dq_spark_{env}.customer_order
-   rule_type: row_dq
-   rule: profit_threshold
-   column_name: profit
-   expectation: profit>0
-   action_if_failed: ignore
-   tag: validity
-   description: profit threshold should be greater tahn 0
-   enable_for_source_dq_validation: false
-   enable_for_target_dq_validation: true
-   is_active: false
-   enable_error_drop_alert: true
-   error_drop_threshold: 0
-   query_dq_delimiter: null
-   enable_querydq_custom_output: null
-   priority: medium
+rule_4:
+  product_id: your_product
+  table_name: dq_spark_{env}.customer_order
+  rule_type: row_dq
+  rule: profit_threshold
+  column_name: profit
+  expectation: profit>0
+  action_if_failed: ignore
+  tag: validity
+  description: profit threshold should be greater tahn 0
+  enable_for_source_dq_validation: false
+  enable_for_target_dq_validation: true
+  is_active: false
+  enable_error_drop_alert: true
+  error_drop_threshold: 0
+  query_dq_delimiter: null
+  enable_querydq_custom_output: null
+  priority: medium
 
- rule_5:
-   product_id: your_product
-   table_name: dq_spark_dev.customer_order
-   rule_type: agg_dq
-   rule: sum_of_sales_range type 1
-   column_name: sales
-   expectation: sum(sales)>99 and sum(sales)<99999
-   action_if_failed: ignore
-   tag: validity
-   description: regex format validation for quantity
-   enable_for_source_dq_validation: true
-   enable_for_target_dq_validation: true
-   is_active: true
-   enable_error_drop_alert: false
-   error_drop_threshold: 0
-   query_dq_delimiter: null
-   enable_querydq_custom_output: true
-   priority: medium
+rule_5:
+  product_id: your_product
+  table_name: dq_spark_dev.customer_order
+  rule_type: agg_dq
+  rule: sum_of_sales_range type 1
+  column_name: sales
+  expectation: sum(sales)>99 and sum(sales)<99999
+  action_if_failed: ignore
+  tag: validity
+  description: regex format validation for quantity
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  is_active: true
+  enable_error_drop_alert: false
+  error_drop_threshold: 0
+  query_dq_delimiter: null
+  enable_querydq_custom_output: true
+  priority: medium
 
- rule_6:
-   product_id: your_product
-   table_name: dq_spark_dev.customer_order
-   rule_type: agg_dq
-   rule: sum_of_sales_range type 2
-   column_name: sales
-   expectation: sum(sales) between 100 and 10000
-   action_if_failed: ignore
-   tag: validity
-   description: regex format validation for quantity
-   enable_for_source_dq_validation: true
-   enable_for_target_dq_validation: true
-   is_active: true
-   enable_error_drop_alert: false
-   error_drop_threshold: 0
-   query_dq_delimiter: null
-   enable_querydq_custom_output: true
-   priority: medium
+rule_6:
+  product_id: your_product
+  table_name: dq_spark_dev.customer_order
+  rule_type: agg_dq
+  rule: sum_of_sales_range type 2
+  column_name: sales
+  expectation: sum(sales) between 100 and 10000
+  action_if_failed: ignore
+  tag: validity
+  description: regex format validation for quantity
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  is_active: true
+  enable_error_drop_alert: false
+  error_drop_threshold: 0
+  query_dq_delimiter: null
+  enable_querydq_custom_output: true
+  priority: medium
 
- rule_7:
-   product_id: your_product
-   table_name: dq_spark_dev.customer_order
-   rule_type: agg_dq
-   rule: sum_of_sales
-   column_name: sales
-   expectation: sum(sales)>10000
-   action_if_failed: ignore
-   tag: validity
-   description: regex format validation for quantity
-   enable_for_source_dq_validation: true
-   enable_for_target_dq_validation: true
-   is_active: true
-   enable_error_drop_alert: false
-   error_drop_threshold: 0
-   query_dq_delimiter: null
-   enable_querydq_custom_output: null
-   priority: medium
+rule_7:
+  product_id: your_product
+  table_name: dq_spark_dev.customer_order
+  rule_type: agg_dq
+  rule: sum_of_sales
+  column_name: sales
+  expectation: sum(sales)>10000
+  action_if_failed: ignore
+  tag: validity
+  description: regex format validation for quantity
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  is_active: true
+  enable_error_drop_alert: false
+  error_drop_threshold: 0
+  query_dq_delimiter: null
+  enable_querydq_custom_output: null
+  priority: medium
 
- rule_8:
-   product_id: your_product
-   table_name: dq_spark_dev.customer_order
-   rule_type: agg_dq
-   rule: sum_of_quantity
-   column_name: quantity
-   expectation: sum(quantity)>10000
-   action_if_failed: ignore
-   tag: validity
-   description: regex format validation for quantity
-   enable_for_source_dq_validation: true
-   enable_for_target_dq_validation: true
-   is_active: true
-   enable_error_drop_alert: false
-   error_drop_threshold: 0
-   query_dq_delimiter: null
-   enable_querydq_custom_output: null
-   priority: medium
+rule_8:
+  product_id: your_product
+  table_name: dq_spark_dev.customer_order
+  rule_type: agg_dq
+  rule: sum_of_quantity
+  column_name: quantity
+  expectation: sum(quantity)>10000
+  action_if_failed: ignore
+  tag: validity
+  description: regex format validation for quantity
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  is_active: true
+  enable_error_drop_alert: false
+  error_drop_threshold: 0
+  query_dq_delimiter: null
+  enable_querydq_custom_output: null
+  priority: medium
 
 # rule_9:
 #   product_id: your_product
@@ -191,24 +191,24 @@
 #   enable_querydq_custom_output: true
 #   priority: medium
 
-rule_11:
-   product_id: your_product
-   table_name: dq_spark_dev.customer_order
-   rule_type: query_dq
-   rule: order_count_validity
-   column_name: "*"
-   expectation: "({source_f1}) > 10@source_f1@select count(*) from customer_order"
-   action_if_failed: ignore
-   tag: validity
-   description: row count threshold
-   enable_for_source_dq_validation: true
-   enable_for_target_dq_validation: false
-   is_active: true
-   enable_error_drop_alert: false
-   error_drop_threshold: 0
-   query_dq_delimiter: "@"
-   enable_querydq_custom_output: true
-   priority: medium
+# rule_11:
+#   product_id: your_product
+#   table_name: dq_spark_dev.customer_order
+#   rule_type: query_dq
+#   rule: order_count_validity
+#   column_name: "*"
+#   expectation: "({source_f1}) > 10@source_f1@select count(*) from order_source"
+#   action_if_failed: ignore
+#   tag: validity
+#   description: row count threshold
+#   enable_for_source_dq_validation: true
+#   enable_for_target_dq_validation: true
+#   is_active: true
+#   enable_error_drop_alert: false
+#   error_drop_threshold: 0
+#   query_dq_delimiter: "@"
+#   enable_querydq_custom_output: true
+#   priority: medium
 
 rule_12:
   product_id: your_product
@@ -216,13 +216,13 @@ rule_12:
   rule_type: query_dq
   rule: order_count_validity_check
   column_name: "*"
-  expectation: (select count(*) from customer_order)  > 5
+  expectation: (select count(*) from customer_order) > 10
   action_if_failed: ignore
   tag: validity
   description: row count threshold
   enable_for_source_dq_validation: true
-  enable_for_target_dq_validation: false
-  is_active: true
+  enable_for_target_dq_validation: true
+  is_active: false
   enable_error_drop_alert: false
   error_drop_threshold: 0
   query_dq_delimiter: null
@@ -240,29 +240,29 @@ rule_13:
   tag: validity
   description: distinct product category
   enable_for_source_dq_validation: true
-  enable_for_target_dq_validation: false
-  is_active: true
+  enable_for_target_dq_validation: true
+  is_active: false
   enable_error_drop_alert: false
   error_drop_threshold: 0
   query_dq_delimiter: null
   enable_querydq_custom_output: true
   priority: medium
 
-# rule_14:
-#   product_id: your_product
-#   table_name: dq_spark_{env}.customer_order
-#   rule_type: agg_dq
-#   rule: distinct_of_ship_mode
-#   column_name: ship_mode
-#   expectation: count(distinct ship_mode) <= 3
-#   action_if_failed: ignore
-#   tag: validity
-#   description: regex format validation for quantity
-#   enable_for_source_dq_validation: true
-#   enable_for_target_dq_validation: true
-#   is_active: true
-#   enable_error_drop_alert: false
-#   error_drop_threshold: 0
-#   query_dq_delimiter: null
-#   enable_querydq_custom_output: null
-#   priority: medium
+rule_14:
+  product_id: your_product
+  table_name: dq_spark_{env}.customer_order
+  rule_type: agg_dq
+  rule: distinct_of_ship_mode
+  column_name: ship_mode
+  expectation: count(distinct ship_mode) <= 3
+  action_if_failed: ignore
+  tag: validity
+  description: regex format validation for quantity
+  enable_for_source_dq_validation: true
+  enable_for_target_dq_validation: true
+  is_active: true
+  enable_error_drop_alert: false
+  error_drop_threshold: 0
+  query_dq_delimiter: null
+  enable_querydq_custom_output: null
+  priority: medium
