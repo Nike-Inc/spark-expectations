@@ -431,6 +431,10 @@ class SparkExpectations:
 
                         if _df.isStreaming:
                             _log.info("Streaming dataframe detected. Only row_dq checks applicable.")
+                            if _source_agg_dq is True:
+                                _log.info("agg_dq expectations provided. Not applicable for streaming dataframe.")
+                            if _source_query_dq:
+                                _log.info("query_dq expectations provided. Not applicable for streaming dataframe.")
 
                         if _source_agg_dq is True and not _df.isStreaming:
                             _log.info(
