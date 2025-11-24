@@ -18,6 +18,7 @@ def load_configurations(spark: SparkSession) -> None:
     - Separates streaming (`se.streaming.*`) and notification (`spark.expectations.*`) configurations into dictionaries.
     - Sets other configuration values directly in the Spark session.
     - Stores streaming and notification configs as JSON strings in Spark session configs.
+    - In serverless environments, skips configuration setting to avoid CONFIG_NOT_AVAILABLE errors.
     - Raises RuntimeError for file not found, YAML parsing errors, permission issues, or other exceptions.
 
     Args:
@@ -44,6 +45,7 @@ def load_configurations(spark: SparkSession) -> None:
                 spark.conf.set(key, str(value))
         spark.conf.set("default_streaming_dict", json.dumps(streaming_config))
         spark.conf.set("default_notification_dict", json.dumps(notification_config))
+
 
     except FileNotFoundError as e:
         raise RuntimeError(f"Spark config YAML file not found: {e}") from e
@@ -75,23 +77,58 @@ def get_config_dict(
         user_conf: Dict[str, Union[str, int, bool, Dict[str, str]]] = None,
     ) -> Dict[str, Union[str, int, bool, Dict[str, str]]]:
         """Helper function to build configuration dictionary with type inference."""
+        # Check if serverless mode
+        is_serverless_mode = user_conf.get("spark.expectations.is.serverless", False) if user_conf else False
+        
         if user_conf:
-            config_dict = {
-                key: infer_safe_cast(user_conf.get(key, spark.conf.get(key, str(value))))
-                for key, value in default_dict.items()
-            }
+            if is_serverless_mode:
+                config_dict = {
+                    key: infer_safe_cast(user_conf.get(key, str(value)))
+                    for key, value in default_dict.items()
+                }
+            else:
+                config_dict = {
+                    key: infer_safe_cast(user_conf.get(key, spark.conf.get(key, str(value))))
+                    for key, value in default_dict.items()
+                }
         else:
-            config_dict = {key: infer_safe_cast(spark.conf.get(key, str(value))) for key, value in default_dict.items()}
+            if is_serverless_mode:
+                config_dict = {key: infer_safe_cast(str(value)) for key, value in default_dict.items()}
+            else:
+                config_dict = {key: infer_safe_cast(spark.conf.get(key, str(value))) for key, value in default_dict.items()}
         return config_dict
 
     try:
-        load_configurations(spark)
-        # Parse both JSON configurations at once
-        default_notification_dict_str = spark.conf.get("default_notification_dict")
-        default_streaming_dict_str = spark.conf.get("default_streaming_dict")
-
-        default_notification_dict = json.loads(default_notification_dict_str)
-        default_streaming_dict = json.loads(default_streaming_dict_str)
+        # Check if running in serverless mode
+        is_serverless = user_conf.get("spark.expectations.is.serverless", False) if user_conf else False
+        
+        
+        
+        if is_serverless:
+            # Use empty configurations for serverless
+            default_notification_dict = {
+                    "spark.expectations.notifications.email.enabled": False,
+                    "spark.expectations.notifications.slack.enabled": False,
+                    "spark.expectations.notifications.teams.enabled": False,
+                    "spark.expectations.agg.dq.detailed.stats": False,
+                    "spark.expectations.query.dq.detailed.stats": False,
+                    "spark.expectations.notifications.on.start": False,
+                    "spark.expectations.notifications.on.completion": True,
+                    "spark.expectations.notifications.on.fail": True,
+                    "park.expectations.notifications.on.error.drop.exceeds.threshold.breach": False,
+                    "spark.expectations.notifications.on.rules.action.if.failed.set.ignore": False,
+                    "spark.expectations.job.metadata": "",
+                    "spark.expectations.notifications.slack.min.priority": "medium"
+            }
+            default_streaming_dict = {}
+        else:
+            # Parse both JSON configurations at once
+            load_configurations(spark)
+            default_notification_dict_str = spark.conf.get("default_notification_dict")
+            default_streaming_dict_str = spark.conf.get("default_streaming_dict")
+            
+            default_notification_dict = json.loads(default_notification_dict_str)
+            default_streaming_dict = json.loads(default_streaming_dict_str)
 
         # Build both dictionaries using the helper function
         notification_dict = _build_config_dict(default_notification_dict, user_conf)
