@@ -105,7 +105,7 @@ def get_config_dict(
         
         
         if is_serverless:
-            # Use empty configurations for serverless
+            # Severless compute does not support setting most Spark properties. So we fallback to hardcoded defaults.
             default_notification_dict = {
                     "spark.expectations.notifications.email.enabled": False,
                     "spark.expectations.notifications.slack.enabled": False,
