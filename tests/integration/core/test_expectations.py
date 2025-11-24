@@ -3190,7 +3190,7 @@ def test_with_expectations_dataframe_not_returned_exception(
 
     with pytest.raises(
         SparkExpectationsMiscException,
-        match=r"error occurred while processing spark expectations Validation failed for rules: \['col1_threshold'\]",
+        match=r"error occurred while processing spark expectations Validation failed for 1 rule\(s\): \['col1_threshold'\]\. Check logs above for detailed error messages\.",
     ):  
         # Create a mock object with a rdd return value
         mock_func = Mock(return_value=_fixture_df.rdd)
