@@ -115,7 +115,7 @@ def get_config_dict(
                     "spark.expectations.notifications.on.start": False,
                     "spark.expectations.notifications.on.completion": True,
                     "spark.expectations.notifications.on.fail": True,
-                    "park.expectations.notifications.on.error.drop.exceeds.threshold.breach": False,
+                    "spark.expectations.notifications.on.error.drop.exceeds.threshold.breach": False,
                     "spark.expectations.notifications.on.rules.action.if.failed.set.ignore": False,
                     "spark.expectations.job.metadata": "",
                     "spark.expectations.notifications.slack.min.priority": "medium"
