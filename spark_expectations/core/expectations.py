@@ -95,25 +95,6 @@ class SparkExpectations:
     stats_table_writer: "WrappedDataFrameWriter"
     debugger: bool = False
     stats_streaming_options: Optional[Dict[str, Union[str, bool]]] = None
-    target_writer_streaming_config: Optional[Dict[str, Any]] = None
-
-    def _configure_stream_writers(self, writer_config: Optional[Dict[str, Any]]) -> None:
-        
-        self.target_and_error_table_writer = (
-                                                self.target_and_error_table_writer
-                                                .outputMode(writer_config.get("outputMode", None))
-                                                .format(writer_config.get("format", None))
-                                                .queryName(writer_config.get("queryName", None))
-                                                .trigger(**writer_config.get("trigger",{}))
-                                                .partitionBy(writer_config.get("partitionBy", []))
-                                                .options(**writer_config.get("options", {}))
-                                            )
-        
-        self.stats_table_writer = (
-                                    self.stats_table_writer
-                                    .mode(writer_config.get("outputMode", None))
-                                    .format(writer_config.get("format", None))
-                                    )
 
     def __post_init__(self) -> None:
         if isinstance(self.rules_df, DataFrame):  # type: ignore
@@ -155,7 +136,6 @@ class SparkExpectations:
 
         if isinstance(self.target_and_error_table_writer, WrappedDataFrameStreamWriter):
             self._context.set_target_and_error_table_writer_type("streaming")
-            self._configure_stream_writers(self.target_writer_streaming_config)
 
         self._context.set_target_and_error_table_writer_config(self.target_and_error_table_writer.build())
         self._context.set_stats_table_writer_config(self.stats_table_writer.build())
