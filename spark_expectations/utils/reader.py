@@ -47,7 +47,7 @@ class SparkExpectationsReader:
             #         "spark.expectations.notifications.teams.enabled": False
             #      }
 
-            if user_config.get("is_serverless") is False:
+            if notification.get("is_serverless") is False:
                 _default_notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = json.loads(
                     self.spark.conf.get("default_notification_dict")
                 )
