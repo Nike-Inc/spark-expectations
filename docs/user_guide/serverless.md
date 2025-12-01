@@ -35,13 +35,14 @@ user_conf = {
     user_config.se_enable_streaming: False
 }
 
+writer = WrappedDataFrameWriter().mode("append").format("delta")
 # Create SparkExpectations instance
 se = SparkExpectations(
     product_id="your_product_id",
     rules_df=your_rules_dataframe,
     stats_table="your_stats_table",
-    target_and_error_table_writer=WrappedDataFrameWriter().mode("append").format("delta"),
-    stats_table_writer=WrappedDataFrameWriter().mode("append").format("delta"),
+    target_and_error_table_writer=writer,
+    stats_table_writer=writer,
     user_conf=user_conf  # Enable serverless mode
 )
 
