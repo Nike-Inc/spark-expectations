@@ -48,7 +48,6 @@ class SparkExpectationsReader:
             #      }
 
             if not notification.get("spark.expectations.is.serverless", False):
-                print("Fetching Serverless default notification dict from Spark conf",notification.get("spark.expectations.is.serverless", False))
                 _default_notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = json.loads(
                     self.spark.conf.get("default_notification_dict")
                 )
