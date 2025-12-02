@@ -47,16 +47,30 @@ class SparkExpectationsReader:
             #         "spark.expectations.notifications.teams.enabled": False
             #      }
 
+            # if not notification.get("spark.expectations.is.serverless", False):
+            #     _default_notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = json.loads(
+            #         self.spark.conf.get("default_notification_dict")
+            #     )
+            # else:
+            #     _default_notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = notification
+
+            # _notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = (
+            #     {**_default_notification_dict, **notification} if notification else _default_notification_dict
+            # )
+
+            if notification is None:
+                notification = {}
+            
+            _notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]]
             if not notification.get("spark.expectations.is.serverless", False):
-                _default_notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = json.loads(
+                _notification_dict = json.loads(
                     self.spark.conf.get("default_notification_dict")
                 )
+                # Merge with provided notification settings
+                if notification:
+                    _notification_dict = {**_notification_dict, **notification}
             else:
-                _default_notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = notification
-
-            _notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = (
-                {**_default_notification_dict, **notification} if notification else _default_notification_dict
-            )
+                _notification_dict = notification
 
             if _notification_dict.get(user_config.se_enable_obs_dq_report_result) is True:
                 self._context.set_enable_obs_dq_report_result(True)
