@@ -47,22 +47,7 @@ class SparkExpectationsReader:
             #         "spark.expectations.notifications.teams.enabled": False
             #      }
 
-            # if not notification.get("spark.expectations.is.serverless", False):
-            #     _default_notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = json.loads(
-            #         self.spark.conf.get("default_notification_dict")
-            #     )
-            # else:
-            #     _default_notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = notification
-
-            # _notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = (
-            #     {**_default_notification_dict, **notification} if notification else _default_notification_dict
-            # )
-
-            if notification is None:
-                notification = {}
-            
-            _notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]]
-            if not notification.get("spark.expectations.is.serverless", False):
+            if notification is None or not notification.get("spark.expectations.is.serverless", False):
                 _notification_dict = json.loads(
                     self.spark.conf.get("default_notification_dict")
                 )
@@ -71,7 +56,7 @@ class SparkExpectationsReader:
                     _notification_dict = {**_notification_dict, **notification}
             else:
                 _notification_dict = notification
-
+           
             if _notification_dict.get(user_config.se_enable_obs_dq_report_result) is True:
                 self._context.set_enable_obs_dq_report_result(True)
                 if _notification_dict.get(user_config.se_dq_obs_alert_flag) is True:
@@ -122,7 +107,7 @@ class SparkExpectationsReader:
                     raise SparkExpectationsMiscException(
                         "All params/variables required for email notification is not configured or supplied"
                     )
-                if _notification_dict[user_config.se_notifications_enable_smtp_server_auth]:
+                if _notification_dict.get(user_config.se_notifications_enable_smtp_server_auth):
                     self._context.set_enable_smtp_server_auth(True)
                     if (
                         _notification_dict[user_config.se_notifications_smtp_password]
@@ -144,25 +129,25 @@ class SparkExpectationsReader:
                             "SMTP password is not set or secret dict for its retrieval is not provided"
                         )
                 if (
-                    _notification_dict[user_config.se_notifications_enable_custom_email_body]
-                    and _notification_dict[user_config.se_notifications_email_custom_body]
+                    _notification_dict.get(user_config.se_notifications_enable_custom_email_body)
+                    and _notification_dict.get(user_config.se_notifications_email_custom_body)
                 ):
                     self._context.set_enable_custom_email_body(True)
                     self._context.set_email_custom_body(
                         str(_notification_dict[user_config.se_notifications_email_custom_body])
                     )
-                if _notification_dict[user_config.se_notifications_enable_templated_basic_email_body]:
+                if _notification_dict.get(user_config.se_notifications_enable_templated_basic_email_body):
                     self._context.set_enable_templated_basic_email_body(True)
                 self._context.set_basic_default_template(
-                    str(_notification_dict[user_config.se_notifications_default_basic_email_template])
+                    str(_notification_dict.get(user_config.se_notifications_default_basic_email_template, ""))
                 )
                 if _notification_dict.get(user_config.se_notifications_enable_templated_custom_email):
                     self._context.set_enable_templated_custom_email(True)
                 self._context.set_custom_default_template(
-                    str(_notification_dict[user_config.se_notifications_email_custom_template])
+                    str(_notification_dict.get(user_config.se_notifications_email_custom_template, ""))
                 )
-            if _notification_dict[user_config.se_notifications_enable_slack] is True:
-                if _notification_dict[user_config.se_notifications_slack_webhook_url]:
+            if _notification_dict.get(user_config.se_notifications_enable_slack) is True:
+                if _notification_dict.get(user_config.se_notifications_slack_webhook_url):
                     self._context.set_enable_slack(True)
                     self._context.set_slack_webhook_url(
                         str(_notification_dict[user_config.se_notifications_slack_webhook_url])
@@ -172,8 +157,8 @@ class SparkExpectationsReader:
                         "All params/variables required for slack notification is not configured or supplied"
                     )
 
-            if _notification_dict[user_config.se_notifications_enable_teams] is True:
-                if _notification_dict[user_config.se_notifications_teams_webhook_url]:
+            if _notification_dict.get(user_config.se_notifications_enable_teams) is True:
+                if _notification_dict.get(user_config.se_notifications_teams_webhook_url):
                     self._context.set_enable_teams(True)
                     self._context.set_teams_webhook_url(
                         str(_notification_dict[user_config.se_notifications_teams_webhook_url])
@@ -183,26 +168,26 @@ class SparkExpectationsReader:
                         "All params/variables required for slack notification is not configured or supplied"
                     )
 
-                if _notification_dict[user_config.se_notifications_enable_zoom] is True:
-                    if _notification_dict[user_config.se_notifications_zoom_webhook_url]:
+                if _notification_dict.get(user_config.se_notifications_enable_zoom) is True:
+                    if _notification_dict.get(user_config.se_notifications_zoom_webhook_url):
                         self._context.set_enable_zoom(True)
                         self._context.set_zoom_webhook_url(
                             str(_notification_dict[user_config.se_notifications_zoom_webhook_url])
                         )
-                        self._context.set_zoom_token(str(_notification_dict[user_config.se_notifications_zoom_token]))
+                        self._context.set_zoom_token(str(_notification_dict.get(user_config.se_notifications_zoom_token, "")))
                     else:
                         raise SparkExpectationsMiscException(
                             "All params/variables required for zoom notification is not configured or supplied"
                         )
             
             if _notification_dict.get(user_config.se_notifications_enable_pagerduty) is True:
-                if _notification_dict[user_config.se_notifications_pagerduty_integration_key]:
+                if _notification_dict.get(user_config.se_notifications_pagerduty_integration_key):
                     self._context.set_enable_pagerduty(True)
                     self._context.set_pagerduty_integration_key(
                         str(_notification_dict[user_config.se_notifications_pagerduty_integration_key])
                     )
                     self._context.set_pagerduty_webhook_url(
-                        str(_notification_dict[user_config.se_notifications_pagerduty_webhook_url])
+                        str(_notification_dict.get(user_config.se_notifications_pagerduty_webhook_url, ""))
                     )
                 else:
                     raise SparkExpectationsMiscException(
