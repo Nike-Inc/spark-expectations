@@ -28,18 +28,19 @@ result = writer.save_df_as_table(batch_df, "my_table", config)
 ```
 
 ### Streaming DataFrame Usage
+For a streaming dataframe, you have to define a stream writer for the target_and_error_table_writer and a batch writer for the stats_table_writer
+
 ```python
 # For streaming DataFrames, it automatically uses df.writeStream
-streaming_config = {
-    "outputMode": "append",
-    "format": "delta", 
-    "queryName": "my_streaming_query",
-    "trigger": {"processingTime": "10 seconds"},
-    "options": {
-        "checkpointLocation": "/path/to/checkpoint",  # REQUIRED for production!
-        "maxFilesPerTrigger": "100"
-    }
-}
+target_writer = (WrappedDataFrameStreamWriter()
+                 .outputMode("append")
+                 .format("delta")
+                 .trigger(processingTime='5 seconds')
+                 .option("checkpointLocation", "checkpoint_path/target")
+                 .option("maxFilesPerTrigger", "100")
+                 )
+streaming_config = target_writer.build()
+stats_writer = WrappedDataFrameWriter().mode("append").format("delta")
 
 # Returns StreamingQuery for streaming DataFrames
 streaming_query = writer.save_df_as_table(streaming_df, "my_streaming_table", streaming_config)
@@ -104,37 +105,29 @@ streaming fashion to target tables.
 #### ✅ Correct Configuration
 
 ```python
-streaming_config = {
-    "outputMode": "append",
-    "format": "delta",
-    "queryName": "my_data_quality_stream", 
-    "trigger": {"processingTime": "30 seconds"},
-    "options": {
-        "checkpointLocation": "/dedicated/checkpoints/my_table_dq_stream",
-        "maxFilesPerTrigger": "1000"
-    }
-}
+target_writer = (WrappedDataFrameStreamWriter()
+                 .outputMode("append")
+                 .format("delta")
+                 .trigger(processingTime='5 seconds')
+                 .option("checkpointLocation", "checkpoint_path/target")
+                 .option("maxFilesPerTrigger", "100")
+                 )
+streaming_config = target_writer.build()
 
-# This will log: "Using checkpoint location: /dedicated/checkpoints/my_table_dq_stream/my_table"
+# This will log: "Using checkpoint location: checkpoint_path/target"
 streaming_query = writer.save_df_as_table(streaming_df, "my_table", streaming_config)
 ```
 
-#### ❌ Avoid These Patterns
-
+#### ❌ Avoid creating a writer class without checkpoint location
+This could lead to errors
 ```python
 # Missing checkpoint location entirely
-bad_config = {
-    "outputMode": "append",
-    "format": "delta"
+target_writer = (WrappedDataFrameStreamWriter()
+                 .outputMode("append")
+                 .format("delta")
+                 )
     # No options with checkpointLocation!
-}
 
-# Empty options
-bad_config2 = {
-    "outputMode": "append", 
-    "format": "delta",
-    "options": {}  # No checkpointLocation!
-}
 ```
 
 ## Configuration Options
@@ -227,17 +220,16 @@ Example:
 from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
 
 # Production-ready streaming configuration
-production_config = {
-    "outputMode": "append",
-    "format": "delta",
-    "queryName": "customer_data_quality_stream",
-    "trigger": {"processingTime": "1 minute"},
-    "options": {
-        "checkpointLocation": "s3a://my-bucket/checkpoints/spark-expectations/prod/customers_dq",
-        "maxFilesPerTrigger": "500",
-        "maxBytesPerTrigger": "1g"
-    }
-}
+
+target_writer = (WrappedDataFrameStreamWriter()
+                 .outputMode("append")
+                 .format("delta")
+                 .trigger(processingTime='1 minute')
+                 .option("checkpointLocation", "s3a://my-bucket/checkpoints/spark-expectations/prod/customers_dq")
+                 .option("maxFilesPerTrigger", "500")
+                 .option("maxBytesPerTrigger", "1g")
+                 )
+production_config = target_writer.build()
 
 # This configuration will NOT trigger warnings
 streaming_query = writer.save_df_as_table(
