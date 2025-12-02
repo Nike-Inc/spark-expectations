@@ -1945,11 +1945,13 @@ def test_execute_dq_process(
     spark.conf.set("spark.sql.session.timeZone", "Etc/UTC")
     df.createOrReplaceTempView("test_table")
     _fixture_context._dq_expectations = expectations
+    _fixture_context.set_table_name("dq_spark.test_final_table")
+    _fixture_context.set_error_table_name("dq_spark.test_final_table_error", user_specified=False)
     writer = SparkExpectationsWriter(_fixture_context)
     regulate_flow = SparkExpectationsRegulateFlow("product1")
 
     func_process = regulate_flow.execute_dq_process(
-        _fixture_context, _fixture_actions, writer, _mock_notify, expectations, "dq_spark.test_final_table", input_count
+        _fixture_context, _fixture_actions, writer, _mock_notify, expectations, input_count
     )
 
     # assert if expected output raises certain exception for failure
@@ -2178,7 +2180,7 @@ def test_execute_dq_process_exception(
         writer = SparkExpectationsWriter(mock_contextt)
         regulate_flow = SparkExpectationsRegulateFlow("product1")
         func_process = regulate_flow.execute_dq_process(
-            mock_contextt, actions, writer, expectations, "dq_spark.test_final_table", input_count
+            mock_contextt, actions, writer, Mock(), expectations, input_count
         )
 
         (_df, _agg_dq_res, _error_count, _status) = func_process(
