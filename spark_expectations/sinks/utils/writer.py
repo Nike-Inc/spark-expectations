@@ -161,7 +161,7 @@ class SparkExpectationsWriter:
                     _df_stream_writer = _df_stream_writer.format(config["format"])
                 
                 if config.get("queryName") is not None:
-                    _df_stream_writer = _df_stream_writer.queryName(f"{config["queryName"]}_{table_name}")
+                    _df_stream_writer = _df_stream_writer.queryName(f"{config['queryName']}_{table_name.split('.')[-1]}")
                 
                 if config.get("partitionBy") is not None and config["partitionBy"] != []:
                     _df_stream_writer = _df_stream_writer.partitionBy(config["partitionBy"])
