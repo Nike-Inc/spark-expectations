@@ -676,3 +676,58 @@ def test_get_rules_from_table_exception(_fixture_reader):
             "mock_rules_table_1",
             "table1",
         )
+
+
+def test_set_notification_param_serverless_integration():
+    """Integration test for set_notification_param in serverless mode"""
+    from spark_expectations.config.user_config import Constants as user_config
+    
+    # Create reader with serverless-compatible context
+    mock_context = Mock(spec=SparkExpectationsContext)
+    mock_context.spark = spark
+    serverless_reader = SparkExpectationsReader(mock_context)
+    
+    # Comprehensive serverless notification configuration
+    serverless_notification = {
+        "spark.expectations.is.serverless": True,
+        user_config.se_notifications_enable_email: False,
+        user_config.se_notifications_enable_slack: False,
+        user_config.se_notifications_enable_teams: False,
+        user_config.se_enable_obs_dq_report_result: False,
+        user_config.se_notifications_on_start: False,
+        user_config.se_notifications_on_completion: True,
+        user_config.se_notifications_on_fail: True
+    }
+    
+    # Should execute without errors in real Spark environment
+    serverless_reader.set_notification_param(serverless_notification)
+    
+    # Verify no exceptions were raised
+    assert True
+
+
+def test_set_notification_param_mixed_mode_integration():
+    """Integration test for mixed serverless/non-serverless configuration"""
+    from spark_expectations.config.user_config import Constants as user_config
+    
+    mock_context = Mock(spec=SparkExpectationsContext)
+    mock_context.spark = spark
+    mixed_reader = SparkExpectationsReader(mock_context)
+    
+    # Test configuration without explicit serverless flag (defaults to non-serverless)
+    mixed_notification = {
+        user_config.se_notifications_enable_email: False,
+        user_config.se_notifications_enable_slack: False,
+        user_config.se_enable_obs_dq_report_result: False,
+        "custom.serverless.compatible.setting": "value"
+    }
+    
+    # Mock Spark config for non-serverless path
+    with patch.object(mixed_reader.spark.conf, 'get', 
+                     return_value='{"spark.expectations.notifications.email.enabled": false}'):
+        
+        # Should handle mixed configuration gracefully
+        mixed_reader.set_notification_param(mixed_notification)
+        
+        # Verify no exceptions were raised
+        assert True

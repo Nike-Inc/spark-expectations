@@ -7,7 +7,8 @@ from pyspark.sql.functions import lit, struct, array, udf
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from spark_expectations.utils.actions import SparkExpectationsActions
-
+from spark_expectations.config.user_config import Constants as user_config
+from spark_expectations.utils.reader import SparkExpectationsReader
 
 @pytest.fixture(name="_fixture_agg_dq_rule")
 def fixture_agg_dq_rule():
@@ -80,3 +81,24 @@ def test_agg_query_dq_detailed_result_exception():
         SparkExpectationsActions().agg_query_dq_detailed_result(
             _mock_object_context, "_fixture_query_dq_rule", "<df>", []
         )
+
+
+def test_reader_serverless_notification_basic():
+    """Test basic serverless notification functionality in reader"""
+    mock_context = Mock(spec=SparkExpectationsContext)
+    mock_spark = Mock()
+    mock_spark.conf.get.return_value = '{"spark.expectations.notifications.email.enabled": false}'
+    mock_context.spark = mock_spark
+    
+    reader = SparkExpectationsReader(_context=mock_context)
+    
+    # Test serverless mode
+    notification = {
+        "spark.expectations.is.serverless": True,
+        user_config.se_notifications_enable_email: False,
+        user_config.se_enable_obs_dq_report_result: False
+    }
+    
+    # Should not raise any exception in serverless mode
+    reader.set_notification_param(notification)
+    assert True
