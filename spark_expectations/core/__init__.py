@@ -92,10 +92,7 @@ def get_config_dict(
                     for key, value in default_dict.items()
                 }
         else:
-            if is_serverless_mode:
-                config_dict = {key: infer_safe_cast(str(value)) for key, value in default_dict.items()}
-            else:
-                config_dict = {key: infer_safe_cast(spark.conf.get(key, str(value))) for key, value in default_dict.items()}
+            config_dict = {key: infer_safe_cast(spark.conf.get(key, str(value))) for key, value in default_dict.items()}
         return config_dict
 
     try:
