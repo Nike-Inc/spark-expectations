@@ -35,18 +35,6 @@ class SparkExpectationsReader:
 
         """
         try:
-            # try:
-            #     _default_notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = json.loads(
-            #         self.spark.conf.get("default_notification_dict")
-            #     )
-            # except Exception:
-            #     # Fallback for serverless environments
-            #      _default_notification_dict = {
-            #         "spark.expectations.notifications.email.enabled": False,
-            #         "spark.expectations.notifications.slack.enabled": False,
-            #         "spark.expectations.notifications.teams.enabled": False
-            #      }
-
             if notification is None or not notification.get("spark.expectations.is.serverless", False):
                 _notification_dict = json.loads(
                     self.spark.conf.get("default_notification_dict")
