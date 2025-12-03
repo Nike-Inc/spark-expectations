@@ -731,3 +731,136 @@ def test_set_notification_param_mixed_mode_integration():
         
         # Verify no exceptions were raised
         assert True
+
+
+def test_set_notification_param_serverless_edge_cases():
+    """Test edge cases in serverless notification parameter handling"""
+    from spark_expectations.config.user_config import Constants as user_config
+    
+    mock_context = Mock(spec=SparkExpectationsContext)
+    mock_context.spark = spark
+    edge_reader = SparkExpectationsReader(mock_context)
+    
+    # Test serverless notification with .get() method usage for optional parameters
+    serverless_notification = {
+        "spark.expectations.is.serverless": True,
+        user_config.se_notifications_enable_email: True,
+        user_config.se_enable_obs_dq_report_result: True,
+        user_config.se_dq_obs_alert_flag: True,
+        user_config.se_notifications_email_smtp_port: "587",
+        user_config.se_notifications_email_subject: "Test Subject",
+        user_config.se_notifications_smtp_password: "test_pass",
+        user_config.se_notifications_email_to: "test@example.com",
+        user_config.se_notifications_email_smtp_host: "smtp.example.com",
+        user_config.se_notifications_email_from: "noreply@example.com",
+        # Test optional parameters that use .get() method
+        user_config.se_notifications_enable_smtp_server_auth: True,
+        user_config.se_notifications_enable_custom_email_body: True,
+        user_config.se_notifications_email_custom_body: "Custom body",
+        user_config.se_notifications_enable_templated_basic_email_body: True,
+        user_config.se_notifications_default_basic_email_template: "basic_template",
+        user_config.se_notifications_enable_templated_custom_email: True,
+        user_config.se_notifications_email_custom_template: "custom_template",
+        # Test notification types with .get() usage
+        user_config.se_notifications_enable_slack: True,
+        user_config.se_notifications_slack_webhook_url: "https://slack.webhook.url",
+        user_config.se_notifications_enable_teams: True,
+        user_config.se_notifications_teams_webhook_url: "https://teams.webhook.url",
+        user_config.se_notifications_enable_zoom: True,
+        user_config.se_notifications_zoom_webhook_url: "https://zoom.webhook.url",
+        user_config.se_notifications_zoom_token: "zoom_token",
+        user_config.se_notifications_enable_pagerduty: True,
+        user_config.se_notifications_pagerduty_integration_key: "pagerduty_key",
+        user_config.se_notifications_pagerduty_webhook_url: "https://pagerduty.webhook.url",
+    }
+    
+    # Test serverless mode (else branch in set_notification_param)
+    edge_reader.set_notification_param(serverless_notification)
+    
+    # Verify context methods are called for serverless configuration
+    mock_context.set_enable_obs_dq_report_result.assert_called_with(True)
+    mock_context.set_se_dq_obs_alert_flag.assert_called_with(True)
+    mock_context.set_enable_mail.assert_called_with(True)
+    mock_context.set_enable_slack.assert_called_with(True)
+    mock_context.set_enable_teams.assert_called_with(True)
+    mock_context.set_enable_zoom.assert_called_with(True)
+    mock_context.set_enable_pagerduty.assert_called_with(True)
+
+
+def test_set_notification_param_serverless_optional_parameters():
+    """Test serverless mode with optional parameters using .get() method"""
+    from spark_expectations.config.user_config import Constants as user_config
+    
+    mock_context = Mock(spec=SparkExpectationsContext)
+    mock_context.spark = spark
+    optional_reader = SparkExpectationsReader(mock_context)
+    
+    # Test serverless notification with missing optional parameters
+    minimal_serverless_notification = {
+        "spark.expectations.is.serverless": True,
+        user_config.se_notifications_enable_email: True,
+        user_config.se_enable_obs_dq_report_result: True,
+        user_config.se_dq_obs_alert_flag: True,
+        user_config.se_notifications_email_smtp_port: "25",  # Test default port
+        user_config.se_notifications_email_subject: "Test",
+        user_config.se_notifications_email_to: "test@example.com",
+        user_config.se_notifications_email_smtp_host: "localhost",
+        user_config.se_notifications_email_from: "test@localhost",
+        # Missing optional parameters to test .get() fallbacks
+        # user_config.se_notifications_enable_smtp_server_auth - not provided
+        # user_config.se_notifications_default_basic_email_template - not provided
+        # user_config.se_notifications_email_custom_template - not provided
+        # user_config.se_notifications_zoom_token - not provided
+        # user_config.se_notifications_pagerduty_webhook_url - not provided
+    }
+    
+    # Test that .get() methods handle missing parameters gracefully
+    optional_reader.set_notification_param(minimal_serverless_notification)
+    
+    # Verify that the function completes without errors despite missing optional parameters
+    mock_context.set_enable_obs_dq_report_result.assert_called_with(True)
+    mock_context.set_mail_smtp_port.assert_called_with(25)  # Test default port conversion
+
+
+def test_set_notification_param_non_serverless_branch():
+    """Test non-serverless branch in set_notification_param"""
+    from spark_expectations.config.user_config import Constants as user_config
+    
+    mock_context = Mock(spec=SparkExpectationsContext)
+    mock_context.spark = spark
+    non_serverless_reader = SparkExpectationsReader(mock_context)
+    
+    # Test non-serverless notification (if branch in set_notification_param)
+    non_serverless_notification = {
+        "spark.expectations.is.serverless": False,
+        user_config.se_notifications_enable_email: False,
+    }
+    
+    # Mock Spark config for non-serverless path  
+    with patch.object(non_serverless_reader.spark.conf, 'get', 
+                     return_value='{"spark.expectations.notifications.email.enabled": false}'):
+        
+        # Test non-serverless mode (if branch)
+        non_serverless_reader.set_notification_param(non_serverless_notification)
+        
+        # Verify Spark config was accessed for non-serverless mode
+        non_serverless_reader.spark.conf.get.assert_called_with("default_notification_dict")
+
+
+def test_set_notification_param_none_notification():
+    """Test set_notification_param with None notification parameter"""
+    from spark_expectations.config.user_config import Constants as user_config
+    
+    mock_context = Mock(spec=SparkExpectationsContext)
+    mock_context.spark = spark  
+    none_reader = SparkExpectationsReader(mock_context)
+    
+    # Mock Spark config for None notification case
+    with patch.object(none_reader.spark.conf, 'get', 
+                     return_value='{"spark.expectations.notifications.email.enabled": false}'):
+        
+        # Test with None notification (should use default configuration)
+        none_reader.set_notification_param(None)
+        
+        # Verify Spark config was accessed when notification is None
+        none_reader.spark.conf.get.assert_called_with("default_notification_dict")
