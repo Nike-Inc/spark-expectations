@@ -179,7 +179,7 @@ class SparkExpectations:
                 self.rules_df = self.rules_df.persist(StorageLevel.MEMORY_AND_DISK)                
             # variable used for enabling notification at different level
             _default_notification_dict, _default_stats_streaming_dict = get_config_dict(self.spark, user_conf)
-            _log.info("Default notification and streaming dict fetched successfully",_default_notification_dict,_default_stats_streaming_dict,user_conf)
+            _log.info("Default notification and streaming dict fetched successfully: %s, %s, %s", _default_notification_dict, _default_stats_streaming_dict, user_conf)
 
             # variable used for enabling notification at different level
             _default_notification_dict, _default_stats_streaming_dict = get_config_dict(self.spark, user_conf)
