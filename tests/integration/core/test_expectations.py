@@ -3811,6 +3811,67 @@ class TestCheckIfPysparkConnectIsSupported:
         ):
             assert check_if_pyspark_connect_is_supported() is True
 
+    def test_type_aliases_when_connect_not_supported(self):
+        """Test that DataFrame and SparkSession type aliases are set correctly
+        when PySpark Connect is not supported.
+        
+        This test ensures that lines 69-70 (the else block) are covered in environments
+        where PySpark Connect IS available.
+        """
+        import sys
+        import importlib
+        from typing import get_args
+        
+        # Simulate environment where PySpark Connect is not available
+        # by removing connect modules and forcing a reimport
+        modules_to_remove = [
+            'spark_expectations.core.expectations',
+            'pyspark.sql.connect',
+            'pyspark.sql.connect.dataframe',
+            'pyspark.sql.connect.session',
+            'pyspark.sql.connect.column',
+        ]
+        
+        # Save original state
+        original_modules = {}
+        for module_name in modules_to_remove:
+            if module_name in sys.modules:
+                original_modules[module_name] = sys.modules[module_name]
+                del sys.modules[module_name]
+        
+        try:
+            # Patch sys.modules to simulate connect not being available
+            with patch.dict('sys.modules', {
+                'pyspark.sql.connect': None,
+                'pyspark.sql.connect.dataframe': None,
+                'pyspark.sql.connect.session': None,
+                'pyspark.sql.connect.column': None,
+            }):
+                # Import the module - this will execute the else block (lines 69-70)
+                import spark_expectations.core.expectations as expectations
+                
+                # Verify that the type aliases exist
+                assert hasattr(expectations, 'DataFrame')
+                assert hasattr(expectations, 'SparkSession')
+                
+                # Verify the module was imported successfully
+                assert expectations.DataFrame is not None
+                assert expectations.SparkSession is not None
+                
+                # Additional verification: when Connect is not supported,
+                # DataFrame and SparkSession should be the standard PySpark types
+                # (not Union types with Connect variants)
+                from pyspark.sql import DataFrame as StandardDataFrame
+                from pyspark.sql import SparkSession as StandardSparkSession
+                
+                # The type aliases should reference the standard types
+                assert expectations.DataFrame is StandardDataFrame
+                assert expectations.SparkSession is StandardSparkSession
+        finally:
+            # Restore original modules
+            for module_name, module in original_modules.items():
+                sys.modules[module_name] = module
+
 
 def test_get_spark_minor_version():
     """Test that get_spark_minor_version returns the correctly formatted version."""
