@@ -175,8 +175,9 @@ class SparkExpectations:
         """
 
         def _except(func: Any) -> Any:
-            if user_conf and not user_conf.get("spark.expectations.is.serverless", False):
-                self.rules_df = self.rules_df.persist(StorageLevel.MEMORY_AND_DISK)                
+            is_serverless = user_conf.get("spark.expectations.is.serverless", False) if user_conf else False
+            if not is_serverless:
+                self.rules_df = self.rules_df.persist(StorageLevel.MEMORY_AND_DISK)
             # variable used for enabling notification at different level
             _default_notification_dict, _default_stats_streaming_dict = get_config_dict(self.spark, user_conf)
             _log.info("Default notification and streaming dict fetched successfully",_default_notification_dict,_default_stats_streaming_dict,user_conf)

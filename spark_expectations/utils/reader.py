@@ -35,15 +35,24 @@ class SparkExpectationsReader:
 
         """
         try:
-            if notification is None or not notification.get("spark.expectations.is.serverless", False):
-                _notification_dict = json.loads(
+            is_serverless = notification.get("spark.expectations.is.serverless", False) if notification else False
+            if is_serverless:
+            # In serverless mode, spark.conf is not available - use notification dict directly
+            # with sensible defaults for missing keys
+                _default_serverless_notification = {
+                    "spark.expectations.notifications.email.enabled": False,
+                    "spark.expectations.notifications.slack.enabled": False,
+                    "spark.expectations.notifications.teams.enabled": False
+                }
+                _notification_dict = {**_default_serverless_notification, **(notification or {})}
+            else:
+            # Non-serverless: load defaults from spark.conf and merge
+                _default_notification_dict = json.loads(
                     self.spark.conf.get("default_notification_dict")
                 )
-                # Merge with provided notification settings
-                if notification:
-                    _notification_dict = {**_notification_dict, **notification}
-            else:
-                _notification_dict = notification
+                _notification_dict = (
+                    {**_default_notification_dict, **notification} if notification else _default_notification_dict
+                )
            
             if _notification_dict.get(user_config.se_enable_obs_dq_report_result) is True:
                 self._context.set_enable_obs_dq_report_result(True)
