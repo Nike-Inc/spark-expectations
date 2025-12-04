@@ -4,6 +4,7 @@ from dataclasses import dataclass
 @dataclass
 class Constants:
     # declare const user config variables for email notification
+    is_serverless = "spark.expectations.is.serverless"
     se_notifications_enable_smtp_server_auth = "spark.expectations.notifications.email.smtp.server.auth"
     se_notifications_smtp_password = "spark.expectations.notifications.email.smtp.password"
     se_notifications_smtp_creds_dict = "spark.expectations.notifications.smtp.creds.dict"
