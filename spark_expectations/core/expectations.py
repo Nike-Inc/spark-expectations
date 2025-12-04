@@ -95,10 +95,9 @@ class SparkExpectations:
     rules_df: "DataFrame"
     stats_table: str
     target_and_error_table_writer: Union["WrappedDataFrameWriter", "WrappedDataFrameStreamWriter"]
-    stats_table_writer: Union["WrappedDataFrameWriter", "WrappedDataFrameStreamWriter"]
+    stats_table_writer: "WrappedDataFrameWriter"
     debugger: bool = False
     stats_streaming_options: Optional[Dict[str, Union[str, bool]]] = None
-    #spark: Optional["SparkSession"] = None
 
     def __post_init__(self) -> None:
         if isinstance(self.rules_df, DataFrame):  # type: ignore
@@ -140,9 +139,6 @@ class SparkExpectations:
 
         if isinstance(self.target_and_error_table_writer, WrappedDataFrameStreamWriter):
             self._context.set_target_and_error_table_writer_type("streaming")
-
-        if isinstance(self.stats_table_writer, WrappedDataFrameStreamWriter):
-            self._context.set_stats_table_writer_type("streaming")
 
         self._context.set_target_and_error_table_writer_config(self.target_and_error_table_writer.build())
         self._context.set_stats_table_writer_config(self.stats_table_writer.build())
