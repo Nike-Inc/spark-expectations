@@ -4016,9 +4016,24 @@ def test_spark_expectations_with_streaming_target_and_error_writer(_fixture_rule
         debugger=False,
     )
     
+    expected_stream_writer_build = {'outputMode': "append",
+                                    'format': 'delta',
+                                    'queryName': None,
+                                    'trigger': None,
+                                    'partitionBy': [],
+                                    'options': {'checkpointLocation': "/tmp/checkpoint1"}}
+    
+    expected_batch_writer_build = {'mode': "append",
+                                   'format': 'delta',
+                                   "partitionBy": [],
+                                    "options": {},
+                                    "bucketBy": {},
+                                    "sortBy": []
+                                    }
+
     # Verify that streaming type is set for target_and_error_table_writer
-    assert se._context.get_target_and_error_table_writer_config == stream_writer.build()
-    assert se._context.get_stats_table_writer_config == batch_writer.build()
+    assert se._context.get_target_and_error_table_writer_config == expected_stream_writer_build
+    assert se._context.get_stats_table_writer_config == expected_batch_writer_build
     # Verify the writer type was set to streaming
     assert isinstance(se.target_and_error_table_writer, WrappedDataFrameStreamWriter)
 

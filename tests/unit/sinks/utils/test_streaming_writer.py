@@ -136,7 +136,7 @@ class TestSaveDataFrameAsTableStreaming:
         assert result is not None, "Should return StreamingQuery for streaming DataFrame"
         assert isinstance(result, StreamingQuery), "Should return StreamingQuery instance"
         assert result.isActive, "Streaming query should be active"
-        assert result.name == "test_basic_streaming_query"
+        assert result.name == "test_basic_streaming_query_test_streaming_table_basic"
         
         # Stop the query
         result.stop()
@@ -174,7 +174,7 @@ class TestSaveDataFrameAsTableStreaming:
         
         assert result is not None
         assert result.isActive
-        assert result.name == "test_full_config_streaming_query"
+        assert result.name == "test_full_config_streaming_query_test_streaming_table_full_config"
         
         # Wait for at least one micro-batch to process
         time.sleep(6)
@@ -710,7 +710,7 @@ class TestStreamingQueryManagement:
         assert "query_id" in status
         assert "run_id" in status
         assert "name" in status
-        assert status["name"] == "test_status_active_query"
+        assert status["name"] == "test_status_active_query_test_status_active"
         assert status["is_active"] is True
         assert status["status"] == "active"
         
