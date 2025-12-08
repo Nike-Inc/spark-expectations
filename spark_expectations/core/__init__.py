@@ -111,7 +111,7 @@ def get_spark_session() -> SparkSession:
     ):
         builder = (
             SparkSession.builder.config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-            .config("spark.jars.packages", "io.delta:delta-spark_2.12:3.0.0")
+            .config("spark.jars.packages", "io.delta:delta-spark_2.13:4.0.0")
             .config(
                 "spark.sql.catalog.spark_catalog",
                 "org.apache.spark.sql.delta.catalog.DeltaCatalog",
@@ -121,10 +121,10 @@ def get_spark_session() -> SparkSession:
             .config("spark.jars.ivy", "/tmp/ivy2")
             .config(  # below jars are used only in the local env, not coupled with databricks or EMR
                 "spark.jars",
-                f"{current_dir}/../../jars/spark-sql-kafka-0-10_2.12-3.0.0.jar,"
-                f"{current_dir}/../../jars/kafka-clients-3.0.0.jar,"
-                f"{current_dir}/../../jars/commons-pool2-2.8.0.jar,"
-                f"{current_dir}/../../jars/spark-token-provider-kafka-0-10_2.12-3.0.0.jar",
+                f"{current_dir}/../../jars/spark-sql-kafka-0-10_2.13-4.0.0.jar,"
+                f"{current_dir}/../../jars/kafka-clients-3.7.0.jar,"
+                f"{current_dir}/../../jars/commons-pool2-2.12.0.jar,"
+                f"{current_dir}/../../jars/spark-token-provider-kafka-0-10_2.13-4.0.0.jar",
             )
             .config("spark.sql.shuffle.partitions", 1)
             .config("spark.dynamicAllocation.enabled", "false")
