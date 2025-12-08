@@ -3190,7 +3190,7 @@ def test_with_expectations_dataframe_not_returned_exception(
 
     with pytest.raises(
         SparkExpectationsMiscException,
-        match=r"error occurred while processing spark expectations Validation failed for rules: \['col1_threshold'\]",
+        match=r"error occurred while processing spark expectations Validation failed for 1 rule\(s\): \['col1_threshold'\]\. Check logs above for detailed error messages\.",
     ):  
         # Create a mock object with a rdd return value
         mock_func = Mock(return_value=_fixture_df.rdd)
@@ -3811,11 +3811,79 @@ class TestCheckIfPysparkConnectIsSupported:
         ):
             assert check_if_pyspark_connect_is_supported() is True
 
+    def test_type_aliases_when_connect_not_supported(self):
+        """Test that DataFrame and SparkSession type aliases are set correctly
+        when PySpark Connect is not supported.
+        
+        This test ensures that lines 69-70 (the else block) are covered in environments
+        where PySpark Connect IS available.
+        
+        Uses subprocess to avoid polluting sys.modules in the main test process,
+        which would affect other tests.
+        """
+        import subprocess
+        import sys
+        from pathlib import Path
+        
+        # Test code to run in isolated subprocess
+        test_code = '''
+import sys
+
+# Block pyspark.sql.connect modules BEFORE importing expectations
+# This simulates an environment where PySpark Connect is not available
+sys.modules['pyspark.sql.connect'] = None
+sys.modules['pyspark.sql.connect.dataframe'] = None
+sys.modules['pyspark.sql.connect.session'] = None
+sys.modules['pyspark.sql.connect.column'] = None
+
+# Now import expectations - this will execute the else block (lines 69-70)
+# because check_if_pyspark_connect_is_supported() will return False
+import spark_expectations.core.expectations as expectations
+from pyspark.sql import DataFrame as StandardDataFrame
+from pyspark.sql import SparkSession as StandardSparkSession
+
+# Verify that the type aliases exist
+assert hasattr(expectations, 'DataFrame'), "DataFrame type alias not found"
+assert hasattr(expectations, 'SparkSession'), "SparkSession type alias not found"
+
+# Verify the module was imported successfully
+assert expectations.DataFrame is not None, "DataFrame is None"
+assert expectations.SparkSession is not None, "SparkSession is None"
+
+# When Connect is not supported, DataFrame and SparkSession should be
+# the standard PySpark types (not Union types with Connect variants)
+assert expectations.DataFrame is StandardDataFrame, \\
+    f"Expected DataFrame to be {StandardDataFrame}, got {expectations.DataFrame}"
+assert expectations.SparkSession is StandardSparkSession, \\
+    f"Expected SparkSession to be {StandardSparkSession}, got {expectations.SparkSession}"
+
+print("SUCCESS: Type aliases correctly set to standard PySpark types")
+'''
+        
+        # Get project root directory (4 levels up from this test file)
+        project_root = Path(__file__).parent.parent.parent.parent
+        
+        # Run test in isolated subprocess
+        result = subprocess.run(
+            [sys.executable, '-c', test_code],
+            capture_output=True,
+            text=True,
+            cwd=str(project_root)
+        )
+        
+        # Check results
+        assert result.returncode == 0, \
+            f"Subprocess test failed with return code {result.returncode}.\nStderr: {result.stderr}\nStdout: {result.stdout}"
+        assert "SUCCESS" in result.stdout, \
+            f"Test did not complete successfully.\nStdout: {result.stdout}\nStderr: {result.stderr}"
+
 
 def test_get_spark_minor_version():
     """Test that get_spark_minor_version returns the correctly formatted version."""
+    import spark_expectations.core.expectations as expectations
     with patch("spark_expectations.core.expectations.spark_version", "9.9.42"):
-        assert get_spark_minor_version() == 9.9
+        # Access function through module to ensure patch is visible
+        assert expectations.get_spark_minor_version() == 9.9
 
 def test_agg_rule_for_non_int_column():
     """
