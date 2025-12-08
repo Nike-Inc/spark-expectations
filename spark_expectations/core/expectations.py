@@ -143,7 +143,7 @@ class SparkExpectations:
         self._context.set_debugger_mode(self.debugger)
         self._context.set_dq_stats_table_name(self.stats_table)
         self._context.set_dq_detailed_stats_table_name(f"{self.stats_table}_detailed")
-        self.rules_df = self.rules_df.persist(StorageLevel.MEMORY_AND_DISK)
+        #self.rules_df = self.rules_df.persist(StorageLevel.MEMORY_AND_DISK)
 
     # TODO Add target_error_table_writer and stats_table_writer as parameters to this function so this takes precedence
     #  if user provides it
@@ -175,8 +175,12 @@ class SparkExpectations:
         """
 
         def _except(func: Any) -> Any:
+            is_serverless = user_conf.get("spark.expectations.is.serverless", False) if user_conf else False
+            if not is_serverless:
+                self.rules_df = self.rules_df.persist(StorageLevel.MEMORY_AND_DISK)
             # variable used for enabling notification at different level
             _default_notification_dict, _default_stats_streaming_dict = get_config_dict(self.spark, user_conf)
+            _log.info("Default notification and streaming dict fetched successfully",_default_notification_dict,_default_stats_streaming_dict,user_conf)
 
             _default_notification_dict[
                 user_config.querydq_output_custom_table_name
