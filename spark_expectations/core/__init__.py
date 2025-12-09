@@ -99,7 +99,9 @@ def get_config_dict(
         # Check if running in serverless mode
         is_serverless = user_conf.get("spark.expectations.is.serverless", False) if user_conf else False
         
-        
+        # Declare types once
+        default_notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]]
+        default_streaming_dict: Dict[str, Union[str, int, bool, Dict[str, str]]]
         
         if is_serverless:
             # Severless compute does not support setting most Spark properties. So we fallback to hardcoded defaults.
