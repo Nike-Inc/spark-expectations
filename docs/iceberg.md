@@ -10,7 +10,7 @@ from pyspark.sql import SparkSession
 builder = (
     SparkSession.builder.config(
         "spark.jars.packages",
-        "org.apache.iceberg:iceberg-spark-runtime-3.4_2.12:1.3.1",
+        "org.apache.iceberg:iceberg-spark-runtime-3.5_2.13:1.7.1",
     )
     .config(
         "spark.sql.extensions",

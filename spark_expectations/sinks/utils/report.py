@@ -170,25 +170,36 @@ class SparkExpectationsReport:
 
             only_querydq_final_after_join_df = (
                 only_querydq_final_after_join_df.withColumn(
+                    "_total_records_str",
+                    regexp_extract(col("total_records"), r"\d+", 0),
+                )
+                .withColumn(
                     "total_records_only_nbr",
-                    regexp_extract(col("total_records"), r"\d+", 0).cast("bigint"),
+                    when(col("_total_records_str") == "", lit(None).cast("bigint"))
+                    .otherwise(col("_total_records_str").cast("bigint")),
+                )
+                .withColumn(
+                    "_valid_records_str",
+                    regexp_extract(col("valid_records"), r"\d+", 0),
                 )
                 .withColumn(
                     "valid_records_only_nbr",
-                    regexp_extract(col("valid_records"), r"\d+", 0).cast("bigint"),
+                    when(col("_valid_records_str") == "", lit(None).cast("bigint"))
+                    .otherwise(col("_valid_records_str").cast("bigint")),
                 )
+                .drop("_total_records_str", "_valid_records_str")
                 .withColumn(
                     "success_percentage",
                     when(
-                        (col("total_records_only_nbr") == "") & (col("valid_records_only_nbr").isNull()),
+                        col("total_records_only_nbr").isNull() & col("valid_records_only_nbr").isNull(),
                         lit(100),
                     )
                     .when(
-                        (col("total_records_only_nbr") == "") & (col("valid_records_only_nbr") == ""),
+                        col("total_records_only_nbr").isNull() & col("valid_records_only_nbr").isNull(),
                         lit(100),
                     )
                     .when(
-                        (col("total_records_only_nbr") != "") & (col("valid_records_only_nbr").isNull()),
+                        col("total_records_only_nbr").isNotNull() & col("valid_records_only_nbr").isNull(),
                         lit(0),
                     )
                     .otherwise(
@@ -211,15 +222,15 @@ class SparkExpectationsReport:
                 .withColumn(
                     "failed_rec_perc_variance",
                     when(
-                        (col("total_records_only_nbr") == "") & (col("valid_records_only_nbr").isNull()),
+                        col("total_records_only_nbr").isNull() & col("valid_records_only_nbr").isNull(),
                         lit(0),
                     )
                     .when(
-                        (col("total_records_only_nbr") == "") & (col("valid_records_only_nbr") == ""),
+                        col("total_records_only_nbr").isNull() & col("valid_records_only_nbr").isNull(),
                         lit(0),
                     )
                     .when(
-                        (col("total_records_only_nbr") != "") & (col("valid_records_only_nbr").isNull()),
+                        col("total_records_only_nbr").isNotNull() & col("valid_records_only_nbr").isNull(),
                         lit(100),
                     )
                     .when(
