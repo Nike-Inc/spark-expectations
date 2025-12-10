@@ -1,5 +1,5 @@
 import re
-from typing import Dict, List
+from typing import Dict, List, Tuple, Optional
 from enum import Enum
 import sqlglot
 from sqlglot.errors import ParseError
@@ -36,6 +36,24 @@ class SparkExpectationsValidateRules:
             flags=re.IGNORECASE,
         )
         return list({name for pair in matches for name in pair if name})
+    
+    @staticmethod
+    def check_starts_with_aggregate(expectation: str) -> Tuple[bool, Optional[str]]:
+        """
+        Returns True if the expression starts with a known aggregate function.
+        This is a conservative regex-based check to avoid needing AST positions.
+        """
+        agg_start_pattern = re.compile(
+            r"^\s*(sum|count|avg|mean|min|max|stddev|stddev_samp|stddev_pop|variance|var_samp|var_pop|"
+            r"collect_list|collect_set)\s*\(",
+            flags=re.IGNORECASE,
+        )
+
+        match = agg_start_pattern.match(expectation)
+        check = bool(match)
+        matched_pattern = match.group(1) if check else None
+        return check, matched_pattern
+    
     @staticmethod
     def validate_row_dq_expectation(df: DataFrame, rule: Dict) -> None:
         """
@@ -50,17 +68,15 @@ class SparkExpectationsValidateRules:
             SparkExpectationsInvalidRowDQExpectationException: If aggregate functions are used or expression fails.
         """
         expectation = rule.get("expectation", "")
-        # Use sqlglot to detect aggregate functions
         try:
-            tree = sqlglot.parse_one(expectation)
-            agg_funcs = list({node.key for node in tree.find_all(sqlglot.expressions.AggFunc)})
+            is_agg, agg_func = SparkExpectationsValidateRules.check_starts_with_aggregate(expectation)
         except Exception as e:
             raise SparkExpectationsInvalidRowDQExpectationException(
                 f"[row_dq] Could not parse expression: {expectation} → {e}"
             )
-        if agg_funcs:
+        if is_agg:
             raise SparkExpectationsInvalidRowDQExpectationException(
-                f"[row_dq] Rule '{rule.get('rule')}' contains aggregate function(s) (not allowed in row_dq): {agg_funcs}"
+                f"[row_dq] Rule '{rule.get('rule')}' contains aggregate function(s) (not allowed in row_dq): {agg_func}"
             )
         try:
             df.select(expr(expectation)).limit(1)
