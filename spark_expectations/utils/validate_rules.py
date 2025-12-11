@@ -38,7 +38,7 @@ class SparkExpectationsValidateRules:
         return list({name for pair in matches for name in pair if name})
     
     @staticmethod
-    def check_starts_with_aggregate(expectation: str) -> Tuple[bool, Optional[str]]:
+    def check_agg_dq(expectation: str) -> Tuple[bool, Optional[str]]:
         """
         Returns True if the expression starts with a known aggregate function.
         This is a conservative regex-based check to avoid needing AST positions.
@@ -55,6 +55,15 @@ class SparkExpectationsValidateRules:
         return check, matched_pattern
     
     @staticmethod
+    def check_query_dq(expectation: str) -> Tuple[bool, Optional[str]]:
+        """
+        Returns True if the expectation starts with 'SELECT' (ignoring leading whitespace).
+        """
+        select_start_pattern = re.compile(r"^\s*\(\s*select\b", flags=re.IGNORECASE)
+        check = bool(select_start_pattern.match(expectation))
+        return check
+    
+    @staticmethod
     def validate_row_dq_expectation(df: DataFrame, rule: Dict) -> None:
         """
         Validates a row_dq expectation by ensuring
@@ -69,7 +78,8 @@ class SparkExpectationsValidateRules:
         """
         expectation = rule.get("expectation", "")
         try:
-            is_agg, agg_func = SparkExpectationsValidateRules.check_starts_with_aggregate(expectation)
+            is_agg, agg_func = SparkExpectationsValidateRules.check_agg_dq(expectation)
+            is_query = SparkExpectationsValidateRules.check_query_dq(expectation)
         except Exception as e:
             raise SparkExpectationsInvalidRowDQExpectationException(
                 f"[row_dq] Could not parse expression: {expectation} → {e}"
@@ -78,6 +88,11 @@ class SparkExpectationsValidateRules:
             raise SparkExpectationsInvalidRowDQExpectationException(
                 f"[row_dq] Rule '{rule.get('rule')}' contains aggregate function(s) (not allowed in row_dq): {agg_func}"
             )
+        if is_query:
+            raise SparkExpectationsInvalidRowDQExpectationException(
+                f"[row_dq] Rule '{rule.get('rule')}' contains select statements (not allowed in row_dq)"
+            )
+        
         try:
             df.select(expr(expectation)).limit(1)
         except Exception as e:
