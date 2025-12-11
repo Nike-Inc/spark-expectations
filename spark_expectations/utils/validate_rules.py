@@ -78,6 +78,7 @@ class SparkExpectationsValidateRules:
         """
         expectation = rule.get("expectation", "")
         try:
+            tree = sqlglot.parse_one(expectation)
             is_agg, agg_func = SparkExpectationsValidateRules.check_agg_dq(expectation)
             is_query = SparkExpectationsValidateRules.check_query_dq(expectation)
         except Exception as e:
