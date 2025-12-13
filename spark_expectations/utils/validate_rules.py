@@ -1,5 +1,5 @@
 import re
-from typing import Dict, List
+from typing import Dict, List, Tuple, Optional, Any
 from enum import Enum
 import sqlglot
 from sqlglot.errors import ParseError
@@ -36,6 +36,65 @@ class SparkExpectationsValidateRules:
             flags=re.IGNORECASE,
         )
         return list({name for pair in matches for name in pair if name})
+    
+    @staticmethod
+    def check_agg_dq(expectation: str) -> Tuple[bool, Optional[str]]:
+        """
+        Returns True if the expression starts with a known aggregate function.
+        This is a conservative regex-based check to avoid needing AST positions.
+        """
+        agg_start_pattern = re.compile(
+            r"^\s*(sum|count|avg|mean|min|max|stddev|stddev_samp|stddev_pop|variance|var_samp|var_pop|"
+            r"collect_list|collect_set)\s*\(",
+            flags=re.IGNORECASE,
+        )
+
+        match = agg_start_pattern.match(expectation)
+        check = bool(match)
+        matched_pattern = match.group(1) if check else None
+        return check, matched_pattern
+    
+    @staticmethod
+    def _get_query_pattern(expectation: str) -> Any:
+        """
+        Returns True if the expectation starts with 'SELECT' (ignoring leading whitespace).
+        """
+        select_pattern = re.compile(r"\s*\(\s*select\b", flags=re.IGNORECASE)
+        select_search = select_pattern.search(expectation)
+        return select_search
+    
+    @staticmethod
+    def check_query_dq(expectation:str) -> bool:
+
+        select_search = SparkExpectationsValidateRules._get_query_pattern(expectation)
+        return True if select_search.start() == 0 else False
+    
+    @staticmethod
+    def check_subquery(expectation:str) -> Tuple[bool, Optional[str]]:
+
+        select_search = SparkExpectationsValidateRules._get_query_pattern(expectation)
+        if select_search and select_search.start() != 0:
+            subquery = expectation[select_search.start():]
+            subquery_pattern = re.compile(r"""^\s*\(\s*                             
+                                            select\s+                              
+                                            (sum|count|avg|mean|min|max|           
+                                            stddev(?:_samp|_pop)?|                
+                                            variance|var_(?:samp|pop)|            
+                                            collect_(?:list|set))                 
+                                            \([^)]+\)\s+                        
+                                            from\s+                             
+                                            [A-Za-z]\w*\.[A-Za-z]\w*\.[A-Za-z]\w* 
+                                        """,
+                                        re.IGNORECASE | re.VERBOSE,
+                                    )
+            
+            subquery_search = subquery_pattern.search(subquery)
+            return bool(subquery_search),subquery
+
+        return True, None
+
+
+    
     @staticmethod
     def validate_row_dq_expectation(df: DataFrame, rule: Dict) -> None:
         """
@@ -50,19 +109,32 @@ class SparkExpectationsValidateRules:
             SparkExpectationsInvalidRowDQExpectationException: If aggregate functions are used or expression fails.
         """
         expectation = rule.get("expectation", "")
-        # Use sqlglot to detect aggregate functions
         try:
             tree = sqlglot.parse_one(expectation)
-            agg_funcs = list({node.key for node in tree.find_all(sqlglot.expressions.AggFunc)})
+            # Step1: Check if the expectation starts with some sort of aggregation or SELECT statement
+            is_agg, agg_func = SparkExpectationsValidateRules.check_agg_dq(expectation)
+            is_query = SparkExpectationsValidateRules.check_query_dq(expectation)
         except Exception as e:
             raise SparkExpectationsInvalidRowDQExpectationException(
                 f"[row_dq] Could not parse expression: {expectation} → {e}"
             )
-        if agg_funcs:
+        if is_agg:
             raise SparkExpectationsInvalidRowDQExpectationException(
-                f"[row_dq] Rule '{rule.get('rule')}' contains aggregate function(s) (not allowed in row_dq): {agg_funcs}"
+                f"[row_dq] Rule '{rule.get('rule')}' contains aggregate function(s) (not allowed in row_dq): {agg_func}"
             )
+        if is_query:
+            raise SparkExpectationsInvalidRowDQExpectationException(
+                f"[row_dq] Rule '{rule.get('rule')}' contains select statements (not allowed in row_dq)"
+            )
+        
         try:
+            # Step2: Validate subquery
+            check_valid_subquery, subquery = SparkExpectationsValidateRules.check_subquery(expectation)
+            if not check_valid_subquery:
+                raise SparkExpectationsInvalidRowDQExpectationException(
+                f"[row_dq] The subquery provided in the expectation is not valid: {subquery}"
+                )
+                
             df.select(expr(expectation)).limit(1)
         except Exception as e:
             raise SparkExpectationsInvalidRowDQExpectationException(
