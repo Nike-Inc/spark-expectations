@@ -1,5 +1,5 @@
 import re
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Any
 from enum import Enum
 import sqlglot
 from sqlglot.errors import ParseError
@@ -55,13 +55,45 @@ class SparkExpectationsValidateRules:
         return check, matched_pattern
     
     @staticmethod
-    def check_query_dq(expectation: str) -> Tuple[bool, Optional[str]]:
+    def _get_query_pattern(expectation: str) -> Any:
         """
         Returns True if the expectation starts with 'SELECT' (ignoring leading whitespace).
         """
-        select_start_pattern = re.compile(r"^\s*\(\s*select\b", flags=re.IGNORECASE)
-        check = bool(select_start_pattern.match(expectation))
-        return check
+        select_pattern = re.compile(r"\s*\(\s*select\b", flags=re.IGNORECASE)
+        select_search = select_pattern.search(expectation)
+        return select_search
+    
+    @staticmethod
+    def check_query_dq(expectation:str) -> bool:
+
+        select_search = SparkExpectationsValidateRules._get_query_pattern(expectation)
+        return True if select_search.start() == 0 else False
+    
+    @staticmethod
+    def check_subquery(expectation:str) -> Tuple[bool, Optional[str]]:
+
+        select_search = SparkExpectationsValidateRules._get_query_pattern(expectation)
+        if select_search and select_search.start() != 0:
+            subquery = expectation[select_search.start():]
+            subquery_pattern = re.compile(r"""^\s*\(\s*                             
+                                            select\s+                              
+                                            (sum|count|avg|mean|min|max|           
+                                            stddev(?:_samp|_pop)?|                
+                                            variance|var_(?:samp|pop)|            
+                                            collect_(?:list|set))                 
+                                            \([^)]+\)\s+                        
+                                            from\s+                             
+                                            [A-Za-z]\w*\.[A-Za-z]\w*\.[A-Za-z]\w* 
+                                        """,
+                                        re.IGNORECASE | re.VERBOSE,
+                                    )
+            
+            subquery_search = subquery_pattern.search(subquery)
+            return bool(subquery_search),subquery
+
+        return True, None
+
+
     
     @staticmethod
     def validate_row_dq_expectation(df: DataFrame, rule: Dict) -> None:
@@ -79,6 +111,7 @@ class SparkExpectationsValidateRules:
         expectation = rule.get("expectation", "")
         try:
             tree = sqlglot.parse_one(expectation)
+            # Step1: Check if the expectation starts with some sort of aggregation or SELECT statement
             is_agg, agg_func = SparkExpectationsValidateRules.check_agg_dq(expectation)
             is_query = SparkExpectationsValidateRules.check_query_dq(expectation)
         except Exception as e:
@@ -95,6 +128,13 @@ class SparkExpectationsValidateRules:
             )
         
         try:
+            # Step2: Validate subquery
+            check_valid_subquery, subquery = SparkExpectationsValidateRules.check_subquery(expectation)
+            if not check_valid_subquery:
+                raise SparkExpectationsInvalidRowDQExpectationException(
+                f"[row_dq] The subquery provided in the expectation is not valid: {subquery}"
+                )
+                
             df.select(expr(expectation)).limit(1)
         except Exception as e:
             raise SparkExpectationsInvalidRowDQExpectationException(
