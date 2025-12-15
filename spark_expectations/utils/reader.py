@@ -36,10 +36,14 @@ class SparkExpectationsReader:
         """
         try:
             is_serverless = notification.get("spark.expectations.is.serverless", False) if notification else False
+            
+            # Declare type once
+            _notification_dict: Dict[str, Union[int, str, bool, Dict[str, str]]]
+            
             if is_serverless:
             # In serverless mode, spark.conf is not available - use notification dict directly
             # with sensible defaults for missing keys
-                _default_serverless_notification = {
+                _default_serverless_notification: Dict[str, Union[int, str, bool, Dict[str, str]]] = {
                     "spark.expectations.notifications.email.enabled": False,
                     "spark.expectations.notifications.slack.enabled": False,
                     "spark.expectations.notifications.teams.enabled": False
@@ -47,7 +51,7 @@ class SparkExpectationsReader:
                 _notification_dict = {**_default_serverless_notification, **(notification or {})}
             else:
             # Non-serverless: load defaults from spark.conf and merge
-                _default_notification_dict = json.loads(
+                _default_notification_dict: Dict[str, Union[int, str, bool, Dict[str, str]]] = json.loads(
                     self.spark.conf.get("default_notification_dict")
                 )
                 _notification_dict = (
