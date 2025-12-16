@@ -26,10 +26,10 @@ def test_get_spark_session(_mock_os):
     assert "-Dderby.system.home=/tmp/derby" in spark.sparkContext.getConf().get("spark.driver.extraJavaOptions")
 
     assert (
-        spark.conf.get("spark.jars") == f"{current_dir}/../../jars/spark-sql-kafka-0-10_2.12-3.0.0.jar,"
-        f"{current_dir}/../../jars/kafka-clients-3.0.0.jar,"
-        f"{current_dir}/../../jars/commons-pool2-2.8.0.jar,"
-        f"{current_dir}/../../jars/spark-token-provider-kafka-0-10_2.12-3.0.0.jar"
+        spark.conf.get("spark.jars") == f"{current_dir}/../../jars/spark-sql-kafka-0-10_2.13-4.0.0.jar,"
+        f"{current_dir}/../../jars/kafka-clients-3.7.0.jar,"
+        f"{current_dir}/../../jars/commons-pool2-2.12.0.jar,"
+        f"{current_dir}/../../jars/spark-token-provider-kafka-0-10_2.13-4.0.0.jar"
     )
 
     # Add more assertions to test any other desired SparkSession configuration options
