@@ -1,5 +1,5 @@
 import re
-from typing import Dict, List, Tuple, Optional, Any
+from typing import Dict, List, Tuple, Optional
 from enum import Enum
 import sqlglot
 from sqlglot.errors import ParseError
@@ -61,39 +61,39 @@ class SparkExpectationsValidateRules:
         inner = sq.this
         if not isinstance(inner,sqlglot.expressions.Select):
             raise SparkExpectationsInvalidRowDQExpectationException(
-                    f"[row_dq] Subquery does not contain SELECT statement"
+                    "[row_dq] Subquery does not contain SELECT statement"
                 )
 
         from_node = inner.args.get("from")
         if not isinstance(from_node, sqlglot.expressions.From):
             raise SparkExpectationsInvalidRowDQExpectationException(
-                    f"[row_dq] Subquery does not contain FROM"
+                    "[row_dq] Subquery does not contain FROM"
                 )
         
         source = from_node.this
         if not isinstance(source, (sqlglot.expressions.Table, sqlglot.expressions.Subquery, sqlglot.expressions.Join)):
             raise SparkExpectationsInvalidRowDQExpectationException(
-                    f"[row_dq] Subquery does not contain a valid source after FROM"
+                    "[row_dq] Subquery does not contain a valid source after FROM"
                 )
         
         projections = inner.args.get("expressions") or []
         if not projections:
             raise SparkExpectationsInvalidRowDQExpectationException(
-                f"[row_dq] Subquery does not contain any valid projections"
+                "[row_dq] Subquery does not contain any valid projections"
             )
         
-        def _validate_projections(expr: sqlglot.Expression) -> bool:
+        def _validate_projections(expression: sqlglot.Expression) -> bool:
             
-            if isinstance(expr, (sqlglot.expressions.AggFunc, sqlglot.expressions.Window, sqlglot.expressions.Column)):
+            if isinstance(expression, (sqlglot.expressions.AggFunc, sqlglot.expressions.Window, sqlglot.expressions.Column)):
                 return True         
-            if isinstance(expr, sqlglot.expressions.Alias):
-                return _validate_projections(expr.this)
-            return isinstance(expr, sqlglot.expressions.Expression)
+            if isinstance(expression, sqlglot.expressions.Alias):
+                return _validate_projections(expression.this)
+            return isinstance(expression, sqlglot.expressions.Expression)
         
-        proj_result = [_validate_projections(expr) for expr in projections]
+        proj_result = [_validate_projections(e) for e in projections]
         if not all(proj_result):
             raise SparkExpectationsInvalidRowDQExpectationException(
-                    f"[row_dq] Subquery does not contain a valid projection"
+                    "[row_dq] Subquery does not contain a valid projection"
                 )
     
     
