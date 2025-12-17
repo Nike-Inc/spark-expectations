@@ -135,7 +135,7 @@ class SparkExpectationsValidateRules:
             raise SparkExpectationsInvalidRowDQExpectationException(
                 f"[row_dq] Could not parse expression: {expectation} → {e}"
             )
-        if is_agg:
+        if agg_funcs and is_agg:
             raise SparkExpectationsInvalidRowDQExpectationException(
                 f"[row_dq] Rule '{rule.get('rule')}' contains aggregate function(s) (not allowed in row_dq): {agg_func}"
             )
