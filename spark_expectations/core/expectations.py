@@ -185,7 +185,7 @@ class SparkExpectations:
                 user_config.querydq_output_custom_table_name
             ] = f"{self.stats_table}_querydq_output"
 
-            _notification_dict: Dict[str, Union[str, int, bool, Dict[str, str], None]] = (
+            _notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = (
                 {**_default_notification_dict, **user_conf} if user_conf else _default_notification_dict
             )
 
@@ -313,7 +313,7 @@ class SparkExpectations:
 
             min_priority_slack = user_config.se_notifications_min_priority_slack
 
-            self.reader.set_notification_param(user_conf)
+            self.reader.set_notification_param(_notification_dict)
             self._context.set_notification_on_start(_notification_on_start)
             self._context.set_notification_on_completion(_notification_on_completion)
             self._context.set_notification_on_fail(_notification_on_fail)
