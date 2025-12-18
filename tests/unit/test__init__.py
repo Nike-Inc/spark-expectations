@@ -168,6 +168,8 @@ def test_build_config_dict_comprehensive():
     from spark_expectations.core import get_config_dict
     
     mock_spark = Mock()
+    # Mock spark.conf.get to return the default value (second argument) when called
+    mock_spark.conf.get = Mock(side_effect=lambda key, default=None: default)
     
     # Test with user_conf that overrides defaults
     with patch('spark_expectations.core.load_configurations') as mock_load_configs:
@@ -186,24 +188,31 @@ def test_build_config_dict_comprehensive():
         assert notification_dict["spark.expectations.notifications.email.enabled"] == False
         assert streaming_dict == {}  # Empty from load_configurations
     
-    # Test with user_conf containing different configs
+    # Test with user_conf containing partial configs
+    # Note: _build_config_dict only includes keys from default_dict, not from user_conf
     with patch('spark_expectations.core.load_configurations') as mock_load_configs:
         mock_load_configs.return_value = (
             {"se.streaming.enable": False},
-            {"spark.expectations.notifications.email.enabled": True}
+            {
+                "spark.expectations.notifications.email.enabled": True,
+                "spark.expectations.notifications.slack.enabled": False
+            }
         )
         
-        user_conf_additional = {
+        user_conf_partial = {
             "spark.expectations.notifications.slack.enabled": True
         }
         
-        notification_dict, streaming_dict = get_config_dict(mock_spark, user_conf_additional)
+        notification_dict, streaming_dict = get_config_dict(mock_spark, user_conf_partial)
         
-        # Verify dictionaries are built correctly
-        assert isinstance(notification_dict, dict)
-        assert isinstance(streaming_dict, dict)
+        # Verify user_conf partial values merge with defaults
+        # email.enabled is not in user_conf, so it gets default value from load_configurations
+        assert notification_dict["spark.expectations.notifications.email.enabled"] == True  # from defaults
+        # slack.enabled is in user_conf, so it overrides the default
+        assert notification_dict["spark.expectations.notifications.slack.enabled"] == True  # from user_conf
+        assert streaming_dict["se.streaming.enable"] == False  # from defaults
     
-    # Test user_conf is None scenarios (lines 95-98)
+    # Test user_conf is None - should use defaults directly
     with patch('spark_expectations.core.load_configurations') as mock_load_configs:
         mock_load_configs.return_value = (
             {},
@@ -212,27 +221,33 @@ def test_build_config_dict_comprehensive():
         
         notification_dict, streaming_dict = get_config_dict(mock_spark, None)
         
-        # Verify None user_conf handling
+        # Verify None user_conf uses defaults
+        assert notification_dict["spark.expectations.notifications.email.enabled"] == False
         assert isinstance(notification_dict, dict)
         assert isinstance(streaming_dict, dict)
 
 
-def test_build_config_dict_serverless_no_user_conf():
-    """Test _build_config_dict when user_conf is None but in serverless mode - covers line 96"""
+def test_build_config_dict_no_user_conf_uses_defaults():
+    """Test _build_config_dict when user_conf is None - should use defaults directly"""
     from spark_expectations.core import get_config_dict
     
     mock_spark = Mock()
+    # Mock spark.conf.get to return the default value (second argument) when called
+    mock_spark.conf.get = Mock(side_effect=lambda key, default=None: default)
     
-    # Mock scenario where user_conf is None and we fall back to non-serverless defaults (line 96)
+    # Mock scenario where user_conf is None and we use defaults
     with patch('spark_expectations.core.load_configurations') as mock_load_configs:
         mock_load_configs.return_value = (
-            {},
+            {"se.streaming.enable": True},
             {"spark.expectations.notifications.email.enabled": False}
         )
-        # This should trigger the non-serverless branch when user_conf is None (line 98)
+        
+        # When user_conf is None, should use defaults directly
         notification_dict, streaming_dict = get_config_dict(mock_spark, None)
         
-        # Verify defaults are applied correctly
+        # Verify defaults are used
+        assert notification_dict["spark.expectations.notifications.email.enabled"] == False
+        assert streaming_dict["se.streaming.enable"] == True
         assert isinstance(notification_dict, dict)
         assert isinstance(streaming_dict, dict)
 
