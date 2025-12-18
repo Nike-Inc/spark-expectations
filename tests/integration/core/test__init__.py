@@ -165,6 +165,42 @@ def test_get_config_dict_with_user_conf(mock_load_configs, mock_config_data: dic
     assert notification_dict['spark.expectations.notifications.email.enabled'] is True
 
 @patch("spark_expectations.core.load_configurations")
+def test_get_config_dict_with_partial_user_conf(mock_load_configs, mock_config_data: dict[str, dict[str, Any]]):
+    """Test get_config_dict with partial user configuration."""
+    spark = SparkSession.builder.getOrCreate()
+
+    # Mock load_configurations to return the config dictionaries
+    mock_load_configs.return_value = (mock_config_data['streaming'], mock_config_data['notification'])
+
+    # User configuration with only some keys
+    user_conf = {
+        'se.streaming.enable': False
+        # email.enabled not specified, should use default
+    }
+
+    # Call the function with partial user config
+    notification_dict, streaming_dict = get_config_dict(spark, user_conf)
+
+    # Verify user override is applied and default is used for unspecified key
+    assert streaming_dict['se.streaming.enable'] is False
+    assert notification_dict['spark.expectations.notifications.email.enabled'] is False  # from default
+
+@patch("spark_expectations.core.load_configurations")
+def test_get_config_dict_no_user_conf_uses_defaults(mock_load_configs, mock_config_data: dict[str, dict[str, Any]]):
+    """Test get_config_dict without user_conf uses defaults directly."""
+    spark = SparkSession.builder.getOrCreate()
+
+    # Mock load_configurations to return the config dictionaries
+    mock_load_configs.return_value = (mock_config_data['streaming'], mock_config_data['notification'])
+
+    # Call the function without user_conf (should use defaults)
+    notification_dict, streaming_dict = get_config_dict(spark, None)
+
+    # Verify default values are used
+    assert streaming_dict['se.streaming.enable'] is True  # from mock_config_data
+    assert notification_dict['spark.expectations.notifications.email.enabled'] is False  # from mock_config_data
+
+@patch("spark_expectations.core.load_configurations")
 def test_get_config_dict_empty_configs(mock_load_configs):
     """Test get_config_dict with empty configuration dictionaries."""
     spark = SparkSession.builder.getOrCreate()

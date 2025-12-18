@@ -76,13 +76,21 @@ def get_config_dict(
         user_conf: Dict[str, Union[str, int, bool, Dict[str, str]]] = None,
     ) -> Dict[str, Union[str, int, bool, Dict[str, str]]]:
         """Helper function to build configuration dictionary with type inference."""
+        is_serverless_mode = user_conf.get("spark.expectations.is.serverless", False) if user_conf else False
+        
         if user_conf:
-            config_dict = {
-                key: infer_safe_cast(user_conf.get(key, str(value)))
-                for key, value in default_dict.items()
-            }
+            if is_serverless_mode:
+                config_dict = {
+                    key: infer_safe_cast(user_conf.get(key, str(value)))
+                    for key, value in default_dict.items()
+                }
+            else:
+                config_dict = {
+                    key: infer_safe_cast(user_conf.get(key, spark.conf.get(key, str(value))))
+                    for key, value in default_dict.items()
+                }
         else:
-            config_dict = {key: infer_safe_cast(str(value)) for key, value in default_dict.items()}
+            config_dict = {key: infer_safe_cast(spark.conf.get(key, str(value))) for key, value in default_dict.items()}
         return config_dict
 
     try:
