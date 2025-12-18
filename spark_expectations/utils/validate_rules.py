@@ -58,6 +58,22 @@ class SparkExpectationsValidateRules:
     @staticmethod
     def _validate_single_subquery(sq: sqlglot.expressions.Subquery) -> None:
 
+        """
+        Validates a single sqlglot Subquery node for structural correctness.
+
+        Ensures the subquery:
+        - wraps a SELECT statement,
+        - contains a FROM clause,
+        - the FROM source is one of Table/Subquery/Join,
+        - has at least one projection, and each projection is a valid expression
+        (Column, AggFunc, Window, or an Alias chain resolving to these).
+
+        Args:
+        sq (sqlglot.expressions.Subquery): The subquery node to validate.
+
+        Raies:
+        SparkExpectationsInvalidRowDQExpectationException: If any of the checks fail.
+        """
         inner = sq.this
         if not isinstance(inner,sqlglot.expressions.Select):
             raise SparkExpectationsInvalidRowDQExpectationException(
@@ -99,6 +115,22 @@ class SparkExpectationsValidateRules:
     
     @staticmethod
     def check_subquery(tree:sqlglot.Expression) -> None:
+        """
+        Validates all sqlglot Subquery nodes inside a parsed expression.
+
+        It finds every Subquery in the AST and delegates validation to
+        - validate_single_subquery, ensuring each subquery:
+        - wraps a SELECT statement,
+        - has a valid FROM source (Table/Subquery/Join),
+        - and contains at least one valid projection.
+
+        Args:
+        tree (sqlglot.Expression): Parsed SQL expression to inspect.
+
+        Raises:
+            SparkExpectationsInvalidRowDQExpectationException: If any subquery is
+            missing SELECT/FROM, has an invalid source, or invalid projections.
+        """
 
         subqueries = list(tree.find_all(sqlglot.expressions.Subquery))
         if not subqueries:
@@ -111,6 +143,27 @@ class SparkExpectationsValidateRules:
                 raise SparkExpectationsInvalidRowDQExpectationException(
                     f"[row_dq] Could not validate subquery: {subquery}: {e}"
                 )
+    
+    @staticmethod        
+    def check_query_dq(tree:sqlglot.Expression) -> bool:
+        """
+        Determines whether a parsed SQL expression represents a SELECT query.
+    
+        It unwraps nested sqlglot Subquery nodes (via the `this` attribute) and
+        returns True if the underlying node is a sqlglot.expressions.Select; otherwise False.
+    
+        Args:
+        tree (sqlglot.Expression): Parsed SQL expression (e.g., from sqlglot.parse_one).
+    
+        Returns:
+        bool: True if the expression resolves to a SELECT, False otherwise.
+        """
+        inner = tree.this
+        if isinstance(inner,sqlglot.expressions.Subquery):
+            return SparkExpectationsValidateRules.check_query_dq(inner)
+        elif isinstance(inner,sqlglot.expressions.Select):
+            return True
+        return False
     
     @staticmethod
     def validate_row_dq_expectation(df: DataFrame, rule: Dict) -> None:
@@ -130,14 +183,20 @@ class SparkExpectationsValidateRules:
             tree = sqlglot.parse_one(expectation)
             agg_funcs = list({node.key for node in tree.find_all(sqlglot.expressions.AggFunc)})
             if agg_funcs:
-                is_agg, agg_func = SparkExpectationsValidateRules.check_agg_dq(expectation)
+                check_agg_dq_result, agg_func = SparkExpectationsValidateRules.check_agg_dq(expectation)
+            check_query_dq_result = SparkExpectationsValidateRules.check_query_dq(tree)
         except Exception as e:
             raise SparkExpectationsInvalidRowDQExpectationException(
                 f"[row_dq] Could not parse expression: {expectation} → {e}"
             )
-        if agg_funcs and is_agg:
+        if agg_funcs and check_agg_dq_result:
             raise SparkExpectationsInvalidRowDQExpectationException(
                 f"[row_dq] Rule '{rule.get('rule')}' contains aggregate function(s) (not allowed in row_dq): {agg_func}"
+            )
+        
+        if check_query_dq_result:
+            raise SparkExpectationsInvalidRowDQExpectationException(
+                f"[row_dq] Rule '{rule.get('rule')}' contains a query as an expectation. Invalid."
             )
         
         try:
