@@ -201,6 +201,28 @@ def test_get_config_dict_no_user_conf_uses_defaults(mock_load_configs, mock_conf
     assert notification_dict['spark.expectations.notifications.email.enabled'] is False  # from mock_config_data
 
 @patch("spark_expectations.core.load_configurations")
+def test_get_config_dict_serverless_mode(mock_load_configs, mock_config_data: dict[str, dict[str, Any]]):
+    """Test get_config_dict with serverless mode enabled."""
+    spark = SparkSession.builder.getOrCreate()
+
+    # Mock load_configurations to return the config dictionaries
+    mock_load_configs.return_value = (mock_config_data['streaming'], mock_config_data['notification'])
+
+    # User configuration with serverless mode enabled
+    user_conf = {
+        'spark.expectations.is.serverless': True,
+        'se.streaming.enable': False,
+        'spark.expectations.notifications.email.enabled': True
+    }
+
+    # Call the function with serverless mode
+    notification_dict, streaming_dict = get_config_dict(spark, user_conf)
+
+    # Verify serverless mode uses user_conf values without accessing spark.conf
+    assert streaming_dict['se.streaming.enable'] is False
+    assert notification_dict['spark.expectations.notifications.email.enabled'] is True
+
+@patch("spark_expectations.core.load_configurations")
 def test_get_config_dict_empty_configs(mock_load_configs):
     """Test get_config_dict with empty configuration dictionaries."""
     spark = SparkSession.builder.getOrCreate()
