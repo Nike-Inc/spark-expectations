@@ -61,6 +61,7 @@ nav:
               - PagerDuty: user_guide/notifications/pagerduty_notifications.md
           - Observability: Observability_examples.md
           - Stream Writer Guide: user_guide/Stream_write_guide.md
+          - Serverless: user_guide/serverless.md
   - Developer Guide:
       - Contributing: developer_guide/contributing.md
       - Setup: developer_guide/setup.md
