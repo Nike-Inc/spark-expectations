@@ -61,6 +61,9 @@ nav:
               - Email: user_guide/notifications/email_notifications.md
               - Slack: user_guide/notifications/slack_notifications.md
               - PagerDuty: user_guide/notifications/pagerduty_notifications.md
+          - Observability: Observability_examples.md
+          - Stream Writer Guide: user_guide/Stream_write_guide.md
+          - Serverless: user_guide/serverless.md
   - Developer Guide:
       - Contributing: developer_guide/contributing.md
       - Setup: developer_guide/setup.md
@@ -89,7 +92,9 @@ nav:
           - Base_Notification_plugin: api/base_notification_plugin.md
           - Email_Notification_plugin: api/email_plugin.md
           - Slack_Notification_plugin: api/slack_plugin.md
+          - Teams_Notification_plugin: api/teams_plugin.md
           - PagerDuty_Notification_plugin: api/pagerduty_plugin.md
+          - Zoom_Notification_plugin: api/zoom_plugin.md
           - Push:
               - Notification_Decorater: api/notifications_decorater.md
       - Utils:
@@ -99,6 +104,9 @@ nav:
           - Udf: api/udf.md
       - Examples:
           - Base_Setup: api/base_setup.md
+          - Sample_DQ_BigQuery: api/sample_dq_bigquery.md
+          - Sample_DQ_Delta: api/sample_dq_delta.md
+          - Sample_DQ_Iceberg: api/sample_dq_iceberg.md
 
 plugins:
   - search:
@@ -106,7 +114,7 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          paths: [ "spark_expectations" ]
+          paths: [ "." ]
           options:
             show_source: true
             show_root_heading: false

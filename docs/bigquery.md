@@ -10,7 +10,7 @@ from pyspark.sql import SparkSession
 builder = (
     SparkSession.builder.config(
         "spark.jars.packages",
-        "com.google.cloud.spark:spark-bigquery-with-dependencies_2.12:0.30.0",
+        "com.google.cloud.spark:spark-bigquery-with-dependencies_2.13:0.41.0",
     )
 )
 spark = builder.getOrCreate()
