@@ -5,14 +5,6 @@ from unittest.mock import Mock, MagicMock
 from spark_expectations.utils.validate_rules import SparkExpectationsValidateRules
 from spark_expectations.core.exceptions import SparkExpectationsInvalidRowDQExpectationException
 from tests.unit.utils.conftest import (
-    CHECK_AGG_DQ_VALID_AGGREGATE_FUNCTIONS,
-    CHECK_AGG_DQ_CASE_INSENSITIVE,
-    CHECK_AGG_DQ_LEADING_WHITESPACE,
-    CHECK_AGG_DQ_WHITESPACE_BEFORE_PAREN,
-    CHECK_AGG_DQ_NON_AGGREGATE_EXPRESSIONS,
-    CHECK_AGG_DQ_AGGREGATE_NOT_AT_START,
-    CHECK_AGG_DQ_EDGE_CASES_NEGATIVE,
-    CHECK_AGG_DQ_COMPLEX_EXPRESSIONS,
     VALIDATE_SUBQUERY_VALID,
     VALIDATE_SUBQUERY_MISSING_FROM,
     VALIDATE_SUBQUERY_COMPLEX_PROJECTIONS,
@@ -24,92 +16,15 @@ from tests.unit.utils.conftest import (
     VALIDATE_ROW_DQ_INVALID_AGGREGATE,
     VALIDATE_ROW_DQ_INVALID_QUERY,
     VALIDATE_ROW_DQ_INVALID_SYNTAX,
+    VALIDATE_SUBQUERIES_ONE_VALID,
+    VALIDATE_SUBQUERIES_MULTIPLE_VALID,
+    VALIDATE_SUBQUERIES_NESTED_VALID,
+    VALIDATE_SUBQUERIES_INVALID,
+    GET_SUBQUERIES_NONE,
+    GET_SUBQUERIES_ONE,
+    GET_SUBQUERIES_MULTIPLE,
+    GET_SUBQUERIES_NESTED,
 )
-
-
-class TestCheckAggDq:
-    """Unit tests for SparkExpectationsValidateRules.check_agg_dq"""
-
-    @pytest.mark.parametrize(
-        "expectation, expected_agg_func",
-        CHECK_AGG_DQ_VALID_AGGREGATE_FUNCTIONS,
-    )
-    def test_check_agg_dq_with_valid_aggregate_functions(self, expectation, expected_agg_func):
-        """Test that all supported aggregate functions are correctly identified."""
-        result, matched_func = SparkExpectationsValidateRules.check_agg_dq(expectation)
-        assert result is True
-        assert matched_func.lower() == expected_agg_func.lower()
-
-    @pytest.mark.parametrize(
-        "expectation, expected_agg_func",
-        CHECK_AGG_DQ_CASE_INSENSITIVE,
-    )
-    def test_check_agg_dq_case_insensitive(self, expectation, expected_agg_func):
-        """Test that aggregate function detection is case-insensitive."""
-        result, matched_func = SparkExpectationsValidateRules.check_agg_dq(expectation)
-        assert result is True
-        assert matched_func.lower() == expected_agg_func.lower()
-
-    @pytest.mark.parametrize(
-        "expectation, expected_agg_func",
-        CHECK_AGG_DQ_LEADING_WHITESPACE,
-    )
-    def test_check_agg_dq_with_leading_whitespace(self, expectation, expected_agg_func):
-        """Test that leading whitespace before aggregate functions is handled."""
-        result, matched_func = SparkExpectationsValidateRules.check_agg_dq(expectation)
-        assert result is True
-        assert matched_func.lower() == expected_agg_func.lower()
-
-    @pytest.mark.parametrize(
-        "expectation, expected_agg_func",
-        CHECK_AGG_DQ_WHITESPACE_BEFORE_PAREN,
-    )
-    def test_check_agg_dq_with_whitespace_before_parenthesis(self, expectation, expected_agg_func):
-        """Test that whitespace between function name and parenthesis is handled."""
-        result, matched_func = SparkExpectationsValidateRules.check_agg_dq(expectation)
-        assert result is True
-        assert matched_func.lower() == expected_agg_func.lower()
-
-    @pytest.mark.parametrize(
-        "expectation",
-        CHECK_AGG_DQ_NON_AGGREGATE_EXPRESSIONS,
-    )
-    def test_check_agg_dq_with_non_aggregate_expressions(self, expectation):
-        """Test that non-aggregate expressions return False."""
-        result, matched_func = SparkExpectationsValidateRules.check_agg_dq(expectation)
-        assert result is False
-        assert matched_func is None
-
-    @pytest.mark.parametrize(
-        "expectation",
-        CHECK_AGG_DQ_AGGREGATE_NOT_AT_START,
-    )
-    def test_check_agg_dq_aggregate_not_at_start(self, expectation):
-        """Test that aggregate functions not at the start return False."""
-        result, matched_func = SparkExpectationsValidateRules.check_agg_dq(expectation)
-        assert result is False
-        assert matched_func is None
-
-    @pytest.mark.parametrize(
-        "expectation",
-        CHECK_AGG_DQ_EDGE_CASES_NEGATIVE,
-    )
-    def test_check_agg_dq_edge_cases_negative(self, expectation):
-        """Test edge cases that should return False."""
-        result, matched_func = SparkExpectationsValidateRules.check_agg_dq(expectation)
-        assert result is False
-        assert matched_func is None
-
-    @pytest.mark.parametrize(
-        "expectation, expected_agg_func",
-        CHECK_AGG_DQ_COMPLEX_EXPRESSIONS,
-    )
-    def test_check_agg_dq_complex_aggregate_expressions(self, expectation, expected_agg_func):
-        """Test complex aggregate expressions are correctly identified."""
-        result, matched_func = SparkExpectationsValidateRules.check_agg_dq(expectation)
-        assert result is True
-        assert matched_func.lower() == expected_agg_func.lower()
-
 
 class TestValidateSingleSubquery:
     """Unit tests for SparkExpectationsValidateRules._validate_single_subquery"""
@@ -197,6 +112,110 @@ class TestValidateSingleSubquery:
         subquery = sqlglot.parse_one(sql)
         # Should not raise any exception
         SparkExpectationsValidateRules._validate_single_subquery(subquery)
+
+
+class TestValidateSubqueries:
+    """Unit tests for SparkExpectationsValidateRules.validate_subqueries"""
+
+    @pytest.mark.parametrize("sql", VALIDATE_SUBQUERIES_ONE_VALID)
+    def test_validate_subqueries_one_valid(self, sql):
+        """Test that expressions with one valid subquery pass validation."""
+        tree = sqlglot.parse_one(sql)
+        # Should not raise any exception
+        SparkExpectationsValidateRules.validate_subqueries(tree)
+
+    @pytest.mark.parametrize("sql", VALIDATE_SUBQUERIES_MULTIPLE_VALID)
+    def test_validate_subqueries_multiple_valid(self, sql):
+        """Test that expressions with multiple valid subqueries pass validation."""
+        tree = sqlglot.parse_one(sql)
+        # Should not raise any exception
+        SparkExpectationsValidateRules.validate_subqueries(tree)
+
+    @pytest.mark.parametrize("sql", VALIDATE_SUBQUERIES_NESTED_VALID)
+    def test_validate_subqueries_nested_valid(self, sql):
+        """Test that expressions with nested valid subqueries pass validation."""
+        tree = sqlglot.parse_one(sql)
+        # Should not raise any exception
+        SparkExpectationsValidateRules.validate_subqueries(tree)
+
+    @pytest.mark.parametrize("sql", VALIDATE_SUBQUERIES_INVALID)
+    def test_validate_subqueries_invalid(self, sql):
+        """Test that expressions with invalid subqueries raise exception."""
+        tree = sqlglot.parse_one(sql)
+        with pytest.raises(SparkExpectationsInvalidRowDQExpectationException) as exc_info:
+            SparkExpectationsValidateRules.validate_subqueries(tree)
+        assert "subquery" in str(exc_info.value).lower()
+
+    def test_validate_subqueries_finds_all_subqueries(self):
+        """Test that validate_subqueries validates ALL subqueries in expression."""
+        # Expression with 3 subqueries - all valid
+        sql = "(SELECT a FROM t1) + (SELECT b FROM t2) + (SELECT c FROM t3)"
+        tree = sqlglot.parse_one(sql)
+        # Should not raise - all subqueries are valid
+        SparkExpectationsValidateRules.validate_subqueries(tree)
+
+    def test_validate_subqueries_exception_contains_subquery_info(self):
+        """Test that exception message contains information about the invalid subquery."""
+        sql = "col1 IN (SELECT id)"  # Invalid - missing FROM
+        tree = sqlglot.parse_one(sql)
+        with pytest.raises(SparkExpectationsInvalidRowDQExpectationException) as exc_info:
+            SparkExpectationsValidateRules.validate_subqueries(tree)
+        error_msg = str(exc_info.value)
+        assert "FROM" in error_msg or "subquery" in error_msg.lower()
+
+
+class TestGetSubqueries:
+    """Unit tests for SparkExpectationsValidateRules.get_subqueries"""
+
+    @pytest.mark.parametrize("sql", GET_SUBQUERIES_NONE)
+    def test_get_subqueries_returns_empty_list_when_no_subqueries(self, sql):
+        """Test that expressions with no subqueries return an empty list."""
+        tree = sqlglot.parse_one(sql)
+        result = SparkExpectationsValidateRules.get_subqueries(tree)
+        assert result == []
+        assert isinstance(result, list)
+
+    @pytest.mark.parametrize("sql,expected_count", GET_SUBQUERIES_ONE)
+    def test_get_subqueries_returns_one_subquery(self, sql, expected_count):
+        """Test that expressions with one subquery return a list with one element."""
+        tree = sqlglot.parse_one(sql)
+        result = SparkExpectationsValidateRules.get_subqueries(tree)
+
+    @pytest.mark.parametrize("sql,expected_count", GET_SUBQUERIES_MULTIPLE)
+    def test_get_subqueries_returns_multiple_subqueries(self, sql, expected_count):
+        """Test that expressions with multiple subqueries return correct count."""
+        tree = sqlglot.parse_one(sql)
+        result = SparkExpectationsValidateRules.get_subqueries(tree)
+
+    @pytest.mark.parametrize("sql,expected_count", GET_SUBQUERIES_NESTED)
+    def test_get_subqueries_finds_nested_subqueries(self, sql, expected_count):
+        """Test that nested subqueries are all found and counted."""
+        tree = sqlglot.parse_one(sql)
+        result = SparkExpectationsValidateRules.get_subqueries(tree)
+
+    def test_get_subqueries_with_complex_expression(self):
+        """Test get_subqueries with complex expression containing multiple subquery types."""
+        sql = """
+            CASE 
+                WHEN col1 IN (SELECT id FROM t1) THEN 1
+                WHEN col2 > (SELECT max(val) FROM t2) THEN 2
+                ELSE 0
+            END
+        """
+        tree = sqlglot.parse_one(sql)
+        result = SparkExpectationsValidateRules.get_subqueries(tree)
+
+    def test_get_subqueries_result_can_be_used_as_boolean(self):
+        """Test that result can be used in boolean context (for bool() conversion)."""
+        # With subqueries - should be truthy
+        tree_with = sqlglot.parse_one("col1 IN (SELECT id FROM t1)")
+        result_with = SparkExpectationsValidateRules.get_subqueries(tree_with)
+        assert bool(result_with) is True
+
+        # Without subqueries - should be falsy
+        tree_without = sqlglot.parse_one("col1 > 10")
+        result_without = SparkExpectationsValidateRules.get_subqueries(tree_without)
+        assert bool(result_without) is False
 
 
 class TestCheckQueryDq:

@@ -2,110 +2,6 @@
 Conftest file containing test parameters for validate_rules unit tests.
 """
 
-# ==================== check_agg_dq Test Parameters ====================
-
-# Valid aggregate functions - each tuple is (expectation, expected_agg_func)
-CHECK_AGG_DQ_VALID_AGGREGATE_FUNCTIONS = [
-    ("sum(col1) > 10", "sum"),
-    ("count(col1) > 5", "count"),
-    ("avg(col1) < 100", "avg"),
-    ("mean(col1) >= 50", "mean"),
-    ("min(col1) > 0", "min"),
-    ("max(col1) < 1000", "max"),
-    ("stddev(col1) > 1", "stddev"),
-    ("stddev_samp(col1) > 1", "stddev_samp"),
-    ("stddev_pop(col1) > 1", "stddev_pop"),
-    ("variance(col1) > 10", "variance"),
-    ("var_samp(col1) > 10", "var_samp"),
-    ("var_pop(col1) > 10", "var_pop"),
-    ("collect_list(col1) is not null", "collect_list"),
-    ("collect_set(col1) is not null", "collect_set"),
-]
-
-# Case insensitive aggregate functions - each tuple is (expectation, expected_agg_func)
-CHECK_AGG_DQ_CASE_INSENSITIVE = [
-    ("SUM(col1) > 10", "SUM"),
-    ("Sum(col1) > 10", "Sum"),
-    ("COUNT(col1) > 5", "COUNT"),
-    ("AVG(col1) < 100", "AVG"),
-    ("MEAN(col1) >= 50", "MEAN"),
-    ("MIN(col1) > 0", "MIN"),
-    ("MAX(col1) < 1000", "MAX"),
-    ("STDDEV(col1) > 1", "STDDEV"),
-    ("STDDEV_SAMP(col1) > 1", "STDDEV_SAMP"),
-    ("STDDEV_POP(col1) > 1", "STDDEV_POP"),
-    ("VARIANCE(col1) > 10", "VARIANCE"),
-    ("VAR_SAMP(col1) > 10", "VAR_SAMP"),
-    ("VAR_POP(col1) > 10", "VAR_POP"),
-    ("COLLECT_LIST(col1) is not null", "COLLECT_LIST"),
-    ("COLLECT_SET(col1) is not null", "COLLECT_SET"),
-]
-
-# Leading whitespace - each tuple is (expectation, expected_agg_func)
-CHECK_AGG_DQ_LEADING_WHITESPACE = [
-    ("  sum(col1) > 10", "sum"),
-    ("\tcount(col1) > 5", "count"),
-    ("   avg(col1) < 100", "avg"),
-    ("\n\tsum(col1) > 10", "sum"),
-]
-
-# Whitespace between function name and parenthesis - each tuple is (expectation, expected_agg_func)
-CHECK_AGG_DQ_WHITESPACE_BEFORE_PAREN = [
-    ("sum (col1) > 10", "sum"),
-    ("count  (col1) > 5", "count"),
-    ("avg\t(col1) < 100", "avg"),
-]
-
-# Non-aggregate expressions (should return False)
-CHECK_AGG_DQ_NON_AGGREGATE_EXPRESSIONS = [
-    "col1 > 10",
-    "col1 is null",
-    "col1 is not null",
-    "col1 between 1 and 10",
-    "col1 in (1, 2, 3)",
-    "col1 like '%test%'",
-    "upper(col1) = 'TEST'",
-    "lower(col1) = 'test'",
-    "length(col1) > 5",
-    "trim(col1) = 'test'",
-    "concat(col1, col2) = 'test'",
-    "substring(col1, 1, 3) = 'abc'",
-    "coalesce(col1, col2) is not null",
-    "case when col1 > 10 then 1 else 0 end",
-    "col1 + col2 > 100",
-    "(col1 % 2) = 0",
-]
-
-# Aggregate not at start (should return False)
-CHECK_AGG_DQ_AGGREGATE_NOT_AT_START = [
-    "col1 + sum(col2) > 100",
-    "(sum(col1)) > 10",  # Parenthesis before aggregate
-    "1 + count(col1) > 5",
-    "col1 = avg(col2)",
-    "not sum(col1) > 10",
-]
-
-# Edge cases that should return False
-CHECK_AGG_DQ_EDGE_CASES_NEGATIVE = [
-    "",                          # Empty string
-    "   ",                       # Whitespace only
-    "sumcol1 > 10",              # No parenthesis (not a function call)
-    "sum_col1 > 10",             # Underscore makes it a column name
-    "summary(col1) > 10",        # Similar but not an aggregate
-    "counter(col1) > 10",        # Similar to count but different
-    "avgerage(col1) > 10",       # Typo
-]
-
-# Complex aggregate expressions - each tuple is (expectation, expected_agg_func)
-CHECK_AGG_DQ_COMPLEX_EXPRESSIONS = [
-    ("sum(col1) > 10 and sum(col2) > 20", "sum"),
-    ("count(distinct col1) > 5", "count"),
-    ("avg(col1 + col2) < 100", "avg"),
-    ("sum(case when col1 > 0 then col1 else 0 end) > 10", "sum"),
-    ("count(*) > 100", "count"),
-    ("sum(col1) between 10 and 100", "sum"),
-]
-
 # ==================== _validate_single_subquery Test Parameters ====================
 
 # Valid subqueries - SQL strings that should pass validation
@@ -271,4 +167,76 @@ VALIDATE_ROW_DQ_INVALID_QUERY = [
 VALIDATE_ROW_DQ_INVALID_SYNTAX = [
     {"expectation": "col1 = = = invalid", "rule": "invalid_syntax"},
     {"expectation": "col1 >>> 10", "rule": "invalid_operator"},
+]
+
+# ==================== validate_subqueries Test Parameters ====================
+
+# Expressions with ONE valid subquery (should pass)
+VALIDATE_SUBQUERIES_ONE_VALID = [
+    # IN clause with subquery
+    "col1 IN (SELECT id FROM table1)"
+]
+
+# Expressions with MULTIPLE valid subqueries (should pass)
+VALIDATE_SUBQUERIES_MULTIPLE_VALID = [
+    # Two subqueries in comparison
+    "(SELECT count(*) FROM table1) = (SELECT count(*) FROM table2)",
+    # Arithmetic with multiple subqueries
+    "(SELECT sum(val) FROM table1) - (SELECT sum(val) FROM table2) < 10",
+]
+
+# Expressions with NESTED subqueries (subquery inside subquery - should pass)
+VALIDATE_SUBQUERIES_NESTED_VALID = [
+    # Subquery in FROM of another subquery
+    "col1 IN (SELECT a.id FROM (SELECT id FROM table1) a)",
+    # Deeply nested
+    "col1 = (SELECT max(val) FROM (SELECT val FROM (SELECT val FROM table1)))",
+]
+
+# Expressions with INVALID subqueries (should raise exception)
+VALIDATE_SUBQUERIES_INVALID = [
+    # Subquery without FROM clause
+    "col1 IN (SELECT col1)",
+    # Multiple subqueries where one is invalid (missing FROM)
+    "col1 IN (SELECT id FROM table1) AND col2 > (SELECT max(val))",
+]
+
+# ==================== get_subqueries Test Parameters ====================
+
+# Expressions with NO subqueries (should return empty list)
+GET_SUBQUERIES_NONE = [
+    # Simple column comparisons
+    "col1 > 10",
+    # Function calls without subquery
+    "upper(col1) = 'TEST'",
+    # IN with literal values (no subquery)
+    "col1 IN (1, 2, 3)",
+]
+
+# Expressions with ONE subquery (should return list with 1 element)
+GET_SUBQUERIES_ONE = [
+    # IN clause with subquery
+    ("col1 IN (SELECT id FROM table1)", 1),
+    # Comparison with scalar subquery
+    ("col1 > (SELECT max(val) FROM table1)", 1),
+    # EXISTS
+    ("EXISTS (SELECT 1 FROM table1)", 1),
+]
+
+# Expressions with MULTIPLE subqueries (should return list with expected count)
+GET_SUBQUERIES_MULTIPLE = [
+    # Two subqueries in comparison
+    ("(SELECT count(*) FROM table1) = (SELECT count(*) FROM table2)", 2),
+    # Three subqueries in arithmetic
+    ("(SELECT a FROM t1) + (SELECT b FROM t2) + (SELECT c FROM t3)", 3),
+    # Subqueries in AND condition
+    ("col1 IN (SELECT id FROM t1) AND col2 IN (SELECT id FROM t2)", 2),
+]
+
+# Expressions with NESTED subqueries (count includes all levels)
+GET_SUBQUERIES_NESTED = [
+    # Subquery in FROM - outer + inner = 2
+    ("col1 IN (SELECT a.id FROM (SELECT id FROM table1) a)", 2),
+    # Triple nested subqueries = 3
+    ("col1 = (SELECT max(val) FROM (SELECT val FROM (SELECT val FROM t1)))", 3),
 ]

@@ -1,6 +1,7 @@
 import re
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List
 from enum import Enum
+
 import sqlglot
 from sqlglot.errors import ParseError
 from pyspark.sql import DataFrame, SparkSession
@@ -38,24 +39,6 @@ class SparkExpectationsValidateRules:
         return list({name for pair in matches for name in pair if name})
     
     @staticmethod
-    def check_agg_dq(expectation: str) -> Tuple[bool, Optional[str]]:
-        """
-        Returns True if the expression starts with a known aggregate function.
-        This is a conservative regex-based check to avoid needing AST positions.
-        """
-        agg_start_pattern = re.compile(
-            r"^\s*(sum|count|avg|mean|min|max|stddev|stddev_samp|stddev_pop|variance|var_samp|var_pop|"
-            r"collect_list|collect_set)\s*\(",
-            flags=re.IGNORECASE,
-        )
-
-        match = agg_start_pattern.match(expectation)
-        check = bool(match)
-        matched_pattern = match.group(1) if check else None
-        return check, matched_pattern
-    
-    
-    @staticmethod
     def _validate_single_subquery(sq: sqlglot.expressions.Subquery) -> None:
 
         """
@@ -74,7 +57,7 @@ class SparkExpectationsValidateRules:
         Raies:
         SparkExpectationsInvalidRowDQExpectationException: If any of the checks fail.
         """
-        inner = sq.this
+        inner = sq.this if sq.this else sq
         if not isinstance(inner,sqlglot.expressions.Select):
             raise SparkExpectationsInvalidRowDQExpectationException(
                     "[row_dq] Subquery does not contain SELECT statement"
@@ -114,7 +97,7 @@ class SparkExpectationsValidateRules:
     
     
     @staticmethod
-    def check_subquery(tree:sqlglot.Expression) -> None:
+    def validate_subqueries(tree:sqlglot.Expression) -> None:
         """
         Validates all sqlglot Subquery nodes inside a parsed expression.
 
@@ -132,9 +115,7 @@ class SparkExpectationsValidateRules:
             missing SELECT/FROM, has an invalid source, or invalid projections.
         """
 
-        subqueries = list(tree.find_all(sqlglot.expressions.Subquery))
-        if not subqueries:
-            return
+        subqueries = SparkExpectationsValidateRules.get_subqueries(tree)
         
         for subquery in subqueries:
             try:
@@ -144,6 +125,12 @@ class SparkExpectationsValidateRules:
                     f"[row_dq] Could not validate subquery: {subquery}: {e}"
                 )
     
+    @staticmethod
+    def get_subqueries(tree:sqlglot.Expression) -> bool:
+        subqueries = list(tree.find_all(sqlglot.expressions.Subquery, sqlglot.expressions.Query))
+        return subqueries
+        
+
     @staticmethod        
     def check_query_dq(tree:sqlglot.Expression) -> bool:
         """
@@ -158,11 +145,11 @@ class SparkExpectationsValidateRules:
         Returns:
         bool: True if the expression resolves to a SELECT, False otherwise.
         """
-        inner = tree.this
-        if isinstance(inner,sqlglot.expressions.Subquery):
-            return SparkExpectationsValidateRules.check_query_dq(inner)
-        elif isinstance(inner,sqlglot.expressions.Select):
+        if isinstance(tree,sqlglot.expressions.Select):
             return True
+        inner = tree.this
+        if isinstance(inner, (sqlglot.expressions.Subquery, sqlglot.expressions.Select)):
+            return SparkExpectationsValidateRules.check_query_dq(inner)
         return False
     
     @staticmethod
@@ -181,17 +168,17 @@ class SparkExpectationsValidateRules:
         expectation = rule.get("expectation", "")
         try:
             tree = sqlglot.parse_one(expectation)
-            agg_funcs = list({node.key for node in tree.find_all(sqlglot.expressions.AggFunc)})
-            if agg_funcs:
-                check_agg_dq_result, agg_func = SparkExpectationsValidateRules.check_agg_dq(expectation)
+            
             check_query_dq_result = SparkExpectationsValidateRules.check_query_dq(tree)
+            agg_funcs = list({node.key for node in tree.find_all(sqlglot.expressions.AggFunc)})
+            check_subqueries = bool(SparkExpectationsValidateRules.get_subqueries(tree))
         except Exception as e:
             raise SparkExpectationsInvalidRowDQExpectationException(
                 f"[row_dq] Could not parse expression: {expectation} → {e}"
             )
-        if agg_funcs and check_agg_dq_result:
+        if agg_funcs and not check_subqueries:
             raise SparkExpectationsInvalidRowDQExpectationException(
-                f"[row_dq] Rule '{rule.get('rule')}' contains aggregate function(s) (not allowed in row_dq): {agg_func}"
+                f"[row_dq] Rule '{rule.get('rule')}' contains aggregate function(s) (not allowed in row_dq): {agg_funcs}"
             )
         
         if check_query_dq_result:
@@ -200,7 +187,8 @@ class SparkExpectationsValidateRules:
             )
         
         try:
-            SparkExpectationsValidateRules.check_subquery(tree)
+            if check_subqueries:
+                SparkExpectationsValidateRules.validate_subqueries(tree)
             df.select(expr(expectation)).limit(1)
         except Exception as e:
             raise SparkExpectationsInvalidRowDQExpectationException(
