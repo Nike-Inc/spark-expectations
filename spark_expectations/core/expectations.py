@@ -63,8 +63,11 @@ if check_if_pyspark_connect_is_supported():
     from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
     from pyspark.sql.connect.session import SparkSession as ConnectSparkSession
 
-DataFrame: TypeAlias = Union[sql.DataFrame, ConnectDataFrame]  # type: ignore
-SparkSession: TypeAlias = Union[sql.SparkSession, ConnectSparkSession]  # type: ignore
+    DataFrame: TypeAlias = Union[sql.DataFrame, ConnectDataFrame]  # type: ignore
+    SparkSession: TypeAlias = Union[sql.SparkSession, ConnectSparkSession]  # type: ignore
+else:
+    DataFrame: TypeAlias = sql.DataFrame  # type: ignore
+    SparkSession: TypeAlias = sql.SparkSession  # type: ignore
 
 
 __all__ = [
@@ -345,9 +348,24 @@ class SparkExpectations:
                         spark=self.spark,
                     )
                     if failed:
-                        # Optionally, raise or log details for each failed rule
-                        failed_rules = [r.get("rule") for rules_list in failed.values() for r in rules_list]
-                        raise SparkExpectationsMiscException(f"Validation failed for rules: {failed_rules}")
+                        # Log detailed error information for each failed rule
+                        _log.error("Rule validation failed. Details of failed rules:")
+                        for rule_type, failed_rules_list in failed.items():
+                            _log.error(f"  Rule Type: {rule_type.value}")
+                            for failed_rule in failed_rules_list:
+                                rule_name = failed_rule.get("rule", "UNKNOWN")
+                                expectation = failed_rule.get("expectation", "N/A")
+                                error_message = failed_rule.get("error_message", "No error details available")
+                                _log.error(f"    - Rule: '{rule_name}'")
+                                _log.error(f"      Expectation: {expectation}")
+                                _log.error(f"      Error: {error_message}")
+                        
+                        # Collect summary for exception message
+                        failed_rules_summary = [r.get("rule") for rules_list in failed.values() for r in rules_list]
+                        raise SparkExpectationsMiscException(
+                            f"Validation failed for {len(failed_rules_summary)} rule(s): {failed_rules_summary}. "
+                            f"Check logs above for detailed error messages."
+                        )
                     _log.info("Validation for rules completed successfully")
 
                     _input_count = _df.count() if not _df.isStreaming else 0
