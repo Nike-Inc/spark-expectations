@@ -187,7 +187,8 @@ class SparkExpectationsValidateRules:
             spark (SparkSession): Spark session.
             
         Returns:
-            dict: {RuleType: [failed_rule_dicts]}
+            dict: {RuleType: [failed_rule_dicts_with_error_details]}
+                Each failed rule dict will include an 'error_message' key with the exception details
         """
         failed: Dict[RuleType, List[Dict]] = {rt: [] for rt in RuleType}
         for rule in rules:
@@ -199,7 +200,10 @@ class SparkExpectationsValidateRules:
                     SparkExpectationsValidateRules.validate_agg_dq_expectation(df, rule)
                 elif rule_type == RuleType.QUERY_DQ:
                     SparkExpectationsValidateRules.validate_query_dq_expectation(df, rule, spark)
-            except Exception:
-                failed[rule_type].append(rule)
+            except Exception as e:
+                # Add error message to the rule for better debugging
+                rule_with_error = rule.copy()
+                rule_with_error['error_message'] = str(e)
+                failed[rule_type].append(rule_with_error)
         # Remove empty lists for rule types with no failures
         return {k: v for k, v in failed.items() if v}
