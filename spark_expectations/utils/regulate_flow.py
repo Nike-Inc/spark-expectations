@@ -112,9 +112,16 @@ class SparkExpectationsRegulateFlow:
                 if row_dq_flag:
                     _log.info("Writing error records into the table started")
 
+                    try:
+                        error_table = _context.get_error_table_name
+
+                    except SparkExpectationsMiscException:
+                        error_table = f"{table_name}_error"
+
+
                     _error_count, _error_df = _writer.write_error_records_final(
                         _df_dq,
-                        f"{table_name}_error",
+                        error_table,
                         _context.get_row_dq_rule_type_name,
                     )
                     if _context.get_summarized_row_dq_res:
