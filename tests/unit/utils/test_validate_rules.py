@@ -367,3 +367,17 @@ class TestValidateRowDqExpectation:
         SparkExpectationsValidateRules.validate_row_dq_expectation(mock_df, rule)
         mock_df.select.assert_called_once()
 
+    def test_validate_row_dq_expectation_calls_validate_subqueries(self, mock_df, mock_expr, mocker):
+        """Test that validate_subqueries is called when expectation contains a subquery."""
+        mock_validate_subqueries = mocker.patch.object(
+            SparkExpectationsValidateRules,
+            "validate_subqueries"
+        )
+        rule = {
+            "expectation": "col1 IN (SELECT id FROM table1)",
+            "rule": "subquery_rule",
+        }
+        SparkExpectationsValidateRules.validate_row_dq_expectation(mock_df, rule)
+        # Verify validate_subqueries was called
+        mock_validate_subqueries.assert_called_once()
+

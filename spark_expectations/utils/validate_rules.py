@@ -81,19 +81,6 @@ class SparkExpectationsValidateRules:
                 "[row_dq] Subquery does not contain any valid projections"
             )
         
-        def _validate_projections(expression: sqlglot.Expression) -> bool:
-            
-            if isinstance(expression, (sqlglot.expressions.AggFunc, sqlglot.expressions.Window, sqlglot.expressions.Column)):
-                return True         
-            if isinstance(expression, sqlglot.expressions.Alias):
-                return _validate_projections(expression.this)
-            return isinstance(expression, sqlglot.expressions.Expression)
-        
-        proj_result = [_validate_projections(e) for e in projections]
-        if not all(proj_result):
-            raise SparkExpectationsInvalidRowDQExpectationException(
-                    "[row_dq] Subquery does not contain a valid projection"
-                )
     
     
     @staticmethod
