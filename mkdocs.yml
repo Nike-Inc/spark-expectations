@@ -54,13 +54,16 @@ nav:
       - Reference:
           - Data Quality Rules: user_guide/data_quality_rules.md
           - Data Quality Metrics: user_guide/data_quality_metrics.md
-          - User Config: user_guide/user_config.md
+          - User Config:
+              - Example Config: user_guide/user_config/user_config.md
+              - Kafka Custom Config: user_guide/user_config/kafka_custom_config.md
           - Notifications:
               - Email: user_guide/notifications/email_notifications.md
               - Slack: user_guide/notifications/slack_notifications.md
               - PagerDuty: user_guide/notifications/pagerduty_notifications.md
           - Observability: Observability_examples.md
           - Stream Writer Guide: user_guide/Stream_write_guide.md
+          - Serverless: user_guide/serverless.md
   - Developer Guide:
       - Contributing: developer_guide/contributing.md
       - Setup: developer_guide/setup.md

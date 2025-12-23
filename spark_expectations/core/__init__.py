@@ -1,5 +1,4 @@
 import ast
-import json
 import os
 from typing import Any, Dict, Union
 
@@ -9,7 +8,7 @@ from pyspark.sql.session import SparkSession
 current_dir = os.path.dirname(os.path.abspath(__file__))
 
 
-def load_configurations(spark: SparkSession) -> None:
+def load_configurations(spark: SparkSession) -> tuple[Dict[str, Union[str, int, bool, Dict[str, str]]], Dict[str, Union[str, int, bool, Dict[str, str]]]]:
     """
     Load Spark configuration settings from a YAML file and apply them to the provided SparkSession.
 
@@ -18,6 +17,7 @@ def load_configurations(spark: SparkSession) -> None:
     - Separates streaming (`se.streaming.*`) and notification (`spark.expectations.*`) configurations into dictionaries.
     - Sets other configuration values directly in the Spark session.
     - Stores streaming and notification configs as JSON strings in Spark session configs.
+    - In serverless environments, skips configuration setting to avoid CONFIG_NOT_AVAILABLE errors.
     - Raises RuntimeError for file not found, YAML parsing errors, permission issues, or other exceptions.
 
     Args:
@@ -42,8 +42,9 @@ def load_configurations(spark: SparkSession) -> None:
                 notification_config[key] = value
             else:
                 spark.conf.set(key, str(value))
-        spark.conf.set("default_streaming_dict", json.dumps(streaming_config))
-        spark.conf.set("default_notification_dict", json.dumps(notification_config))
+        
+        return streaming_config, notification_config      
+        
 
     except FileNotFoundError as e:
         raise RuntimeError(f"Spark config YAML file not found: {e}") from e
@@ -55,7 +56,7 @@ def load_configurations(spark: SparkSession) -> None:
 
 def get_config_dict(
     spark: SparkSession, user_conf: Dict[str, Union[str, int, bool, Dict[str, str]]] = None
-) -> tuple[Dict[str, Union[str, int, bool, Dict[str, str], None]], Dict[str, Union[bool, str]],]:
+) -> tuple[Dict[str, Union[str, int, bool, Dict[str, str]]], Dict[str, Union[str, int, bool, Dict[str, str]]],]:
     """
     Retrieve both notification and streaming config dictionaries from the user configuration or Spark session or default configuration.
 
@@ -75,23 +76,26 @@ def get_config_dict(
         user_conf: Dict[str, Union[str, int, bool, Dict[str, str]]] = None,
     ) -> Dict[str, Union[str, int, bool, Dict[str, str]]]:
         """Helper function to build configuration dictionary with type inference."""
+        is_serverless_mode = user_conf.get("spark.expectations.is.serverless", False) if user_conf else False
+        
         if user_conf:
-            config_dict = {
-                key: infer_safe_cast(user_conf.get(key, spark.conf.get(key, str(value))))
-                for key, value in default_dict.items()
-            }
+            if is_serverless_mode:
+                config_dict = {
+                    key: infer_safe_cast(user_conf.get(key, str(value)))
+                    for key, value in default_dict.items()
+                }
+            else:
+                config_dict = {
+                    key: infer_safe_cast(user_conf.get(key, spark.conf.get(key, str(value))))
+                    for key, value in default_dict.items()
+                }
         else:
             config_dict = {key: infer_safe_cast(spark.conf.get(key, str(value))) for key, value in default_dict.items()}
         return config_dict
 
     try:
-        load_configurations(spark)
-        # Parse both JSON configurations at once
-        default_notification_dict_str = spark.conf.get("default_notification_dict")
-        default_streaming_dict_str = spark.conf.get("default_streaming_dict")
-
-        default_notification_dict = json.loads(default_notification_dict_str)
-        default_streaming_dict = json.loads(default_streaming_dict_str)
+        # Get configurations directly from load_configurations
+        default_streaming_dict, default_notification_dict = load_configurations(spark)
 
         # Build both dictionaries using the helper function
         notification_dict = _build_config_dict(default_notification_dict, user_conf)
@@ -99,8 +103,6 @@ def get_config_dict(
 
         return notification_dict, streaming_dict
 
-    except json.JSONDecodeError as e:
-        raise RuntimeError(f"Error parsing configuration JSON: {e}") from e
     except Exception as e:
         raise RuntimeError(f"Error retrieving configuration: {e}") from e
 
@@ -111,7 +113,7 @@ def get_spark_session() -> SparkSession:
     ):
         builder = (
             SparkSession.builder.config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-            .config("spark.jars.packages", "io.delta:delta-spark_2.12:3.0.0")
+            .config("spark.jars.packages", "io.delta:delta-spark_2.13:4.0.0")
             .config(
                 "spark.sql.catalog.spark_catalog",
                 "org.apache.spark.sql.delta.catalog.DeltaCatalog",
@@ -121,10 +123,10 @@ def get_spark_session() -> SparkSession:
             .config("spark.jars.ivy", "/tmp/ivy2")
             .config(  # below jars are used only in the local env, not coupled with databricks or EMR
                 "spark.jars",
-                f"{current_dir}/../../jars/spark-sql-kafka-0-10_2.12-3.0.0.jar,"
-                f"{current_dir}/../../jars/kafka-clients-3.0.0.jar,"
-                f"{current_dir}/../../jars/commons-pool2-2.8.0.jar,"
-                f"{current_dir}/../../jars/spark-token-provider-kafka-0-10_2.12-3.0.0.jar",
+                f"{current_dir}/../../jars/spark-sql-kafka-0-10_2.13-4.0.0.jar,"
+                f"{current_dir}/../../jars/kafka-clients-3.7.0.jar,"
+                f"{current_dir}/../../jars/commons-pool2-2.12.0.jar,"
+                f"{current_dir}/../../jars/spark-token-provider-kafka-0-10_2.13-4.0.0.jar",
             )
             .config("spark.sql.shuffle.partitions", 1)
             .config("spark.dynamicAllocation.enabled", "false")
@@ -135,7 +137,7 @@ def get_spark_session() -> SparkSession:
         sparksession = builder.getOrCreate()
     else:
         sparksession = SparkSession.getActiveSession()
-    load_configurations(sparksession)
+    load_configurations(sparksession)  # Load default configs, return values not needed here
     return sparksession
 
 

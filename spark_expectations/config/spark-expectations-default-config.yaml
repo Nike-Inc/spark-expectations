@@ -40,3 +40,4 @@ se.streaming.dbx.secret.token.url: "se_streaming_auth_secret_token_url_key"
 se.streaming.dbx.secret.app.name: "se_streaming_auth_secret_appid_key"
 se.streaming.dbx.secret.token: "se_streaming_auth_secret_token_key"
 se.streaming.dbx.topic.name: "se_streaming_topic_name"
+spark.expectations.is.serverless : False

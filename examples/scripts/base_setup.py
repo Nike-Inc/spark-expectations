@@ -55,10 +55,10 @@ def set_up_kafka() -> None:
 def add_kafka_jars(builder: SparkSession.builder) -> SparkSession.builder:
     return builder.config(  # below jars are used only in the local env, not coupled with databricks or EMR
         "spark.jars",
-        f"{CURRENT_DIR}/../../jars/spark-sql-kafka-0-10_2.12-3.0.0.jar,"
-        f"{CURRENT_DIR}/../../jars/kafka-clients-3.0.0.jar,"
-        f"{CURRENT_DIR}/../../jars/commons-pool2-2.8.0.jar,"
-        f"{CURRENT_DIR}/../../jars/spark-token-provider-kafka-0-10_2.12-3.0.0.jar",
+        f"{CURRENT_DIR}/../../jars/spark-sql-kafka-0-10_2.13-4.0.0.jar,"
+        f"{CURRENT_DIR}/../../jars/kafka-clients-3.7.0.jar,"
+        f"{CURRENT_DIR}/../../jars/commons-pool2-2.12.0.jar,"
+        f"{CURRENT_DIR}/../../jars/spark-token-provider-kafka-0-10_2.13-4.0.0.jar",
     )
 
 
@@ -67,7 +67,7 @@ def set_up_iceberg() -> SparkSession:
     spark = add_kafka_jars(
         SparkSession.builder.config(
             "spark.jars.packages",
-            "org.apache.iceberg:iceberg-spark-runtime-3.4_2.12:1.3.1",
+            "org.apache.iceberg:iceberg-spark-runtime-3.5_2.13:1.7.1",
         )
         .config(
             "spark.sql.extensions",
@@ -106,14 +106,14 @@ def set_up_bigquery(materialization_dataset: str) -> SparkSession:
     spark = add_kafka_jars(
         SparkSession.builder.config(
             "spark.jars.packages",
-            "com.google.cloud.spark:spark-bigquery-with-dependencies_2.12:0.30.0",
+            "com.google.cloud.spark:spark-bigquery-with-dependencies_2.13:0.41.0",
         )
     ).getOrCreate()
     spark._jsc.hadoopConfiguration().set("fs.gs.impl", "com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem")
     spark.conf.set("viewsEnabled", "true")
     spark.conf.set("materializationDataset", materialization_dataset)
 
-    # Add dependencies like gcs-connector-hadoop3-2.2.6-SNAPSHOT-shaded.jar, spark-avro_2.12-3.4.1.jar if you wanted to use indirect method for reading/writing
+    # Add dependencies like gcs-connector-hadoop3-2.2.6-SNAPSHOT-shaded.jar, spark-avro_2.13-4.0.0.jar if you wanted to use indirect method for reading/writing
     return spark
 
 
@@ -122,7 +122,7 @@ def set_up_delta() -> SparkSession:
 
     builder = add_kafka_jars(
         SparkSession.builder.config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-        .config("spark.jars.packages", "io.delta:delta-spark_2.12:3.0.0")
+        .config("spark.jars.packages", "io.delta:delta-spark_2.13:4.0.0")
         .config(
             "spark.sql.catalog.spark_catalog",
             "org.apache.spark.sql.delta.catalog.DeltaCatalog",

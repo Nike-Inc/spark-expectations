@@ -35,6 +35,7 @@ For a streaming dataframe, you have to define a stream writer for the target_and
 target_writer = (WrappedDataFrameStreamWriter()
                  .outputMode("append")
                  .format("delta")
+                 .queryName("se_streaming_target_query")
                  .trigger(processingTime='5 seconds')
                  .option("checkpointLocation", "checkpoint_path/target")
                  .option("maxFilesPerTrigger", "100")
@@ -108,6 +109,7 @@ streaming fashion to target tables.
 target_writer = (WrappedDataFrameStreamWriter()
                  .outputMode("append")
                  .format("delta")
+                 .queryName("se_streaming_target_query")
                  .trigger(processingTime='5 seconds')
                  .option("checkpointLocation", "checkpoint_path/target")
                  .option("maxFilesPerTrigger", "100")
@@ -224,8 +226,9 @@ from spark_expectations.sinks.utils.writer import SparkExpectationsWriter
 target_writer = (WrappedDataFrameStreamWriter()
                  .outputMode("append")
                  .format("delta")
+                 .queryName("se_streaming_target_query")
                  .trigger(processingTime='1 minute')
-                 .option("checkpointLocation", "s3a://my-bucket/checkpoints/spark-expectations/prod/customers_dq")
+                 .option("checkpointLocation", f"{CONFIG['checkpoint_path']}/target")
                  .option("maxFilesPerTrigger", "500")
                  .option("maxBytesPerTrigger", "1g")
                  )
@@ -233,8 +236,8 @@ production_config = target_writer.build()
 
 # This configuration will NOT trigger warnings
 streaming_query = writer.save_df_as_table(
-    streaming_df=customer_stream,
-    table_name="customers_with_dq", 
+    df=streaming_df,
+    table_name=CONFIG["target_table"], 
     config=production_config
 )
 

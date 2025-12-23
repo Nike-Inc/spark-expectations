@@ -1,6 +1,6 @@
 # Dockerfile for running Spark notebooks with Spark Expectations
 # This Dockerfile sets up a JupyterLab environment with Apache Spark and Spark Expectations installed.
-FROM apache/spark:3.5.5-java17-python3
+FROM apache/spark:4.0.0-java17-python3
 
 USER root
 
@@ -13,7 +13,7 @@ RUN pip install --upgrade pip && \
     pip install ipywidgets && \
     pip install jinja2 && \ 
     pip install pandas && \
-    pip install pyspark==3.5.5
+    pip install pyspark==4.0.0
 
 # Ensure jupyterlab related folders exist and are owned by spark
 RUN mkdir -p /app/spark_expectations  && \
@@ -48,7 +48,7 @@ EXPOSE 8888
 
 # Set environment variables for Spark Expectations
 ENV SPARK_EXPECTATIONS_LOG_LEVEL=DEBUG
-ENV PYSPARK_SUBMIT_ARGS="--packages io.delta:delta-spark_2.12:3.0.0 pyspark-shell"
+ENV PYSPARK_SUBMIT_ARGS="--packages io.delta:delta-spark_2.13:4.0.0 pyspark-shell"
 
 USER spark
 # Set the working directory
