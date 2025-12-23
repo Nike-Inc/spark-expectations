@@ -688,7 +688,6 @@ def test_set_notification_param_missing_dq_obs_alert_flag():
     
     # Test notification configuration that triggers the else branch (lines 82-83)
     notification_missing_alert_flag = {
-        "spark.expectations.is.serverless": True,
         user_config.se_enable_obs_dq_report_result: True,
         user_config.se_dq_obs_alert_flag: False,  # This will trigger the else branch
     }
@@ -712,7 +711,6 @@ def test_set_notification_param_zoom_missing_webhook():
     
     # Test zoom notification with missing webhook URL - need teams enabled first since zoom is nested
     notification_zoom_no_webhook = {
-        "spark.expectations.is.serverless": True,
         user_config.se_notifications_enable_teams: True,
         user_config.se_notifications_teams_webhook_url: "https://teams.webhook.url",
         user_config.se_notifications_enable_zoom: True,
@@ -735,7 +733,6 @@ def test_set_notification_param_smtp_auth_no_password():
     
     # Test SMTP auth without password or creds dict - should hit line 140
     notification_smtp_auth_no_creds = {
-        "spark.expectations.is.serverless": True,
         user_config.se_notifications_enable_email: True,
         user_config.se_notifications_email_smtp_host: "smtp.example.com",
         user_config.se_notifications_email_from: "test@example.com", 
@@ -794,7 +791,6 @@ def test_set_notification_param_obs_dq_report_positive():
     
     # Complete obs DQ report notification configuration  
     notification_obs_dq_complete = {
-        "spark.expectations.is.serverless": True,
         user_config.se_enable_obs_dq_report_result: True,
         user_config.se_dq_obs_alert_flag: True,
         user_config.se_notifications_email_smtp_port: "587",
@@ -825,7 +821,6 @@ def test_set_notification_param_zoom_complete():
     
     # Complete zoom notification configuration (needs teams first since it's nested)
     notification_zoom_complete = {
-        "spark.expectations.is.serverless": True,
         user_config.se_notifications_enable_teams: True,
         user_config.se_notifications_teams_webhook_url: "https://teams.webhook.url",
         user_config.se_notifications_enable_zoom: True,

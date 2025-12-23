@@ -1,4 +1,3 @@
-import json
 import os
 from typing import Optional, Union, Dict, Tuple
 from dataclasses import dataclass
@@ -35,28 +34,8 @@ class SparkExpectationsReader:
 
         """
         try:
-            is_serverless = notification.get("spark.expectations.is.serverless", False) if notification else False
-            
-            # Declare type once
-            _notification_dict: Dict[str, Union[int, str, bool, Dict[str, str]]]
-            
-            if is_serverless:
-            # In serverless mode, spark.conf is not available - use notification dict directly
-            # with sensible defaults for missing keys
-                _default_serverless_notification: Dict[str, Union[int, str, bool, Dict[str, str]]] = {
-                    "spark.expectations.notifications.email.enabled": False,
-                    "spark.expectations.notifications.slack.enabled": False,
-                    "spark.expectations.notifications.teams.enabled": False
-                }
-                _notification_dict = {**_default_serverless_notification, **(notification or {})}
-            else:
-            # Non-serverless: load defaults from spark.conf and merge
-                _default_notification_dict: Dict[str, Union[int, str, bool, Dict[str, str]]] = json.loads(
-                    self.spark.conf.get("default_notification_dict")
-                )
-                _notification_dict = (
-                    {**_default_notification_dict, **notification} if notification else _default_notification_dict
-                )
+            # Use the notification dict directly - it's already merged with defaults
+            _notification_dict = notification if notification else {}
            
             if _notification_dict.get(user_config.se_enable_obs_dq_report_result) is True:
                 self._context.set_enable_obs_dq_report_result(True)
@@ -111,8 +90,8 @@ class SparkExpectationsReader:
                 if _notification_dict.get(user_config.se_notifications_enable_smtp_server_auth):
                     self._context.set_enable_smtp_server_auth(True)
                     if (
-                        _notification_dict[user_config.se_notifications_smtp_password]
-                        and _notification_dict[user_config.se_notifications_smtp_password] != ""
+                        _notification_dict.get(user_config.se_notifications_smtp_password)
+                        and _notification_dict.get(user_config.se_notifications_smtp_password) != ""
                     ):
                         self._context.set_mail_smtp_password(
                             str(_notification_dict[user_config.se_notifications_smtp_password])
