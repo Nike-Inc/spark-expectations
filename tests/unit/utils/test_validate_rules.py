@@ -1,6 +1,6 @@
 import pytest
 import sqlglot
-from unittest.mock import Mock, MagicMock
+from unittest.mock import MagicMock
 
 from spark_expectations.utils.validate_rules import SparkExpectationsValidateRules
 from spark_expectations.core.exceptions import SparkExpectationsInvalidRowDQExpectationException
@@ -172,6 +172,7 @@ class TestGetSubqueries:
         """Test that expressions with one subquery return a list with one element."""
         tree = sqlglot.parse_one(sql)
         result = SparkExpectationsValidateRules.get_subqueries(tree)
+        assert len(result) == expected_count
 
     @pytest.mark.parametrize("sql,expected_count", GET_SUBQUERIES_MULTIPLE)
     def test_get_subqueries_returns_multiple_subqueries(self, sql, expected_count):
@@ -198,6 +199,7 @@ class TestGetSubqueries:
         """
         tree = sqlglot.parse_one(sql)
         result = SparkExpectationsValidateRules.get_subqueries(tree)
+        assert len(result) == 2
 
     def test_get_subqueries_result_can_be_used_as_boolean(self):
         """Test that result can be used in boolean context (for bool() conversion)."""

@@ -54,11 +54,11 @@ class SparkExpectationsValidateRules:
         Args:
         sq (sqlglot.expressions.Subquery): The subquery node to validate.
 
-        Raies:
+        Raises:
         SparkExpectationsInvalidRowDQExpectationException: If any of the checks fail.
         """
         inner = sq.this if sq.this else sq
-        if not isinstance(inner,sqlglot.expressions.Select):
+        if not isinstance(inner, sqlglot.expressions.Select):
             raise SparkExpectationsInvalidRowDQExpectationException(
                     "[row_dq] Subquery does not contain SELECT statement"
                 )
@@ -84,7 +84,7 @@ class SparkExpectationsValidateRules:
     
     
     @staticmethod
-    def validate_subqueries(tree:sqlglot.Expression) -> None:
+    def validate_subqueries(tree: sqlglot.Expression) -> None:
         """
         Validates all sqlglot Subquery nodes inside a parsed expression.
 
@@ -137,7 +137,7 @@ class SparkExpectationsValidateRules:
         
 
     @staticmethod        
-    def check_query_dq(tree:sqlglot.Expression) -> bool:
+    def check_query_dq(tree: sqlglot.Expression) -> bool:
         """
         Determines whether a parsed SQL expression represents a SELECT query.
     
@@ -150,7 +150,7 @@ class SparkExpectationsValidateRules:
         Returns:
         bool: True if the expression resolves to a SELECT, False otherwise.
         """
-        if isinstance(tree,sqlglot.expressions.Select):
+        if isinstance(tree, sqlglot.expressions.Select):
             return True
         inner = tree.this
         if isinstance(inner, (sqlglot.expressions.Subquery, sqlglot.expressions.Select)):
@@ -183,7 +183,7 @@ class SparkExpectationsValidateRules:
             )
         if agg_funcs and not check_subqueries:
             raise SparkExpectationsInvalidRowDQExpectationException(
-                f"[row_dq] Rule '{rule.get('rule')}' contains aggregate function(s) (not allowed in row_dq): {agg_funcs}"
+                f"[row_dq] Rule '{rule.get('rule')}' contains aggregate function(s) outside of subquery/subqueries: {agg_funcs}"
             )
         
         if check_query_dq_result:

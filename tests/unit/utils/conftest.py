@@ -143,8 +143,8 @@ CHECK_QUERY_DQ_EDGE_CASES = [
 VALIDATE_ROW_DQ_VALID_EXPECTATIONS = [
     # Simple column comparisons
     {"expectation": "col1 between 1 and 100", "rule": "col1_between"},
-    # String functions
-    {"expectation": "length(col1) > 5", "rule": "col1_length"},
+    # Subqueries
+    {"expectation": "col1 > (SELECT count(*) FROM table1)", "rule": "col1_from_subquery"},
     # Arithmetic expressions
     {"expectation": "col1 + col2 > 100", "rule": "col1_plus_col2"},
     # Boolean expressions

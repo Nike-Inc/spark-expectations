@@ -3061,14 +3061,10 @@ def test_with_expectations(
         
 
     else:
-        with patch(
-            "spark_expectations.utils.validate_rules.SparkExpectationsValidateRules.validate_expectations",
-            return_value={},
-        ):
-            se._context.set_input_count(input_count)
-            se._context.set_error_count(error_count)
-            se._context.set_output_count(output_count)
-            get_dataset()  # decorated_func()
+        se._context.set_input_count(input_count)
+        se._context.set_error_count(error_count)
+        se._context.set_output_count(output_count)
+        get_dataset()  # decorated_func()
 
         if write_to_table is True:
             expected_output_df = expected_output.withColumn("run_id", lit("product1_run_test")).withColumn(
