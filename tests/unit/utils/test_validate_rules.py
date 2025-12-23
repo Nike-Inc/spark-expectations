@@ -8,6 +8,7 @@ from tests.unit.utils.conftest import (
     VALIDATE_SUBQUERY_VALID,
     VALIDATE_SUBQUERY_MISSING_FROM,
     VALIDATE_SUBQUERY_COMPLEX_PROJECTIONS,
+    VALIDATE_SUBQUERY_MISSING_PROJECTIONS,
     CHECK_QUERY_DQ_VALID_SELECT,
     CHECK_QUERY_DQ_NESTED_SUBQUERIES,
     CHECK_QUERY_DQ_NON_SELECT,
@@ -44,6 +45,14 @@ class TestValidateSingleSubquery:
             SparkExpectationsValidateRules._validate_single_subquery(subquery)
         assert "FROM" in str(exc_info.value)
 
+    @pytest.mark.parametrize("sql", VALIDATE_SUBQUERY_MISSING_PROJECTIONS)
+    def test_validate_single_subquery_missing_projections(self, sql):
+        """Test that subqueries without projections raise exception."""
+        subquery = sqlglot.parse_one(sql)
+        with pytest.raises(SparkExpectationsInvalidRowDQExpectationException) as exc_info:
+            SparkExpectationsValidateRules._validate_single_subquery(subquery)
+        assert "Subquery does not contain any valid projections" in str(exc_info.value)
+
     @pytest.mark.parametrize("sql", VALIDATE_SUBQUERY_COMPLEX_PROJECTIONS)
     def test_validate_single_subquery_complex_projections(self, sql):
         """Test that subqueries with complex projections pass validation."""
@@ -60,23 +69,6 @@ class TestValidateSingleSubquery:
         with pytest.raises(SparkExpectationsInvalidRowDQExpectationException) as exc_info:
             SparkExpectationsValidateRules._validate_single_subquery(fake_subquery)
         assert "SELECT" in str(exc_info.value)
-
-    def test_validate_single_subquery_no_projections(self):
-        """Test that SELECT without projections raises exception."""
-        # Create a SELECT node with FROM but no projections
-        select_node = sqlglot.expressions.Select(
-            **{
-                "from": sqlglot.expressions.From(
-                    this=sqlglot.expressions.Table(this=sqlglot.expressions.Identifier(this="table1"))
-                ),
-                "expressions": [],  # Empty projections
-            }
-        )
-        fake_subquery = sqlglot.expressions.Subquery(this=select_node)
-        
-        with pytest.raises(SparkExpectationsInvalidRowDQExpectationException) as exc_info:
-            SparkExpectationsValidateRules._validate_single_subquery(fake_subquery)
-        assert "projection" in str(exc_info.value).lower()
 
     def test_validate_single_subquery_with_join(self):
         """Test that subqueries with JOIN are valid."""
@@ -186,12 +178,14 @@ class TestGetSubqueries:
         """Test that expressions with multiple subqueries return correct count."""
         tree = sqlglot.parse_one(sql)
         result = SparkExpectationsValidateRules.get_subqueries(tree)
+        assert len(result) == expected_count
 
     @pytest.mark.parametrize("sql,expected_count", GET_SUBQUERIES_NESTED)
     def test_get_subqueries_finds_nested_subqueries(self, sql, expected_count):
         """Test that nested subqueries are all found and counted."""
         tree = sqlglot.parse_one(sql)
         result = SparkExpectationsValidateRules.get_subqueries(tree)
+        assert len(result) == expected_count
 
     def test_get_subqueries_with_complex_expression(self):
         """Test get_subqueries with complex expression containing multiple subquery types."""

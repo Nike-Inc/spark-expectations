@@ -126,8 +126,26 @@ class SparkExpectationsValidateRules:
                 )
     
     @staticmethod
-    def get_subqueries(tree:sqlglot.Expression) -> bool:
-        subqueries = list(tree.find_all(sqlglot.expressions.Subquery, sqlglot.expressions.Query))
+    def get_subqueries(tree: sqlglot.Expression) -> list:
+        """
+        Extracts all subqueries and query expressions from a parsed SQL expression tree.
+        
+        This captures Subquery nodes as well as Query types (Select, Union, etc.),
+        including SELECT queries embedded in IN expressions. Duplicates are removed
+        (e.g., a Select inside a Subquery is not counted twice).
+        
+        Args:
+            tree (sqlglot.Expression): Parsed SQL expression tree.
+            
+        Returns:
+            list: List of unique subquery/query expressions.
+        """
+        subqueries = []
+        for expression in tree.find_all(sqlglot.expressions.Subquery, sqlglot.expressions.Query):
+            # Skip Query nodes that are direct children of a Subquery (already captured)
+            if isinstance(expression, sqlglot.expressions.Query) and isinstance(expression.parent, sqlglot.expressions.Subquery):
+                continue
+            subqueries.append(expression)
         return subqueries
         
 

@@ -51,7 +51,7 @@ VALIDATE_SUBQUERY_MISSING_SELECT = [
 VALIDATE_SUBQUERY_MISSING_FROM = [
     "(SELECT col1)",
     "(SELECT col1, col2)",
-    
+    'SELECT x FROM (VALUES (1), (2), (3)) AS t(x)'
 ]
 
 # Invalid subqueries - empty projections (no columns selected)
@@ -68,6 +68,10 @@ VALIDATE_SUBQUERY_COMPLEX_PROJECTIONS = [
     "(SELECT row_number() OVER (ORDER BY col1) AS rn FROM table1)",
     # Mixed projections
     "(SELECT col1, sum(col2) AS total, rank() OVER (ORDER BY col1) AS rnk FROM table1)",
+]
+
+VALIDATE_SUBQUERY_MISSING_PROJECTIONS = [
+    "(SELECT FROM table1)"
 ]
 
 # ==================== check_query_dq Test Parameters ====================
