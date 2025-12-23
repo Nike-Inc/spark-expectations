@@ -74,7 +74,7 @@ class SparkExpectationsWriter:
                 # Try to access table properties to check if table exists
                 # This works in all Spark versions (Spark 2.x, 3.x, 3.3+)
                 try:
-                    table_properties = self.spark.sql(f"SHOW TBLPROPERTIES {table_name}").collect()
+                    table_properties = self.spark.sql(f"SHOW TBLPROPERTIES {table_name}").collect()  # pylint: disable=not-an-iterable
                 except Exception:
                     # Table doesn't exist yet
                     if attempt < max_retries - 1:
@@ -91,6 +91,7 @@ class SparkExpectationsWriter:
                         "skipping table properties"
                     )
                     return
+                # pylint: disable=not-an-iterable
                 table_properties_dict = {row["key"]: row["value"] for row in table_properties}
 
                 # Set product_id if not set or different
@@ -254,6 +255,7 @@ class SparkExpectationsWriter:
                     if not stats_table:
                         # Fetch table properties
                         table_properties = self.spark.sql(f"SHOW TBLPROPERTIES {table_name}").collect()
+                        # pylint: disable=not-an-iterable
                         table_properties_dict = {row["key"]: row["value"] for row in table_properties}
 
                         # Set product_id in table properties
@@ -585,7 +587,7 @@ class SparkExpectationsWriter:
         )
 
         _df_target_aggquery_detailed_stats = _df_target_aggquery_detailed_stats.select(
-            *[col for col in _df_target_aggquery_detailed_stats.columns if col not in ["tag", "description"]]
+            *[col for col in _df_target_aggquery_detailed_stats.columns if col not in ["tag", "description"]]  # pylint: disable=not-an-iterable
         )
 
         _df_detailed_stats = _df_source_aggquery_detailed_stats.join(

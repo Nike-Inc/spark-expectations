@@ -26,10 +26,10 @@ def test_get_spark_session(_mock_os):
     assert "-Dderby.system.home=/tmp/derby" in spark.sparkContext.getConf().get("spark.driver.extraJavaOptions")
 
     assert (
-        spark.conf.get("spark.jars") == f"{current_dir}/../../jars/spark-sql-kafka-0-10_2.12-3.0.0.jar,"
-        f"{current_dir}/../../jars/kafka-clients-3.0.0.jar,"
-        f"{current_dir}/../../jars/commons-pool2-2.8.0.jar,"
-        f"{current_dir}/../../jars/spark-token-provider-kafka-0-10_2.12-3.0.0.jar"
+        spark.conf.get("spark.jars") == f"{current_dir}/../../jars/spark-sql-kafka-0-10_2.13-4.0.0.jar,"
+        f"{current_dir}/../../jars/kafka-clients-3.7.0.jar,"
+        f"{current_dir}/../../jars/commons-pool2-2.12.0.jar,"
+        f"{current_dir}/../../jars/spark-token-provider-kafka-0-10_2.13-4.0.0.jar"
     )
 
     # Add more assertions to test any other desired SparkSession configuration options
@@ -46,14 +46,11 @@ def test_get_spark_active_session():
 @patch("spark_expectations.core.__init__.current_dir", new=os.path.dirname(__file__)+"/../../../")
 def test_load_configurations_valid_file():
     spark = SparkSession.builder.getOrCreate()
-    load_configurations(spark)
+    streaming_dict, notification_dict = load_configurations(spark)
 
-    # Check that the configurations are loaded correctly
-    assert spark.conf.get("default_streaming_dict") is not None
-    assert spark.conf.get("default_notification_dict") is not None
-
-    streaming_dict = json.loads(spark.conf.get("default_streaming_dict"))
-    notification_dict = json.loads(spark.conf.get("default_notification_dict"))
+    # Check that the configurations are returned correctly
+    assert streaming_dict is not None
+    assert notification_dict is not None
 
     # Check that the streaming and notification configurations are loaded correctly
     assert streaming_dict["se.streaming.dbx.secret.scope"] == "secret_scope"
@@ -81,17 +78,13 @@ def test_load_configurations_empty_file():
     """Test that load_configurations handles empty files correctly."""
     spark = SparkSession.builder.getOrCreate()
 
-    # Clear any existing configurations that might interfere
-    spark.conf.unset("default_streaming_dict")
-    spark.conf.unset("default_notification_dict")
-
     # Mock the open function to return empty data
     with patch("builtins.open", mock_open(read_data="")):
-        load_configurations(spark)
+        streaming_dict, notification_dict = load_configurations(spark)
 
-        # Check that the default values are set correctly
-        assert spark.conf.get("default_streaming_dict") == "{}"
-        assert spark.conf.get("default_notification_dict") == "{}"
+        # Check that the default values are returned correctly (empty dicts)
+        assert streaming_dict == {}
+        assert notification_dict == {}
 
 @pytest.fixture
 def spark_session():
@@ -135,9 +128,8 @@ def test_get_config_dict_basic_functionality(mock_load_configs, mock_config_data
     """Test basic functionality of get_config_dict."""
     spark = SparkSession.builder.getOrCreate()
 
-    # Setup mock Spark configurations
-    spark.conf.set("default_streaming_dict", json.dumps(mock_config_data['streaming']))
-    spark.conf.set("default_notification_dict", json.dumps(mock_config_data['notification']))
+    # Mock load_configurations to return the config dictionaries
+    mock_load_configs.return_value = (mock_config_data['streaming'], mock_config_data['notification'])
 
     # Call the function
     notification_dict, streaming_dict = get_config_dict(spark)
@@ -156,8 +148,8 @@ def test_get_config_dict_with_user_conf(mock_load_configs, mock_config_data: dic
     """Test get_config_dict with user configuration override."""
     spark = SparkSession.builder.getOrCreate()
 
-    spark.conf.set("default_streaming_dict", json.dumps(mock_config_data['streaming']))
-    spark.conf.set("default_notification_dict", json.dumps(mock_config_data['notification']))
+    # Mock load_configurations to return the config dictionaries
+    mock_load_configs.return_value = (mock_config_data['streaming'], mock_config_data['notification'])
 
     # User configuration to override defaults
     user_conf = {
@@ -173,12 +165,70 @@ def test_get_config_dict_with_user_conf(mock_load_configs, mock_config_data: dic
     assert notification_dict['spark.expectations.notifications.email.enabled'] is True
 
 @patch("spark_expectations.core.load_configurations")
+def test_get_config_dict_with_partial_user_conf(mock_load_configs, mock_config_data: dict[str, dict[str, Any]]):
+    """Test get_config_dict with partial user configuration."""
+    spark = SparkSession.builder.getOrCreate()
+
+    # Mock load_configurations to return the config dictionaries
+    mock_load_configs.return_value = (mock_config_data['streaming'], mock_config_data['notification'])
+
+    # User configuration with only some keys
+    user_conf = {
+        'se.streaming.enable': False
+        # email.enabled not specified, should use default
+    }
+
+    # Call the function with partial user config
+    notification_dict, streaming_dict = get_config_dict(spark, user_conf)
+
+    # Verify user override is applied and default is used for unspecified key
+    assert streaming_dict['se.streaming.enable'] is False
+    assert notification_dict['spark.expectations.notifications.email.enabled'] is False  # from default
+
+@patch("spark_expectations.core.load_configurations")
+def test_get_config_dict_no_user_conf_uses_defaults(mock_load_configs, mock_config_data: dict[str, dict[str, Any]]):
+    """Test get_config_dict without user_conf uses defaults directly."""
+    spark = SparkSession.builder.getOrCreate()
+
+    # Mock load_configurations to return the config dictionaries
+    mock_load_configs.return_value = (mock_config_data['streaming'], mock_config_data['notification'])
+
+    # Call the function without user_conf (should use defaults)
+    notification_dict, streaming_dict = get_config_dict(spark, None)
+
+    # Verify default values are used
+    assert streaming_dict['se.streaming.enable'] is True  # from mock_config_data
+    assert notification_dict['spark.expectations.notifications.email.enabled'] is False  # from mock_config_data
+
+@patch("spark_expectations.core.load_configurations")
+def test_get_config_dict_serverless_mode(mock_load_configs, mock_config_data: dict[str, dict[str, Any]]):
+    """Test get_config_dict with serverless mode enabled."""
+    spark = SparkSession.builder.getOrCreate()
+
+    # Mock load_configurations to return the config dictionaries
+    mock_load_configs.return_value = (mock_config_data['streaming'], mock_config_data['notification'])
+
+    # User configuration with serverless mode enabled
+    user_conf = {
+        'spark.expectations.is.serverless': True,
+        'se.streaming.enable': False,
+        'spark.expectations.notifications.email.enabled': True
+    }
+
+    # Call the function with serverless mode
+    notification_dict, streaming_dict = get_config_dict(spark, user_conf)
+
+    # Verify serverless mode uses user_conf values without accessing spark.conf
+    assert streaming_dict['se.streaming.enable'] is False
+    assert notification_dict['spark.expectations.notifications.email.enabled'] is True
+
+@patch("spark_expectations.core.load_configurations")
 def test_get_config_dict_empty_configs(mock_load_configs):
     """Test get_config_dict with empty configuration dictionaries."""
     spark = SparkSession.builder.getOrCreate()
 
-    spark.conf.set("default_streaming_dict", "{}")
-    spark.conf.set("default_notification_dict", "{}")
+    # Mock load_configurations to return empty dictionaries
+    mock_load_configs.return_value = ({}, {})
 
     # Call the function
     notification_dict, streaming_dict = get_config_dict(spark)
@@ -186,20 +236,6 @@ def test_get_config_dict_empty_configs(mock_load_configs):
     # Verify empty dictionaries are returned
     assert notification_dict == {}
     assert streaming_dict == {}
-
-@patch("spark_expectations.core.load_configurations")
-def test_get_config_dict_json_decode_error(mock_load_configs):
-    """Test get_config_dict handles JSON decode errors properly."""
-    spark = SparkSession.builder.getOrCreate()
-
-    spark.conf.set("default_streaming_dict", "invalid json")
-    spark.conf.set("default_notification_dict", "{}")
-
-    # Verify RuntimeError is raised
-    with pytest.raises(RuntimeError) as exc_info:
-        get_config_dict(spark)
-
-    assert "Error parsing configuration JSON" in str(exc_info.value)
 
 @patch("spark_expectations.core.load_configurations")
 def test_get_config_dict_load_configurations_error(mock_load_configs):

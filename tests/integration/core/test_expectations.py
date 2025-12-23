@@ -230,29 +230,18 @@ def test_spark_session_initialization():
         )
         assert type(se.spark) == SparkSession
 
-    # Test if exception is raised if sparkSession.getActiveSession() returns None
-    with patch.object(DataFrame, "sparkSession", new_callable=PropertyMock) as mock_sparkSession:
-        mock_sparkSession.side_effect = AttributeError("The 'sparkSession' attribute is not accessible")
-        with patch.object(SparkSession, "getActiveSession", return_value=None):
-            rules_df = spark.createDataFrame([("Alice", 32)], ["name", "age"])
-
-            writer = WrappedDataFrameWriter().mode("append").format("parquet")
-
-            # expect it to raise an exception SparkExpectationsMiscException as spark session is not available
-            with pytest.raises(SparkExpectationsMiscException) as e:
-                se = SparkExpectations(
-                    product_id="product1",
-                    rules_df=rules_df,
-                    stats_table="dq_spark.test_dq_stats_table",
-                    stats_table_writer=writer,
-                    target_and_error_table_writer=writer,
-                    debugger=False,
-                )
-                assert se.spark is None
-                assert (
-                    str(e.value)
-                    == "Spark session is not available, please initialize a spark session before calling SE"
-                )
+    # Test if exception is raised when rules_df is not a DataFrame type
+    writer = WrappedDataFrameWriter().mode("append").format("parquet")
+    with pytest.raises(SparkExpectationsMiscException) as e:
+        se = SparkExpectations(
+            product_id="product1",
+            rules_df="not_a_dataframe",  # type: ignore
+            stats_table="dq_spark.test_dq_stats_table",
+            stats_table_writer=writer,
+            target_and_error_table_writer=writer,
+            debugger=False,
+        )
+    assert "Input rules_df is not of dataframe type" in str(e.value)
 
 
 @pytest.mark.parametrize(
