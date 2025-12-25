@@ -3028,10 +3028,10 @@ def test_with_expectations(
     )
     se._context._run_date = "2022-12-27 10:00:00"
     se._context._env = "local"
-    se._context.set_input_count(100)
-    se._context.set_output_count(100)
-    se._context.set_error_count(0)
     se._context._run_id = "product1_run_test"
+    se._context.set_input_count(input_count)
+    se._context.set_error_count(error_count)
+    se._context.set_output_count(output_count)
 
     # Decorate the mock function with required args
     @se.with_expectations(
@@ -3061,6 +3061,7 @@ def test_with_expectations(
                 assert False
             except Exception as e:
                 assert True
+        
 
     else:
         get_dataset()  # decorated_func()
@@ -3077,7 +3078,7 @@ def test_with_expectations(
                 error_table = spark.table("dq_spark.test_final_table_error")
                 assert error_table.count() == error_count
 
-    stats_table = spark.table("test_dq_stats_table")
+    stats_table = spark.table("dq_spark.test_dq_stats_table")
     row = stats_table.first()
     assert stats_table.count() == 1
     assert row.product_id == "product1"
