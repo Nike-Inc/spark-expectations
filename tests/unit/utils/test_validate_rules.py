@@ -25,6 +25,8 @@ from tests.unit.utils.conftest import (
     GET_SUBQUERIES_ONE,
     GET_SUBQUERIES_MULTIPLE,
     GET_SUBQUERIES_NESTED,
+    CHECK_AGG_OUTSIDE_SUBQUERIES_TRUE,
+    CHECK_AGG_OUTSIDE_SUBQUERIES_FALSE,
 )
 
 class TestValidateSingleSubquery:
@@ -383,3 +385,69 @@ class TestValidateRowDqExpectation:
         # Verify validate_subqueries was called
         mock_validate_subqueries.assert_called_once()
 
+    def test_validate_row_dq_expectation_subquery_with_aggregate_inside_passes(self, mock_df, mock_expr):
+        """Test that subquery with aggregate function inside passes validation."""
+        rule = {
+            "expectation": "col1 > (SELECT sum(col2) FROM table1)",
+            "rule": "agg_inside_subquery",
+        }
+        # Should not raise - aggregate is inside subquery
+        SparkExpectationsValidateRules.validate_row_dq_expectation(mock_df, rule)
+        mock_df.select.assert_called_once()
+
+    def test_validate_row_dq_expectation_subquery_with_aggregate_outside_fails(self, mock_df, mock_expr):
+        """Test that aggregate function outside subquery raises exception."""
+        rule = {
+            "expectation": "sum(col1) > (SELECT max(col2) FROM table1)",
+            "rule": "agg_outside_subquery",
+        }
+        with pytest.raises(SparkExpectationsInvalidRowDQExpectationException) as exc_info:
+            SparkExpectationsValidateRules.validate_row_dq_expectation(mock_df, rule)
+        assert "outside of subquery" in str(exc_info.value).lower()
+
+    def test_validate_row_dq_expectation_multiple_aggregates_all_inside_subqueries_passes(self, mock_df, mock_expr):
+        """Test that multiple aggregates all inside subqueries passes validation."""
+        rule = {
+            "expectation": "col1 IN (SELECT max(id) FROM t1) AND col2 > (SELECT avg(val) FROM t2)",
+            "rule": "multi_agg_inside_subqueries",
+        }
+        # Should not raise - all aggregates are inside subqueries
+        SparkExpectationsValidateRules.validate_row_dq_expectation(mock_df, rule)
+        mock_df.select.assert_called_once()
+
+    def test_validate_row_dq_expectation_calls_check_agg_outside_subqueries(self, mock_df, mock_expr, mocker):
+        """Test that check_agg_outside_subqueries is called when subquery and aggregates exist."""
+        mock_check_agg = mocker.patch.object(
+            SparkExpectationsValidateRules,
+            "check_agg_outside_subqueries",
+            return_value=False  # All aggregates inside subqueries
+        )
+        rule = {
+            "expectation": "col1 > (SELECT sum(col2) FROM table1)",
+            "rule": "subquery_with_agg",
+        }
+        SparkExpectationsValidateRules.validate_row_dq_expectation(mock_df, rule)
+        # Verify check_agg_outside_subqueries was called
+        mock_check_agg.assert_called_once()
+
+
+class TestCheckAggOutsideSubqueries:
+    """Unit tests for SparkExpectationsValidateRules.check_agg_outside_subqueries"""
+
+    @pytest.mark.parametrize("sql,agg_funcs", CHECK_AGG_OUTSIDE_SUBQUERIES_TRUE)
+    def test_check_agg_outside_subqueries_returns_true(self, sql, agg_funcs):
+        """Test that expressions with aggregates outside subqueries return True."""
+        tree = sqlglot.parse_one(sql)
+        # Get actual aggregate functions from the tree
+        actual_agg_funcs = list({node.key for node in tree.find_all(sqlglot.expressions.AggFunc)})
+        result = SparkExpectationsValidateRules.check_agg_outside_subqueries(tree, actual_agg_funcs)
+        assert result is True
+
+    @pytest.mark.parametrize("sql,agg_funcs", CHECK_AGG_OUTSIDE_SUBQUERIES_FALSE)
+    def test_check_agg_outside_subqueries_returns_false(self, sql, agg_funcs):
+        """Test that expressions with all aggregates inside subqueries return False."""
+        tree = sqlglot.parse_one(sql)
+        # Get actual aggregate functions from the tree
+        actual_agg_funcs = list({node.key for node in tree.find_all(sqlglot.expressions.AggFunc)})
+        result = SparkExpectationsValidateRules.check_agg_outside_subqueries(tree, actual_agg_funcs)
+        assert result is False

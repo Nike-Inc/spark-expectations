@@ -205,6 +205,30 @@ VALIDATE_SUBQUERIES_INVALID = [
     "col1 IN (SELECT id FROM table1) AND col2 > (SELECT max(val))",
 ]
 
+# ==================== check_agg_outside_subqueries Test Parameters ====================
+
+# Expressions where aggregates are OUTSIDE subqueries (should return True)
+CHECK_AGG_OUTSIDE_SUBQUERIES_TRUE = [
+    # Aggregate with no subquery at all
+    ("sum(col1) > 10", ["sum"]),
+    # Aggregate outside with unrelated subquery
+    ("sum(col1) > 10 AND col2 IN (SELECT id FROM table1)", ["sum"]),
+    # Multiple aggregates outside, none in subqueries
+    ("sum(col1) + count(col2) > 100", ["sum", "count"]),
+    # Aggregate both inside and outside subquery (more outside than inside)
+    ("sum(col1) > (SELECT max(col2) FROM table1) AND count(col3) > 10", ["sum", "count", "max"]),
+]
+
+# Expressions where all aggregates are INSIDE subqueries (should return False)
+CHECK_AGG_OUTSIDE_SUBQUERIES_FALSE = [
+    # Single subquery with aggregate
+    ("col1 > (SELECT sum(col2) FROM table1)", ["sum"]),
+    # IN clause with aggregate in subquery
+    ("col1 IN (SELECT max(id) FROM table1)", ["max"]),
+    # Nested subquery with aggregate
+    ("col1 = (SELECT max(val) FROM (SELECT val FROM table1))", ["max"]),
+]
+
 # ==================== get_subqueries Test Parameters ====================
 
 # Expressions with NO subqueries (should return empty list)
