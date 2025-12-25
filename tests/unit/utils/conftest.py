@@ -48,9 +48,10 @@ VALIDATE_SUBQUERY_MISSING_SELECT = [
 ]
 
 # Invalid subqueries - missing FROM clause
-VALIDATE_SUBQUERY_MISSING_FROM = [
+VALIDATE_SUBQUERY_INVALID_FROM = [
     "(SELECT col1)",
     "(SELECT col1, col2)",
+    'SELECT x FROM (VALUES (1), (2), (3)) AS t(x)'
 ]
 
 # Invalid subqueries - empty projections (no columns selected)

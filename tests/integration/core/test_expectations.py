@@ -3029,6 +3029,9 @@ def test_with_expectations(
     se._context._run_date = "2022-12-27 10:00:00"
     se._context._env = "local"
     se._context._run_id = "product1_run_test"
+    se._context.set_input_count(input_count)
+    se._context.set_error_count(error_count)
+    se._context.set_output_count(output_count)
 
     # Decorate the mock function with required args
     @se.with_expectations(
@@ -3061,9 +3064,6 @@ def test_with_expectations(
         
 
     else:
-        se._context.set_input_count(input_count)
-        se._context.set_error_count(error_count)
-        se._context.set_output_count(output_count)
         get_dataset()  # decorated_func()
 
         if write_to_table is True:

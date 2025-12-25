@@ -6,7 +6,7 @@ from spark_expectations.utils.validate_rules import SparkExpectationsValidateRul
 from spark_expectations.core.exceptions import SparkExpectationsInvalidRowDQExpectationException
 from tests.unit.utils.conftest import (
     VALIDATE_SUBQUERY_VALID,
-    VALIDATE_SUBQUERY_MISSING_FROM,
+    VALIDATE_SUBQUERY_INVALID_FROM,
     VALIDATE_SUBQUERY_COMPLEX_PROJECTIONS,
     VALIDATE_SUBQUERY_MISSING_PROJECTIONS,
     CHECK_QUERY_DQ_VALID_SELECT,
@@ -38,8 +38,8 @@ class TestValidateSingleSubquery:
         # Should not raise any exception
         SparkExpectationsValidateRules._validate_single_subquery(subquery)
 
-    @pytest.mark.parametrize("sql", VALIDATE_SUBQUERY_MISSING_FROM)
-    def test_validate_single_subquery_missing_from(self, sql):
+    @pytest.mark.parametrize("sql", VALIDATE_SUBQUERY_INVALID_FROM)
+    def test_validate_single_subquery_invalid_from(self, sql):
         """Test that subqueries without FROM clause raise exception."""
         subquery = sqlglot.parse_one(sql)
         with pytest.raises(SparkExpectationsInvalidRowDQExpectationException) as exc_info:
