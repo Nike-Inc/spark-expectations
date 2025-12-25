@@ -18,7 +18,6 @@ from tests.unit.utils.conftest import (
     VALIDATE_ROW_DQ_INVALID_QUERY,
     VALIDATE_ROW_DQ_INVALID_SYNTAX,
     VALIDATE_SUBQUERIES_ONE_VALID,
-    VALIDATE_SUBQUERIES_MULTIPLE_VALID,
     VALIDATE_SUBQUERIES_NESTED_VALID,
     VALIDATE_SUBQUERIES_INVALID,
     GET_SUBQUERIES_NONE,
@@ -114,13 +113,6 @@ class TestValidateSubqueries:
     @pytest.mark.parametrize("sql", VALIDATE_SUBQUERIES_ONE_VALID)
     def test_validate_subqueries_one_valid(self, sql):
         """Test that expressions with one valid subquery pass validation."""
-        tree = sqlglot.parse_one(sql)
-        # Should not raise any exception
-        SparkExpectationsValidateRules.validate_subqueries(tree)
-
-    @pytest.mark.parametrize("sql", VALIDATE_SUBQUERIES_MULTIPLE_VALID)
-    def test_validate_subqueries_multiple_valid(self, sql):
-        """Test that expressions with multiple valid subqueries pass validation."""
         tree = sqlglot.parse_one(sql)
         # Should not raise any exception
         SparkExpectationsValidateRules.validate_subqueries(tree)

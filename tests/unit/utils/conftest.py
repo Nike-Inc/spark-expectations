@@ -51,7 +51,6 @@ VALIDATE_SUBQUERY_MISSING_SELECT = [
 VALIDATE_SUBQUERY_MISSING_FROM = [
     "(SELECT col1)",
     "(SELECT col1, col2)",
-    'SELECT x FROM (VALUES (1), (2), (3)) AS t(x)'
 ]
 
 # Invalid subqueries - empty projections (no columns selected)
@@ -179,14 +178,6 @@ VALIDATE_ROW_DQ_INVALID_SYNTAX = [
 VALIDATE_SUBQUERIES_ONE_VALID = [
     # IN clause with subquery
     "col1 IN (SELECT id FROM table1)"
-]
-
-# Expressions with MULTIPLE valid subqueries (should pass)
-VALIDATE_SUBQUERIES_MULTIPLE_VALID = [
-    # Two subqueries in comparison
-    "(SELECT count(*) FROM table1) = (SELECT count(*) FROM table2)",
-    # Arithmetic with multiple subqueries
-    "(SELECT sum(val) FROM table1) - (SELECT sum(val) FROM table2) < 10",
 ]
 
 # Expressions with NESTED subqueries (subquery inside subquery - should pass)

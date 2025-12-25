@@ -88,8 +88,8 @@ class SparkExpectationsValidateRules:
         """
         Validates all sqlglot Subquery nodes inside a parsed expression.
 
-        It finds every Subquery in the AST and delegates validation to
-        - validate_single_subquery, ensuring each subquery:
+        It finds every Subquery in the AST and delegates validation to _validate_single_subquery, ensuring each subquery:
+        
         - wraps a SELECT statement,
         - has a valid FROM source (Table/Subquery/Join),
         - and contains at least one valid projection.
