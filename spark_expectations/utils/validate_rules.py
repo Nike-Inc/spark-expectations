@@ -1,6 +1,7 @@
 import re
 from typing import Dict, List
 from enum import Enum
+
 import sqlglot
 from sqlglot.errors import ParseError
 from pyspark.sql import DataFrame, SparkSession
@@ -36,6 +37,153 @@ class SparkExpectationsValidateRules:
             flags=re.IGNORECASE,
         )
         return list({name for pair in matches for name in pair if name})
+    
+    @staticmethod
+    def _validate_single_subquery(sq: sqlglot.expressions.Subquery) -> None:
+
+        """
+        Validates a single sqlglot Subquery node for structural correctness.
+
+        Ensures the subquery:
+        - wraps a SELECT statement,
+        - contains a FROM clause,
+        - the FROM source is one of Table/Subquery/Join,
+        - has at least one projection, and each projection is a valid expression
+        (Column, AggFunc, Window, or an Alias chain resolving to these).
+
+        Args:
+        sq (sqlglot.expressions.Subquery): The subquery node to validate.
+
+        Raises:
+        SparkExpectationsInvalidRowDQExpectationException: If any of the checks fail.
+        """
+        inner = sq.this if sq.this else sq
+        if not isinstance(inner, sqlglot.expressions.Select):
+            raise SparkExpectationsInvalidRowDQExpectationException(
+                    "[row_dq] Subquery does not contain SELECT statement"
+                )
+
+        from_node = inner.args.get("from")
+        if not isinstance(from_node, sqlglot.expressions.From):
+            raise SparkExpectationsInvalidRowDQExpectationException(
+                    "[row_dq] Subquery does not contain FROM"
+                )
+        
+        source = from_node.this
+        if not isinstance(source, (sqlglot.expressions.Table, sqlglot.expressions.Subquery, sqlglot.expressions.Join)):
+            raise SparkExpectationsInvalidRowDQExpectationException(
+                    "[row_dq] Subquery does not contain a valid source after FROM"
+                )
+        
+        projections = inner.args.get("expressions") or []
+        if not projections:
+            raise SparkExpectationsInvalidRowDQExpectationException(
+                "[row_dq] Subquery does not contain any valid projections"
+            )
+        
+    
+    
+    @staticmethod
+    def validate_subqueries(tree: sqlglot.Expression) -> None:
+        """
+        Validates all sqlglot Subquery nodes inside a parsed expression.
+
+        It finds every Subquery in the AST and delegates validation to _validate_single_subquery, ensuring each subquery:
+        
+        - wraps a SELECT statement,
+        - has a valid FROM source (Table/Subquery/Join),
+        - and contains at least one valid projection.
+
+        Args:
+        tree (sqlglot.Expression): Parsed SQL expression to inspect.
+
+        Raises:
+            SparkExpectationsInvalidRowDQExpectationException: If any subquery is
+            missing SELECT/FROM, has an invalid source, or invalid projections.
+        """
+
+        subqueries = SparkExpectationsValidateRules.get_subqueries(tree)
+        
+        for subquery in subqueries:
+            try:
+                SparkExpectationsValidateRules._validate_single_subquery(subquery)
+            except Exception as e:
+                raise SparkExpectationsInvalidRowDQExpectationException(
+                    f"[row_dq] Could not validate subquery: {subquery}: {e}"
+                )
+    
+    @staticmethod
+    def get_subqueries(tree: sqlglot.Expression) -> list:
+        """
+        Extracts all subqueries and query expressions from a parsed SQL expression tree.
+        
+        This captures Subquery nodes as well as Query types (Select, Union, etc.),
+        including SELECT queries embedded in IN expressions. Duplicates are removed
+        (e.g., a Select inside a Subquery is not counted twice).
+        
+        Args:
+            tree (sqlglot.Expression): Parsed SQL expression tree.
+            
+        Returns:
+            list: List of unique subquery/query expressions.
+        """
+        subqueries = []
+        for expression in tree.find_all(sqlglot.expressions.Subquery, sqlglot.expressions.Query):
+            # Skip Query nodes that are direct children of a Subquery (already captured)
+            if isinstance(expression, sqlglot.expressions.Query) and isinstance(expression.parent, sqlglot.expressions.Subquery):
+                continue
+            subqueries.append(expression)
+        return subqueries
+        
+
+    @staticmethod        
+    def check_query_dq(tree: sqlglot.Expression) -> bool:
+        """
+        Determines whether a parsed SQL expression represents a SELECT query.
+    
+        It unwraps nested sqlglot Subquery nodes (via the `this` attribute) and
+        returns True if the underlying node is a sqlglot.expressions.Select; otherwise False.
+    
+        Args:
+        tree (sqlglot.Expression): Parsed SQL expression (e.g., from sqlglot.parse_one).
+    
+        Returns:
+        bool: True if the expression resolves to a SELECT, False otherwise.
+        """
+        if isinstance(tree, sqlglot.expressions.Select):
+            return True
+        inner = tree.this
+        if isinstance(inner, (sqlglot.expressions.Subquery, sqlglot.expressions.Select)):
+            return SparkExpectationsValidateRules.check_query_dq(inner)
+        return False
+
+    @staticmethod
+    def check_agg_outside_subqueries(tree: sqlglot.Expression, agg_funcs: list) -> bool:
+        """
+        Verifies that all aggregate functions in the expression are contained within subqueries.
+        
+        This method compares the aggregate functions found in the entire expression tree
+        against those found within subqueries. If there are aggregate functions outside
+        of subqueries, it raises an exception.
+        
+        Args:
+            tree (sqlglot.Expression): Parsed SQL expression tree.
+            agg_funcs (list): List of aggregate function keys found in the entire tree.
+            
+        Raises:
+            SparkExpectationsInvalidRowDQExpectationException: If aggregate functions 
+                exist outside of subqueries.
+        """
+        subqueries = SparkExpectationsValidateRules.get_subqueries(tree)
+        subquery_agg = []
+
+        for query in subqueries:
+            query_agg = list({node.key for node in query.find_all(sqlglot.expressions.AggFunc)})
+            subquery_agg.extend(query_agg)
+
+        return len(agg_funcs) != len(subquery_agg)
+
+    
     @staticmethod
     def validate_row_dq_expectation(df: DataFrame, rule: Dict) -> None:
         """
@@ -50,25 +198,44 @@ class SparkExpectationsValidateRules:
             SparkExpectationsInvalidRowDQExpectationException: If aggregate functions are used or expression fails.
         """
         expectation = rule.get("expectation", "")
-        # Use sqlglot to detect aggregate functions
         try:
             tree = sqlglot.parse_one(expectation)
+            
+            check_query_dq_result = SparkExpectationsValidateRules.check_query_dq(tree)
             agg_funcs = list({node.key for node in tree.find_all(sqlglot.expressions.AggFunc)})
+            check_subqueries = bool(SparkExpectationsValidateRules.get_subqueries(tree))
         except Exception as e:
             raise SparkExpectationsInvalidRowDQExpectationException(
                 f"[row_dq] Could not parse expression: {expectation} → {e}"
             )
-        if agg_funcs:
+        
+        if check_subqueries:
+            if agg_funcs:
+                agg_subquery_check = SparkExpectationsValidateRules.check_agg_outside_subqueries(tree, agg_funcs)
+                if agg_subquery_check:
+                    raise SparkExpectationsInvalidRowDQExpectationException(
+                        "[row_dq] Expectation contains aggregate function(s) outside of subquery/subqueries"
+                    )
+            SparkExpectationsValidateRules.validate_subqueries(tree)
+        
+        if agg_funcs and not check_subqueries:
             raise SparkExpectationsInvalidRowDQExpectationException(
-                f"[row_dq] Rule '{rule.get('rule')}' contains aggregate function(s) (not allowed in row_dq): {agg_funcs}"
+                f"[row_dq] Rule '{rule.get('rule')}' contains aggregate function(s) outside of subquery/subqueries: {agg_funcs}"
             )
-        try:
+        
+        if check_query_dq_result:
+            raise SparkExpectationsInvalidRowDQExpectationException(
+                f"[row_dq] Rule '{rule.get('rule')}' contains a query as an expectation. Invalid."
+            )
+        
+        try:    
             df.select(expr(expectation)).limit(1)
         except Exception as e:
             raise SparkExpectationsInvalidRowDQExpectationException(
                 f"[row_dq] Rule failed validation | rule_type: row_dq | "
                 f"rule: '{rule.get('rule')}' | expectation: '{expectation}' → {e}"
             )
+        
     @staticmethod
     def validate_agg_dq_expectation(df: DataFrame, rule: Dict) -> None:
         """
