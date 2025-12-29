@@ -288,7 +288,7 @@ class SparkExpectationsReader:
             self._context.reset_num_query_dq_rules()
 
             # Only set the default error table name if one has not already been provided.
-            # This allows callers to override the erortable location vai the context
+            # This allows callers to override the error tables fully qualified name through SparkExpectationsContext
             try:
                 _ = self._context.get_error_table_name
             except SparkExpectationsMiscException:

@@ -112,10 +112,10 @@ class SparkExpectationsRegulateFlow:
                 if row_dq_flag:
                     _log.info("Writing error records into the table started")
 
-                    try:
+                    try: # checking if the user has set error table name in the context
                         error_table = _context.get_error_table_name
 
-                    except SparkExpectationsMiscException:
+                    except SparkExpectationsMiscException: # fail-safety to use default error table name
                         error_table = f"{table_name}_error"
 
 
