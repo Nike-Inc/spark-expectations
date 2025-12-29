@@ -107,10 +107,10 @@ def test_default_error_table_naming():
 
 
 def test_error_table_override():
-    """ Expectation: my_db.my_override_error is used as the error table instead of the default my_db.target_table_error"""
-    target_table_override= "different_catalog.my_override_error"
+    """ Expectation: different_catalog.my_override_error is used as the error table instead of the default my_db.target_table_error"""
+    target_table_override= "different_catalog.my_override_error" # Define the error table name we want
     ctx = SparkExpectationsContext(product_id="p1", spark=Mock())
-    ctx.set_error_table_name(target_table_override)
+    ctx.set_error_table_name(target_table_override) #  set_error_table_name as different_catalog.my_override_error
 
     actions = Mock()
     writer = Mock()
@@ -135,12 +135,14 @@ def test_error_table_override():
 
     process(df=MagicMock(name="input_df"), _rule_type="row_dq", row_dq_flag=True)
 
+    # Assert that write_error_records_final was called with target_table_override instead of "my_db.target_table_error"
     writer.write_error_records_final.assert_called_once_with(
         dq_df,
         target_table_override,
         ctx.get_row_dq_rule_type_name,
     )
 
+    # Assert that the get_error_table method returns the override value
     assert ctx.get_error_table_name == target_table_override
 
 
