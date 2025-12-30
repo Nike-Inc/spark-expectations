@@ -279,7 +279,6 @@ class SparkExpectationsReader:
         """
         try:
             self._context.set_final_table_name(target_table)
-            self._context.set_error_table_name(f"{target_table}_error")
             self._context.set_table_name(target_table)
             self._context.set_env(os.environ.get("SPARKEXPECTATIONS_ENV"))
 
@@ -287,6 +286,13 @@ class SparkExpectationsReader:
             self._context.reset_num_dq_rules()
             self._context.reset_num_row_dq_rules()
             self._context.reset_num_query_dq_rules()
+
+            # Only set the default error table name if one has not already been provided.
+            # This allows callers to override the error tables fully qualified name through SparkExpectationsContext
+            try:
+                _ = self._context.get_error_table_name
+            except SparkExpectationsMiscException:
+                self._context.set_error_table_name(f"{target_table}_error")
 
             if params is not None:
                 rules_df = reduce(
