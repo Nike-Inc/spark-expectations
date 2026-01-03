@@ -108,7 +108,12 @@ def test_invalid_row_dq(sample_df, expectation, spark):
         "rule": "invalid_row_dq",
     }
     failed = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
-    assert RuleType.ROW_DQ in failed and rule in failed[RuleType.ROW_DQ]
+    assert RuleType.ROW_DQ in failed
+    # Verify that error_message is included in the failed rule
+    assert len(failed[RuleType.ROW_DQ]) > 0
+    failed_rule = failed[RuleType.ROW_DQ][0]
+    assert "error_message" in failed_rule
+    assert failed_rule["error_message"]  # Ensure error_message is not empty
 
 
 @pytest.mark.parametrize(
@@ -126,7 +131,12 @@ def test_invalid_agg_dq(sample_df, expectation, spark):
         "rule": "invalid_agg_dq",
     }
     failed = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
-    assert RuleType.AGG_DQ in failed and rule in failed[RuleType.AGG_DQ]
+    assert RuleType.AGG_DQ in failed
+    # Verify that error_message is included in the failed rule
+    assert len(failed[RuleType.AGG_DQ]) > 0
+    failed_rule = failed[RuleType.AGG_DQ][0]
+    assert "error_message" in failed_rule
+    assert failed_rule["error_message"]  # Ensure error_message is not empty
 
 
 @pytest.mark.parametrize(
@@ -151,7 +161,12 @@ def test_invalid_query_dq(sample_df, expectation, spark):
         "rule": "invalid_query_dq",
     }
     failed = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
-    assert RuleType.QUERY_DQ in failed and rule in failed[RuleType.QUERY_DQ]
+    assert RuleType.QUERY_DQ in failed
+    # Verify that error_message is included in the failed rule
+    assert len(failed[RuleType.QUERY_DQ]) > 0
+    failed_rule = failed[RuleType.QUERY_DQ][0]
+    assert "error_message" in failed_rule
+    assert failed_rule["error_message"]  # Ensure error_message is not empty
 
 
 @pytest.mark.parametrize(
