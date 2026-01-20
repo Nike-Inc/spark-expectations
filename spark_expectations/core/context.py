@@ -196,6 +196,66 @@ class SparkExpectationsContext:
         return float(runtime_version) if runtime_version is not None else None
 
     @property
+    def get_dbr_workspace_id(self) -> Optional[str]:
+        """
+        This function returns the Databricks workspace ID.
+        
+        Returns:
+            Optional[str]: Returns the workspace ID if running in Databricks, "local" otherwise
+        """
+        try:
+            workspace_id = os.environ.get("DATABRICKS_WORKSPACE_ID")
+            if workspace_id:
+                return workspace_id
+            
+            try:
+                from dbruntime.databricks_repl_context import get_context  # type: ignore
+                context = get_context()
+                if context and hasattr(context, 'workspaceId'):
+                    return context.workspaceId
+            except (ImportError, Exception):
+                pass
+            
+            return "local"
+        except Exception:
+            return "local"
+
+    @property
+    def get_dbr_workspace_url(self) -> Optional[str]:
+        """
+        This function returns Databricks workspace hostname.
+        
+        Returns:
+            Optional[str]: Returns the workspace hostname if running in Databricks, "local" otherwise
+        """
+        try:
+            workspace_url = None
+            workspace_url = os.environ.get("DATABRICKS_HOST")
+            
+            if not workspace_url:
+                try:
+                    from dbruntime.databricks_repl_context import get_context  
+                    context = get_context()
+                    if context and hasattr(context, 'browserHostName'):
+                        workspace_url = context.browserHostName
+                except (ImportError, Exception):
+                    pass
+            
+            if not workspace_url:
+                try:
+                    workspace_url = self.spark.conf.get("spark.databricks.workspaceUrl", None)
+                except Exception:
+                    pass
+            
+            if workspace_url:
+                workspace_url = workspace_url.replace("https://", "").replace("http://", "")
+                return workspace_url
+            
+            return "local"
+        except Exception:
+            return "local"
+
+    @property
     def get_run_id(self) -> str:
         """
         Get run_id for the instance of spark-expectations class
