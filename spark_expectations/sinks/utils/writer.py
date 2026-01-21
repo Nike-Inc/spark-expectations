@@ -826,8 +826,6 @@ class SparkExpectationsWriter:
                         self._context.get_run_date,
                         "%Y-%m-%d %H:%M:%S",
                     ),
-                    self._context.get_dbr_workspace_id,
-                    self._context.get_dbr_workspace_url,
                 )
             ]
 
@@ -893,8 +891,6 @@ class SparkExpectationsWriter:
                     StructField(self._context.get_run_id_name, StringType(), True),
                     StructField(self._context.get_run_date_name, DateType(), True),
                     StructField(self._context.get_run_date_time_name, TimestampType(), True),
-                    StructField("databricks_workspace_id", StringType(), True),
-                    StructField("databricks_hostname", StringType(), True),
                 ]
             )
 
@@ -908,6 +904,8 @@ class SparkExpectationsWriter:
                 .withColumn("success_percentage", sql_round(df.success_percentage, 2))
                 .withColumn("error_percentage", sql_round(df.error_percentage, 2))
                 .withColumn("dq_env", lit(dq_env))
+                .withColumn("databricks_workspace_id", lit(self._context.get_dbr_workspace_id))
+                .withColumn("databricks_hostname", lit(self._context.get_dbr_workspace_url))
             )
 
             self._context.set_stats_dict(df)

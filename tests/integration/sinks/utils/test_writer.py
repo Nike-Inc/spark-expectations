@@ -177,7 +177,9 @@ def fixture_create_stats_table():
     meta_dq_run_id STRING,
     meta_dq_run_date DATE,
     meta_dq_run_datetime TIMESTAMP,
-    dq_env STRING
+    dq_env STRING,
+    databricks_workspace_id STRING,
+    databricks_hostname STRING
     )
     USING delta
     """
@@ -2179,6 +2181,8 @@ def test_write_error_stats(
         '{"dag": "dag1", "task": "task1", "team": "my_squad"}',
     )
     setattr(_mock_context, "get_topic_name", "dq-sparkexpectations-stats")
+    setattr(_mock_context, "get_dbr_workspace_id", "local")
+    setattr(_mock_context, "get_dbr_workspace_url", "local")
 
     if writer_config is None:
         setattr(
@@ -2229,6 +2233,9 @@ def test_write_error_stats(
         # assert row.dq_run_time == input_record.get("dq_run_time")
         assert row.dq_status == input_record.get("status")
         assert row.meta_dq_run_id == "product1_run_test"
+        assert row.dq_env == "test_env"
+        assert row.databricks_workspace_id == "local"
+        assert row.databricks_hostname == "local"
 
         assert (
             spark.read.format("kafka")
