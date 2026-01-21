@@ -826,7 +826,6 @@ class SparkExpectationsWriter:
                         self._context.get_run_date,
                         "%Y-%m-%d %H:%M:%S",
                     ),
-                    "" if "env" not in self._context.get_dq_rules_params else self._context.get_dq_rules_params["env"],
                     self._context.get_dbr_workspace_id,
                     self._context.get_dbr_workspace_url,
                 )
@@ -894,20 +893,21 @@ class SparkExpectationsWriter:
                     StructField(self._context.get_run_id_name, StringType(), True),
                     StructField(self._context.get_run_date_name, DateType(), True),
                     StructField(self._context.get_run_date_time_name, TimestampType(), True),
-                    StructField("dq_env", StringType(), True),
                     StructField("databricks_workspace_id", StringType(), True),
-                    StructField("databricks_workspace_hostname", StringType(), True),
+                    StructField("databricks_hostname", StringType(), True),
                 ]
             )
 
             df = self.spark.createDataFrame(error_stats_data, schema=error_stats_schema)
             self._context.print_dataframe_with_debugger(df)
 
-            # Round percentage columns
+            dq_env = "" if "env" not in self._context.get_dq_rules_params else self._context.get_dq_rules_params["env"]
+
             df = (
                 df.withColumn("output_percentage", sql_round(df.output_percentage, 2))
                 .withColumn("success_percentage", sql_round(df.success_percentage, 2))
                 .withColumn("error_percentage", sql_round(df.error_percentage, 2))
+                .withColumn("dq_env", lit(dq_env))
             )
 
             self._context.set_stats_dict(df)
