@@ -913,10 +913,16 @@ class SparkExpectationsWriter:
             if self._context.get_stats_table_writer_config["format"] == "bigquery":
                 df = df.withColumn("dq_rules", to_json(df["dq_rules"]))
 
+            stats_config = self._context.get_stats_table_writer_config.copy()
+            if "options" not in stats_config:
+                stats_config["options"] = {}
+            if "mergeSchema" not in stats_config["options"]:
+                stats_config["options"]["mergeSchema"] = "true"
+
             self.save_df_as_table(
                 df,
                 self._context.get_dq_stats_table_name,
-                config=self._context.get_stats_table_writer_config,
+                config=stats_config,
                 stats_table=True,
             )
 
