@@ -353,7 +353,7 @@ class SparkExpectations:
                         ]
                         # pylint: disable=logging-too-many-args
                         _log.warning(
-                            "Some rules failed validation and will be skipped: %s. "
+                            "Some rules failed validation: %s. "
                             "Check earlier log messages for details on each invalid rule.",
                             failed_rules
                         )
