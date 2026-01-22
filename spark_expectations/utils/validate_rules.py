@@ -201,7 +201,7 @@ class SparkExpectationsValidateRules:
     @staticmethod
     # pylint: disable=too-many-return-statements
     def validate_row_dq_expectation(
-        df: DataFrame, rule: Dict, raise_exception: bool = True
+        df: DataFrame, rule: Dict, raise_exception: bool = False
     ) -> ValidationResult:
         """
         Validates a row_dq expectation by ensuring
@@ -286,7 +286,7 @@ class SparkExpectationsValidateRules:
         
     @staticmethod
     def validate_agg_dq_expectation(
-        df: DataFrame, rule: Dict, raise_exception: bool = True
+        df: DataFrame, rule: Dict, raise_exception: bool = False
     ) -> ValidationResult:
         """
         Validates an agg_dq expectation by ensuring it includes aggregate functions.
@@ -336,7 +336,7 @@ class SparkExpectationsValidateRules:
         return ValidationResult(is_valid=True, rule=rule, rule_type="agg_dq")
     @staticmethod
     def validate_query_dq_expectation(
-        _df: DataFrame, rule: Dict, _spark: SparkSession, raise_exception: bool = True
+        _df: DataFrame, rule: Dict, _spark: SparkSession, raise_exception: bool = False
     ) -> ValidationResult:
         """ 
         Validates a query_dq expectation by ensuring it is a valid SQL query.
@@ -455,8 +455,9 @@ class SparkExpectationsValidateRules:
                                     If False (default), logs warnings and continues.
             
         Returns:
-            dict: {rule_type_str: [ValidationResult]} containing only invalid rules.
-                  Empty dict if all rules are valid.
+            Dict[str, List[ValidationResult]]: A dictionary mapping rule type strings
+                to lists of ValidationResult objects for invalid rules only. Empty 
+                dict if all rules are valid.
         """
         invalid_results: Dict[str, List[ValidationResult]] = {}
         valid_count = 0
@@ -492,13 +493,6 @@ class SparkExpectationsValidateRules:
             elif rule_type == RuleType.QUERY_DQ:
                 result = SparkExpectationsValidateRules.validate_query_dq_expectation(
                     df, rule, spark, raise_exception=raise_exception
-                )
-            else:
-                result = ValidationResult(
-                    is_valid=False,
-                    error_message=f"Unhandled rule_type: '{rule_type_str}'",
-                    rule=rule,
-                    rule_type=rule_type_str
                 )
             
             if not result.is_valid:
