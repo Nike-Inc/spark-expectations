@@ -337,18 +337,28 @@ class SparkExpectations:
                     _df: DataFrame = func(*args, **kwargs)
                     table_name: str = self._context.get_table_name
 
-                    # run rule validations
+                    # run rule validations (non-blocking - invalid rules are logged but don't stop execution)
                     rules = [row.asDict() for row in self.rules_df.collect()]
-                    failed = SparkExpectationsValidateRules.validate_expectations(
+                    invalid_results = SparkExpectationsValidateRules.validate_expectations(
                         df=_df,
                         rules=rules,
                         spark=self.spark,
                     )
-                    if failed:
-                        # Optionally, raise or log details for each failed rule
-                        failed_rules = [r.get("rule") for rules_list in failed.values() for r in rules_list]
-                        raise SparkExpectationsMiscException(f"Validation failed for rules: {failed_rules}")
-                    _log.info("Validation for rules completed successfully")
+                    if invalid_results:
+                        # Log failed rule names - validation continues with valid rules only
+                        failed_rules = [
+                            result.rule.get("rule") if result.rule else "unknown"
+                            for results_list in invalid_results.values()
+                            for result in results_list
+                        ]
+                        # pylint: disable=logging-too-many-args
+                        _log.warning(
+                            "Some rules failed validation and will be skipped: %s. "
+                            "Check earlier log messages for details on each invalid rule.",
+                            failed_rules
+                        )
+                    else:
+                        _log.info("Validation for rules completed successfully - all rules are valid")
 
                     _input_count = _df.count() if not _df.isStreaming else 0
                     _log.info(f"data frame input record count: {_input_count}")
