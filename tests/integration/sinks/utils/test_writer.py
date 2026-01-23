@@ -210,7 +210,7 @@ def test_expectations_writer_save_df_as_table(_fixture_employee, _fixture_contex
         {"mode": "overwrite", "format": "delta", "mergeSchema": "true"},
     )
     stats_table = spark.table("employee_table")
-    assert stats_table.count() == 8
+    assert stats_table.count() == 1000
 
 
 def test_expectations_writer_save_df_as_table_partition(_fixture_employee, _fixture_context):
@@ -227,7 +227,7 @@ def test_expectations_writer_save_df_as_table_partition(_fixture_employee, _fixt
         },
     )
     stats_table = spark.table("employee_table")
-    assert stats_table.count() == 8
+    assert stats_table.count() == 1000
 
 
 def test_expectations_writer_save_df_as_table_sortby(_fixture_employee, _fixture_context):
@@ -239,12 +239,12 @@ def test_expectations_writer_save_df_as_table_sortby(_fixture_employee, _fixture
         {
             "mode": "overwrite",
             "format": "delta",
-            "sortBy": ["name"],
+            "sortBy": ["full_name"],
             "mergeSchema": "true",
         },
     )
     stats_table = spark.table("employee_table")
-    assert stats_table.count() == 8
+    assert stats_table.count() == 1000
 
 
 def test_expectations_writer_save_df_as_table_with_bucketby(_fixture_employee, _fixture_context):
@@ -256,11 +256,11 @@ def test_expectations_writer_save_df_as_table_with_bucketby(_fixture_employee, _
         {
             "mode": "overwrite",
             "format": "delta",
-            "bucketBy": {"numBuckets": 4, "columns": ["name"]},
+            "bucketBy": {"numBuckets": 4, "columns": ["full_name"]},
         },
     )
     stats_table = spark.table("employee_table")
-    assert stats_table.count() == 8
+    assert stats_table.count() == 1000
 
 
 # write_error_records_source tests
@@ -272,7 +272,7 @@ def test_write_error_records_source(_fixture_employee, _fixture_context, _fixtur
     writer.write_error_records_source(_fixture_dq_dataset, "employee_table", "row_dq")
 
     error_table = spark.table("employee_table_error")
-    assert error_table.count() == 8
+    assert error_table.count() == 1000
     assert error_table.select("meta_dq_run_id").first()[0] == "product1_run_test"
 
 
@@ -282,10 +282,20 @@ def fixture_create_employee_error_table():
     spark.sql(
         """
         CREATE TABLE IF NOT EXISTS employee_table_error (
-        name STRING,
-        age INT,
-        salary DOUBLE,
+        eeid STRING,
+        full_name STRING,
+        job_title STRING,
         department STRING,
+        business_unit STRING,
+        gender STRING,
+        ethnicity STRING,
+        age INT,
+        hire_date STRING,
+        annual_salary STRING,
+        bonus INT,
+        country STRING,
+        city STRING,
+        exit_date STRING,
         meta_dq_run_id STRING
         )
         USING delta
@@ -305,7 +315,7 @@ def test_write_error_records_source_with_multiple_loads(
     writer.write_error_records_source(_fixture_dq_dataset_2, "employee_table", "row_dq")
 
     error_table = spark.table("employee_table_error")
-    assert error_table.count() == 16
+    assert error_table.count() == 2000
 
 
 def test_write_error_records_final(_fixture_employee, _fixture_context, _fixture_dq_dataset):
@@ -316,7 +326,7 @@ def test_write_error_records_final(_fixture_employee, _fixture_context, _fixture
     writer.write_error_records_final(_fixture_dq_dataset, "employee_table", "row_dq")
 
     error_table = spark.table("employee_table_error")
-    assert error_table.count() == 8
+    assert error_table.count() == 1000
     assert error_table.select("meta_dq_run_id").first()[0] == "product1_run_test"
 
 
@@ -339,10 +349,20 @@ def fixture_create_employee_final_table():
     spark.sql(
         """
         CREATE TABLE IF NOT EXISTS employee_table (
-        name STRING,
-        age INT,
-        salary DOUBLE,
+        eeid STRING,
+        full_name STRING,
+        job_title STRING,
         department STRING,
+        business_unit STRING,
+        gender STRING,
+        ethnicity STRING,
+        age INT,
+        hire_date STRING,
+        annual_salary STRING,
+        bonus INT,
+        country STRING,
+        city STRING,
+        exit_date STRING,
         meta_dq_run_id STRING
         )
         USING delta
@@ -362,7 +382,7 @@ def test_write_error_records_final_with_multiple_loads(
     writer.write_error_records_final(_fixture_dq_dataset_2, "employee_table", "row_dq")
 
     final_table = spark.table("employee_table")
-    assert final_table.count() == 16
+    assert final_table.count() == 2000
 
 
 def test_write_error_records_final_with_error_table_config(_fixture_employee, _fixture_context, _fixture_dq_dataset):
@@ -380,7 +400,7 @@ def test_write_error_records_final_with_error_table_config(_fixture_employee, _f
     writer.write_error_records_final(_fixture_dq_dataset, "employee_table", "row_dq")
 
     error_table = spark.table("employee_table_error")
-    assert error_table.count() == 8
+    assert error_table.count() == 1000
 
 
 @pytest.fixture(name="_fixture_bq_employee_table")
