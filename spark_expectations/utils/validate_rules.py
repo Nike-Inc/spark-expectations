@@ -212,7 +212,7 @@ class SparkExpectationsValidateRules:
             df (DataFrame): The input DataFrame.
             rule (Dict): Rule containing the 'expectation' and 'rule'.
             raise_exception (bool): If True, raises exception on invalid rule. 
-                                    If False, returns ValidationResult. Default is True.
+                                    If False, returns ValidationResult. Default is False.
         Returns:
             ValidationResult: Result containing validation status and error message if any.
         Raises:
@@ -294,7 +294,7 @@ class SparkExpectationsValidateRules:
             df (DataFrame): The input DataFrame.
             rule (Dict): Rule containing the 'expectation' and 'rule'.
             raise_exception (bool): If True, raises exception on invalid rule. 
-                                    If False, returns ValidationResult. Default is True.
+                                    If False, returns ValidationResult. Default is False.
         Returns:
             ValidationResult: Result containing validation status and error message if any.
         Raises:
@@ -345,7 +345,7 @@ class SparkExpectationsValidateRules:
             rule (Dict): Rule containing the 'expectation' SQL.
             _spark (SparkSession): Spark session.
             raise_exception (bool): If True, raises exception on invalid rule. 
-                                    If False, returns ValidationResult. Default is True.
+                                    If False, returns ValidationResult. Default is False.
         Returns:
             ValidationResult: Result containing validation status and error message if any.
         Raises:
