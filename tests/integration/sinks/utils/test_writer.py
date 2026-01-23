@@ -255,8 +255,8 @@ def test_expectations_writer_save_df_as_table_with_bucketby(_fixture_employee, _
         "employee_table",
         {
             "mode": "overwrite",
-            "format": "delta",
-            "bucketBy": {"numBuckets": 4, "columns": ["full_name"]},
+            "format": "parquet",
+            "bucketBy": {"numBuckets": 4, "colName": "department"},
         },
     )
     stats_table = spark.table("employee_table")
