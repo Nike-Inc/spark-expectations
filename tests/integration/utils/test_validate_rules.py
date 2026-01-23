@@ -12,6 +12,7 @@ from spark_expectations.core.exceptions import (
 from spark_expectations.utils.validate_rules import (
     SparkExpectationsValidateRules,
     RuleType,
+    ValidationResult,
 )
 
 
@@ -41,8 +42,8 @@ def test_valid_row_dq(sample_df, expectation, spark):
         "expectation": expectation,
         "rule": "valid_row_dq",
     }
-    failed = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
-    assert RuleType.ROW_DQ not in failed
+    invalid_results = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
+    assert "row_dq" not in invalid_results
 
 
 @pytest.mark.parametrize(
@@ -64,8 +65,8 @@ def test_valid_agg_dq(sample_df, expectation, spark):
         "expectation": expectation,
         "rule": "valid_agg_dq",
     }
-    failed = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
-    assert RuleType.AGG_DQ not in failed
+    invalid_results = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
+    assert "agg_dq" not in invalid_results
 
 
 @pytest.mark.parametrize(
@@ -88,8 +89,8 @@ def test_valid_query_dq(sample_df, expectation, spark):
         "expectation": expectation,
         "rule": "valid_query_dq",
     }
-    failed = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
-    assert RuleType.QUERY_DQ not in failed
+    invalid_results = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
+    assert "query_dq" not in invalid_results
 
 
 @pytest.mark.parametrize(
@@ -107,8 +108,11 @@ def test_invalid_row_dq(sample_df, expectation, spark):
         "expectation": expectation,
         "rule": "invalid_row_dq",
     }
-    failed = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
-    assert RuleType.ROW_DQ in failed and rule in failed[RuleType.ROW_DQ]
+    invalid_results = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
+    assert "row_dq" in invalid_results
+    # Check that the rule is in the invalid results
+    invalid_rules = [r.rule for r in invalid_results["row_dq"]]
+    assert rule in invalid_rules
 
 
 @pytest.mark.parametrize(
@@ -125,8 +129,11 @@ def test_invalid_agg_dq(sample_df, expectation, spark):
         "expectation": expectation,
         "rule": "invalid_agg_dq",
     }
-    failed = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
-    assert RuleType.AGG_DQ in failed and rule in failed[RuleType.AGG_DQ]
+    invalid_results = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
+    assert "agg_dq" in invalid_results
+    # Check that the rule is in the invalid results
+    invalid_rules = [r.rule for r in invalid_results["agg_dq"]]
+    assert rule in invalid_rules
 
 
 @pytest.mark.parametrize(
@@ -150,8 +157,11 @@ def test_invalid_query_dq(sample_df, expectation, spark):
         "expectation": expectation,
         "rule": "invalid_query_dq",
     }
-    failed = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
-    assert RuleType.QUERY_DQ in failed and rule in failed[RuleType.QUERY_DQ]
+    invalid_results = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
+    assert "query_dq" in invalid_results
+    # Check that the rule is in the invalid results
+    invalid_rules = [r.rule for r in invalid_results["query_dq"]]
+    assert rule in invalid_rules
 
 
 @pytest.mark.parametrize(
@@ -160,11 +170,15 @@ def test_invalid_query_dq(sample_df, expectation, spark):
         "col1 > 20",
     ],
 )
-def test_invalid_rule_type_exception(sample_df, expectation, spark):
+def test_invalid_rule_type_logged_as_invalid(sample_df, expectation, spark):
+    """Test that unknown rule types are logged as invalid but don't raise exceptions."""
     rule = {
         "rule_type": "foo_dq",
         "expectation": expectation,
         "rule": "invalid_rule_type",
     }
-    with pytest.raises(Exception):
-        SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
+    # No longer raises exception, instead returns invalid result
+    invalid_results = SparkExpectationsValidateRules.validate_expectations(sample_df, [rule], spark)
+    assert "foo_dq" in invalid_results
+    assert len(invalid_results["foo_dq"]) == 1
+    assert "Unknown rule_type" in invalid_results["foo_dq"][0].error_message

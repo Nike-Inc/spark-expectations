@@ -3166,28 +3166,30 @@ def test_with_expectations_overwrite_writers(
     assert _fixture_spark_expectations._context.get_target_and_error_table_writer_config == modified_writer.build()
 
 
-def test_with_expectations_dataframe_not_returned_exception(
+def test_with_expectations_invalid_rules_do_not_raise_exception(
     _fixture_create_database,
     _fixture_spark_expectations,
     _fixture_df,
     _fixture_rules_df,
     _fixture_local_kafka_topic,
 ):
+    """
+    Test that invalid rules do not raise exceptions - validation is non-blocking.
+    Invalid rules are logged as warnings but execution continues.
+    """
     partial_func = _fixture_spark_expectations.with_expectations(
         "dq_spark.test_final_table",
         user_conf={user_config.se_notifications_on_fail: False},
     )
 
-    with pytest.raises(
-        SparkExpectationsMiscException,
-        match=r"error occurred while processing spark expectations Validation failed for rules: \['col1_threshold'\]",
-    ):  
-        # Create a mock object with a rdd return value
-        mock_func = Mock(return_value=_fixture_df.rdd)
-
-        # Decorate the mock function with required args
-        decorated_func = partial_func(mock_func)
-        decorated_func()
+    mock_func = Mock(return_value=_fixture_df)
+    decorated_func = partial_func(mock_func)
+    
+    # Should NOT raise an exception for invalid rules - validation is non-blocking
+    result = decorated_func()
+    
+    assert result is not None
+        
     for db in spark.catalog.listDatabases():
         if db.name != "default":
             spark.sql(f"DROP DATABASE {db.name} CASCADE")
