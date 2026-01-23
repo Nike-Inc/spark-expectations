@@ -239,6 +239,7 @@ def test_expectations_writer_save_df_as_table_sortby(_fixture_employee, _fixture
         {
             "mode": "overwrite",
             "format": "delta",
+            "bucketBy": {"numBuckets": 4, "colName": "department"},
             "sortBy": ["full_name"],
             "mergeSchema": "true",
         },
