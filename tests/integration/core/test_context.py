@@ -1259,6 +1259,43 @@ def test_get_dbr_version():
     assert context.get_dbr_version == None
 
 
+def test_get_dbr_workspace_id_from_env():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    os.environ["DATABRICKS_WORKSPACE_ID"] = "test_workspace_123"
+    assert context.get_dbr_workspace_id == "test_workspace_123"
+    del os.environ["DATABRICKS_WORKSPACE_ID"]
+
+
+def test_get_dbr_workspace_id_fallback_to_local():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    if "DATABRICKS_WORKSPACE_ID" in os.environ:
+        del os.environ["DATABRICKS_WORKSPACE_ID"]
+    assert context.get_dbr_workspace_id == "local"
+
+
+def test_get_dbr_workspace_url_from_env():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    os.environ["DATABRICKS_HOST"] = "https://test-workspace.cloud.databricks.com"
+    result = context.get_dbr_workspace_url
+    assert result == "test-workspace.cloud.databricks.com"
+    del os.environ["DATABRICKS_HOST"]
+
+
+def test_get_dbr_workspace_url_removes_protocol():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    os.environ["DATABRICKS_HOST"] = "http://test-workspace.databricks.com"
+    result = context.get_dbr_workspace_url
+    assert result == "test-workspace.databricks.com"
+    del os.environ["DATABRICKS_HOST"]
+
+
+def test_get_dbr_workspace_url_fallback_to_local():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    if "DATABRICKS_HOST" in os.environ:
+        del os.environ["DATABRICKS_HOST"]
+    assert context.get_dbr_workspace_url == "local"
+
+
 def test_get_run_id_name():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     values = [None, "test"]
