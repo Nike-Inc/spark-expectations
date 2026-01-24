@@ -279,7 +279,8 @@ def test_write_error_records_source(_fixture_employee, _fixture_context, _fixtur
 
     error_table = spark.table("employee_table_error")
     assert error_table.count() == 1000
-    assert error_table.select("meta_dq_run_id").first()[0] == "product1_run_test"
+    # run_id is set from context (product_id + uuid), not from fixture
+    assert error_table.select("meta_dq_run_id").first()[0].startswith("product1_")
 
 
 @pytest.fixture(name="_fixture_create_employee_error_table")
@@ -333,7 +334,8 @@ def test_write_error_records_final(_fixture_employee, _fixture_context, _fixture
 
     error_table = spark.table("employee_table_error")
     assert error_table.count() == 1000
-    assert error_table.select("meta_dq_run_id").first()[0] == "product1_run_test"
+    # run_id is set from context (product_id + uuid), not from fixture
+    assert error_table.select("meta_dq_run_id").first()[0].startswith("product1_")
 
 
 def test_write_error_records_final_without_error_table(_fixture_employee, _fixture_context, _fixture_dq_dataset):
