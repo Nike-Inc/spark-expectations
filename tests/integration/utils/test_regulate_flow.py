@@ -72,7 +72,9 @@ def fixture_create_stats_table():
     meta_dq_run_id STRING,
     meta_dq_run_date DATE,
     meta_dq_run_datetime TIMESTAMP,
-    dq_env STRING
+    dq_env STRING,
+    databricks_workspace_id STRING,
+    databricks_hostname STRING
     )
     USING delta
     """
