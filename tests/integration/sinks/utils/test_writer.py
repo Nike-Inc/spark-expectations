@@ -193,7 +193,12 @@ def fixture_create_stats_table():
 
 @pytest.fixture(name="_fixture_dq_dataset")
 def fixture_dq_dataset(_fixture_employee):
-    return _fixture_employee.select("*").withColumn("meta_dq_run_id", lit("product1_run_test"))
+    from pyspark.sql.functions import array, create_map
+    # Add mock row_dq columns that write_error_records_final expects
+    return (_fixture_employee.select("*")
+            .withColumn("meta_dq_run_id", lit("product1_run_test"))
+            .withColumn("row_dq_rule1", array(create_map()))
+            .withColumn("row_dq_rule2", array(create_map())))
 
 
 def test_expectations_writer_instantiation(_fixture_context):
@@ -310,9 +315,9 @@ def test_write_error_records_source_with_multiple_loads(
 
     _fixture_dq_dataset_2 = _fixture_dq_dataset.withColumn("meta_dq_run_id", lit("product1_run_test_2"))
 
-    writer.write_error_records_source(_fixture_dq_dataset, "employee_table", "row_dq")
+    writer.write_error_records_final(_fixture_dq_dataset, "employee_table_error", "row_dq")
 
-    writer.write_error_records_source(_fixture_dq_dataset_2, "employee_table", "row_dq")
+    writer.write_error_records_final(_fixture_dq_dataset_2, "employee_table_error", "row_dq")
 
     error_table = spark.table("employee_table_error")
     assert error_table.count() == 2000
@@ -434,7 +439,7 @@ def test_write_to_bq_error_table(_fixture_bq_employee_table, _fixture_context, _
     _fixture_context.set_target_and_error_table_writer_config(error_table_writer_config)
 
     with patch("pyspark.sql.DataFrameWriter.save", autospec=True, spec_set=True) as mock_bq:
-        writer.write_error_records_source(_fixture_dq_dataset, "employee_table", "row_dq")
+        writer.write_error_records_final(_fixture_dq_dataset, "employee_table_error", "row_dq")
         mock_bq.assert_called()
 
 
