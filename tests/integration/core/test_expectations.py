@@ -3100,9 +3100,7 @@ def test_with_expectations(
     assert row.meta_dq_run_date == datetime.date(2022, 12, 27)
     assert row.meta_dq_run_datetime == datetime.datetime(2022, 12, 27, 10, 00, 00)
     assert row.dq_env == "local"
-    assert row.databricks_workspace_id == "local"
-    assert row.databricks_hostname == "local"
-    assert len(stats_table.columns) == 23
+    assert len(stats_table.columns) == 21
 
     assert (
         spark.read.format("kafka")

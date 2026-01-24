@@ -43,38 +43,36 @@ class SparkExpectationsWriter:
         self.spark = self._context.spark
 
     def _set_table_properties_with_retry(
-        self,
-        table_name: str,
-        max_retries: int = 3,
-        initial_wait: float = 0.5,
-        max_wait: float = 10.0
+        self, table_name: str, max_retries: int = 3, initial_wait: float = 0.5, max_wait: float = 10.0
     ) -> None:
         """
         Set table properties with retry logic and exponential backoff.
-        
+
         This method waits for the streaming table to be created and then sets the product_id
         property. Uses exponential backoff to avoid blocking while waiting for table creation.
-        
+
         Args:
             table_name: Name of the table to set properties on
             max_retries: Maximum number of retry attempts (default: 5)
             initial_wait: Initial wait time in seconds (default: 0.5)
             max_wait: Maximum wait time between retries in seconds (default: 10.0)
-            
+
         Returns:
             None
         """
         import time
-        
+
         wait_time = initial_wait
-        
+
         for attempt in range(max_retries):
             try:
                 # Check if table exists - backward compatible with Spark < 3.3
                 # Try to access table properties to check if table exists
                 # This works in all Spark versions (Spark 2.x, 3.x, 3.3+)
                 try:
-                    table_properties = self.spark.sql(f"SHOW TBLPROPERTIES {table_name}").collect()  # pylint: disable=not-an-iterable
+                    table_properties = self.spark.sql(
+                        f"SHOW TBLPROPERTIES {table_name}"
+                    ).collect()  # pylint: disable=not-an-iterable
                 except Exception:
                     # Table doesn't exist yet
                     if attempt < max_retries - 1:
@@ -85,10 +83,9 @@ class SparkExpectationsWriter:
                         time.sleep(wait_time)
                         wait_time = min(wait_time * 2, max_wait)  # Exponential backoff with cap
                         continue
-                    
+
                     _log.warning(
-                        f"Table {table_name} not available after {max_retries} attempts, "
-                        "skipping table properties"
+                        f"Table {table_name} not available after {max_retries} attempts, " "skipping table properties"
                     )
                     return
                 # pylint: disable=not-an-iterable
@@ -101,16 +98,15 @@ class SparkExpectationsWriter:
                 ):
                     _log.info(f"Setting product_id for table {table_name} in tableproperties")
                     self.spark.sql(
-                        f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = "
-                        f"'{self._context.product_id}')"
+                        f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = " f"'{self._context.product_id}')"
                     )
                     _log.info(f"Successfully set product_id for table {table_name}")
                 else:
                     _log.debug(f"product_id already set for table {table_name}")
-                
+
                 # Success - exit retry loop
                 return
-                
+
             except Exception as e:
                 if attempt < max_retries - 1:
                     _log.warning(
@@ -126,9 +122,11 @@ class SparkExpectationsWriter:
                     )
                     return
 
-    def save_df_as_table(self, df: DataFrame, table_name: str, config: dict, stats_table: bool = False) -> Optional[StreamingQuery]:
+    def save_df_as_table(
+        self, df: DataFrame, table_name: str, config: dict, stats_table: bool = False
+    ) -> Optional[StreamingQuery]:
         """
-        This function takes a dataframe and writes into a table. It automatically detects if the DataFrame 
+        This function takes a dataframe and writes into a table. It automatically detects if the DataFrame
         is streaming and uses the appropriate write method (writeStream or write).
 
         Args:
@@ -152,28 +150,30 @@ class SparkExpectationsWriter:
             # Automatically detect if DataFrame is streaming and use appropriate write method
             if df.isStreaming:
                 _log.info("Detected streaming DataFrame, using writeStream")
-                
+
                 _df_stream_writer = df.writeStream
-                
+
                 if config.get("outputMode") is not None:
                     _df_stream_writer = _df_stream_writer.outputMode(config["outputMode"])
-                
+
                 if config.get("format") is not None:
                     _df_stream_writer = _df_stream_writer.format(config["format"])
-                
+
                 if config.get("queryName") is not None:
-                    _df_stream_writer = _df_stream_writer.queryName(f"{config['queryName']}_{table_name.split('.')[-1]}")
-                
+                    _df_stream_writer = _df_stream_writer.queryName(
+                        f"{config['queryName']}_{table_name.split('.')[-1]}"
+                    )
+
                 if config.get("partitionBy") is not None and config["partitionBy"] != []:
                     _df_stream_writer = _df_stream_writer.partitionBy(config["partitionBy"])
-                
+
                 # Check for checkpoint location - critical for production streaming
                 has_checkpoint = (
-                    config.get("options") is not None 
+                    config.get("options") is not None
                     and isinstance(config.get("options"), dict)
                     and "checkpointLocation" in config["options"]
                 )
-                
+
                 if not has_checkpoint:
                     _log.warning(
                         "⚠️  PRODUCTION WARNING: No checkpointLocation specified for streaming DataFrame. "
@@ -182,25 +182,25 @@ class SparkExpectationsWriter:
                         "streaming fashion to target tables. This ensures fault tolerance and exactly-once "
                         "processing guarantees. Example: config['options']['checkpointLocation'] = '/path/to/checkpoint'"
                     )
-                
+
                 # Apply options if they exist
                 # Create a copy to avoid mutating the original config (which may be reused for multiple tables)
                 stream_options = {}
                 if config.get("options") is not None and isinstance(config.get("options"), dict):
                     stream_options = config["options"].copy()
-                    
+
                     if "checkpointLocation" in stream_options:
                         checkpoint_location = stream_options["checkpointLocation"].rstrip("/")
                         # Replace dots with underscores for path safety (table names like "db.table" become "db_table")
                         safe_table_name = table_name.replace(".", "_")
-                        
+
                         # Only append table_name if it's not already the last segment of the path
                         # This prevents duplicate appends when the same config is reused
                         checkpoint_parts = checkpoint_location.split("/")
                         if not checkpoint_parts or checkpoint_parts[-1] != safe_table_name:
                             stream_options["checkpointLocation"] = f"{checkpoint_location}/{safe_table_name}"
                         _log.info(f"Using checkpoint location: {stream_options['checkpointLocation']}")
-                    
+
                     # Only apply options if dict is not empty
                     if stream_options:
                         _df_stream_writer = _df_stream_writer.options(**stream_options)
@@ -218,7 +218,7 @@ class SparkExpectationsWriter:
                 _log.info(f"Writing streaming records to table: {table_name}")
                 streaming_query = _df_stream_writer.toTable(table_name)
                 _log.info(f"Successfully started streaming write to table: {table_name}")
-                
+
                 # Set table properties for non-stats tables
                 if not stats_table:
                     self._set_table_properties_with_retry(table_name)
@@ -226,7 +226,7 @@ class SparkExpectationsWriter:
                 return streaming_query
             else:
                 _log.info("Detected batch DataFrame, using write")
-                
+
                 # Batch DataFrame logic
                 _df_writer = df.write
 
@@ -251,7 +251,7 @@ class SparkExpectationsWriter:
                 else:
                     _df_writer.saveAsTable(name=table_name)
                     _log.info(f"finished writing records to table: {table_name}")
-                    
+
                     if not stats_table:
                         # Fetch table properties
                         table_properties = self.spark.sql(f"SHOW TBLPROPERTIES {table_name}").collect()
@@ -263,7 +263,9 @@ class SparkExpectationsWriter:
                             table_properties_dict.get("product_id") is None
                             or table_properties_dict.get("product_id") != self._context.product_id
                         ):
-                            _log.info(f"product_id is not set for table {table_name} in tableproperties, setting it now")
+                            _log.info(
+                                f"product_id is not set for table {table_name} in tableproperties, setting it now"
+                            )
                             self.spark.sql(
                                 f"ALTER TABLE {table_name} SET TBLPROPERTIES ('product_id' = "
                                 f"'{self._context.product_id}')"
@@ -587,7 +589,9 @@ class SparkExpectationsWriter:
         )
 
         _df_target_aggquery_detailed_stats = _df_target_aggquery_detailed_stats.select(
-            *[col for col in _df_target_aggquery_detailed_stats.columns if col not in ["tag", "description"]]  # pylint: disable=not-an-iterable
+            *[
+                col for col in _df_target_aggquery_detailed_stats.columns if col not in ["tag", "description"]
+            ]  # pylint: disable=not-an-iterable
         )
 
         _df_detailed_stats = _df_source_aggquery_detailed_stats.join(
@@ -720,9 +724,9 @@ class SparkExpectationsWriter:
                 "topic": f"{self._context.get_topic_name}",
                 "failOnDataLoss": "true",
             }
-        
+
         secret_handler = SparkExpectationsSecretsBackend(se_stats_dict)
-        
+
         if self._context.get_se_streaming_stats_kafka_custom_config_enable:
             options = {
                 "kafka.bootstrap.servers": f"{self._context.get_se_streaming_stats_kafka_bootstrap_server}",
@@ -932,7 +936,6 @@ class SparkExpectationsWriter:
                 self._context.get_agg_dq_detailed_stats_status is True
                 or self._context.get_query_dq_detailed_stats_status is True
             ):
-
                 self.write_detailed_stats()
 
                 # TODO Implement the below function for writing the custom query dq stats
@@ -1045,7 +1048,7 @@ class SparkExpectationsWriter:
         if df.isStreaming:
             _log.info("Skipping summarized row dq res generation for streaming DataFrame")
             return
-        
+
         try:
             df_explode = df.select(explode(f"meta_{rule_type}_results").alias("row_dq_res"))
             df_res = (
@@ -1103,7 +1106,7 @@ class SparkExpectationsWriter:
                                     "description": each_rule["description"],
                                     "tag": each_rule["tag"],
                                     "action_if_failed": each_rule["action_if_failed"],
-                                    "failed_row_count": 0
+                                    "failed_row_count": 0,
                                 }
                             )
 
@@ -1166,10 +1169,10 @@ class SparkExpectationsWriter:
     def get_streaming_query_status(self, streaming_query: StreamingQuery) -> Dict[str, Any]:
         """
         Get status information for a streaming query
-        
+
         Args:
             streaming_query: The streaming query to check
-            
+
         Returns:
             Dict[str, Any]: Status information including query details. Always includes:
                 - query_id: Unique identifier for the query
@@ -1177,32 +1180,32 @@ class SparkExpectationsWriter:
                 - name: Name of the query
                 - is_active: Boolean indicating if query is active
                 - status: "active", "inactive", "not_running", or "error"
-                
+
             For active queries with progress data, may also include:
                 - batch_id: Non-negative integer representing the batch number
                 - input_rows_per_second: Input rate
                 - processed_rows_per_second: Processing rate
                 - batch_duration: Duration of the batch in milliseconds
                 - timestamp: Timestamp of the progress update
-                
+
             For inactive queries with errors:
                 - error: Error message from the query exception
-                
+
             Note: Progress fields are only included when actually present in the
             streaming query progress. Batch IDs are always non-negative integers.
         """
         try:
             if streaming_query is None:
                 return {"status": "not_running", "message": "No streaming query provided"}
-                
+
             status = {
                 "query_id": streaming_query.id,
                 "run_id": streaming_query.runId,
                 "name": streaming_query.name,
                 "is_active": streaming_query.isActive,
-                "status": "active" if streaming_query.isActive else "inactive"
+                "status": "active" if streaming_query.isActive else "inactive",
             }
-            
+
             if streaming_query.isActive:
                 progress = streaming_query.lastProgress
                 if progress:
@@ -1210,16 +1213,16 @@ class SparkExpectationsWriter:
                     # Batch IDs are always non-negative, so we use None for missing values
                     if "batchId" in progress:
                         status["batch_id"] = progress["batchId"]
-                    
+
                     if "inputRowsPerSecond" in progress:
                         status["input_rows_per_second"] = progress["inputRowsPerSecond"]
-                    
+
                     if "processedRowsPerSecond" in progress:
                         status["processed_rows_per_second"] = progress["processedRowsPerSecond"]
-                    
+
                     if "batchDuration" in progress:
                         status["batch_duration"] = progress["batchDuration"]
-                    
+
                     if "timestamp" in progress:
                         status["timestamp"] = progress["timestamp"]
             else:
@@ -1230,20 +1233,20 @@ class SparkExpectationsWriter:
                         status["error"] = str(exception)
                 except Exception:
                     pass
-                    
+
             return status
-            
+
         except Exception as e:
             return {"status": "error", "message": f"Error getting query status: {e}"}
 
     def stop_streaming_query(self, streaming_query: StreamingQuery, timeout: Optional[int] = None) -> bool:
         """
         Stop a streaming query gracefully
-        
+
         Args:
             streaming_query: The streaming query to stop
             timeout: Optional timeout in seconds
-            
+
         Returns:
             bool: True if stopped successfully, False otherwise
         """
@@ -1251,18 +1254,18 @@ class SparkExpectationsWriter:
             if streaming_query is None or not streaming_query.isActive:
                 _log.info("Streaming query is not active or None")
                 return True
-                
+
             _log.info(f"Stopping streaming query: {streaming_query.id}")
-            
+
             if timeout:
                 streaming_query.stop()
                 streaming_query.awaitTermination(timeout)
             else:
                 streaming_query.stop()
-                
+
             _log.info(f"Successfully stopped streaming query: {streaming_query.id}")
             return True
-            
+
         except Exception as e:
             _log.error(f"Error stopping streaming query: {e}")
             return False
