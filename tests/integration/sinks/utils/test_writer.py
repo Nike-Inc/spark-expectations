@@ -193,12 +193,13 @@ def fixture_create_stats_table():
 
 @pytest.fixture(name="_fixture_dq_dataset")
 def fixture_dq_dataset(_fixture_employee):
-    from pyspark.sql.functions import array, create_map
+    from pyspark.sql.functions import create_map
     # Add mock row_dq columns that write_error_records_final expects
+    # Maps must have "status": "fail" to pass through remove_passing_status_maps filter
     return (_fixture_employee.select("*")
             .withColumn("meta_dq_run_id", lit("product1_run_test"))
-            .withColumn("row_dq_rule1", array(create_map()))
-            .withColumn("row_dq_rule2", array(create_map())))
+            .withColumn("row_dq_rule1", create_map(lit("status"), lit("fail"), lit("rule"), lit("rule1"), lit("action_if_failed"), lit("ignore")))
+            .withColumn("row_dq_rule2", create_map(lit("status"), lit("fail"), lit("rule"), lit("rule2"), lit("action_if_failed"), lit("ignore"))))
 
 
 def test_expectations_writer_instantiation(_fixture_context):
@@ -328,7 +329,7 @@ def test_write_error_records_final(_fixture_employee, _fixture_context, _fixture
     spark.sql("DROP TABLE IF EXISTS employee_table")
     spark.sql("DROP TABLE IF EXISTS employee_table_error")
 
-    writer.write_error_records_final(_fixture_dq_dataset, "employee_table", "row_dq")
+    writer.write_error_records_final(_fixture_dq_dataset, "employee_table_error", "row_dq")
 
     error_table = spark.table("employee_table_error")
     assert error_table.count() == 1000
@@ -402,7 +403,7 @@ def test_write_error_records_final_with_error_table_config(_fixture_employee, _f
     spark.sql("DROP TABLE IF EXISTS employee_table")
     spark.sql("DROP TABLE IF EXISTS employee_table_error")
 
-    writer.write_error_records_final(_fixture_dq_dataset, "employee_table", "row_dq")
+    writer.write_error_records_final(_fixture_dq_dataset, "employee_table_error", "row_dq")
 
     error_table = spark.table("employee_table_error")
     assert error_table.count() == 1000
@@ -1172,7 +1173,8 @@ def test_write_error_records_final_exception(_fixture_employee, _fixture_writer,
         SparkExpectationsMiscException,
         match=r"error occurred while saving data into the final error table .*",
     ):
-        _fixture_writer.write_error_records_final(_fixture_dq_dataset, "employee_table", "row_dq")
+        with patch.object(_fixture_writer, 'save_df_as_table', side_effect=Exception("mock table write error")):
+            _fixture_writer.write_error_records_final(_fixture_dq_dataset, "employee_table", "row_dq")
 
 
 def test_generate_rules_exceeds_threshold_exception():
