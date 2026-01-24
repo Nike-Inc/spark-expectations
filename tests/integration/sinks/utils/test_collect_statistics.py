@@ -568,6 +568,8 @@ def test_collect_stats_on_success_failure(
     )
     setattr(_mock_context, "get_se_streaming_stats_dict", {"se.streaming.enable": True})
     setattr(_mock_context, "get_topic_name", "dq-sparkexpectations-stats")
+    setattr(_mock_context, "get_dbr_workspace_id", "local")
+    setattr(_mock_context, "get_dbr_workspace_url", "local")
 
     _mock_context.spark = spark
     _mock_context.product_id = "product1"
@@ -1092,6 +1094,8 @@ def test_collect_stats_on_success_failure_exception(
     )
     setattr(_mock_context, "get_se_streaming_stats_dict", {"se.streaming.enable": True})
     setattr(_mock_context, "get_topic_name", "dq-sparkexpectations-stats")
+    setattr(_mock_context, "get_dbr_workspace_id", "local")
+    setattr(_mock_context, "get_dbr_workspace_url", "local")
 
     writer = SparkExpectationsWriter(_mock_context)
     statistics_writer_obj = SparkExpectationsCollectStatistics(_mock_context, writer)
