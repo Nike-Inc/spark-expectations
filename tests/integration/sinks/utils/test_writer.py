@@ -269,7 +269,7 @@ def test_write_error_records_source(_fixture_employee, _fixture_context, _fixtur
     spark.sql("DROP TABLE IF EXISTS employee_table")
     spark.sql("DROP TABLE IF EXISTS employee_table_error")
 
-    writer.write_error_records_source(_fixture_dq_dataset, "employee_table", "row_dq")
+    writer.write_error_records_final(_fixture_dq_dataset, "employee_table_error", "row_dq")
 
     error_table = spark.table("employee_table_error")
     assert error_table.count() == 1000
