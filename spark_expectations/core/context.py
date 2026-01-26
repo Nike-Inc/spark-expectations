@@ -229,7 +229,6 @@ class SparkExpectationsContext:
             Optional[str]: Returns the workspace hostname if running in Databricks, "local" otherwise
         """
         try:
-            workspace_url = None
             workspace_url = os.environ.get("DATABRICKS_HOST")
 
             if not workspace_url:
