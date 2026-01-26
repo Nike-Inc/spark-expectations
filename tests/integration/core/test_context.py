@@ -1296,6 +1296,117 @@ def test_get_dbr_workspace_url_fallback_to_local():
     assert context.get_dbr_workspace_url == "local"
 
 
+def test_get_dbr_workspace_id_from_dbruntime_context():
+    """Test getting workspace ID from dbruntime context when env var is not set (covers lines 213-215)"""
+    from unittest.mock import MagicMock
+    import sys
+
+    if "DATABRICKS_WORKSPACE_ID" in os.environ:
+        del os.environ["DATABRICKS_WORKSPACE_ID"]
+
+    # Create mock dbruntime module
+    mock_dbr_context = MagicMock()
+    mock_dbr_context.workspaceId = "dbruntime_workspace_456"
+    mock_get_context = MagicMock(return_value=mock_dbr_context)
+    mock_repl_context = MagicMock()
+    mock_repl_context.get_context = mock_get_context
+    mock_dbruntime = MagicMock()
+
+    # Patch sys.modules before import happens inside the property
+    with patch.dict(sys.modules, {
+        "dbruntime": mock_dbruntime,
+        "dbruntime.databricks_repl_context": mock_repl_context
+    }):
+        context = SparkExpectationsContext(product_id="product1", spark=spark)
+        result = context.get_dbr_workspace_id
+        assert result == "dbruntime_workspace_456"
+
+
+def test_get_dbr_workspace_id_dbruntime_import_error():
+    """Test workspace ID fallback when dbruntime import fails (covers line 216-217)"""
+    if "DATABRICKS_WORKSPACE_ID" in os.environ:
+        del os.environ["DATABRICKS_WORKSPACE_ID"]
+
+    # dbruntime is not installed, so ImportError will be raised
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    result = context.get_dbr_workspace_id
+    assert result == "local"
+
+
+def test_get_dbr_workspace_url_from_dbruntime_context():
+    """Test getting workspace URL from dbruntime context when env var is not set (covers lines 239-241)"""
+    from unittest.mock import MagicMock
+    import sys
+
+    if "DATABRICKS_HOST" in os.environ:
+        del os.environ["DATABRICKS_HOST"]
+
+    mock_dbr_context = MagicMock()
+    mock_dbr_context.browserHostName = "https://dbruntime-workspace.databricks.com"
+    mock_get_context = MagicMock(return_value=mock_dbr_context)
+    mock_repl_context = MagicMock()
+    mock_repl_context.get_context = mock_get_context
+    mock_dbruntime = MagicMock()
+
+    with patch.dict(sys.modules, {
+        "dbruntime": mock_dbruntime,
+        "dbruntime.databricks_repl_context": mock_repl_context
+    }):
+        context = SparkExpectationsContext(product_id="product1", spark=spark)
+        result = context.get_dbr_workspace_url
+        assert result == "dbruntime-workspace.databricks.com"
+
+
+def test_get_dbr_workspace_url_from_spark_conf():
+    """Test getting workspace URL from spark conf (covers line 247)"""
+    from unittest.mock import MagicMock
+    if "DATABRICKS_HOST" in os.environ:
+        del os.environ["DATABRICKS_HOST"]
+
+    mock_spark = MagicMock()
+    mock_spark.conf.get.return_value = "https://spark-conf-workspace.databricks.com"
+
+    context = SparkExpectationsContext(product_id="product1", spark=mock_spark)
+    result = context.get_dbr_workspace_url
+    assert result == "spark-conf-workspace.databricks.com"
+
+
+def test_get_dbr_workspace_url_spark_conf_exception():
+    """Test workspace URL when spark.conf.get throws exception (covers lines 248-249)"""
+    from unittest.mock import MagicMock
+    if "DATABRICKS_HOST" in os.environ:
+        del os.environ["DATABRICKS_HOST"]
+
+    mock_spark = MagicMock()
+    mock_spark.conf.get.side_effect = Exception("Spark conf not available")
+
+    context = SparkExpectationsContext(product_id="product1", spark=mock_spark)
+    result = context.get_dbr_workspace_url
+    assert result == "local"
+
+
+def test_get_dbr_workspace_id_outer_exception():
+    """Test workspace ID outer exception handler (covers lines 220-221)"""
+    from unittest.mock import MagicMock, PropertyMock
+
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+
+    # Patch os.environ.get to raise an exception to trigger outer except
+    with patch("os.environ.get", side_effect=Exception("Unexpected error")):
+        result = context.get_dbr_workspace_id
+        assert result == "local"
+
+
+def test_get_dbr_workspace_url_outer_exception():
+    """Test workspace URL outer exception handler (covers lines 256-257)"""
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+
+    # Patch os.environ.get to raise an exception to trigger outer except
+    with patch("os.environ.get", side_effect=Exception("Unexpected error")):
+        result = context.get_dbr_workspace_url
+        assert result == "local"
+
+
 def test_get_run_id_name():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     values = [None, "test"]
