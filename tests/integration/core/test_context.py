@@ -1297,7 +1297,7 @@ def test_get_dbr_workspace_url_fallback_to_local():
 
 
 def test_get_dbr_workspace_id_from_dbruntime_context():
-    """Test getting workspace ID from dbruntime context when env var is not set (covers lines 213-215)"""
+    """Test getting workspace ID from dbruntime context when env var is not set"""
     from unittest.mock import MagicMock
     import sys
 
@@ -1323,7 +1323,7 @@ def test_get_dbr_workspace_id_from_dbruntime_context():
 
 
 def test_get_dbr_workspace_id_dbruntime_import_error():
-    """Test workspace ID fallback when dbruntime import fails (covers line 216-217)"""
+    """Test workspace ID fallback when dbruntime import fails"""
     if "DATABRICKS_WORKSPACE_ID" in os.environ:
         del os.environ["DATABRICKS_WORKSPACE_ID"]
 
@@ -1334,7 +1334,7 @@ def test_get_dbr_workspace_id_dbruntime_import_error():
 
 
 def test_get_dbr_workspace_url_from_dbruntime_context():
-    """Test getting workspace URL from dbruntime context when env var is not set (covers lines 239-241)"""
+    """Test getting workspace URL from dbruntime context when env var is not set"""
     from unittest.mock import MagicMock
     import sys
 
@@ -1358,7 +1358,7 @@ def test_get_dbr_workspace_url_from_dbruntime_context():
 
 
 def test_get_dbr_workspace_url_from_spark_conf():
-    """Test getting workspace URL from spark conf (covers line 247)"""
+    """Test getting workspace URL from spark conf"""
     from unittest.mock import MagicMock
     if "DATABRICKS_HOST" in os.environ:
         del os.environ["DATABRICKS_HOST"]
@@ -1372,7 +1372,7 @@ def test_get_dbr_workspace_url_from_spark_conf():
 
 
 def test_get_dbr_workspace_url_spark_conf_exception():
-    """Test workspace URL when spark.conf.get throws exception (covers lines 248-249)"""
+    """Test workspace URL when spark.conf.get throws exception"""
     from unittest.mock import MagicMock
     if "DATABRICKS_HOST" in os.environ:
         del os.environ["DATABRICKS_HOST"]
@@ -1386,7 +1386,7 @@ def test_get_dbr_workspace_url_spark_conf_exception():
 
 
 def test_get_dbr_workspace_id_outer_exception():
-    """Test workspace ID outer exception handler (covers lines 220-221)"""
+    """Test workspace ID outer exception handler"""
     from unittest.mock import MagicMock, PropertyMock
 
     context = SparkExpectationsContext(product_id="product1", spark=spark)
@@ -1398,7 +1398,7 @@ def test_get_dbr_workspace_id_outer_exception():
 
 
 def test_get_dbr_workspace_url_outer_exception():
-    """Test workspace URL outer exception handler (covers lines 256-257)"""
+    """Test workspace URL outer exception handler"""
     context = SparkExpectationsContext(product_id="product1", spark=spark)
 
     # Patch os.environ.get to raise an exception to trigger outer except

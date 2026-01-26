@@ -679,7 +679,7 @@ def test_get_rules_from_table_exception(_fixture_reader):
 
 
 def test_set_notification_param_missing_dq_obs_alert_flag():
-    """Test set_notification_param when se_dq_obs_alert_flag is False - covers lines 82-83 in reader.py"""
+    """Test set_notification_param when se_dq_obs_alert_flag is False"""
     from spark_expectations.config.user_config import Constants as user_config
     
     mock_context = Mock(spec=SparkExpectationsContext)
@@ -702,7 +702,7 @@ def test_set_notification_param_missing_dq_obs_alert_flag():
 
 
 def test_set_notification_param_zoom_missing_webhook():
-    """Test set_notification_param when zoom is enabled but webhook URL is missing - covers line 179 in reader.py"""
+    """Test set_notification_param when zoom is enabled but webhook URL is missing"""
     from spark_expectations.config.user_config import Constants as user_config
     
     mock_context = Mock(spec=SparkExpectationsContext)
@@ -724,7 +724,7 @@ def test_set_notification_param_zoom_missing_webhook():
 
 
 def test_set_notification_param_smtp_auth_no_password():
-    """Test set_notification_param SMTP auth without password - covers lines 140 in reader.py"""
+    """Test set_notification_param SMTP auth without password"""
     from spark_expectations.config.user_config import Constants as user_config
     
     mock_context = Mock(spec=SparkExpectationsContext)
@@ -782,7 +782,7 @@ def test_process_rules_df_custom_output_enabled():
 
 
 def test_set_notification_param_obs_dq_report_positive():
-    """Test set_notification_param with complete obs DQ report configuration - covers lines 63-78"""
+    """Test set_notification_param with complete obs DQ report configuration"""
     from spark_expectations.config.user_config import Constants as user_config
     
     mock_context = Mock(spec=SparkExpectationsContext)
@@ -812,7 +812,7 @@ def test_set_notification_param_obs_dq_report_positive():
 
 
 def test_set_notification_param_zoom_complete():
-    """Test set_notification_param with complete zoom configuration - covers lines 173-177"""
+    """Test set_notification_param with complete zoom configuration"""
     from spark_expectations.config.user_config import Constants as user_config
     
     mock_context = Mock(spec=SparkExpectationsContext)
