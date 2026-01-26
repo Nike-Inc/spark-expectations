@@ -195,12 +195,12 @@ class SparkExpectationsContext:
         return float(runtime_version) if runtime_version is not None else None
 
     @property
-    def get_dbr_workspace_id(self) -> Optional[str]:
+    def get_dbr_workspace_id(self) -> str:
         """
         This function returns the Databricks workspace ID.
 
         Returns:
-            Optional[str]: Returns the workspace ID if running in Databricks, "local" otherwise
+            str: Returns the workspace ID if running in Databricks, "local" otherwise
         """
         try:
             workspace_id = os.environ.get("DATABRICKS_WORKSPACE_ID")
@@ -214,19 +214,21 @@ class SparkExpectationsContext:
                 if context and hasattr(context, "workspaceId"):
                     return context.workspaceId
             except (ImportError, Exception):
+                # Expected when not running in Databricks; fall through to return "local"
                 pass
 
             return "local"
         except Exception:
+            # Catch-all for any unexpected errors; return safe default
             return "local"
 
     @property
-    def get_dbr_workspace_url(self) -> Optional[str]:
+    def get_dbr_workspace_url(self) -> str:
         """
         This function returns Databricks workspace hostname.
 
         Returns:
-            Optional[str]: Returns the workspace hostname if running in Databricks, "local" otherwise
+            str: Returns the workspace hostname if running in Databricks, "local" otherwise
         """
         try:
             workspace_url = os.environ.get("DATABRICKS_HOST")
@@ -239,12 +241,14 @@ class SparkExpectationsContext:
                     if context and hasattr(context, "browserHostName"):
                         workspace_url = context.browserHostName
                 except (ImportError, Exception):
+                    # Expected when not running in Databricks; fall through to spark.conf
                     pass
 
             if not workspace_url:
                 try:
                     workspace_url = self.spark.conf.get("spark.databricks.workspaceUrl", None)
                 except Exception:
+                    # spark.conf may not be available; fall through to return "local"
                     pass
 
             if workspace_url:
@@ -253,6 +257,7 @@ class SparkExpectationsContext:
 
             return "local"
         except Exception:
+            # Catch-all for any unexpected errors; return safe default
             return "local"
 
     @property

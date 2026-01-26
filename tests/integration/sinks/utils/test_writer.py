@@ -4460,3 +4460,90 @@ def test_get_kafka_write_options_custom():
             {}
         )  # Empty dict since we mock everything
         assert actual_options == expected_options
+
+
+def test_save_df_as_table_auto_merge_schema_for_stats_table(_fixture_employee, _fixture_context):
+    """Test that mergeSchema is automatically enabled for stats table writes"""
+    import shutil
+    
+    # Clean up any existing table data
+    table_path = "/tmp/hive/warehouse/test_auto_merge_schema_table"
+    if os.path.exists(table_path):
+        shutil.rmtree(table_path)
+    
+    spark.sql("DROP TABLE IF EXISTS test_auto_merge_schema_table")
+    
+    writer = SparkExpectationsWriter(_fixture_context)
+    
+    # Test 1: Config with no options - mergeSchema should be auto-added
+    config_no_options = {"mode": "append", "format": "delta"}
+    config_copy = config_no_options.copy()
+    
+    writer.save_df_as_table(
+        _fixture_employee,
+        "test_auto_merge_schema_table",
+        config=config_copy,
+        stats_table=True
+    )
+    
+    # Verify original config was not mutated
+    assert "options" not in config_no_options
+    
+    # Test 2: Config with empty options - mergeSchema should be auto-added  
+    spark.sql("DROP TABLE IF EXISTS test_auto_merge_schema_table2")
+    table_path2 = "/tmp/hive/warehouse/test_auto_merge_schema_table2"
+    if os.path.exists(table_path2):
+        shutil.rmtree(table_path2)
+        
+    config_empty_options = {"mode": "append", "format": "delta", "options": {}}
+    config_copy2 = config_empty_options.copy()
+    config_copy2["options"] = config_empty_options["options"].copy()
+    
+    writer.save_df_as_table(
+        _fixture_employee,
+        "test_auto_merge_schema_table2", 
+        config=config_copy2,
+        stats_table=True
+    )
+    
+    # Verify original config was not mutated
+    assert config_empty_options["options"] == {}
+    
+    # Clean up
+    spark.sql("DROP TABLE IF EXISTS test_auto_merge_schema_table")
+    spark.sql("DROP TABLE IF EXISTS test_auto_merge_schema_table2")
+
+
+def test_save_df_as_table_respects_user_merge_schema(_fixture_employee, _fixture_context):
+    """Test that user-specified mergeSchema is not overwritten"""
+    import shutil
+    
+    # Clean up any existing table data
+    table_path = "/tmp/hive/warehouse/test_user_merge_schema_table"
+    if os.path.exists(table_path):
+        shutil.rmtree(table_path)
+    
+    spark.sql("DROP TABLE IF EXISTS test_user_merge_schema_table")
+    
+    writer = SparkExpectationsWriter(_fixture_context)
+    
+    # User explicitly sets mergeSchema to "false" - should be respected
+    config_user_specified = {
+        "mode": "append",
+        "format": "delta",
+        "options": {"mergeSchema": "false"}
+    }
+    original_merge_schema = config_user_specified["options"]["mergeSchema"]
+    
+    writer.save_df_as_table(
+        _fixture_employee,
+        "test_user_merge_schema_table",
+        config=config_user_specified,
+        stats_table=True
+    )
+    
+    # Verify user's setting was preserved (not mutated)
+    assert config_user_specified["options"]["mergeSchema"] == original_merge_schema
+    
+    # Clean up
+    spark.sql("DROP TABLE IF EXISTS test_user_merge_schema_table")
