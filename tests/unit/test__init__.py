@@ -86,7 +86,7 @@ def test_infer_safe_cast_comprehensive_coverage():
 
 
 def test_load_configurations_error_handling():
-    """Test load_configurations error handling - covers lines 50-55"""
+    """Test load_configurations error handling"""
     from spark_expectations.core import load_configurations
     import tempfile
     import os
@@ -126,7 +126,7 @@ def test_get_config_dict_error_conditions():
 
 
 def test_load_configurations_success_scenarios():
-    """Test load_configurations with valid config data - covers lines 33-47"""
+    """Test load_configurations with valid config data"""
     from spark_expectations.core import load_configurations
     import json
     
@@ -253,7 +253,7 @@ def test_build_config_dict_no_user_conf_uses_defaults():
 
 
 def test_get_spark_session_local_environment():
-    """Test get_spark_session with UNIT_TESTING_ENV set - covers lines 143-168"""
+    """Test get_spark_session with UNIT_TESTING_ENV set"""
     from spark_expectations.core import get_spark_session
     import os
     
@@ -279,7 +279,7 @@ def test_get_spark_session_local_environment():
 
 
 def test_get_spark_session_sparkexpectations_env():
-    """Test get_spark_session with SPARKEXPECTATIONS_ENV set - covers lines 143-168"""
+    """Test get_spark_session with SPARKEXPECTATIONS_ENV set"""
     from spark_expectations.core import get_spark_session
     import os
     
@@ -311,7 +311,7 @@ def test_get_spark_session_sparkexpectations_env():
 
 
 def test_get_spark_session_active_session_branch():
-    """Test get_spark_session else branch using getActiveSession - covers lines 169-171"""
+    """Test get_spark_session else branch using getActiveSession"""
     from spark_expectations.core import get_spark_session
     import os
     
@@ -331,7 +331,7 @@ def test_get_spark_session_active_session_branch():
 
 
 def test_infer_safe_cast_string_fallback():
-    """Test infer_safe_cast final string fallback - covers lines 219-220"""
+    """Test infer_safe_cast final string fallback"""
     from spark_expectations.core import infer_safe_cast
     
     # Test final fallback to string (lines 219-220)
@@ -373,7 +373,7 @@ def test_infer_safe_cast_string_fallback():
 
 
 def test_infer_safe_cast_complete_fallback_coverage():
-    """Ensure we hit all branches including the dictionary parsing exception - covers lines 220-225"""
+    """Ensure we hit all branches including the dictionary parsing exception"""
     from spark_expectations.core import infer_safe_cast
     
     # Test various inputs that will definitely hit the final fallback

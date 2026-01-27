@@ -33,6 +33,8 @@ create table if not exists `catalog`.`schema`.`dq_stats` (
     meta_dq_run_date DATE,  -- (19)!
     meta_dq_run_datetime TIMESTAMP,  -- (20)!
     dq_env STRING,  -- (21)!
+    databricks_workspace_id STRING,  -- (22)!
+    databricks_hostname STRING  -- (23)!
 );
 ```
 
@@ -57,6 +59,8 @@ create table if not exists `catalog`.`schema`.`dq_stats` (
 19. `meta_dq_run_date` date on which rule is executed
 20. `meta_dq_run_datetime` date and time on which rule is executed
 21. `dq_env` environment value passed from the user_config.se_dq_rules_params
+22. `databricks_workspace_id` Databricks workspace ID (automatically detected from environment or context, defaults to "local")
+23. `databricks_hostname` Databricks workspace hostname/URL (automatically detected from environment, context, or Spark config, defaults to "local")
 
 ### DQ Detailed Stats Table
 

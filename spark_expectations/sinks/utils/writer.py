@@ -142,6 +142,20 @@ class SparkExpectationsWriter:
 
         """
         try:
+            # For stats tables, automatically enable mergeSchema to allow seamless schema evolution
+            # when new columns are added (e.g., databricks_workspace_id, databricks_hostname)
+            if stats_table:
+                # Create a copy to avoid mutating the original config
+                config = config.copy()
+                if config.get("options") is None:
+                    config["options"] = {}
+                else:
+                    config["options"] = config["options"].copy()
+                # Only set mergeSchema if not explicitly configured by user
+                if "mergeSchema" not in config["options"]:
+                    config["options"]["mergeSchema"] = "true"
+                    _log.info("Auto-enabled mergeSchema for stats table to support schema evolution")
+
             # Add metadata columns for non-stats tables
             if not stats_table:
                 df = df.withColumn(self._context.get_run_id_name, lit(f"{self._context.get_run_id}")).withColumn(
@@ -905,6 +919,8 @@ class SparkExpectationsWriter:
                 .withColumn("success_percentage", sql_round(df.success_percentage, 2))
                 .withColumn("error_percentage", sql_round(df.error_percentage, 2))
                 .withColumn("dq_env", lit(dq_env))
+                .withColumn("databricks_workspace_id", lit(self._context.get_dbr_workspace_id))
+                .withColumn("databricks_hostname", lit(self._context.get_dbr_workspace_url))
             )
 
             self._context.set_stats_dict(df)

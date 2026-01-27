@@ -186,7 +186,6 @@ class SparkExpectationsContext:
         self._kafka_write_status: str = "Disabled"
         self._kafka_write_error_message: str = ""
 
-
     @property
     def get_dbr_version(self) -> Optional[float]:
         """
@@ -194,6 +193,72 @@ class SparkExpectationsContext:
         """
         runtime_version = os.environ.get("DATABRICKS_RUNTIME_VERSION")
         return float(runtime_version) if runtime_version is not None else None
+
+    @property
+    def get_dbr_workspace_id(self) -> str:
+        """
+        This function returns the Databricks workspace ID.
+
+        Returns:
+            str: Returns the workspace ID if running in Databricks, "local" otherwise
+        """
+        try:
+            workspace_id = os.environ.get("DATABRICKS_WORKSPACE_ID")
+            if workspace_id:
+                return workspace_id
+
+            try:
+                from dbruntime.databricks_repl_context import get_context  # type: ignore
+
+                context = get_context()
+                if context and hasattr(context, "workspaceId"):
+                    return context.workspaceId
+            except (ImportError, Exception):
+                # Expected when not running in Databricks; fall through to return "local"
+                pass
+
+            return "local"
+        except Exception:
+            # Catch-all for any unexpected errors; return safe default
+            return "local"
+
+    @property
+    def get_dbr_workspace_url(self) -> str:
+        """
+        This function returns Databricks workspace hostname.
+
+        Returns:
+            str: Returns the workspace hostname if running in Databricks, "local" otherwise
+        """
+        try:
+            workspace_url = os.environ.get("DATABRICKS_HOST")
+
+            if not workspace_url:
+                try:
+                    from dbruntime.databricks_repl_context import get_context
+
+                    context = get_context()
+                    if context and hasattr(context, "browserHostName"):
+                        workspace_url = context.browserHostName
+                except (ImportError, Exception):
+                    # Expected when not running in Databricks; fall through to spark.conf
+                    pass
+
+            if not workspace_url:
+                try:
+                    workspace_url = self.spark.conf.get("spark.databricks.workspaceUrl", None)
+                except Exception:
+                    # spark.conf may not be available; fall through to return "local"
+                    pass
+
+            if workspace_url:
+                workspace_url = workspace_url.replace("https://", "").replace("http://", "")
+                return workspace_url
+
+            return "local"
+        except Exception:
+            # Catch-all for any unexpected errors; return safe default
+            return "local"
 
     @property
     def get_run_id(self) -> str:
@@ -287,10 +352,10 @@ class SparkExpectationsContext:
             """The spark expectations context is not set completely, please assign '_error_table_name' before 
             accessing it"""
         )
-    
+
     def set_min_priority_email(self, min_priority_email: str) -> None:
         self._min_priority_email = min_priority_email
-    
+
     @property
     def get_min_priority_email(self) -> str:
         """
@@ -299,10 +364,10 @@ class SparkExpectationsContext:
             str: The minimum priority for email notifications
         """
         return self._min_priority_email
-    
+
     def set_min_priority_pagerduty(self, min_priority_pagerduty: str) -> None:
         self._min_priority_pagerduty = min_priority_pagerduty
-    
+
     @property
     def get_min_priority_pagerduty(self) -> str:
         """
@@ -311,10 +376,10 @@ class SparkExpectationsContext:
             str: The minimum priority for pagerduty notifications
         """
         return self._min_priority_pagerduty
-    
+
     def set_min_priority_slack(self, min_priority_slack: str) -> None:
         self._min_priority_slack = min_priority_slack
-    
+
     @property
     def get_min_priority_slack(self) -> str:
         """
@@ -323,7 +388,7 @@ class SparkExpectationsContext:
             str: The minimum priority for slack notifications
         """
         return self._min_priority_slack
-    
+
     def set_min_priority_teams(self, min_priority_teams: str) -> None:
         self._min_priority_teams = min_priority_teams
 
@@ -335,10 +400,10 @@ class SparkExpectationsContext:
             str: The minimum priority for teams notifications
         """
         return self._min_priority_teams
-    
+
     def set_min_priority_zoom(self, min_priority_zoom: str) -> None:
         self._min_priority_zoom = min_priority_zoom
-    
+
     @property
     def get_min_priority_zoom(self) -> str:
         """
@@ -1403,7 +1468,7 @@ class SparkExpectationsContext:
         Returns:
             topic name key / path in Optional[str]
         """
-        
+
         _topic_name: Optional[str] = (
             self._se_streaming_stats_dict.get(user_config.se_streaming_stats_topic_name)
             if self.get_se_streaming_stats_kafka_custom_config_enable or self.get_env == "local"
@@ -1413,7 +1478,7 @@ class SparkExpectationsContext:
                 else self._se_streaming_stats_dict.get(user_config.dbx_topic_name)
             )
         )
-        
+
         if _topic_name:
             return _topic_name
         raise SparkExpectationsMiscException(
@@ -1421,7 +1486,7 @@ class SparkExpectationsContext:
             'UserConfig.cbs_topic_name' before 
             accessing it"""
         )
-    
+
     def set_se_streaming_stats_kafka_custom_config_enable(self, se_streaming_stats_kafka_config_enable: bool) -> None:
         self._se_streaming_stats_kafka_custom_config_enable = se_streaming_stats_kafka_config_enable
 
@@ -1437,7 +1502,6 @@ class SparkExpectationsContext:
             return self._se_streaming_stats_kafka_custom_config_enable
         return False
 
-    
     def set_se_streaming_stats_kafka_bootstrap_server(self, se_streaming_stats_kafka_server: str) -> None:
         self._se_streaming_stats_kafka_bootstrap_server = se_streaming_stats_kafka_server
 
@@ -1986,8 +2050,7 @@ class SparkExpectationsContext:
         Returns:
             str: Returns stats_table_writer_type which in str
         """
-        return self._stats_table_writer_type    
-
+        return self._stats_table_writer_type
 
     def set_target_and_error_table_writer_config(self, config: dict) -> None:
         """
