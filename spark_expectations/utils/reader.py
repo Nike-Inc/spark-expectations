@@ -279,7 +279,6 @@ class SparkExpectationsReader:
         """
         try:
             self._context.set_final_table_name(target_table)
-            self._context.set_error_table_name(f"{target_table}_error")
             self._context.set_table_name(target_table)
             self._context.set_env(os.environ.get("SPARKEXPECTATIONS_ENV"))
 
@@ -287,6 +286,9 @@ class SparkExpectationsReader:
             self._context.reset_num_dq_rules()
             self._context.reset_num_row_dq_rules()
             self._context.reset_num_query_dq_rules()
+            
+            if not self._context.get_error_table_name_user_specified:
+                self._context.set_error_table_name(f"{target_table}_error", user_specified=False)
 
             if params is not None:
                 rules_df = reduce(

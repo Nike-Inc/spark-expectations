@@ -22,9 +22,10 @@ on both the source and validated data sets. In case a rules fails, the row-level
 and a summarized report of all failed aggregated data quality rules is compiled in the `_stats` table. 
 * Spark Expectations optionally provides detailed, rule-level records showing the execution and results of each rule. 
 These per-rule validation results are captured in the `stats_detailed` table, allowing for thorough inspection and analysis.
-* All the records which fail one or more data quality rules, are by default quarantined in an `_error` table along with 
+* All the records which fail one or more data quality rules, are by default quarantined in an `_error` table (default name: `<target_table>_error`) along with 
 the metadata on rules that failed, job information etc. This helps analysts or products to look at the error data easily 
 and work with the teams required to correct the data and reprocess it easily
+  * If you need a custom error table name/location, override it on your `SparkExpectations` instance context before executing the decorated function (for example, `se._context.set_error_table_name("catalog.schema.custom_error_table")`).
 * Aggregated Metrics are provided on the job level along with necessary metadata so that recalculation or compute is 
 avoided
 * The data that doesn't meet the data quality contract or the standards is not written into the final table unless or
