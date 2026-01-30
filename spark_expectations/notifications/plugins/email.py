@@ -160,6 +160,7 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
     ) -> None:
         """
         function to send email notification for requested mail id's with retry logic
+        
         Args:
             _context: object of SparkExpectationsContext
             _config_args: dict which consists of: receiver mail(str), subject: subject of
