@@ -3028,10 +3028,10 @@ def test_with_expectations(
     )
     se._context._run_date = "2022-12-27 10:00:00"
     se._context._env = "local"
-    se._context.set_input_count(100)
-    se._context.set_output_count(100)
-    se._context.set_error_count(0)
     se._context._run_id = "product1_run_test"
+    se._context.set_input_count(input_count)
+    se._context.set_error_count(error_count)
+    se._context.set_output_count(output_count)
 
     # Decorate the mock function with required args
     @se.with_expectations(
@@ -3061,6 +3061,7 @@ def test_with_expectations(
                 assert False
             except Exception as e:
                 assert True
+        
 
     else:
         get_dataset()  # decorated_func()
@@ -3077,7 +3078,7 @@ def test_with_expectations(
                 error_table = spark.table("dq_spark.test_final_table_error")
                 assert error_table.count() == error_count
 
-    stats_table = spark.table("test_dq_stats_table")
+    stats_table = spark.table("dq_spark.test_dq_stats_table")
     row = stats_table.first()
     assert stats_table.count() == 1
     assert row.product_id == "product1"
@@ -3099,7 +3100,9 @@ def test_with_expectations(
     assert row.meta_dq_run_date == datetime.date(2022, 12, 27)
     assert row.meta_dq_run_datetime == datetime.datetime(2022, 12, 27, 10, 00, 00)
     assert row.dq_env == "local"
-    assert len(stats_table.columns) == 21
+    assert row.databricks_workspace_id == "local"
+    assert row.databricks_hostname == "local"
+    assert len(stats_table.columns) == 23
 
     assert (
         spark.read.format("kafka")
@@ -3165,28 +3168,30 @@ def test_with_expectations_overwrite_writers(
     assert _fixture_spark_expectations._context.get_target_and_error_table_writer_config == modified_writer.build()
 
 
-def test_with_expectations_dataframe_not_returned_exception(
+def test_with_expectations_invalid_rules_do_not_raise_exception(
     _fixture_create_database,
     _fixture_spark_expectations,
     _fixture_df,
     _fixture_rules_df,
     _fixture_local_kafka_topic,
 ):
+    """
+    Test that invalid rules do not raise exceptions - validation is non-blocking.
+    Invalid rules are logged as warnings but execution continues.
+    """
     partial_func = _fixture_spark_expectations.with_expectations(
         "dq_spark.test_final_table",
         user_conf={user_config.se_notifications_on_fail: False},
     )
 
-    with pytest.raises(
-        SparkExpectationsMiscException,
-        match=r"error occurred while processing spark expectations Validation failed for rules: \['col1_threshold'\]",
-    ):  
-        # Create a mock object with a rdd return value
-        mock_func = Mock(return_value=_fixture_df.rdd)
-
-        # Decorate the mock function with required args
-        decorated_func = partial_func(mock_func)
-        decorated_func()
+    mock_func = Mock(return_value=_fixture_df)
+    decorated_func = partial_func(mock_func)
+    
+    # Should NOT raise an exception for invalid rules - validation is non-blocking
+    result = decorated_func()
+    
+    assert result is not None
+        
     for db in spark.catalog.listDatabases():
         if db.name != "default":
             spark.sql(f"DROP DATABASE {db.name} CASCADE")

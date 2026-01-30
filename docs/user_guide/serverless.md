@@ -12,6 +12,13 @@ Databricks Serverless Compute offers a managed, auto-scaling environment that si
 
 Spark Expectations automatically detects and adapts to these constraints when running in serverless mode.
 
+## Limitations
+
+!!! warning "Email Notifications in Serverless"
+    **Email notifications may not work in Databricks Serverless environments** due to network restrictions. Ensure your serverless compute has the necessary permissions and network access to send emails via SMTP.
+    
+    **Workaround:** Use Slack, Teams, or other webhook-based notifications instead - these work reliably in serverless environments.
+
 ## Quick Start
 
 ### Enable Serverless Mode
@@ -23,11 +30,11 @@ from spark_expectations.core.expectations import SparkExpectations, WrappedDataF
 
 # Configure for serverless environment
 user_conf = {
-    user_config.se_notifications_enable_email: False,
-    user_config.se_notifications_enable_slack: False,
+    user_config.is_serverless: True,  # Enable serverless mode
+    user_config.se_notifications_enable_email: False,  # Email may not work in serverless
+    user_config.se_notifications_enable_slack: True,   # Use Slack instead (recommended)
     user_config.se_enable_error_table: True,
-    user_config.se_enable_query_dq_detailed_result: True,
-    user_config.is_serverless: True,  # This flag is for Serverless conf
+    user_config.se_enable_query_dq_detailed_result: True,    
     user_config.se_dq_rules_params: {
         "env": "local",
         "table": "orders",

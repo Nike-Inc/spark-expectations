@@ -715,18 +715,12 @@ class TestStreamingQueryManagement:
         assert status["status"] == "active"
         
         # May have progress information - only included if present
-        if query.lastProgress:
-            progress = query.lastProgress
-            
-            # Batch ID should be non-negative if present
-            if "batch_id" in status:
-                assert status["batch_id"] >= 0, "Batch ID should be non-negative"
-            
-            # Other fields may or may not be present depending on progress data
-            # Just verify they match the progress data if present
-            if "batchId" in progress:
-                assert "batch_id" in status
-                assert status["batch_id"] == progress["batchId"]
+        # Note: We only verify batch_id is non-negative, not that it matches
+        # query.lastProgress["batchId"], because the streaming query may advance
+        # between when get_streaming_query_status captures the progress and when
+        # we check query.lastProgress here (race condition).
+        if "batch_id" in status:
+            assert status["batch_id"] >= 0, "Batch ID should be non-negative"
         
         query.stop()
         time.sleep(1)

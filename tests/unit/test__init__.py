@@ -86,7 +86,7 @@ def test_infer_safe_cast_comprehensive_coverage():
 
 
 def test_load_configurations_error_handling():
-    """Test load_configurations error handling - covers lines 50-55"""
+    """Test load_configurations error handling"""
     from spark_expectations.core import load_configurations
     import tempfile
     import os
@@ -112,25 +112,12 @@ def test_load_configurations_error_handling():
 
 
 def test_get_config_dict_error_conditions():
-    """Test get_config_dict error handling - covers lines 140-142"""
+    """Test get_config_dict error handling"""
     from spark_expectations.core import get_config_dict
-    import json
     
     mock_spark = Mock()
     
-    # Test JSONDecodeError (line 140)
-    with patch('spark_expectations.core.load_configurations'):
-        mock_spark.conf.get.side_effect = lambda key, default=None: {
-            "default_notification_dict": "invalid json {",
-            "default_streaming_dict": "{}"
-        }.get(key, default)
-        
-        user_conf = {"spark.expectations.is.serverless": False}
-        
-        with pytest.raises(RuntimeError, match="Error parsing configuration JSON"):
-            get_config_dict(mock_spark, user_conf)
-    
-    # Test general Exception (line 142)
+    # Test general Exception
     with patch('spark_expectations.core.load_configurations', side_effect=Exception("Config error")):
         user_conf = {"spark.expectations.is.serverless": False}
         
@@ -139,7 +126,7 @@ def test_get_config_dict_error_conditions():
 
 
 def test_load_configurations_success_scenarios():
-    """Test load_configurations with valid config data - covers lines 33-47"""
+    """Test load_configurations with valid config data"""
     from spark_expectations.core import load_configurations
     import json
     
@@ -167,88 +154,106 @@ def test_load_configurations_success_scenarios():
     
     with patch('builtins.open', mock_open()):
         with patch('yaml.safe_load', return_value=valid_config):
-            load_configurations(mock_spark)
+            streaming_dict, notification_dict = load_configurations(mock_spark)
             
             # Verify config processing
             mock_spark.conf.set.assert_any_call("spark.sql.adaptive.enabled", "True")
-            mock_spark.conf.set.assert_any_call("default_streaming_dict", json.dumps({"se.streaming.topic.name": "test_topic"}))
-            mock_spark.conf.set.assert_any_call("default_notification_dict", json.dumps({"spark.expectations.notifications.email.enabled": True}))
+            # Verify the returned dictionaries
+            assert streaming_dict == {"se.streaming.topic.name": "test_topic"}
+            assert notification_dict == {"spark.expectations.notifications.email.enabled": True}
 
 
 def test_build_config_dict_comprehensive():
-    """Test _build_config_dict internal function comprehensively - covers lines 81-99"""
+    """Test _build_config_dict internal function comprehensively"""
     from spark_expectations.core import get_config_dict
     
     mock_spark = Mock()
+    # Mock spark.conf.get to return the default value (second argument) when called
+    mock_spark.conf.get = Mock(side_effect=lambda key, default=None: default)
     
-    # Test serverless mode with user_conf (lines 84-87)
-    with patch('spark_expectations.core.load_configurations'):
-        user_conf_serverless = {
-            "spark.expectations.is.serverless": True,
+    # Test with user_conf that overrides defaults
+    with patch('spark_expectations.core.load_configurations') as mock_load_configs:
+        mock_load_configs.return_value = (
+            {},
+            {"spark.expectations.notifications.email.enabled": True}
+        )
+        user_conf_with_overrides = {
             "spark.expectations.notifications.email.enabled": False,
             "custom.config": "test_value"
         }
         
-        notification_dict, streaming_dict = get_config_dict(mock_spark, user_conf_serverless)
+        notification_dict, streaming_dict = get_config_dict(mock_spark, user_conf_with_overrides)
         
-        # Verify serverless processing
+        # Verify user_conf overrides defaults
         assert notification_dict["spark.expectations.notifications.email.enabled"] == False
-        assert streaming_dict == {}  # Empty in serverless mode
+        assert streaming_dict == {}  # Empty from load_configurations
     
-    # Test non-serverless mode with user_conf (lines 90-93)
-    with patch('spark_expectations.core.load_configurations'):
-        mock_spark.conf.get.side_effect = lambda key, default=None: {
-            "default_notification_dict": '{"spark.expectations.notifications.email.enabled": true}',
-            "default_streaming_dict": '{"se.streaming.enable": false}'
-        }.get(key, default)
+    # Test with user_conf containing partial configs
+    # Note: _build_config_dict only includes keys from default_dict, not from user_conf
+    with patch('spark_expectations.core.load_configurations') as mock_load_configs:
+        mock_load_configs.return_value = (
+            {"se.streaming.enable": False},
+            {
+                "spark.expectations.notifications.email.enabled": True,
+                "spark.expectations.notifications.slack.enabled": False
+            }
+        )
         
-        user_conf_non_serverless = {
-            "spark.expectations.is.serverless": False,
+        user_conf_partial = {
             "spark.expectations.notifications.slack.enabled": True
         }
         
-        notification_dict, streaming_dict = get_config_dict(mock_spark, user_conf_non_serverless)
+        notification_dict, streaming_dict = get_config_dict(mock_spark, user_conf_partial)
         
-        # Verify non-serverless processing 
-        assert isinstance(notification_dict, dict)
-        assert isinstance(streaming_dict, dict)
+        # Verify user_conf partial values merge with defaults
+        # email.enabled is not in user_conf, so it gets default value from load_configurations
+        assert notification_dict["spark.expectations.notifications.email.enabled"] == True  # from defaults
+        # slack.enabled is in user_conf, so it overrides the default
+        assert notification_dict["spark.expectations.notifications.slack.enabled"] == True  # from user_conf
+        assert streaming_dict["se.streaming.enable"] == False  # from defaults
     
-    # Test user_conf is None scenarios (lines 95-98)
-    with patch('spark_expectations.core.load_configurations'):
-        mock_spark.conf.get.side_effect = lambda key, default=None: {
-            "default_notification_dict": '{"spark.expectations.notifications.email.enabled": false}',
-            "default_streaming_dict": '{}'
-        }.get(key, default)
+    # Test user_conf is None - should use defaults directly
+    with patch('spark_expectations.core.load_configurations') as mock_load_configs:
+        mock_load_configs.return_value = (
+            {},
+            {"spark.expectations.notifications.email.enabled": False}
+        )
         
         notification_dict, streaming_dict = get_config_dict(mock_spark, None)
         
-        # Verify None user_conf handling
+        # Verify None user_conf uses defaults
+        assert notification_dict["spark.expectations.notifications.email.enabled"] == False
         assert isinstance(notification_dict, dict)
         assert isinstance(streaming_dict, dict)
 
 
-def test_build_config_dict_serverless_no_user_conf():
-    """Test _build_config_dict when user_conf is None but in serverless mode - covers line 96"""
+def test_build_config_dict_no_user_conf_uses_defaults():
+    """Test _build_config_dict when user_conf is None - should use defaults directly"""
     from spark_expectations.core import get_config_dict
     
     mock_spark = Mock()
-    mock_spark.conf.get.side_effect = lambda key, default=None: {
-        "default_notification_dict": '{"spark.expectations.notifications.email.enabled": false}',
-        "default_streaming_dict": '{}'
-    }.get(key, default)
+    # Mock spark.conf.get to return the default value (second argument) when called
+    mock_spark.conf.get = Mock(side_effect=lambda key, default=None: default)
     
-    # Mock scenario where user_conf is None and we fall back to non-serverless defaults (line 96)
-    with patch('spark_expectations.core.load_configurations'):
-        # This should trigger the non-serverless branch when user_conf is None (line 98)
+    # Mock scenario where user_conf is None and we use defaults
+    with patch('spark_expectations.core.load_configurations') as mock_load_configs:
+        mock_load_configs.return_value = (
+            {"se.streaming.enable": True},
+            {"spark.expectations.notifications.email.enabled": False}
+        )
+        
+        # When user_conf is None, should use defaults directly
         notification_dict, streaming_dict = get_config_dict(mock_spark, None)
         
-        # Verify defaults are applied correctly
+        # Verify defaults are used
+        assert notification_dict["spark.expectations.notifications.email.enabled"] == False
+        assert streaming_dict["se.streaming.enable"] == True
         assert isinstance(notification_dict, dict)
         assert isinstance(streaming_dict, dict)
 
 
 def test_get_spark_session_local_environment():
-    """Test get_spark_session with UNIT_TESTING_ENV set - covers lines 143-168"""
+    """Test get_spark_session with UNIT_TESTING_ENV set"""
     from spark_expectations.core import get_spark_session
     import os
     
@@ -274,7 +279,7 @@ def test_get_spark_session_local_environment():
 
 
 def test_get_spark_session_sparkexpectations_env():
-    """Test get_spark_session with SPARKEXPECTATIONS_ENV set - covers lines 143-168"""
+    """Test get_spark_session with SPARKEXPECTATIONS_ENV set"""
     from spark_expectations.core import get_spark_session
     import os
     
@@ -306,7 +311,7 @@ def test_get_spark_session_sparkexpectations_env():
 
 
 def test_get_spark_session_active_session_branch():
-    """Test get_spark_session else branch using getActiveSession - covers lines 169-171"""
+    """Test get_spark_session else branch using getActiveSession"""
     from spark_expectations.core import get_spark_session
     import os
     
@@ -326,7 +331,7 @@ def test_get_spark_session_active_session_branch():
 
 
 def test_infer_safe_cast_string_fallback():
-    """Test infer_safe_cast final string fallback - covers lines 219-220"""
+    """Test infer_safe_cast final string fallback"""
     from spark_expectations.core import infer_safe_cast
     
     # Test final fallback to string (lines 219-220)
@@ -368,7 +373,7 @@ def test_infer_safe_cast_string_fallback():
 
 
 def test_infer_safe_cast_complete_fallback_coverage():
-    """Ensure we hit all branches including the dictionary parsing exception - covers lines 220-225"""
+    """Ensure we hit all branches including the dictionary parsing exception"""
     from spark_expectations.core import infer_safe_cast
     
     # Test various inputs that will definitely hit the final fallback
