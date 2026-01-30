@@ -719,3 +719,307 @@ def test_process_message_template_render_exception(mock_log, mock_fs_loader, moc
     assert mail_content.startswith("Error: Failed to render custom email template.")
     assert "Original content:" in mail_content
     assert content_type == "plain"
+
+
+# =============================================================================
+# Retry Logic Tests
+# =============================================================================
+
+
+@patch("spark_expectations.notifications.plugins.email.time.sleep")
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_send_notification_retry_success_on_second_attempt(_mock_context, mock_sleep):
+    """Test that send_notification succeeds on retry after first failure"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_mail = True
+    _mock_context.get_mail_from = "sender@example.com"
+    _mock_context.get_to_mail = "receiver@example.com"
+    _mock_context.get_mail_subject = "Test Email"
+    _mock_context.get_mail_smtp_server = "mailhost.example.com"
+    _mock_context.get_mail_smtp_port = 587
+    _mock_context.get_enable_smtp_server_auth = False
+
+    mock_config_args = {"message": "Test Email Body"}
+
+    with (
+        patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp,
+        patch("spark_expectations.notifications.plugins.email.MIMEMultipart") as _mock_mltp,
+        patch("spark_expectations.notifications.plugins.email._log") as mock_log,
+    ):
+        # First call fails, second succeeds
+        mock_server = MagicMock()
+        mock_smtp.return_value = mock_server
+        mock_server.sendmail.side_effect = [Exception("Temporary failure"), None]
+
+        # act
+        email_handler.send_notification(
+            _context=_mock_context,
+            _config_args=mock_config_args,
+            max_retries=3,
+            base_retry_delay=0.1,
+        )
+
+        # assert - should have called SMTP twice (first failed, second succeeded)
+        assert mock_smtp.call_count == 2
+        assert mock_server.sendmail.call_count == 2
+        mock_sleep.assert_called_once()  # Should have slept once between retries
+        mock_log.warning.assert_called()  # Should have logged the retry warning
+
+
+@patch("spark_expectations.notifications.plugins.email.time.sleep")
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_send_notification_retry_all_attempts_exhausted(_mock_context, mock_sleep):
+    """Test that exception is raised after all retry attempts are exhausted"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_mail = True
+    _mock_context.get_mail_from = "sender@example.com"
+    _mock_context.get_to_mail = "receiver@example.com"
+    _mock_context.get_mail_subject = "Test Email"
+    _mock_context.get_mail_smtp_server = "mailhost.example.com"
+    _mock_context.get_mail_smtp_port = 587
+    _mock_context.get_enable_smtp_server_auth = False
+
+    mock_config_args = {"message": "Test Email Body"}
+
+    with (
+        patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp,
+        patch("spark_expectations.notifications.plugins.email._log") as mock_log,
+        pytest.raises(SparkExpectationsEmailException) as exc_info,
+    ):
+        mock_server = MagicMock()
+        mock_smtp.return_value = mock_server
+        mock_server.sendmail.side_effect = Exception("Persistent failure")
+
+        # act
+        email_handler.send_notification(
+            _context=_mock_context,
+            _config_args=mock_config_args,
+            max_retries=3,
+            base_retry_delay=0.1,
+        )
+
+    # assert
+    assert "after 3 attempts" in str(exc_info.value)
+    assert "Persistent failure" in str(exc_info.value)
+    assert mock_smtp.call_count == 3
+    assert mock_sleep.call_count == 2  # Sleep between attempts 1-2 and 2-3
+    mock_log.error.assert_called()  # Should have logged the final error
+
+
+@patch("spark_expectations.notifications.plugins.email.time.sleep")
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_send_notification_retry_concurrent_connection_error_exponential_backoff(_mock_context, mock_sleep):
+    """Test that concurrent connection error (432) uses exponential backoff"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_mail = True
+    _mock_context.get_mail_from = "sender@example.com"
+    _mock_context.get_to_mail = "receiver@example.com"
+    _mock_context.get_mail_subject = "Test Email"
+    _mock_context.get_mail_smtp_server = "smtp.outlook.com"
+    _mock_context.get_mail_smtp_port = 587
+    _mock_context.get_enable_smtp_server_auth = False
+
+    mock_config_args = {"message": "Test Email Body"}
+
+    with (
+        patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp,
+        pytest.raises(SparkExpectationsEmailException),
+    ):
+        mock_server = MagicMock()
+        mock_smtp.return_value = mock_server
+        # Simulate Microsoft 432 concurrent connection error
+        mock_server.sendmail.side_effect = Exception(
+            "(432, b'4.3.2 Concurrent connections limit exceeded')"
+        )
+
+        # act
+        email_handler.send_notification(
+            _context=_mock_context,
+            _config_args=mock_config_args,
+            max_retries=3,
+            base_retry_delay=5.0,
+        )
+
+    # assert - verify exponential backoff delays for 432 error
+    # First retry: 5.0 * (2^0) = 5.0
+    # Second retry: 5.0 * (2^1) = 10.0
+    sleep_calls = [call[0][0] for call in mock_sleep.call_args_list]
+    assert sleep_calls[0] == 5.0   # First retry delay
+    assert sleep_calls[1] == 10.0  # Second retry delay (exponential)
+
+
+@patch("spark_expectations.notifications.plugins.email.time.sleep")
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_send_notification_retry_server_cleanup_on_failure(_mock_context, mock_sleep):
+    """Test that server connection is properly closed on failure before retry"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_mail = True
+    _mock_context.get_mail_from = "sender@example.com"
+    _mock_context.get_to_mail = "receiver@example.com"
+    _mock_context.get_mail_subject = "Test Email"
+    _mock_context.get_mail_smtp_server = "mailhost.example.com"
+    _mock_context.get_mail_smtp_port = 587
+    _mock_context.get_enable_smtp_server_auth = False
+
+    mock_config_args = {"message": "Test Email Body"}
+
+    with (
+        patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp,
+        patch("spark_expectations.notifications.plugins.email.MIMEMultipart"),
+    ):
+        mock_server = MagicMock()
+        mock_smtp.return_value = mock_server
+        # Fail on first attempt, succeed on second
+        mock_server.sendmail.side_effect = [Exception("Temporary failure"), None]
+
+        # act
+        email_handler.send_notification(
+            _context=_mock_context,
+            _config_args=mock_config_args,
+            max_retries=3,
+            base_retry_delay=0.1,
+        )
+
+        # assert - server.quit should be called for cleanup after failure and after success
+        # First call fails -> quit called in cleanup
+        # Second call succeeds -> quit called normally
+        assert mock_server.quit.call_count == 2
+
+
+@patch("spark_expectations.notifications.plugins.email.time.sleep")
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_send_notification_retry_with_custom_max_retries(_mock_context, mock_sleep):
+    """Test that custom max_retries parameter is respected"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_mail = True
+    _mock_context.get_mail_from = "sender@example.com"
+    _mock_context.get_to_mail = "receiver@example.com"
+    _mock_context.get_mail_subject = "Test Email"
+    _mock_context.get_mail_smtp_server = "mailhost.example.com"
+    _mock_context.get_mail_smtp_port = 587
+    _mock_context.get_enable_smtp_server_auth = False
+
+    mock_config_args = {"message": "Test Email Body"}
+
+    with (
+        patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp,
+        pytest.raises(SparkExpectationsEmailException) as exc_info,
+    ):
+        mock_server = MagicMock()
+        mock_smtp.return_value = mock_server
+        mock_server.sendmail.side_effect = Exception("Failure")
+
+        # act - use custom max_retries of 5
+        email_handler.send_notification(
+            _context=_mock_context,
+            _config_args=mock_config_args,
+            max_retries=5,
+            base_retry_delay=0.1,
+        )
+
+    # assert
+    assert "after 5 attempts" in str(exc_info.value)
+    assert mock_smtp.call_count == 5
+    assert mock_sleep.call_count == 4  # Sleep between each retry
+
+
+@patch("spark_expectations.notifications.plugins.email.time.sleep")
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_send_notification_retry_non_rate_limit_error_linear_backoff(_mock_context, mock_sleep):
+    """Test that non-rate-limit errors use linear backoff instead of exponential"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_mail = True
+    _mock_context.get_mail_from = "sender@example.com"
+    _mock_context.get_to_mail = "receiver@example.com"
+    _mock_context.get_mail_subject = "Test Email"
+    _mock_context.get_mail_smtp_server = "mailhost.example.com"
+    _mock_context.get_mail_smtp_port = 587
+    _mock_context.get_enable_smtp_server_auth = False
+
+    mock_config_args = {"message": "Test Email Body"}
+
+    with (
+        patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp,
+        pytest.raises(SparkExpectationsEmailException),
+    ):
+        mock_server = MagicMock()
+        mock_smtp.return_value = mock_server
+        # Generic error (not 432)
+        mock_server.sendmail.side_effect = Exception("Generic SMTP error")
+
+        # act
+        email_handler.send_notification(
+            _context=_mock_context,
+            _config_args=mock_config_args,
+            max_retries=3,
+            base_retry_delay=2.0,
+        )
+
+    # assert - verify linear backoff delays for non-432 errors
+    # First retry: 2.0 * 1 = 2.0
+    # Second retry: 2.0 * 2 = 4.0
+    sleep_calls = [call[0][0] for call in mock_sleep.call_args_list]
+    assert sleep_calls[0] == 2.0  # First retry delay
+    assert sleep_calls[1] == 4.0  # Second retry delay (linear)
+
+
+@patch("spark_expectations.notifications.plugins.email.time.sleep")
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_send_notification_retry_logs_warning_on_each_failure(_mock_context, mock_sleep):
+    """Test that a warning is logged for each failed attempt except the last"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_mail = True
+    _mock_context.get_mail_from = "sender@example.com"
+    _mock_context.get_to_mail = "receiver@example.com"
+    _mock_context.get_mail_subject = "Test Email"
+    _mock_context.get_mail_smtp_server = "mailhost.example.com"
+    _mock_context.get_mail_smtp_port = 587
+    _mock_context.get_enable_smtp_server_auth = False
+
+    mock_config_args = {"message": "Test Email Body"}
+
+    with (
+        patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp,
+        patch("spark_expectations.notifications.plugins.email._log") as mock_log,
+        pytest.raises(SparkExpectationsEmailException),
+    ):
+        mock_server = MagicMock()
+        mock_smtp.return_value = mock_server
+        mock_server.sendmail.side_effect = Exception("Test error")
+
+        # act
+        email_handler.send_notification(
+            _context=_mock_context,
+            _config_args=mock_config_args,
+            max_retries=3,
+            base_retry_delay=0.1,
+        )
+
+    # assert - 2 warnings for retries, 1 error for final failure
+    assert mock_log.warning.call_count == 2
+    assert mock_log.error.call_count == 1
+
+    # Verify warning messages contain attempt numbers
+    warning_calls = [str(call) for call in mock_log.warning.call_args_list]
+    assert any("1/3" in call for call in warning_calls)
+    assert any("2/3" in call for call in warning_calls)
+
+
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_send_notification_no_retry_when_mail_disabled(_mock_context):
+    """Test that no retries occur when mail is disabled"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_mail = False
+
+    mock_config_args = {"message": "Test Email Body"}
+
+    with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp:
+        # act
+        email_handler.send_notification(
+            _context=_mock_context,
+            _config_args=mock_config_args,
+            max_retries=3,
+        )
+
+        # assert - SMTP should never be called
+        mock_smtp.assert_not_called()

@@ -1,4 +1,5 @@
 import json
+import time
 from typing import Dict, Union, Optional
 import smtplib
 from email.mime.text import MIMEText
@@ -154,18 +155,28 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
         self,
         _context: SparkExpectationsContext,
         _config_args: Dict[Union[str], Union[str, bool]],
+        max_retries: int = 4,
+        base_retry_delay: float = 5.0,
     ) -> None:
         """
-        function to send email notification for requested mail id's
+        function to send email notification for requested mail id's with retry logic
         Args:
             _context: object of SparkExpectationsContext
             _config_args: dict which consists of: receiver mail(str), subject: subject of
                           the mail(str) and body: body of the mail(str)
+            max_retries: maximum number of retry attempts (default: 4)
+            base_retry_delay: initial delay between retries in seconds (default: 5.0)
         Returns:
 
         """
-        try:
-            if _context.get_enable_mail is True:
+        if _context.get_enable_mail is not True:
+            return
+
+        last_exception = None
+
+        for attempt in range(1, max_retries + 1):
+            server = None
+            try:
                 msg = MIMEMultipart()
                 msg["From"] = _context.get_mail_from
                 msg["To"] = _context.get_to_mail
@@ -187,10 +198,42 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
                     text,
                 )
                 server.quit()
+                server = None  # Mark as closed
 
                 _log.info("email sent successfully")
+                return  # Success, exit the method
 
-        except Exception as e:
-            raise SparkExpectationsEmailException(
-                f"error occurred while sending email notification from spark expectations project {e}"
-            )
+            except Exception as e:
+                last_exception = e
+                # Ensure server connection is closed before retry
+                if server is not None:
+                    try:
+                        server.quit()
+                    except Exception:
+                        pass  # Ignore cleanup errors
+
+                if attempt < max_retries:
+                    # Use longer delays for concurrent connection errors (432)
+                    error_str = str(e)
+                    if "432" in error_str or "concurrent" in error_str.lower():
+                        # Longer delay for rate-limiting errors with exponential backoff
+                        wait_time = base_retry_delay * (2 ** (attempt - 1))
+                    else:
+                        wait_time = base_retry_delay * attempt
+
+                    _log.warning(
+                        f"Email send attempt {attempt}/{max_retries} failed: {e}. "
+                        f"Retrying in {wait_time} seconds..."
+                    )
+                    time.sleep(wait_time)
+                else:
+                    _log.error(
+                        f"Email send attempt {attempt}/{max_retries} failed: {e}. "
+                        f"No more retries left."
+                    )
+
+        # All retries exhausted
+        raise SparkExpectationsEmailException(
+            f"error occurred while sending email notification from spark expectations project "
+            f"after {max_retries} attempts: {last_exception}"
+        )
