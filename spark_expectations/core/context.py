@@ -38,6 +38,7 @@ class SparkExpectationsContext:
         self._dq_detailed_stats_table_name: Optional[str] = None
         self._final_table_name: Optional[str] = None
         self._error_table_name: Optional[str] = None
+        self._error_table_name_user_specified: bool = False
         self._row_dq_rule_type_name: str = "row_dq"
         self._agg_dq_rule_type_name: str = "agg_dq"
         self._query_dq_rule_type_name: str = "query_dq"
@@ -335,16 +336,17 @@ class SparkExpectationsContext:
             accessing it"""
         )
 
-    def set_error_table_name(self, error_table_name: str) -> None:
+    def set_error_table_name(self, error_table_name: str, user_specified: bool = True) -> None:
         self._error_table_name = error_table_name
+        self._error_table_name_user_specified = user_specified
 
     @property
     def get_error_table_name(self) -> str:
         """
-        Get dq_stats_table_name to which the final stats of the dq job will be written into
+        Get error_table_name to which the final stats of the dq job will be written into
 
         Returns:
-            str: returns the dq_stats_table_name
+            str: returns error_table_name attribute value
         """
         if self._error_table_name:
             return self._error_table_name
@@ -352,6 +354,13 @@ class SparkExpectationsContext:
             """The spark expectations context is not set completely, please assign '_error_table_name' before 
             accessing it"""
         )
+
+    @property
+    def get_error_table_name_user_specified(self) -> bool:
+        """
+        Returns True if user override default error table name, otherwise False
+        """
+        return self._error_table_name_user_specified
 
     def set_min_priority_email(self, min_priority_email: str) -> None:
         self._min_priority_email = min_priority_email

@@ -28,7 +28,6 @@ class SparkExpectationsRegulateFlow:
         _writer: SparkExpectationsWriter,
         _notification: SparkExpectationsNotify,
         expectations: Dict[str, List[dict]],
-        table_name: str,
         _input_count: int = 0,
     ) -> Any:
         """
@@ -39,7 +38,6 @@ class SparkExpectationsRegulateFlow:
             _writer: SparkExpectationsWriter class object
             _notification: SparkExpectationsNotify class object
             expectations: expectations dictionary which contains rules
-            table_name: name of the table
             _input_count: number of records in the source dataframe
         Returns:
                Any: returns function
@@ -114,7 +112,7 @@ class SparkExpectationsRegulateFlow:
 
                     _error_count, _error_df = _writer.write_error_records_final(
                         _df_dq,
-                        f"{table_name}_error",
+                        _context.get_error_table_name,
                         _context.get_row_dq_rule_type_name,
                     )
                     if _context.get_summarized_row_dq_res:

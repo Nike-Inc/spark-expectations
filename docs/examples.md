@@ -63,7 +63,7 @@ se_user_conf = {
 17. When `user_config.se_notifications_on_error_drop_exceeds_threshold_breach` parameter set to `True` enables notification when error threshold reaches above the configured value 
 18. When `user_config.se_notifications_on_rules_action_if_failed_set_ignore` parameter set to `True` enables notification when rules action is set to ignore if failed 
 19. The `user_config.se_notifications_on_error_drop_threshold` parameter captures error drop threshold value 
-20. The `user_config.se_enable_error_table` parameter, which controls whether error data to load into error table, is set to true by default 
+20. The `user_config.se_enable_error_table` parameter, which controls whether error data to load into error table, is set to true by default. The default error table name is `<target_table>_error`; users can override it by calling `set_error_table_name(...)` on the `SparkExpectations` instance context (for example, `se._context.set_error_table_name("catalog.schema.custom_error_table")`) before executing the decorated function.
 21. When `user_config.enable_query_dq_detailed_result` parameter set to `True`, enables the option to capture the query_dq detailed stats to detailed_stats table. By default set to `False`
 22. When `user_config.enable_agg_dq_detailed_result` parameter set to `True`, enables the option to capture the agg_dq detailed stats to detailed_stats table. By default set to `False`
 23. The `user_config.querydq_output_custom_table_name` parameter is used to specify the name of the custom query_dq output table which captures the output of the alias queries passed in the query dq expectation. Default is <stats_table>_custom_output 
