@@ -6,6 +6,7 @@ from typing import Dict, Optional, Any, Union, List, TypeAlias, overload
 from pyspark.version import __version__ as spark_version
 from pyspark import StorageLevel
 from pyspark import sql
+from pyspark.sql.functions import md5, concat_ws, col
 
 
 from spark_expectations import _log
@@ -96,6 +97,24 @@ class SparkExpectations:
     debugger: bool = False
     stats_streaming_options: Optional[Dict[str, Union[str, bool]]] = None
 
+    def _add_hash_columns(self, df: "DataFrame") -> "DataFrame":
+        """
+        Add hash columns to the rules DataFrame.
+
+        Args:
+            df: The rules DataFrame
+
+        Returns:
+            DataFrame with id_hash and expectation_hash columns added
+        """
+        return df.withColumn(
+            "id_hash",
+            md5(concat_ws("|", col("product_id"), col("table_name"), col("rule"), col("rule_type")))
+        ).withColumn(
+            "expectation_hash",
+            md5(col("expectation"))
+        )
+    
     def __post_init__(self) -> None:
         if isinstance(self.rules_df, DataFrame):  # type: ignore
             try:
@@ -143,6 +162,7 @@ class SparkExpectations:
         self._context.set_debugger_mode(self.debugger)
         self._context.set_dq_stats_table_name(self.stats_table)
         self._context.set_dq_detailed_stats_table_name(f"{self.stats_table}_detailed")
+        self.rules_df = self._add_hash_columns(self.rules_df)
         # self.rules_df = self.rules_df.persist(StorageLevel.MEMORY_AND_DISK)
 
     # TODO Add target_error_table_writer and stats_table_writer as parameters to this function so this takes precedence

@@ -1275,4 +1275,3 @@ class SparkExpectationsWriter:
         except Exception as e:
             _log.error(f"Error stopping streaming query: {e}")
             return False
-
