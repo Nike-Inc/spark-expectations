@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple, List, Any
 from datetime import datetime, timezone
@@ -919,8 +920,7 @@ class SparkExpectationsWriter:
                 .withColumn("success_percentage", sql_round(df.success_percentage, 2))
                 .withColumn("error_percentage", sql_round(df.error_percentage, 2))
                 .withColumn("dq_env", lit(dq_env))
-                .withColumn("databricks_workspace_id", lit(self._context.get_dbr_workspace_id))
-                .withColumn("databricks_hostname", lit(self._context.get_dbr_workspace_url))
+                .withColumn("se_job_metadata", lit(json.dumps(self._context.get_se_job_metadata)))
             )
 
             self._context.set_stats_dict(df)

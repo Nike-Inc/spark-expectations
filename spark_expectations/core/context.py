@@ -1,9 +1,11 @@
 # pylint: disable=too-many-lines
 import os
+from importlib import metadata
 from datetime import timezone
 from datetime import datetime
 from dataclasses import dataclass
 from uuid import uuid1
+import ast
 from typing import Dict, Optional, List, Tuple, Any
 from pyspark.sql import DataFrame, SparkSession
 from spark_expectations.config.user_config import Constants as user_config
@@ -102,6 +104,7 @@ class SparkExpectationsContext:
         self._source_query_dq_result: Optional[List[Dict[str, str]]] = None
         self._final_query_dq_result: Optional[List[Dict[str, str]]] = None
         self._job_metadata: Optional[str] = None
+        self._se_job_metadata: Optional[Dict[str, Any]] = None
 
         self._source_agg_dq_detailed_stats: Optional[List[Tuple]] = None
         self._source_query_dq_detailed_stats: Optional[List[Tuple]] = None
@@ -258,6 +261,124 @@ class SparkExpectationsContext:
             return "local"
         except Exception:
             # Catch-all for any unexpected errors; return safe default
+            return "local"
+
+    @property
+    def get_spark_version(self) -> str:
+        """
+        This function returns the Spark version.
+
+        Returns:
+            str: Returns the Spark version if available, "unknown" otherwise
+        """
+        try:
+            spark_version = getattr(self.spark, "version", None)
+            return spark_version if spark_version else "unknown"
+        except Exception:
+            # Catch-all for any unexpected errors; return safe default
+            return "unknown"
+
+    @property
+    def get_spark_expectations_version(self) -> str:
+        """
+        This function returns the Spark Expectations package version.
+
+        Returns:
+            str: Returns the package version if available, "unknown" otherwise
+        """
+        try:
+            return metadata.version("spark-expectations")
+        except metadata.PackageNotFoundError:
+            return "unknown"
+        except Exception:
+            # Catch-all for any unexpected errors; return safe default
+            return "unknown"
+
+    @property
+    def get_se_job_metadata(self) -> dict:
+        """
+        This function returns Spark Expectations job metadata for local/Databricks runtimes.
+
+        Returns:
+            dict: Job metadata including versions and runtime environment details.
+        """
+        dbr_version = self.get_dbr_version
+        workspace_url = self.get_dbr_workspace_url
+        workspace_id = self.get_dbr_workspace_id
+
+        is_databricks = (
+            dbr_version is not None or workspace_url != "local" or workspace_id != "local"
+        )
+
+        runtime_env = {
+            "host": "databricks" if is_databricks else "local",
+            "info": {
+                "workspace_url": "" if not is_databricks else workspace_url,
+                "workspace_id": "" if not is_databricks else workspace_id,
+                "dbr_version": "" if not is_databricks else str(dbr_version),
+                "job_id": "" if not is_databricks else self.get_dbr_job_id,
+            },
+        }
+
+        default_metadata = {
+            "se_version": self.get_spark_expectations_version,
+            "spark_version": self.get_spark_version,
+            "runtime_env": runtime_env,
+        }
+        if self._se_job_metadata is not None:
+            merged_metadata = dict(default_metadata)
+            merged_metadata.update(self._se_job_metadata)
+            return merged_metadata
+
+        return default_metadata
+
+    def set_se_job_metadata(self, se_job_metadata: Optional[Any] = None) -> None:
+        """
+        This function sets Spark Expectations job metadata override.
+
+        Returns:
+            None
+        """
+        if se_job_metadata is None:
+            self._se_job_metadata = None
+            return
+
+        if isinstance(se_job_metadata, dict):
+            self._se_job_metadata = se_job_metadata
+            return
+
+        if isinstance(se_job_metadata, str):
+            try:
+                parsed_value = ast.literal_eval(se_job_metadata)
+                if isinstance(parsed_value, dict):
+                    self._se_job_metadata = parsed_value
+                    return
+            except (ValueError, SyntaxError):
+                pass
+
+            self._se_job_metadata = {"job_metadata": se_job_metadata}
+            return
+
+        self._se_job_metadata = {"job_metadata": str(se_job_metadata)}
+
+    @property
+    def get_dbr_job_id(self) -> str:
+        """
+        This function returns the Databricks job ID if running in a job.
+
+        Returns:
+            str: Returns the job ID if available, "local" otherwise
+        """
+        try:
+            from dbruntime.databricks_repl_context import get_context  # type: ignore
+
+            context = get_context()
+            if context and hasattr(context, "jobId"):
+                job_id_value = context.jobId
+                return "local" if job_id_value is None else str(job_id_value)
+            return "local"
+        except (ImportError, Exception):
+            # Expected when not running in Databricks; return safe default
             return "local"
 
     @property
