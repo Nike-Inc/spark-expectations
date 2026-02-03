@@ -436,7 +436,6 @@ class SparkExpectations:
                             _writer=self._writer,
                             _notification=self._notification,
                             expectations=expectations,
-                            table_name=table_name,
                             _input_count=_input_count,
                         )
 

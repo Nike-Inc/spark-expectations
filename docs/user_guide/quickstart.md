@@ -193,6 +193,9 @@ se = SparkExpectations(
     stats_streaming_options=stats_streaming_config_dict   # (6)!
 )
 
+# Optional: override the default error table name (default: `<target_table>_error`)
+se._context.set_error_table_name(f"{catalog}.{schema}.{target_table_name}_dq_error")
+
 """
 This decorator helps to wrap a function which returns dataframe and apply dataframe rules on it
 
