@@ -1,3 +1,4 @@
+import json
 import os
 import unittest.mock
 from datetime import datetime
@@ -178,8 +179,7 @@ def fixture_create_stats_table():
     meta_dq_run_date DATE,
     meta_dq_run_datetime TIMESTAMP,
     dq_env STRING,
-    databricks_workspace_id STRING,
-    databricks_hostname STRING
+    se_job_metadata STRING
     )
     USING delta
     """
@@ -2049,6 +2049,11 @@ def test_write_error_stats(
         "get_rules_exceeds_threshold",
         input_record.get("row_dq_error_threshold"),
     )
+    setattr(
+        _mock_context,
+        "get_se_job_metadata",
+        {"runtime_env": {"host": "local"}},
+    )
 
     setattr(
         _mock_context,
@@ -2234,8 +2239,8 @@ def test_write_error_stats(
         assert row.dq_status == input_record.get("status")
         assert row.meta_dq_run_id == "product1_run_test"
         assert row.dq_env == "test_env"
-        assert row.databricks_workspace_id == "local"
-        assert row.databricks_hostname == "local"
+        se_job_metadata = json.loads(row.se_job_metadata)
+        assert se_job_metadata.get("runtime_env", {}).get("host") == "local"
 
         assert (
             spark.read.format("kafka")

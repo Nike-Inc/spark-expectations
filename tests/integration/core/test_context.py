@@ -2365,6 +2365,39 @@ def test_get_job_metadata():
     assert context.get_job_metadata is None
 
 
+def test_set_se_job_metadata_dict():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_se_job_metadata({"job": "test_job_metadata"})
+    result = context.get_se_job_metadata
+    assert result.get("job") == "test_job_metadata"
+    assert result.get("runtime_env", {}).get("host") == "local"
+    assert "se_version" in result
+    assert "spark_version" in result
+
+
+def test_set_se_job_metadata_str_dict():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_se_job_metadata("{'job': 'test_job_metadata'}")
+    result = context.get_se_job_metadata
+    assert result.get("job") == "test_job_metadata"
+
+
+def test_set_se_job_metadata_str_non_dict():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_se_job_metadata("test_job_metadata")
+    result = context.get_se_job_metadata
+    assert result.get("job_metadata") == "test_job_metadata"
+
+
+def test_set_se_job_metadata_none():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_se_job_metadata({"job": "test_job_metadata"})
+    context.set_se_job_metadata(None)
+    result = context.get_se_job_metadata
+    assert "job" not in result
+    assert "job_metadata" not in result
+
+
 def test_set_enable_obs_dq_report_result():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
     context.set_enable_obs_dq_report_result(True)
