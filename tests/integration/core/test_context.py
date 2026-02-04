@@ -2389,6 +2389,36 @@ def test_set_se_job_metadata_str_non_dict():
     assert result.get("job_metadata") == "test_job_metadata"
 
 
+def test_set_se_job_metadata_invalid_str():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.set_se_job_metadata("{invalid")
+    result = context.get_se_job_metadata
+    assert result.get("job_metadata") == "{invalid"
+
+
+def test_set_se_job_metadata_non_str_object():
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    payload = ["job", 1]
+    context.set_se_job_metadata(payload)
+    result = context.get_se_job_metadata
+    assert result.get("job_metadata") == str(payload)
+
+
+def test_get_se_job_metadata_databricks_env(monkeypatch):
+    monkeypatch.setenv("DATABRICKS_RUNTIME_VERSION", "13.3")
+    monkeypatch.setenv("DATABRICKS_WORKSPACE_ID", "12345")
+    monkeypatch.setenv("DATABRICKS_HOST", "https://dbc-123.cloud.databricks.com")
+
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    result = context.get_se_job_metadata
+
+    assert result.get("runtime_env", {}).get("host") == "databricks"
+    assert result.get("runtime_env", {}).get("info", {}).get("workspace_id") == "12345"
+    assert result.get("runtime_env", {}).get("info", {}).get("workspace_url") == "dbc-123.cloud.databricks.com"
+    assert result.get("runtime_env", {}).get("info", {}).get("dbr_version") == "13.3"
+    assert result.get("runtime_env", {}).get("info", {}).get("job_id") == "local"
+
+
 def test_set_se_job_metadata_none():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
     context.set_se_job_metadata({"job": "test_job_metadata"})
