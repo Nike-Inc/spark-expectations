@@ -1,6 +1,8 @@
 # pylint: disable=pointless-statement
 from datetime import datetime, timedelta
 from unittest.mock import patch
+import sys
+import types
 import pytest
 from spark_expectations.core import get_spark_session
 from spark_expectations.config.user_config import Constants as user_config
@@ -2417,6 +2419,34 @@ def test_get_se_job_metadata_databricks_env(monkeypatch):
     assert result.get("runtime_env", {}).get("info", {}).get("workspace_url") == "dbc-123.cloud.databricks.com"
     assert result.get("runtime_env", {}).get("info", {}).get("dbr_version") == "13.3"
     assert result.get("runtime_env", {}).get("info", {}).get("job_id") == "local"
+
+
+def test_get_dbr_job_id_from_context(monkeypatch):
+    fake_context = types.SimpleNamespace(jobId=98765)
+    fake_module = types.SimpleNamespace(get_context=lambda: fake_context)
+    monkeypatch.setitem(sys.modules, "dbruntime.databricks_repl_context", fake_module)
+
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    assert context.get_dbr_job_id == "98765"
+
+
+def test_get_dbr_job_id_from_context_none(monkeypatch):
+    fake_context = types.SimpleNamespace(jobId=None)
+    fake_module = types.SimpleNamespace(get_context=lambda: fake_context)
+    monkeypatch.setitem(sys.modules, "dbruntime.databricks_repl_context", fake_module)
+
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    assert context.get_dbr_job_id == "local"
+
+
+def test_get_dbr_workspace_from_context(monkeypatch):
+    fake_context = types.SimpleNamespace(workspaceId="999", browserHostName="dbc-999.cloud.databricks.com")
+    fake_module = types.SimpleNamespace(get_context=lambda: fake_context)
+    monkeypatch.setitem(sys.modules, "dbruntime.databricks_repl_context", fake_module)
+
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    assert context.get_dbr_workspace_id == "999"
+    assert context.get_dbr_workspace_url == "dbc-999.cloud.databricks.com"
 
 
 def test_set_se_job_metadata_none():
