@@ -2441,6 +2441,14 @@ def test_get_dbr_job_id_from_context_none(monkeypatch):
     assert context.get_dbr_job_id == "local"
 
 
+def test_get_dbr_job_id_import_error(monkeypatch):
+    fake_module = types.SimpleNamespace()
+    monkeypatch.setitem(sys.modules, "dbruntime.databricks_repl_context", fake_module)
+
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    assert context.get_dbr_job_id == "local"
+
+
 def test_get_dbr_workspace_from_context(monkeypatch):
     fake_context = types.SimpleNamespace(workspaceId="999", browserHostName="dbc-999.cloud.databricks.com")
     fake_module = types.SimpleNamespace(get_context=lambda: fake_context)
