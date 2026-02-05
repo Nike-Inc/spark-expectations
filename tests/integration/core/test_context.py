@@ -1,8 +1,10 @@
 # pylint: disable=pointless-statement
 from datetime import datetime, timedelta
 from unittest.mock import patch
+from importlib import metadata as importlib_metadata
 import sys
 import types
+import spark_expectations.core.context as context_module
 import pytest
 from spark_expectations.core import get_spark_session
 from spark_expectations.config.user_config import Constants as user_config
@@ -2439,6 +2441,14 @@ def test_get_dbr_job_id_from_context_none(monkeypatch):
     assert context.get_dbr_job_id == "local"
 
 
+def test_get_dbr_job_id_import_error(monkeypatch):
+    fake_module = types.SimpleNamespace()
+    monkeypatch.setitem(sys.modules, "dbruntime.databricks_repl_context", fake_module)
+
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    assert context.get_dbr_job_id == "local"
+
+
 def test_get_dbr_workspace_from_context(monkeypatch):
     fake_context = types.SimpleNamespace(workspaceId="999", browserHostName="dbc-999.cloud.databricks.com")
     fake_module = types.SimpleNamespace(get_context=lambda: fake_context)
@@ -2456,6 +2466,35 @@ def test_set_se_job_metadata_none():
     result = context.get_se_job_metadata
     assert "job" not in result
     assert "job_metadata" not in result
+
+
+def test_get_spark_version_exception():
+    class BadSpark:
+        @property
+        def version(self):
+            raise Exception("boom")
+
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.spark = BadSpark()
+    assert context.get_spark_version == "unknown"
+
+
+def test_get_spark_expectations_version_package_not_found(monkeypatch):
+    def raise_not_found(_name):
+        raise importlib_metadata.PackageNotFoundError
+
+    monkeypatch.setattr(context_module.metadata, "version", raise_not_found)
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    assert context.get_spark_expectations_version == "unknown"
+
+
+def test_get_spark_expectations_version_exception(monkeypatch):
+    def raise_error(_name):
+        raise RuntimeError("boom")
+
+    monkeypatch.setattr(context_module.metadata, "version", raise_error)
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    assert context.get_spark_expectations_version == "unknown"
 
 
 def test_set_enable_obs_dq_report_result():
