@@ -60,6 +60,8 @@ def fixture_product_rules_schema():
             StructField("query_dq_delimiter", StringType(), True),
             StructField("enable_querydq_custom_output", BooleanType(), True),
             StructField("priority", StringType(), False),
+            StructField("id_hash", StringType(), True),
+            StructField("expectation_hash", StringType(), True),
         ]
     )
 
@@ -457,6 +459,8 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                         "enable_error_drop_alert": True,
                         "error_drop_threshold": 10,
                         "priority": "medium",
+                        "id_hash": "null",
+                        "expectation_hash": "null",
                     },
                     {
                         "product_id": "product1",
@@ -473,6 +477,8 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                         "enable_error_drop_alert": False,
                         "error_drop_threshold": 0,
                         "priority": "medium",
+                        "id_hash": "null",
+                        "expectation_hash": "null",
                     },
                     {
                         "action_if_failed": "ignore",
@@ -489,6 +495,8 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                         "table_name": "table1",
                         "tag": "tag3",
                         "priority": "medium",
+                        "id_hash": "null",
+                        "expectation_hash": "null",
                     },
                 ],
                 "agg_dq_rules": [
@@ -507,6 +515,8 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                         "enable_error_drop_alert": False,
                         "error_drop_threshold": 0,
                         "priority": "medium",
+                        "id_hash": "null",
+                        "expectation_hash": "null",
                     },
                     {
                         "action_if_failed": "ignore",
@@ -523,6 +533,8 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                         "table_name": "table1",
                         "tag": "tag10",
                         "priority": "medium",
+                        "id_hash": "null",
+                        "expectation_hash": "null",
                     },
                 ],
                 "query_dq_rules": [
@@ -543,6 +555,8 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                         "expectation_source_f1": "expectation13a",
                         "error_drop_threshold": 0,
                         "priority": "medium",
+                        "id_hash": "null",
+                        "expectation_hash": "null",
                     },
                     {
                         "product_id": "product1",
@@ -561,6 +575,8 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                         "expectation_source_f1": "expectation13a",
                         "error_drop_threshold": 0,
                         "priority": "medium",
+                        "id_hash": "null",
+                        "expectation_hash": "null",
                     },
                     {
                         "product_id": "product1",
@@ -579,6 +595,8 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                         "expectation_source_f1": "expectation13a",
                         "error_drop_threshold": 0,
                         "priority": "medium",
+                        "id_hash": "null",
+                        "expectation_hash": "null",
                     },
                     {
                         "product_id": "product1",
@@ -597,6 +615,8 @@ def test_get_rules_dlt(product_id, table_name, tag, expected_output, mocker, _fi
                         "expectation_source_f1": "expectation13a",
                         "error_drop_threshold": 0,
                         "priority": "medium",
+                        "id_hash": "null",
+                        "expectation_hash": "null",
                     },
                 ],
             },
