@@ -73,6 +73,7 @@ class SparkExpectationsContext:
         self._mail_smtp_server: str
         self._mail_smtp_port: int
         self._mail_smtp_password: Optional[str] = None
+        self._mail_smtp_user_name: Optional[str] = None
         self._smtp_creds_dict: Dict[str, str] = {}
         self._email_custom_body: Optional[str] = None
 
@@ -702,6 +703,24 @@ class SparkExpectationsContext:
 
         else:
             return None
+
+    def set_mail_smtp_user_name(self, mail_smtp_user_name: str) -> None:
+        """
+        Sets the SMTP username for authentication.
+        Args:
+            mail_smtp_user_name: The SMTP username to use for authentication
+        """
+        self._mail_smtp_user_name = mail_smtp_user_name
+
+    @property
+    def get_mail_smtp_user_name(self) -> Optional[str]:
+        """
+        Returns the SMTP username for authentication.
+        Falls back to mail_from if not explicitly set.
+        Returns:
+            str: returns _mail_smtp_user_name or None if not set
+        """
+        return self._mail_smtp_user_name
 
     def set_smtp_creds_dict(self, smtp_creds_dict: Dict[str, str]) -> None:
         """

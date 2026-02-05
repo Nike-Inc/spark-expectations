@@ -59,7 +59,8 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
             _context: SparkExpectationsContext object
             server: smtplib.SMTP object
         """
-        sender = _context.get_mail_from
+        # Use dedicated SMTP username if provided, otherwise fall back to mail_from
+        smtp_user = _context.get_mail_smtp_user_name or _context.get_mail_from
         password = _context.get_mail_smtp_password
 
         if not password:
@@ -76,7 +77,7 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
 
         if password is None:
             raise SparkExpectationsEmailException("SMTP password is not set.")
-        server.login(sender, password)
+        server.login(smtp_user, password)
 
     def _process_message(
         self, _context: SparkExpectationsContext, _config_args: Dict[Union[str], Union[str, bool]]
