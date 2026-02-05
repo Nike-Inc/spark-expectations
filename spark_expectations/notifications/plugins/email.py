@@ -1,4 +1,5 @@
 import json
+import random
 import time
 from typing import Dict, Union, Optional
 import smtplib
@@ -157,16 +158,19 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
         _config_args: Dict[Union[str], Union[str, bool]],
         max_retries: int = 4,
         base_retry_delay: float = 5.0,
+        enable_jitter: bool = True,
     ) -> None:
         """
         function to send email notification for requested mail id's with retry logic
-        
+        and random jitter to handle parallel task execution
+
         Args:
             _context: object of SparkExpectationsContext
             _config_args: dict which consists of: receiver mail(str), subject: subject of
                           the mail(str) and body: body of the mail(str)
             max_retries: maximum number of retry attempts (default: 4)
             base_retry_delay: initial delay between retries in seconds (default: 5.0)
+            enable_jitter: add random jitter to delays to prevent thundering herd (default: True)
         Returns:
 
         """
@@ -174,6 +178,11 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
             return
 
         last_exception = None
+
+        # Add initial random delay to stagger parallel task email attempts (0-3 seconds)
+        if enable_jitter:
+            initial_jitter = random.uniform(0, 3.0)
+            time.sleep(initial_jitter)
 
         for attempt in range(1, max_retries + 1):
             server = None
@@ -222,9 +231,14 @@ class SparkExpectationsEmailPluginImpl(SparkExpectationsNotification):
                     else:
                         wait_time = base_retry_delay * attempt
 
+                    # Add random jitter (0-50% of wait_time) to prevent thundering herd
+                    if enable_jitter:
+                        jitter = random.uniform(0, wait_time * 0.5)
+                        wait_time += jitter
+
                     _log.warning(
                         f"Email send attempt {attempt}/{max_retries} failed: {e}. "
-                        f"Retrying in {wait_time} seconds..."
+                        f"Retrying in {wait_time:.1f} seconds..."
                     )
                     time.sleep(wait_time)
                 else:

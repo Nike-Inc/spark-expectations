@@ -751,12 +751,13 @@ def test_send_notification_retry_success_on_second_attempt(_mock_context, mock_s
         mock_smtp.return_value = mock_server
         mock_server.sendmail.side_effect = [Exception("Temporary failure"), None]
 
-        # act
+        # act - disable jitter for predictable testing
         email_handler.send_notification(
             _context=_mock_context,
             _config_args=mock_config_args,
             max_retries=3,
             base_retry_delay=0.1,
+            enable_jitter=False,
         )
 
         # assert - should have called SMTP twice (first failed, second succeeded)
@@ -790,12 +791,13 @@ def test_send_notification_retry_all_attempts_exhausted(_mock_context, mock_slee
         mock_smtp.return_value = mock_server
         mock_server.sendmail.side_effect = Exception("Persistent failure")
 
-        # act
+        # act - disable jitter for predictable testing
         email_handler.send_notification(
             _context=_mock_context,
             _config_args=mock_config_args,
             max_retries=3,
             base_retry_delay=0.1,
+            enable_jitter=False,
         )
 
     # assert
@@ -832,12 +834,13 @@ def test_send_notification_retry_concurrent_connection_error_exponential_backoff
             "(432, b'4.3.2 Concurrent connections limit exceeded')"
         )
 
-        # act
+        # act - disable jitter for predictable testing
         email_handler.send_notification(
             _context=_mock_context,
             _config_args=mock_config_args,
             max_retries=3,
             base_retry_delay=5.0,
+            enable_jitter=False,
         )
 
     # assert - verify exponential backoff delays for 432 error
@@ -872,12 +875,13 @@ def test_send_notification_retry_server_cleanup_on_failure(_mock_context, mock_s
         # Fail on first attempt, succeed on second
         mock_server.sendmail.side_effect = [Exception("Temporary failure"), None]
 
-        # act
+        # act - disable jitter for predictable testing
         email_handler.send_notification(
             _context=_mock_context,
             _config_args=mock_config_args,
             max_retries=3,
             base_retry_delay=0.1,
+            enable_jitter=False,
         )
 
         # assert - server.quit should be called for cleanup after failure and after success
@@ -909,12 +913,13 @@ def test_send_notification_retry_with_custom_max_retries(_mock_context, mock_sle
         mock_smtp.return_value = mock_server
         mock_server.sendmail.side_effect = Exception("Failure")
 
-        # act - use custom max_retries of 5
+        # act - use custom max_retries of 5, disable jitter for predictable testing
         email_handler.send_notification(
             _context=_mock_context,
             _config_args=mock_config_args,
             max_retries=5,
             base_retry_delay=0.1,
+            enable_jitter=False,
         )
 
     # assert
@@ -947,12 +952,13 @@ def test_send_notification_retry_non_rate_limit_error_linear_backoff(_mock_conte
         # Generic error (not 432)
         mock_server.sendmail.side_effect = Exception("Generic SMTP error")
 
-        # act
+        # act - disable jitter for predictable testing
         email_handler.send_notification(
             _context=_mock_context,
             _config_args=mock_config_args,
             max_retries=3,
             base_retry_delay=2.0,
+            enable_jitter=False,
         )
 
     # assert - verify linear backoff delays for non-432 errors
@@ -987,12 +993,13 @@ def test_send_notification_retry_logs_warning_on_each_failure(_mock_context, moc
         mock_smtp.return_value = mock_server
         mock_server.sendmail.side_effect = Exception("Test error")
 
-        # act
+        # act - disable jitter for predictable testing
         email_handler.send_notification(
             _context=_mock_context,
             _config_args=mock_config_args,
             max_retries=3,
             base_retry_delay=0.1,
+            enable_jitter=False,
         )
 
     # assert - 2 warnings for retries, 1 error for final failure
@@ -1023,3 +1030,179 @@ def test_send_notification_no_retry_when_mail_disabled(_mock_context):
 
         # assert - SMTP should never be called
         mock_smtp.assert_not_called()
+
+
+# =============================================================================
+# Jitter Tests for Parallel Task Handling
+# =============================================================================
+
+
+@patch("spark_expectations.notifications.plugins.email.random.uniform")
+@patch("spark_expectations.notifications.plugins.email.time.sleep")
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_send_notification_jitter_initial_delay(_mock_context, mock_sleep, mock_random):
+    """Test that initial jitter delay is applied when jitter is enabled"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_mail = True
+    _mock_context.get_mail_from = "sender@example.com"
+    _mock_context.get_to_mail = "receiver@example.com"
+    _mock_context.get_mail_subject = "Test Email"
+    _mock_context.get_mail_smtp_server = "mailhost.example.com"
+    _mock_context.get_mail_smtp_port = 587
+    _mock_context.get_enable_smtp_server_auth = False
+
+    mock_config_args = {"message": "Test Email Body"}
+
+    # Mock random.uniform to return predictable values
+    mock_random.return_value = 1.5  # Initial jitter value
+
+    with (
+        patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp,
+        patch("spark_expectations.notifications.plugins.email.MIMEMultipart"),
+    ):
+        mock_server = MagicMock()
+        mock_smtp.return_value = mock_server
+
+        # act - with jitter enabled (default)
+        email_handler.send_notification(
+            _context=_mock_context,
+            _config_args=mock_config_args,
+            enable_jitter=True,
+        )
+
+        # assert - random.uniform should be called for initial jitter
+        mock_random.assert_called_with(0, 3.0)
+        # First sleep call should be the initial jitter
+        assert mock_sleep.call_args_list[0][0][0] == 1.5
+
+
+@patch("spark_expectations.notifications.plugins.email.random.uniform")
+@patch("spark_expectations.notifications.plugins.email.time.sleep")
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_send_notification_jitter_no_initial_delay_when_disabled(_mock_context, mock_sleep, mock_random):
+    """Test that no initial jitter delay when jitter is disabled"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_mail = True
+    _mock_context.get_mail_from = "sender@example.com"
+    _mock_context.get_to_mail = "receiver@example.com"
+    _mock_context.get_mail_subject = "Test Email"
+    _mock_context.get_mail_smtp_server = "mailhost.example.com"
+    _mock_context.get_mail_smtp_port = 587
+    _mock_context.get_enable_smtp_server_auth = False
+
+    mock_config_args = {"message": "Test Email Body"}
+
+    with (
+        patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp,
+        patch("spark_expectations.notifications.plugins.email.MIMEMultipart"),
+    ):
+        mock_server = MagicMock()
+        mock_smtp.return_value = mock_server
+
+        # act - with jitter disabled
+        email_handler.send_notification(
+            _context=_mock_context,
+            _config_args=mock_config_args,
+            enable_jitter=False,
+        )
+
+        # assert - random.uniform should NOT be called when jitter is disabled
+        mock_random.assert_not_called()
+        # No sleep should be called on success without retries
+        mock_sleep.assert_not_called()
+
+
+@patch("spark_expectations.notifications.plugins.email.random.uniform")
+@patch("spark_expectations.notifications.plugins.email.time.sleep")
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_send_notification_jitter_added_to_retry_delays(_mock_context, mock_sleep, mock_random):
+    """Test that jitter is added to retry delays when enabled"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_mail = True
+    _mock_context.get_mail_from = "sender@example.com"
+    _mock_context.get_to_mail = "receiver@example.com"
+    _mock_context.get_mail_subject = "Test Email"
+    _mock_context.get_mail_smtp_server = "mailhost.example.com"
+    _mock_context.get_mail_smtp_port = 587
+    _mock_context.get_enable_smtp_server_auth = False
+
+    mock_config_args = {"message": "Test Email Body"}
+
+    # Mock random.uniform to return predictable values
+    # First call: initial jitter (0-3)
+    # Second call: retry jitter (0 to wait_time*0.5)
+    mock_random.side_effect = [1.0, 0.5]  # Initial jitter=1.0, retry jitter=0.5
+
+    with (
+        patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp,
+        patch("spark_expectations.notifications.plugins.email.MIMEMultipart"),
+    ):
+        mock_server = MagicMock()
+        mock_smtp.return_value = mock_server
+        # Fail first, succeed second
+        mock_server.sendmail.side_effect = [Exception("Temporary failure"), None]
+
+        # act - with jitter enabled
+        email_handler.send_notification(
+            _context=_mock_context,
+            _config_args=mock_config_args,
+            max_retries=3,
+            base_retry_delay=2.0,
+            enable_jitter=True,
+        )
+
+        # assert - sleep should include jitter
+        # First sleep: initial jitter = 1.0
+        # Second sleep: base_retry_delay * 1 + jitter = 2.0 + 0.5 = 2.5
+        sleep_calls = [call[0][0] for call in mock_sleep.call_args_list]
+        assert sleep_calls[0] == 1.0   # Initial jitter
+        assert sleep_calls[1] == 2.5   # Retry delay with jitter (2.0 + 0.5)
+
+
+@patch("spark_expectations.notifications.plugins.email.random.uniform")
+@patch("spark_expectations.notifications.plugins.email.time.sleep")
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_send_notification_jitter_helps_parallel_tasks(_mock_context, mock_sleep, mock_random):
+    """Test that jitter creates different delays for parallel task simulation"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_enable_mail = True
+    _mock_context.get_mail_from = "sender@example.com"
+    _mock_context.get_to_mail = "receiver@example.com"
+    _mock_context.get_mail_subject = "Test Email"
+    _mock_context.get_mail_smtp_server = "mailhost.example.com"
+    _mock_context.get_mail_smtp_port = 587
+    _mock_context.get_enable_smtp_server_auth = False
+
+    mock_config_args = {"message": "Test Email Body"}
+
+    with (
+        patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp,
+        patch("spark_expectations.notifications.plugins.email.MIMEMultipart"),
+    ):
+        mock_server = MagicMock()
+        mock_smtp.return_value = mock_server
+
+        # Simulate first task with jitter=0.5
+        mock_random.return_value = 0.5
+        email_handler.send_notification(
+            _context=_mock_context,
+            _config_args=mock_config_args,
+            enable_jitter=True,
+        )
+        first_task_delay = mock_sleep.call_args_list[0][0][0]
+
+        mock_sleep.reset_mock()
+
+        # Simulate second task with jitter=2.5
+        mock_random.return_value = 2.5
+        email_handler.send_notification(
+            _context=_mock_context,
+            _config_args=mock_config_args,
+            enable_jitter=True,
+        )
+        second_task_delay = mock_sleep.call_args_list[0][0][0]
+
+        # assert - different tasks get different delays
+        assert first_task_delay != second_task_delay
+        assert first_task_delay == 0.5
+        assert second_task_delay == 2.5
