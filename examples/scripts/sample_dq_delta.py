@@ -36,7 +36,10 @@ se: SparkExpectations = SparkExpectations(
     stats_table_writer=writer,
     target_and_error_table_writer=writer,
     debugger=False,
-    stats_streaming_options={user_config.se_enable_streaming: False},
+    stats_streaming_options={
+        user_config.se_enable_streaming: False,
+        user_config.se_streaming_stats_topic_name: "dq-sparkexpectations-stats",
+    },
 )
 
 

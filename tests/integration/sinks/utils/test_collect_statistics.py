@@ -71,8 +71,7 @@ def fixture_create_stats_table():
     meta_dq_run_date DATE,
     meta_dq_run_datetime TIMESTAMP,
     dq_env STRING,
-    databricks_workspace_id STRING,
-    databricks_hostname STRING
+    se_job_metadata STRING
     )
     USING delta
     """
@@ -503,6 +502,11 @@ def test_collect_stats_on_success_failure(
         _mock_context,
         "get_rules_exceeds_threshold",
         input_record.get("row_dq_error_threshold"),
+    )
+    setattr(
+        _mock_context,
+        "get_se_job_metadata",
+        {"runtime_env": {"host": "local"}},
     )
 
     setattr(
@@ -1027,6 +1031,11 @@ def test_collect_stats_on_success_failure_exception(
         _mock_context,
         "get_rules_exceeds_threshold",
         input_record.get("row_dq_error_threshold"),
+    )
+    setattr(
+        _mock_context,
+        "get_se_job_metadata",
+        {"runtime_env": {"host": "local"}},
     )
 
     setattr(
