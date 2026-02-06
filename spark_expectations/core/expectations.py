@@ -6,7 +6,7 @@ from typing import Dict, Optional, Any, Union, List, TypeAlias, overload
 from pyspark.version import __version__ as spark_version
 from pyspark import StorageLevel
 from pyspark import sql
-from pyspark.sql.functions import md5, concat_ws, col, lit, coalesce
+from pyspark.sql.functions import md5, concat_ws, col, lit, coalesce, trim
 
 
 from spark_expectations import _log
@@ -110,10 +110,10 @@ class SparkExpectations:
         return df.withColumn(
             "id_hash",
             md5(concat_ws("_", 
-                coalesce(col("product_id"), lit("")), 
-                coalesce(col("table_name"), lit("")), 
-                coalesce(col("rule"), lit("")), 
-                coalesce(col("rule_type"), lit(""))))
+                trim(coalesce(col("product_id"), lit(""))), 
+                trim(coalesce(col("table_name"), lit(""))), 
+                trim(coalesce(col("rule"), lit(""))), 
+                trim(coalesce(col("rule_type"), lit("")))))
         ).withColumn(
             "expectation_hash",
             md5(col("expectation"))

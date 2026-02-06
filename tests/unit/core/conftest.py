@@ -374,3 +374,25 @@ def different_id_same_expectation_data():
             "priority": "low",
         },
     ]
+
+
+@pytest.fixture
+def rule_data_with_whitespace():
+    """Rule data with leading/trailing whitespace in id fields."""
+    return [{
+        "product_id": "  product1  ",
+        "table_name": " table1 ",
+        "rule": "  rule1",
+        "rule_type": "row_dq  ",
+        "expectation": "col1 > 0",
+        "column_name": "col1",
+        "action_if_failed": "ignore",
+        "tag": "validity",
+        "description": "Test",
+        "enable_for_source_dq_validation": "True",
+        "enable_for_target_dq_validation": "False",
+        "is_active": "True",
+        "enable_error_drop_alert": "False",
+        "error_drop_threshold": "0",
+        "priority": "medium",
+    }]

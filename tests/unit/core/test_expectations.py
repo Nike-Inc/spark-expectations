@@ -199,3 +199,35 @@ class TestAddHashColumns:
         # Should only contain hex characters
         assert all(c in "0123456789abcdef" for c in row["id_hash"])
         assert all(c in "0123456789abcdef" for c in row["expectation_hash"])
+
+    def test_add_hash_columns_trims_whitespace_from_id_fields(
+        self, spark, se_instance, rules_df_schema, base_rule_data, rule_data_with_whitespace
+    ):
+        """Test that whitespace is trimmed from id fields before computing hash."""
+        # Create DataFrames - one with clean data, one with whitespace
+        clean_df = spark.createDataFrame(base_rule_data, schema=rules_df_schema)
+        whitespace_df = spark.createDataFrame(rule_data_with_whitespace, schema=rules_df_schema)
+        
+        # Add hash columns to both
+        clean_result = se_instance._add_hash_columns(clean_df)
+        whitespace_result = se_instance._add_hash_columns(whitespace_df)
+        
+        clean_row = clean_result.collect()[0]
+        whitespace_row = whitespace_result.collect()[0]
+        
+        # id_hash should be identical after trimming whitespace
+        assert clean_row["id_hash"] == whitespace_row["id_hash"]
+
+    def test_add_hash_columns_trims_whitespace_produces_valid_hash(
+        self, spark, se_instance, rules_df_schema, rule_data_with_whitespace
+    ):
+        """Test that trimmed whitespace data still produces valid MD5 hash."""
+        input_df = spark.createDataFrame(rule_data_with_whitespace, schema=rules_df_schema)
+        
+        result_df = se_instance._add_hash_columns(input_df)
+        row = result_df.collect()[0]
+        
+        # Should produce a valid 32-character MD5 hash
+        assert row["id_hash"] is not None
+        assert len(row["id_hash"]) == 32
+        assert all(c in "0123456789abcdef" for c in row["id_hash"])
