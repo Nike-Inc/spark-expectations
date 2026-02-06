@@ -109,7 +109,7 @@ class SparkExpectations:
         """
         return df.withColumn(
             "id_hash",
-            md5(concat_ws("|", 
+            md5(concat_ws("_", 
                 coalesce(col("product_id"), lit("")), 
                 coalesce(col("table_name"), lit("")), 
                 coalesce(col("rule"), lit("")), 
