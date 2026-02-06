@@ -1248,15 +1248,21 @@ def test_get_dq_run_time():
 
 def test_get_dbr_version():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
+
+    # Standard compute returns numeric version strings
     os.environ["DATABRICKS_RUNTIME_VERSION"] = "13"
-    assert context.get_dbr_version == 13
+    assert context.get_dbr_version == "13"
 
     os.environ["DATABRICKS_RUNTIME_VERSION"] = "13.3"
-    assert context.get_dbr_version == 13.3
+    assert context.get_dbr_version == "13.3"
 
-    # Remove the mock to test non-Databricks environment
+    # Serverless compute returns 'client.' prefixed version string
+    os.environ["DATABRICKS_RUNTIME_VERSION"] = "client.1.13"
+    assert context.get_dbr_version == "client.1.13"
+
+    # Non-Databricks environment returns None
     del os.environ["DATABRICKS_RUNTIME_VERSION"]
-    assert context.get_dbr_version == None
+    assert context.get_dbr_version is None
 
 
 def test_get_dbr_workspace_id_from_env():

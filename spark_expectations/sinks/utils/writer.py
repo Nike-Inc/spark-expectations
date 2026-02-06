@@ -747,7 +747,9 @@ class SparkExpectationsWriter:
                 "topic": f"{self._context.get_topic_name}",
             }
 
-        elif self._context.get_dbr_version and self._context.get_dbr_version >= 13.3:
+        elif self._context.get_dbr_version and (
+            self._context.get_dbr_version.startswith("client.") or float(self._context.get_dbr_version) >= 13.3
+        ):
             options = {
                 "kafka.bootstrap.servers": f"{secret_handler.get_secret(self._context.get_server_url_key)}",
                 "kafka.security.protocol": "SASL_SSL",

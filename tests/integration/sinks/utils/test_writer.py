@@ -4309,7 +4309,7 @@ def test_generate_rules_exceeds_threshold_exception():
     "dbr_version,env,expected_options",
     [
         (
-            13.3,
+            "13.3",
             "prod",
             {
                 "kafka.bootstrap.servers": "test-server-url",
@@ -4322,7 +4322,7 @@ def test_generate_rules_exceeds_threshold_exception():
             },
         ),
         (
-            12,
+            "12",
             "local",
             {
                 "kafka.bootstrap.servers": "localhost:9092",
@@ -4331,7 +4331,7 @@ def test_generate_rules_exceeds_threshold_exception():
             },
         ),
         (
-            12,
+            "12",
             "prod",
             {
                 "kafka.bootstrap.servers": "test-server-url",
@@ -4339,6 +4339,19 @@ def test_generate_rules_exceeds_threshold_exception():
                 "kafka.sasl.mechanism": "OAUTHBEARER",
                 "kafka.sasl.jaas.config": """kafkashaded.org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required oauth.client.id='test-client-id'  oauth.client.secret='test-token' oauth.token.endpoint.uri='test-endpoint'; """,
                 "kafka.sasl.login.callback.handler.class": "io.strimzi.kafka.oauth.client.JaasClientOauthLoginCallbackHandler",
+                "topic": "test-topic",
+            },
+        ),
+        (
+            "client.1.13",  # Serverless compute version string
+            "prod",
+            {
+                "kafka.bootstrap.servers": "test-server-url",
+                "kafka.security.protocol": "SASL_SSL",
+                "kafka.sasl.mechanism": "OAUTHBEARER",
+                "kafka.sasl.jaas.config": """kafkashaded.org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="test-client-id" clientSecret="test-token";""",
+                "kafka.sasl.oauthbearer.token.endpoint.url": "test-endpoint",
+                "kafka.sasl.login.callback.handler.class": "kafkashaded.org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler",
                 "topic": "test-topic",
             },
         ),
