@@ -92,6 +92,8 @@ class SparkExpectationsActions:
                     "description",
                     "column_name",
                     "priority",
+                    "id_hash",
+                    "expectation_hash"
                 ]
             ]
         )
