@@ -561,6 +561,16 @@ def test_set_mail_smtp_password():
     assert context.get_mail_smtp_password == "test_password"
 
 
+def test_set_mail_smtp_user_name():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    # Default is None
+    assert context.get_mail_smtp_user_name is None
+    # Set and verify
+    context.set_mail_smtp_user_name("smtp_user@example.com")
+    assert context._mail_smtp_user_name == "smtp_user@example.com"
+    assert context.get_mail_smtp_user_name == "smtp_user@example.com"
+
+
 def test_set_smtp_creds_dict():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_smtp_creds_dict(

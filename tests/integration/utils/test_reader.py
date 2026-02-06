@@ -210,6 +210,27 @@ def fixture_product_rules_pipe():
                 "spark.expectations.notifications.email.enabled": True,
                 "spark.expectations.notifications.email.smtp.host": "smtp.mail.com",
                 "spark.expectations.notifications.email.smtp.port": 587,
+                "spark.expectations.notifications.email.smtp.password": "password",
+                "spark.expectations.notifications.smtp.user.name": "smtp_user@mail.com",
+                "spark.expectations.notifications.email.from": "sender@mail.com",
+                "spark.expectations.notifications.email.to.other.mail.com": "recipient@mail.com",
+                "spark.expectations.notifications.email.subject": "Test email",
+                "spark.expectations.notifications.slack.enabled": False,
+                "spark.expectations.notifications.slack.webhook.url": "",
+                "spark.expectations.notifications.teams.enabled": False,
+                "spark.expectations.notifications.teams.webhook.url": "",
+                "spark.expectations.notifications.pagerduty.enabled": False,
+                "spark.expectations.notifications.pagerduty.integration.key": "",
+                "spark.expectations.notifications.pagerduty.webhook.url": "",
+            },
+            None,
+        ),
+        (
+            {
+                "spark.expectations.notifications.email.smtp.server.auth": True,
+                "spark.expectations.notifications.email.enabled": True,
+                "spark.expectations.notifications.email.smtp.host": "smtp.mail.com",
+                "spark.expectations.notifications.email.smtp.port": 587,
                 "spark.expectations.notifications.smtp.creds.dict": {
                     "se.streaming.secret.type": "cerberus",
                     "se.streaming.cerberus.url": "https://xyz.com",
@@ -358,6 +379,12 @@ def test_set_notification_param(notification, expected_result):
                 mock_context.set_smtp_creds_dict.assert_called_once_with(
                     notification.get("spark.expectations.notifications.smtp.creds.dict")
                 )
+            if notification.get("spark.expectations.notifications.smtp.user.name"):
+                mock_context.set_mail_smtp_user_name.assert_called_once_with(
+                    notification.get("spark.expectations.notifications.smtp.user.name")
+                )
+            else:
+                mock_context.set_mail_smtp_user_name.assert_not_called()
         if notification.get("spark.expectations.notifications.slack.enabled"):
             mock_context.set_enable_slack.assert_called_once_with(
                 notification.get("spark.expectations.notifications.slack.enabled")
