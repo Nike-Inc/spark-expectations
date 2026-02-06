@@ -719,10 +719,9 @@ class SparkExpectationsContext:
     @property
     def get_mail_smtp_user_name(self) -> Optional[str]:
         """
-        Returns the SMTP username for authentication.
-        Falls back to mail_from if not explicitly set.
+        Returns the SMTP username for authentication, if configured.
         Returns:
-            str: returns _mail_smtp_user_name or None if not set
+            str: _mail_smtp_user_name or None if not set
         """
         return self._mail_smtp_user_name
 

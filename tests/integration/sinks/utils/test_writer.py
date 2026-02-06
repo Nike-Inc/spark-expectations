@@ -4355,6 +4355,32 @@ def test_generate_rules_exceeds_threshold_exception():
                 "topic": "test-topic",
             },
         ),
+        (
+            "15.4.x-gpu-ml",  # Unrecognizable version string defaults to modern config
+            "prod",
+            {
+                "kafka.bootstrap.servers": "test-server-url",
+                "kafka.security.protocol": "SASL_SSL",
+                "kafka.sasl.mechanism": "OAUTHBEARER",
+                "kafka.sasl.jaas.config": """kafkashaded.org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="test-client-id" clientSecret="test-token";""",
+                "kafka.sasl.oauthbearer.token.endpoint.url": "test-endpoint",
+                "kafka.sasl.login.callback.handler.class": "kafkashaded.org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler",
+                "topic": "test-topic",
+            },
+        ),
+        (
+            None,  # No DATABRICKS_RUNTIME_VERSION (non-Databricks env) defaults to modern config
+            "prod",
+            {
+                "kafka.bootstrap.servers": "test-server-url",
+                "kafka.security.protocol": "SASL_SSL",
+                "kafka.sasl.mechanism": "OAUTHBEARER",
+                "kafka.sasl.jaas.config": """kafkashaded.org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="test-client-id" clientSecret="test-token";""",
+                "kafka.sasl.oauthbearer.token.endpoint.url": "test-endpoint",
+                "kafka.sasl.login.callback.handler.class": "kafkashaded.org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler",
+                "topic": "test-topic",
+            },
+        ),
     ],
 )
 def test_get_kafka_write_options(dbr_version, env, expected_options):
