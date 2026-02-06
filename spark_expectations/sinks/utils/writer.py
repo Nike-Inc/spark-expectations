@@ -725,6 +725,29 @@ class SparkExpectationsWriter:
             alert = SparkExpectationsAlert(self._context)
             alert.prep_report_data()
 
+    def _is_legacy_dbr_version(self) -> bool:
+        """Returns True only when we can positively confirm the runtime is DBR < 13.3.
+
+        .. deprecated::
+            Support for DBR < 13.3 is deprecated and will be removed in a future
+            version. DBR 12.2 LTS reached end-of-support in September 2024.
+            Migrate to DBR 13.3+ or Serverless compute.
+
+        The legacy branch uses the Strimzi OAuth library (io.strimzi.kafka.oauth.client)
+        which was required before DBR 13.3. Starting with DBR 13.3, Databricks bundles
+        Kafka 3.x which includes built-in OAuth support via kafkashaded classes.
+
+        For any version that is absent, non-numeric (e.g. Serverless 'client.1.13'),
+        or unrecognizable we return False so the caller defaults to the modern config,
+        """
+        dbr_version = self._context.get_dbr_version
+        if not dbr_version:
+            return False
+        try:
+            return float(dbr_version) < 13.3
+        except (ValueError, TypeError):
+            return False
+
     def get_kafka_write_options(self, se_stats_dict: dict) -> dict:
         """Gets Kafka write configuration options based on runtime environment and config settings"""
 
@@ -747,7 +770,21 @@ class SparkExpectationsWriter:
                 "topic": f"{self._context.get_topic_name}",
             }
 
-        elif self._context.get_dbr_version and self._context.get_dbr_version >= 13.3:
+        elif self._is_legacy_dbr_version():
+            # Deprecated: Legacy config for DBR < 13.3 which uses the Strimzi OAuth library
+            # instead of the built-in kafkashaded OAuth support added in Kafka 3.x.
+            # TODO: Remove this branch once DBR < 13.3 support is dropped.
+            options = {
+                "kafka.bootstrap.servers": f"{secret_handler.get_secret(self._context.get_server_url_key)}",
+                "kafka.security.protocol": "SASL_SSL",
+                "kafka.sasl.mechanism": "OAUTHBEARER",
+                "kafka.sasl.jaas.config": f"""kafkashaded.org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required oauth.client.id='{secret_handler.get_secret(self._context.get_client_id)}'  oauth.client.secret='{secret_handler.get_secret(self._context.get_token)}' oauth.token.endpoint.uri='{secret_handler.get_secret(self._context.get_token_endpoint_url)}'; """,
+                "kafka.sasl.login.callback.handler.class": "io.strimzi.kafka.oauth.client.JaasClientOauthLoginCallbackHandler",
+                "topic": f"{secret_handler.get_secret(self._context.get_topic_name)}",
+            }
+        else:
+            # Modern config (DBR >= 13.3, Serverless, or unknown runtime).
+            # Uses the built-in kafkashaded OAuth classes available in Kafka 3.x+.
             options = {
                 "kafka.bootstrap.servers": f"{secret_handler.get_secret(self._context.get_server_url_key)}",
                 "kafka.security.protocol": "SASL_SSL",
@@ -755,15 +792,6 @@ class SparkExpectationsWriter:
                 "kafka.sasl.jaas.config": f"""kafkashaded.org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required clientId="{secret_handler.get_secret(self._context.get_client_id)}" clientSecret="{secret_handler.get_secret(self._context.get_token)}";""",
                 "kafka.sasl.oauthbearer.token.endpoint.url": f"{secret_handler.get_secret(self._context.get_token_endpoint_url)}",
                 "kafka.sasl.login.callback.handler.class": "kafkashaded.org.apache.kafka.common.security.oauthbearer.secured.OAuthBearerLoginCallbackHandler",
-                "topic": f"{secret_handler.get_secret(self._context.get_topic_name)}",
-            }
-        else:
-            options = {
-                "kafka.bootstrap.servers": f"{secret_handler.get_secret(self._context.get_server_url_key)}",
-                "kafka.security.protocol": "SASL_SSL",
-                "kafka.sasl.mechanism": "OAUTHBEARER",
-                "kafka.sasl.jaas.config": f"""kafkashaded.org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required oauth.client.id='{secret_handler.get_secret(self._context.get_client_id)}'  oauth.client.secret='{secret_handler.get_secret(self._context.get_token)}' oauth.token.endpoint.uri='{secret_handler.get_secret(self._context.get_token_endpoint_url)}'; """,
-                "kafka.sasl.login.callback.handler.class": "io.strimzi.kafka.oauth.client.JaasClientOauthLoginCallbackHandler",
                 "topic": f"{secret_handler.get_secret(self._context.get_topic_name)}",
             }
 
