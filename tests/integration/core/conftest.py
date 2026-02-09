@@ -139,9 +139,6 @@ def fixture_spark_expectations(_fixture_rules_df):
         debugger=False,
     )
 
-    def _error_threshold_exceeds(expectations):
-        pass
-
     return spark_expectations
 
 
