@@ -8,6 +8,7 @@ from uuid import uuid1
 import ast
 from typing import Dict, Optional, List, Tuple, Any
 from pyspark.sql import DataFrame, SparkSession
+from spark_expectations import _log
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
 
@@ -216,13 +217,14 @@ class SparkExpectationsContext:
                 context = get_context()
                 if context and hasattr(context, "workspaceId"):
                     return context.workspaceId
-            except (ImportError, Exception):
+            except (ImportError, Exception) as e:
                 # Expected when not running in Databricks; fall through to return "local"
-                pass
+                _log.info(f"Unable to retrieve Databricks workspace ID via dbruntime: {e}")
 
             return "local"
-        except Exception:
+        except Exception as e:
             # Catch-all for any unexpected errors; return safe default
+            _log.info(f"Failed to retrieve Databricks workspace ID: {e}")
             return "local"
 
     @property
@@ -274,8 +276,9 @@ class SparkExpectationsContext:
         try:
             spark_version = getattr(self.spark, "version", None)
             return spark_version if spark_version else "unknown"
-        except Exception:
+        except Exception as e:
             # Catch-all for any unexpected errors; return safe default
+            _log.warning(f"Failed to retrieve Spark version: {e}")
             return "unknown"
 
     @property
@@ -327,7 +330,7 @@ class SparkExpectationsContext:
         }
         if self._se_job_metadata is not None:
             merged_metadata = dict(default_metadata)
-            merged_metadata.update(self._se_job_metadata)
+            merged_metadata["user_metadata"] = self._se_job_metadata
             return merged_metadata
 
         return default_metadata
@@ -353,8 +356,8 @@ class SparkExpectationsContext:
                 if isinstance(parsed_value, dict):
                     self._se_job_metadata = parsed_value
                     return
-            except (ValueError, SyntaxError):
-                pass
+            except (ValueError, SyntaxError) as e:
+                _log.warning(f"Failed to parse se_job_metadata string as dict: {e}")
 
             self._se_job_metadata = {"job_metadata": se_job_metadata}
             return
