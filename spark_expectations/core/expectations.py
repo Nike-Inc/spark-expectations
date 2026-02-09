@@ -109,11 +109,11 @@ class SparkExpectations:
         """
         return df.withColumn(
             "id_hash",
-            md5(concat_ws("_", 
-                trim(coalesce(col("product_id"), lit(""))), 
-                trim(coalesce(col("table_name"), lit(""))), 
-                trim(coalesce(col("rule"), lit(""))), 
-                trim(coalesce(col("rule_type"), lit("")))))
+            md5(concat_ws("|", 
+                coalesce(trim(col("product_id")), lit("")), 
+                coalesce(trim(col("table_name")), lit("")), 
+                coalesce(trim(col("rule")), lit("")),
+                coalesce(trim(col("rule_type")), lit(""))))
         ).withColumn(
             "expectation_hash",
             md5(col("expectation"))

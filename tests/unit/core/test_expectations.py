@@ -126,7 +126,7 @@ class TestAddHashColumns:
         result_df = se_instance._add_hash_columns(input_df)
         row = result_df.collect()[0]
         
-        # Should produce hash of "___" (empty strings joined with underscores)
+        # Should produce hash of "|||" (empty strings joined with pipes)
         assert row["id_hash"] is not None
         assert len(row["id_hash"]) == 32  # MD5 hash length
 
