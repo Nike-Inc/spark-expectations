@@ -6,7 +6,7 @@ on:
   push:
     branches: [ main ]
   release:
-    types: [ created ]
+    types: [ published ]
 
 jobs:
   unittesting:

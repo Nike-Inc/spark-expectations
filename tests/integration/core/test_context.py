@@ -561,6 +561,16 @@ def test_set_mail_smtp_password():
     assert context.get_mail_smtp_password == "test_password"
 
 
+def test_set_mail_smtp_user_name():
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    # Default is None
+    assert context.get_mail_smtp_user_name is None
+    # Set and verify
+    context.set_mail_smtp_user_name("smtp_user@example.com")
+    assert context._mail_smtp_user_name == "smtp_user@example.com"
+    assert context.get_mail_smtp_user_name == "smtp_user@example.com"
+
+
 def test_set_smtp_creds_dict():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     context.set_smtp_creds_dict(
@@ -1248,15 +1258,21 @@ def test_get_dq_run_time():
 
 def test_get_dbr_version():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
+
+    # Standard compute returns numeric version strings
     os.environ["DATABRICKS_RUNTIME_VERSION"] = "13"
-    assert context.get_dbr_version == 13
+    assert context.get_dbr_version == "13"
 
     os.environ["DATABRICKS_RUNTIME_VERSION"] = "13.3"
-    assert context.get_dbr_version == 13.3
+    assert context.get_dbr_version == "13.3"
 
-    # Remove the mock to test non-Databricks environment
+    # Serverless compute returns 'client.' prefixed version string
+    os.environ["DATABRICKS_RUNTIME_VERSION"] = "client.1.13"
+    assert context.get_dbr_version == "client.1.13"
+
+    # Non-Databricks environment returns None
     del os.environ["DATABRICKS_RUNTIME_VERSION"]
-    assert context.get_dbr_version == None
+    assert context.get_dbr_version is None
 
 
 def test_get_dbr_workspace_id_from_env():
