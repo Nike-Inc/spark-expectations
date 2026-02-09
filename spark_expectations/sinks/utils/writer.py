@@ -669,7 +669,7 @@ class SparkExpectationsWriter:
             self._context.print_dataframe_with_debugger(_df_detailed_stats)
 
             _log.info(
-                "Writing metrics to the detailed stats table: {self._context.get_dq_detailed_stats_table_name}, started"
+                f"Writing metrics to the detailed stats table: {self._context.get_dq_detailed_stats_table_name}, started"
             )
 
             self.save_df_as_table(
@@ -687,7 +687,7 @@ class SparkExpectationsWriter:
             _df_custom_detailed_stats_source = self._prep_secondary_query_output()
 
             _log.info(
-                "Writing metrics to the output custom table: {self._context.get_query_dq_output_custom_table_name}, started"
+                f"Writing metrics to the output custom table: {self._context.get_query_dq_output_custom_table_name}, started"
             )
 
             self.save_df_as_table(
@@ -698,7 +698,7 @@ class SparkExpectationsWriter:
             )
 
             _log.info(
-                "Writing metrics to the output custom table: {self._context.get_query_dq_output_custom_table_name}, ended"
+                f"Writing metrics to the output custom table: {self._context.get_query_dq_output_custom_table_name}, ended"
             )
         except Exception as e:
             raise SparkExpectationsMiscException(f"error occurred while saving the data into the stats table {e}")

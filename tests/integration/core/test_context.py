@@ -2373,7 +2373,7 @@ def test_set_se_job_metadata_dict():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
     context.set_se_job_metadata({"job": "test_job_metadata"})
     result = context.get_se_job_metadata
-    assert result.get("job") == "test_job_metadata"
+    assert result.get("user_metadata") == {"job": "test_job_metadata"}
     assert result.get("runtime_env", {}).get("host") == "local"
     assert "se_version" in result
     assert "spark_version" in result
@@ -2383,21 +2383,21 @@ def test_set_se_job_metadata_str_dict():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
     context.set_se_job_metadata("{'job': 'test_job_metadata'}")
     result = context.get_se_job_metadata
-    assert result.get("job") == "test_job_metadata"
+    assert result.get("user_metadata") == {"job": "test_job_metadata"}
 
 
 def test_set_se_job_metadata_str_non_dict():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
     context.set_se_job_metadata("test_job_metadata")
     result = context.get_se_job_metadata
-    assert result.get("job_metadata") == "test_job_metadata"
+    assert result.get("user_metadata") == {"job_metadata": "test_job_metadata"}
 
 
 def test_set_se_job_metadata_invalid_str():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
     context.set_se_job_metadata("{invalid")
     result = context.get_se_job_metadata
-    assert result.get("job_metadata") == "{invalid"
+    assert result.get("user_metadata") == {"job_metadata": "{invalid"}
 
 
 def test_set_se_job_metadata_non_str_object():
@@ -2405,7 +2405,7 @@ def test_set_se_job_metadata_non_str_object():
     payload = ["job", 1]
     context.set_se_job_metadata(payload)
     result = context.get_se_job_metadata
-    assert result.get("job_metadata") == str(payload)
+    assert result.get("user_metadata") == {"job_metadata": str(payload)}
 
 
 def test_get_se_job_metadata_databricks_env(monkeypatch):
@@ -2464,6 +2464,7 @@ def test_set_se_job_metadata_none():
     context.set_se_job_metadata({"job": "test_job_metadata"})
     context.set_se_job_metadata(None)
     result = context.get_se_job_metadata
+    assert "user_metadata" not in result
     assert "job" not in result
     assert "job_metadata" not in result
 
@@ -2477,6 +2478,80 @@ def test_get_spark_version_exception():
     context = SparkExpectationsContext(product_id="test_product", spark=spark)
     context.spark = BadSpark()
     assert context.get_spark_version == "unknown"
+
+
+def test_get_spark_version_exception_logs_warning(caplog):
+    """Test that get_spark_version logs a warning when an exception occurs"""
+    import logging
+    from spark_expectations import _log as se_log
+
+    class BadSpark:
+        @property
+        def version(self):
+            raise RuntimeError("spark unavailable")
+
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.spark = BadSpark()
+    se_log.propagate = True
+    try:
+        with caplog.at_level(logging.WARNING, logger="spark_expectations"):
+            result = context.get_spark_version
+        assert result == "unknown"
+        assert "Failed to retrieve Spark version" in caplog.text
+        assert "spark unavailable" in caplog.text
+    finally:
+        se_log.propagate = False
+
+
+def test_set_se_job_metadata_invalid_str_logs_warning(caplog):
+    """Test that set_se_job_metadata logs a warning when string parsing fails"""
+    import logging
+    from spark_expectations import _log as se_log
+
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    se_log.propagate = True
+    try:
+        with caplog.at_level(logging.WARNING, logger="spark_expectations"):
+            context.set_se_job_metadata("{invalid")
+        assert "Failed to parse se_job_metadata string as dict" in caplog.text
+    finally:
+        se_log.propagate = False
+
+
+def test_get_dbr_workspace_id_dbruntime_import_error_logs_info(caplog):
+    """Test that get_dbr_workspace_id logs info when dbruntime import fails"""
+    import logging
+    from spark_expectations import _log as se_log
+
+    if "DATABRICKS_WORKSPACE_ID" in os.environ:
+        del os.environ["DATABRICKS_WORKSPACE_ID"]
+
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    se_log.propagate = True
+    try:
+        with caplog.at_level(logging.INFO, logger="spark_expectations"):
+            result = context.get_dbr_workspace_id
+        assert result == "local"
+        assert "Unable to retrieve Databricks workspace ID via dbruntime" in caplog.text
+    finally:
+        se_log.propagate = False
+
+
+def test_get_dbr_workspace_id_outer_exception_logs_info(caplog):
+    """Test that get_dbr_workspace_id logs info when outer exception occurs"""
+    import logging
+    from spark_expectations import _log as se_log
+
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    se_log.propagate = True
+    try:
+        with patch("os.environ.get", side_effect=Exception("Unexpected error")):
+            with caplog.at_level(logging.INFO, logger="spark_expectations"):
+                result = context.get_dbr_workspace_id
+        assert result == "local"
+        assert "Failed to retrieve Databricks workspace ID" in caplog.text
+    finally:
+        se_log.propagate = False
 
 
 def test_get_spark_expectations_version_package_not_found(monkeypatch):

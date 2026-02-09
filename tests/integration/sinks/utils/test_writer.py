@@ -2242,6 +2242,18 @@ def test_write_error_stats(
         se_job_metadata = json.loads(row.se_job_metadata)
         assert se_job_metadata.get("runtime_env", {}).get("host") == "local"
 
+        # Compare Kafka output to stats table; the Kafka writer converts
+        # se_job_metadata from a JSON string to a struct so the comparison
+        # must apply the same transformation to the stats table DataFrame.
+        from pyspark.sql.functions import from_json, schema_of_json, lit as _lit
+        expected_stats = stats_table
+        if "se_job_metadata" in expected_stats.columns:
+            _sample = expected_stats.select("se_job_metadata").first()[0]
+            if _sample:
+                expected_stats = expected_stats.withColumn(
+                    "se_job_metadata",
+                    from_json(col("se_job_metadata"), schema_of_json(_lit(_sample))),
+                )
         assert (
             spark.read.format("kafka")
             .option("kafka.bootstrap.servers", "localhost:9092")
@@ -2253,7 +2265,7 @@ def test_write_error_stats(
             .limit(1)
             .selectExpr("cast(value as string) as value")
             .collect()
-            == stats_table.selectExpr("to_json(struct(*)) AS value").collect()
+            == expected_stats.selectExpr("to_json(struct(*)) AS value").collect()
         )
 
 
