@@ -266,6 +266,7 @@ def test_retrieve_password_none(_mock_secret_handler):
 @patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
 def test_get_smtp_password(_mock_context):
     email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_mail_smtp_user_name = None
     _mock_context.get_mail_from = "test@example.com"
     _mock_context.get_mail_smtp_password = "test_password"
 
@@ -276,8 +277,37 @@ def test_get_smtp_password(_mock_context):
 
 
 @patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_get_smtp_password_with_explicit_username(_mock_context):
+    """Test that _get_smtp_password uses get_mail_smtp_user_name when set instead of get_mail_from"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_mail_smtp_user_name = "smtp_user@example.com"
+    _mock_context.get_mail_from = "sender@example.com"
+    _mock_context.get_mail_smtp_password = "test_password"
+
+    with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp:
+        server = mock_smtp.return_value
+        email_handler._get_smtp_password(_mock_context, server)
+        server.login.assert_called_once_with("smtp_user@example.com", "test_password")
+
+
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
+def test_get_smtp_password_falls_back_to_mail_from(_mock_context):
+    """Test that _get_smtp_password falls back to get_mail_from when get_mail_smtp_user_name is None"""
+    email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_mail_smtp_user_name = None
+    _mock_context.get_mail_from = "fallback@example.com"
+    _mock_context.get_mail_smtp_password = "test_password"
+
+    with patch("spark_expectations.notifications.plugins.email.smtplib.SMTP") as mock_smtp:
+        server = mock_smtp.return_value
+        email_handler._get_smtp_password(_mock_context, server)
+        server.login.assert_called_once_with("fallback@example.com", "test_password")
+
+
+@patch("spark_expectations.notifications.plugins.email.SparkExpectationsContext", autospec=True, spec_set=True)
 def test_get_smtp_password_with_retrieve_method(_mock_context):
     email_handler = SparkExpectationsEmailPluginImpl()
+    _mock_context.get_mail_smtp_user_name = None
     _mock_context.get_mail_from = "test@example.com"
     _mock_context.get_mail_smtp_password = None
     _mock_context.get_smtp_creds_dict = {

@@ -108,6 +108,10 @@ class SparkExpectationsReader:
                         raise SparkExpectationsMiscException(
                             "SMTP password is not set or secret dict for its retrieval is not provided"
                         )
+                    # Set SMTP username if provided and non-empty (falls back to mail_from in email plugin if not set)
+                    _smtp_user_name = _notification_dict.get(user_config.se_notifications_smtp_user_name)
+                    if _smtp_user_name is not None and str(_smtp_user_name).strip() != "":
+                        self._context.set_mail_smtp_user_name(str(_smtp_user_name).strip())
                 if (
                     _notification_dict.get(user_config.se_notifications_enable_custom_email_body)
                     and _notification_dict.get(user_config.se_notifications_email_custom_body)

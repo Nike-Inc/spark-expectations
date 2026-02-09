@@ -76,6 +76,7 @@ class SparkExpectationsContext:
         self._mail_smtp_server: str
         self._mail_smtp_port: int
         self._mail_smtp_password: Optional[str] = None
+        self._mail_smtp_user_name: Optional[str] = None
         self._smtp_creds_dict: Dict[str, str] = {}
         self._email_custom_body: Optional[str] = None
 
@@ -192,12 +193,16 @@ class SparkExpectationsContext:
         self._kafka_write_error_message: str = ""
 
     @property
-    def get_dbr_version(self) -> Optional[float]:
+    def get_dbr_version(self) -> Optional[str]:
         """
-        This function is used to get the dbr version.
+        Returns the raw DATABRICKS_RUNTIME_VERSION environment variable value,
+        or None when not running on Databricks.
+
+        On standard (non-serverless) compute this is a numeric version string
+        such as '13.3' or '14.2'.
+        On Serverless compute is string value, e.g. client.1.13, client.4.9
         """
-        runtime_version = os.environ.get("DATABRICKS_RUNTIME_VERSION")
-        return float(runtime_version) if runtime_version is not None else None
+        return os.environ.get("DATABRICKS_RUNTIME_VERSION")
 
     @property
     def get_dbr_workspace_id(self) -> str:
@@ -826,6 +831,23 @@ class SparkExpectationsContext:
 
         else:
             return None
+
+    def set_mail_smtp_user_name(self, mail_smtp_user_name: str) -> None:
+        """
+        Sets the SMTP username for authentication.
+        Args:
+            mail_smtp_user_name: The SMTP username to use for authentication
+        """
+        self._mail_smtp_user_name = mail_smtp_user_name
+
+    @property
+    def get_mail_smtp_user_name(self) -> Optional[str]:
+        """
+        Returns the SMTP username for authentication, if configured.
+        Returns:
+            str: _mail_smtp_user_name or None if not set
+        """
+        return self._mail_smtp_user_name
 
     def set_smtp_creds_dict(self, smtp_creds_dict: Dict[str, str]) -> None:
         """
