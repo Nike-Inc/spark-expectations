@@ -354,7 +354,9 @@ def fixture_row_dq_expected_result():
                     'column_name': 'col1',
                     "status": "pass",
                     "tag": "validity",
-                    "priority": "medium"
+                    "priority": "medium",
+                    "id_hash": None,
+                    "expectation_hash": None
                 },
                 "row_dq_col1_gt_eq_2": {
                     "rule_type": "row_dq",
@@ -364,7 +366,9 @@ def fixture_row_dq_expected_result():
                     "status": "fail",
                     "tag": "accuracy",
                     "description": "col1 gt or eq 2",
-                    "priority": "medium"
+                    "priority": "medium",
+                    "id_hash": None,
+                    "expectation_hash": None
                 },
                 "row_dq_col1_gt_eq_3": {
                     "rule_type": "row_dq",
@@ -374,7 +378,9 @@ def fixture_row_dq_expected_result():
                     "status": "fail",
                     "tag": "completeness",
                     "description": "col1 gt or eq 3",
-                    "priority": "medium"
+                    "priority": "medium",
+                    "id_hash": None,
+                    "expectation_hash": None
                 },
             },
             {
@@ -386,7 +392,9 @@ def fixture_row_dq_expected_result():
                     "rule_type": "row_dq",
                     "status": "pass",
                     "tag": "validity",
-                    "priority": "medium"
+                    "priority": "medium",
+                    "id_hash": None,
+                    "expectation_hash": None
                 },
                 "row_dq_col1_gt_eq_2": {
                     "rule_type": "row_dq",
@@ -396,7 +404,9 @@ def fixture_row_dq_expected_result():
                     "status": "pass",
                     "tag": "accuracy",
                     "description": "col1 gt or eq 2",
-                    "priority": "medium"
+                    "priority": "medium",
+                    "id_hash": None,
+                    "expectation_hash": None
                 },
                 "row_dq_col1_gt_eq_3": {
                     "rule_type": "row_dq",
@@ -406,7 +416,9 @@ def fixture_row_dq_expected_result():
                     "status": "fail",
                     "tag": "completeness",
                     "description": "col1 gt or eq 3",
-                    "priority": "medium"
+                    "priority": "medium",
+                    "id_hash": None,
+                    "expectation_hash": None
                 },
             },
             {
@@ -418,7 +430,9 @@ def fixture_row_dq_expected_result():
                     'column_name': 'col1',
                     "status": "pass",
                     "tag": "validity",
-                    "priority": "medium"
+                    "priority": "medium",
+                    "id_hash": None,
+                    "expectation_hash": None
                 },
                 "row_dq_col1_gt_eq_2": {
                     "rule_type": "row_dq",
@@ -428,7 +442,9 @@ def fixture_row_dq_expected_result():
                     'column_name': 'col1',
                     "tag": "accuracy",
                     "description": "col1 gt or eq 2",
-                    "priority": "medium"
+                    "priority": "medium",
+                    "id_hash": None,
+                    "expectation_hash": None
                 },
                 "row_dq_col1_gt_eq_3": {
                     "rule_type": "row_dq",
@@ -438,7 +454,9 @@ def fixture_row_dq_expected_result():
                     "status": "pass",
                     "tag": "completeness",
                     "description": "col1 gt or eq 3",
-                    "priority": "medium"
+                    "priority": "medium",
+                    "id_hash": None,
+                    "expectation_hash": None
                 },
             },
         ]
@@ -458,7 +476,9 @@ def fixture_agg_dq_expected_result():
                 'column_name': 'col1',
                 "status": "pass",
                 "tag": "validity",
-                "priority": "medium"
+                "priority": "medium",
+                "id_hash": None,
+                "expectation_hash": None
             },
             {
                 "rule_type": "agg_dq",
@@ -468,7 +488,9 @@ def fixture_agg_dq_expected_result():
                 "status": "fail",
                 "tag": "accuracy",
                 "description": "col2 unique value grater than 3",
-                "priority": "medium"
+                "priority": "medium",
+                "id_hash": None,
+                "expectation_hash": None
             },
             {
                 "rule_type": "agg_dq",
@@ -478,7 +500,9 @@ def fixture_agg_dq_expected_result():
                 "status": "fail",
                 "tag": "accuracy",
                 "description": "sum of col1 value grater than 6 and less than 10",
-                "priority": "medium"
+                "priority": "medium",
+                "id_hash": None,
+                "expectation_hash": None
             },
         ]
     }
@@ -497,7 +521,9 @@ def fixture_query_dq_expected_result():
                 "status": "fail",
                 "tag": "validity",
                 "action_if_failed": "ignore",
-                "priority": "medium"
+                "priority": "medium",
+                "id_hash": None,
+                "expectation_hash": None
             },
             {
                 "rule": "table_distinct_count",
@@ -507,7 +533,9 @@ def fixture_query_dq_expected_result():
                 "status": "fail",
                 "tag": "accuracy",
                 "action_if_failed": "fail",
-                "priority": "medium"
+                "priority": "medium",
+                "id_hash": None,
+                "expectation_hash": None
             },
         ]
     }

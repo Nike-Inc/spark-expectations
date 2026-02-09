@@ -88,7 +88,9 @@ def fixture_context():
                 "description": "col1 should not be null",
                 "enable_error_drop_alert": False,
                 "error_drop_threshold": 0,
-                "priority": "medium"
+                "priority": "medium",
+                "id_hash": None,
+                "expectation_hash": None
             },
             {
                 "product_id": "product1",
@@ -104,7 +106,9 @@ def fixture_context():
                 "description": "col2 should start with A",
                 "enable_error_drop_alert": False,
                 "error_drop_threshold": 0,
-                "priority": "medium"
+                "priority": "medium",
+                "id_hash": None,
+                "expectation_hash": None
             },
         ]
     }
@@ -3938,7 +3942,9 @@ def test_write_error_records_final_dependent(
                             "column_name":"col1",
                             "tag": "validity",
                             "action_if_failed": "ignore",
-                            "priority": "medium"
+                            "priority": "medium",
+                            "id_hash": "hash1",
+                            "expectation_hash": "exp_hash1"
                         },
                         {
                             "rule_type": "row_dq",
@@ -3947,7 +3953,9 @@ def test_write_error_records_final_dependent(
                             "column_name": "col2",
                             "tag": "validity",
                             "action_if_failed": "ignore",
-                            "priority": "medium"
+                            "priority": "medium",
+                            "id_hash": "hash2",
+                            "expectation_hash": "exp_hash2"
                         },
                     ],
                     "meta_dq_run_id": "run_id",
@@ -3962,7 +3970,9 @@ def test_write_error_records_final_dependent(
                             "column_name": "col1",
                             "tag": "validity",
                             "action_if_failed": "ignore",
-                            "priority": "medium"
+                            "priority": "medium",
+                            "id_hash": "hash1",
+                            "expectation_hash": "exp_hash1"
                         }
                     ],
                     "meta_dq_run_id": "run_id",
@@ -3977,7 +3987,9 @@ def test_write_error_records_final_dependent(
                             "column_name": "col2",
                             "tag": "validity",
                             "action_if_failed": "ignore",
-                            "priority": "medium"
+                            "priority": "medium",
+                            "id_hash": "hash2",
+                            "expectation_hash": "exp_hash2"
                         }
                     ],
                     "meta_dq_run_id": "run_id",
@@ -3993,7 +4005,9 @@ def test_write_error_records_final_dependent(
                     "tag": "validity",
                     "action_if_failed": "ignore",
                     "failed_row_count": 2,
-                    "priority": "medium"
+                    "priority": "medium",
+                    "id_hash": "hash1",
+                    "expectation_hash": "exp_hash1"
                 },
                 {
                     "rule_type": "row_dq",
@@ -4003,7 +4017,9 @@ def test_write_error_records_final_dependent(
                     "tag": "validity",
                     "action_if_failed": "ignore",
                     "failed_row_count": 2,
-                    "priority": "medium"
+                    "priority": "medium",
+                    "id_hash": "hash2",
+                    "expectation_hash": "exp_hash2"
                 },
             ],
         ),
@@ -4018,7 +4034,9 @@ def test_write_error_records_final_dependent(
                             "column_name":"col1",
                             "tag": "validity",
                             "action_if_failed": "ignore",
-                            "priority": "medium"
+                            "priority": "medium",
+                            "id_hash": "hash1",
+                            "expectation_hash": "exp_hash1"
                         }
                     ],
                     "meta_dq_run_id": "run_id",
@@ -4033,7 +4051,9 @@ def test_write_error_records_final_dependent(
                             "column_name": "col1",
                             "tag": "validity",
                             "action_if_failed": "ignore",
-                            "priority": "medium"
+                            "priority": "medium",
+                            "id_hash": "hash1",
+                            "expectation_hash": "exp_hash1"
                         }
                     ],
                     "meta_dq_run_id": "run_id",
@@ -4049,7 +4069,9 @@ def test_write_error_records_final_dependent(
                     "tag": "validity",
                     "action_if_failed": "ignore",
                     "failed_row_count": 2,
-                    "priority": "medium"
+                    "priority": "medium",
+                    "id_hash": "hash1",
+                    "expectation_hash": "exp_hash1"
                 },
                 {
                     "rule_type": "row_dq",
@@ -4059,7 +4081,9 @@ def test_write_error_records_final_dependent(
                     "tag": "validity",
                     "action_if_failed": "ignore",
                     "failed_row_count": 0,
-                    "priority": "medium"
+                    "priority": "medium",
+                    "id_hash": None,
+                    "expectation_hash": None
                 },
             ],
         ),

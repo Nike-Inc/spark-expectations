@@ -1093,8 +1093,10 @@ class SparkExpectationsWriter:
                 .withColumn("tag", col("row_dq_res")["tag"])
                 .withColumn("action_if_failed", col("row_dq_res")["action_if_failed"])
                 .withColumn("column_name", col("row_dq_res")["column_name"])
-                .select("rule_type", "rule", "priority", "column_name", "description", "tag", "action_if_failed")
-                .groupBy("rule_type", "rule", "priority", "column_name", "description", "tag", "action_if_failed")
+                .withColumn("id_hash", col("row_dq_res")["id_hash"])
+                .withColumn("expectation_hash", col("row_dq_res")["expectation_hash"])
+                .select("rule_type", "rule", "priority", "column_name", "description", "tag", "action_if_failed", "id_hash", "expectation_hash" )
+                .groupBy("rule_type", "rule", "priority", "column_name", "description", "tag", "action_if_failed", "id_hash", "expectation_hash")
                 .count()
                 .withColumnRenamed("count", "failed_row_count")
             )
@@ -1108,6 +1110,8 @@ class SparkExpectationsWriter:
                     "tag": row.tag,
                     "action_if_failed": row.action_if_failed,
                     "failed_row_count": row.failed_row_count,
+                    "id_hash": row.id_hash,
+                    "expectation_hash": row.expectation_hash
                 }
                 for row in df_res.select(
                     "rule_type",
@@ -1118,6 +1122,8 @@ class SparkExpectationsWriter:
                     "tag",
                     "action_if_failed",
                     "failed_row_count",
+                    "id_hash",
+                    "expectation_hash"
                 ).collect()
             ]
             failed_rule_list = []
@@ -1140,7 +1146,9 @@ class SparkExpectationsWriter:
                                     "description": each_rule["description"],
                                     "tag": each_rule["tag"],
                                     "action_if_failed": each_rule["action_if_failed"],
-                                    "failed_row_count": 0
+                                    "failed_row_count": 0,
+                                    "id_hash": each_rule["id_hash"],
+                                    "expectation_hash": each_rule["expectation_hash"]
                                 }
                             )
 
