@@ -1,5 +1,6 @@
 from typing import Dict, Union
 from pyspark.sql import DataFrame
+from pyspark.sql.functions import col, from_json, lit, schema_of_json
 from spark_expectations.sinks.plugins.base_writer import (
     SparkExpectationsSinkWriter,
     spark_expectations_writer_impl,
@@ -42,6 +43,18 @@ class SparkExpectationsKafkaWritePluginImpl(SparkExpectationsSinkWriter):
                 # Log Kafka connection details (mask sensitive info)
                 masked_options = {k: (v if "password" not in k.lower() and "secret" not in k.lower() and "token" not in k.lower() else "***MASKED***") for k, v in kafka_options.items()}
                 _log.info(f"Writing to Kafka with options: {masked_options}")
+
+                # Convert se_job_metadata from JSON string to a proper struct
+                # so it appears as a nested object in the Kafka JSON output
+                # instead of a double-escaped string
+                if "se_job_metadata" in df.columns:
+                    metadata_sample = df.select("se_job_metadata").first()[0]
+                    if metadata_sample:
+                        metadata_schema = schema_of_json(lit(metadata_sample))
+                        df = df.withColumn(
+                            "se_job_metadata",
+                            from_json(col("se_job_metadata"), metadata_schema),
+                        )
 
                 df.selectExpr("to_json(struct(*)) AS value").write.format("kafka").mode("append").options(
                     **kafka_options

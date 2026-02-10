@@ -1,3 +1,4 @@
+import json
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple, List, Any
 from datetime import datetime, timezone
@@ -668,7 +669,7 @@ class SparkExpectationsWriter:
             self._context.print_dataframe_with_debugger(_df_detailed_stats)
 
             _log.info(
-                "Writing metrics to the detailed stats table: {self._context.get_dq_detailed_stats_table_name}, started"
+                f"Writing metrics to the detailed stats table: {self._context.get_dq_detailed_stats_table_name}, started"
             )
 
             self.save_df_as_table(
@@ -686,7 +687,7 @@ class SparkExpectationsWriter:
             _df_custom_detailed_stats_source = self._prep_secondary_query_output()
 
             _log.info(
-                "Writing metrics to the output custom table: {self._context.get_query_dq_output_custom_table_name}, started"
+                f"Writing metrics to the output custom table: {self._context.get_query_dq_output_custom_table_name}, started"
             )
 
             self.save_df_as_table(
@@ -697,7 +698,7 @@ class SparkExpectationsWriter:
             )
 
             _log.info(
-                "Writing metrics to the output custom table: {self._context.get_query_dq_output_custom_table_name}, ended"
+                f"Writing metrics to the output custom table: {self._context.get_query_dq_output_custom_table_name}, ended"
             )
         except Exception as e:
             raise SparkExpectationsMiscException(f"error occurred while saving the data into the stats table {e}")
@@ -947,8 +948,7 @@ class SparkExpectationsWriter:
                 .withColumn("success_percentage", sql_round(df.success_percentage, 2))
                 .withColumn("error_percentage", sql_round(df.error_percentage, 2))
                 .withColumn("dq_env", lit(dq_env))
-                .withColumn("databricks_workspace_id", lit(self._context.get_dbr_workspace_id))
-                .withColumn("databricks_hostname", lit(self._context.get_dbr_workspace_url))
+                .withColumn("se_job_metadata", lit(json.dumps(self._context.get_se_job_metadata)))
             )
 
             self._context.set_stats_dict(df)

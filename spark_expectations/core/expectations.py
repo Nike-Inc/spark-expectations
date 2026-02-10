@@ -232,6 +232,8 @@ class SparkExpectations:
 
             dq_rules_params = _notification_dict.get(user_config.se_dq_rules_params, {})
             self._context.set_dq_rules_params(dq_rules_params if isinstance(dq_rules_params, dict) else {})
+            
+            self._context.set_se_job_metadata(_notification_dict.get(user_config.se_job_metadata))
 
             # Overwrite the writers if provided by the user in the with_expectations explicitly
             if target_and_error_table_writer:
