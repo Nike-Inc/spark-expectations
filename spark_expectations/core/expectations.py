@@ -6,6 +6,7 @@ from typing import Dict, Optional, Any, Union, List, TypeAlias, overload
 from pyspark.version import __version__ as spark_version
 from pyspark import StorageLevel
 from pyspark import sql
+from pyspark.sql import functions as F
 from pyspark.sql.functions import md5, concat_ws, col, lit, coalesce, trim
 
 
@@ -15,6 +16,7 @@ from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException,
     SparkExpectationsDataframeNotReturnedException,
+    SparkExpectationsUserInputOrConfigInvalidException,
 )
 from spark_expectations.notifications.push.spark_expectations_notify import (
     SparkExpectationsNotify,
@@ -119,6 +121,37 @@ class SparkExpectations:
             md5(col("expectation"))
         )
     
+    def _validate_rules(self) -> None:
+        """
+        Validate that the rules DataFrame contains all required columns and they are not null.
+
+        Raises:
+            SparkExpectationsUserInputOrConfigInvalidException: If any required columns are missing
+                or contain NULL values.
+        """
+        required_columns = {"product_id", "table_name", "rule", "rule_type"}
+        actual_columns = set(self.rules_df.columns)
+        missing_columns = required_columns - actual_columns
+        
+                # Check 1: Ensure required columns exist
+        if missing_columns:
+            raise SparkExpectationsUserInputOrConfigInvalidException(
+                f"rules_df is missing required columns: {sorted(missing_columns)}"
+            )
+        
+        # Check 2: Ensure required columns don't have NULL values
+        null_check_expr = [
+            F.sum(F.when(F.col(c).isNull(), 1).otherwise(0)).alias(c)
+            for c in required_columns
+        ]
+        null_counts = self.rules_df.select(null_check_expr).collect()[0]
+        columns_with_nulls = [c for c in required_columns if null_counts[c] > 0]
+        
+        if columns_with_nulls:
+            raise SparkExpectationsUserInputOrConfigInvalidException(
+                f"rules_df contains NULL values in required columns: {sorted(columns_with_nulls)}"
+            )
+
     def __post_init__(self) -> None:
         if isinstance(self.rules_df, DataFrame):  # type: ignore
             try:
@@ -166,6 +199,7 @@ class SparkExpectations:
         self._context.set_debugger_mode(self.debugger)
         self._context.set_dq_stats_table_name(self.stats_table)
         self._context.set_dq_detailed_stats_table_name(f"{self.stats_table}_detailed")
+        self._validate_rules()
         self.rules_df = self._add_hash_columns(self.rules_df)
         # self.rules_df = self.rules_df.persist(StorageLevel.MEMORY_AND_DISK)
 
