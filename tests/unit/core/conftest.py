@@ -396,3 +396,239 @@ def rule_data_with_whitespace():
         "error_drop_threshold": "0",
         "priority": "medium",
     }]
+
+
+# =============================================================================
+# Fixtures for _validate_rules tests
+# =============================================================================
+
+@pytest.fixture
+def rules_df_schema_missing_product_id():
+    """Schema missing product_id column."""
+    return StructType([
+        StructField("table_name", StringType(), True),
+        StructField("rule", StringType(), True),
+        StructField("rule_type", StringType(), True),
+        StructField("expectation", StringType(), True),
+        StructField("column_name", StringType(), True),
+        StructField("action_if_failed", StringType(), True),
+        StructField("tag", StringType(), True),
+        StructField("description", StringType(), True),
+        StructField("enable_for_source_dq_validation", StringType(), True),
+        StructField("enable_for_target_dq_validation", StringType(), True),
+        StructField("is_active", StringType(), True),
+        StructField("enable_error_drop_alert", StringType(), True),
+        StructField("error_drop_threshold", StringType(), True),
+        StructField("priority", StringType(), True),
+    ])
+
+
+@pytest.fixture
+def rules_df_schema_missing_multiple():
+    """Schema missing product_id and rule_type columns."""
+    return StructType([
+        StructField("table_name", StringType(), True),
+        StructField("rule", StringType(), True),
+        StructField("expectation", StringType(), True),
+        StructField("column_name", StringType(), True),
+        StructField("action_if_failed", StringType(), True),
+        StructField("tag", StringType(), True),
+        StructField("description", StringType(), True),
+        StructField("enable_for_source_dq_validation", StringType(), True),
+        StructField("enable_for_target_dq_validation", StringType(), True),
+        StructField("is_active", StringType(), True),
+        StructField("enable_error_drop_alert", StringType(), True),
+        StructField("error_drop_threshold", StringType(), True),
+        StructField("priority", StringType(), True),
+    ])
+
+
+@pytest.fixture
+def rule_data_missing_product_id():
+    """Rule data without product_id field (for schema missing product_id)."""
+    return [{
+        "table_name": "table1",
+        "rule": "rule1",
+        "rule_type": "row_dq",
+        "expectation": "col1 > 0",
+        "column_name": "col1",
+        "action_if_failed": "ignore",
+        "tag": "validity",
+        "description": "Test",
+        "enable_for_source_dq_validation": "True",
+        "enable_for_target_dq_validation": "False",
+        "is_active": "True",
+        "enable_error_drop_alert": "False",
+        "error_drop_threshold": "0",
+        "priority": "medium",
+    }]
+
+
+@pytest.fixture
+def rule_data_missing_multiple():
+    """Rule data without product_id and rule_type fields."""
+    return [{
+        "table_name": "table1",
+        "rule": "rule1",
+        "expectation": "col1 > 0",
+        "column_name": "col1",
+        "action_if_failed": "ignore",
+        "tag": "validity",
+        "description": "Test",
+        "enable_for_source_dq_validation": "True",
+        "enable_for_target_dq_validation": "False",
+        "is_active": "True",
+        "enable_error_drop_alert": "False",
+        "error_drop_threshold": "0",
+        "priority": "medium",
+    }]
+
+
+@pytest.fixture
+def valid_rules_df(spark, rules_df_schema, base_rule_data):
+    """Valid rules DataFrame with all required columns and no NULL values."""
+    return spark.createDataFrame(base_rule_data, schema=rules_df_schema)
+
+
+@pytest.fixture
+def rules_df_missing_product_id_column(spark, rules_df_schema_missing_product_id, rule_data_missing_product_id):
+    """Rules DataFrame missing product_id column."""
+    return spark.createDataFrame(rule_data_missing_product_id, schema=rules_df_schema_missing_product_id)
+
+
+@pytest.fixture
+def rules_df_missing_multiple_columns(spark, rules_df_schema_missing_multiple, rule_data_missing_multiple):
+    """Rules DataFrame missing product_id and rule_type columns."""
+    return spark.createDataFrame(rule_data_missing_multiple, schema=rules_df_schema_missing_multiple)
+
+
+@pytest.fixture
+def rules_df_with_null_product_id(spark, rules_df_schema, rule_data_null_product_id):
+    """Rules DataFrame with NULL product_id value."""
+    return spark.createDataFrame(rule_data_null_product_id, schema=rules_df_schema)
+
+
+@pytest.fixture
+def rules_df_with_null_table_name(spark, rules_df_schema, rule_data_null_table_name):
+    """Rules DataFrame with NULL table_name value."""
+    return spark.createDataFrame(rule_data_null_table_name, schema=rules_df_schema)
+
+
+@pytest.fixture
+def rules_df_with_all_null_ids(spark, rules_df_schema, rule_data_all_null_ids):
+    """Rules DataFrame with all NULL values in required columns."""
+    return spark.createDataFrame(rule_data_all_null_ids, schema=rules_df_schema)
+
+
+@pytest.fixture
+def rules_df_with_partial_null_rows(spark, rules_df_schema):
+    """Rules DataFrame with some rows having NULL values."""
+    data = [
+        {
+            "product_id": "product1",
+            "table_name": "table1",
+            "rule": "rule1",
+            "rule_type": "row_dq",
+            "expectation": "col1 > 0",
+            "column_name": "col1",
+            "action_if_failed": "ignore",
+            "tag": "validity",
+            "description": "Test 1",
+            "enable_for_source_dq_validation": "True",
+            "enable_for_target_dq_validation": "False",
+            "is_active": "True",
+            "enable_error_drop_alert": "False",
+            "error_drop_threshold": "0",
+            "priority": "medium",
+        },
+        {
+            "product_id": None,  # NULL in second row
+            "table_name": "table2",
+            "rule": "rule2",
+            "rule_type": "row_dq",
+            "expectation": "col2 > 0",
+            "column_name": "col2",
+            "action_if_failed": "ignore",
+            "tag": "validity",
+            "description": "Test 2",
+            "enable_for_source_dq_validation": "True",
+            "enable_for_target_dq_validation": "False",
+            "is_active": "True",
+            "enable_error_drop_alert": "False",
+            "error_drop_threshold": "0",
+            "priority": "medium",
+        },
+    ]
+    return spark.createDataFrame(data, schema=rules_df_schema)
+
+
+@pytest.fixture
+def empty_rules_df(spark, rules_df_schema):
+    """Empty rules DataFrame with correct schema but no rows."""
+    return spark.createDataFrame([], schema=rules_df_schema)
+
+
+@pytest.fixture
+def rule_data_empty_string_product_id():
+    """Rule data with empty string product_id."""
+    return [{
+        "product_id": "",
+        "table_name": "table1",
+        "rule": "rule1",
+        "rule_type": "row_dq",
+        "expectation": "col1 > 0",
+        "column_name": "col1",
+        "action_if_failed": "ignore",
+        "tag": "validity",
+        "description": "Test",
+        "enable_for_source_dq_validation": "True",
+        "enable_for_target_dq_validation": "False",
+        "is_active": "True",
+        "enable_error_drop_alert": "False",
+        "error_drop_threshold": "0",
+        "priority": "medium",
+    }]
+
+
+@pytest.fixture
+def rule_data_whitespace_only_product_id():
+    """Rule data with whitespace-only product_id."""
+    return [{
+        "product_id": "   ",
+        "table_name": "table1",
+        "rule": "rule1",
+        "rule_type": "row_dq",
+        "expectation": "col1 > 0",
+        "column_name": "col1",
+        "action_if_failed": "ignore",
+        "tag": "validity",
+        "description": "Test",
+        "enable_for_source_dq_validation": "True",
+        "enable_for_target_dq_validation": "False",
+        "is_active": "True",
+        "enable_error_drop_alert": "False",
+        "error_drop_threshold": "0",
+        "priority": "medium",
+    }]
+
+
+@pytest.fixture
+def rule_data_multiple_empty_columns():
+    """Rule data with multiple empty string columns."""
+    return [{
+        "product_id": "",
+        "table_name": "   ",
+        "rule": "rule1",
+        "rule_type": "",
+        "expectation": "col1 > 0",
+        "column_name": "col1",
+        "action_if_failed": "ignore",
+        "tag": "validity",
+        "description": "Test",
+        "enable_for_source_dq_validation": "True",
+        "enable_for_target_dq_validation": "False",
+        "is_active": "True",
+        "enable_error_drop_alert": "False",
+        "error_drop_threshold": "0",
+        "priority": "medium",
+    }]
