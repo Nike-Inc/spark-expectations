@@ -121,7 +121,7 @@ class SparkExpectations:
             md5(col("expectation"))
         )
     
-    def _validate_rules(self) -> None:
+    def _check_missing_columns(self, required_columns: set) -> None:
         """
         Validate that the rules DataFrame contains all required columns and they are not null.
 
@@ -129,28 +129,57 @@ class SparkExpectations:
             SparkExpectationsUserInputOrConfigInvalidException: If any required columns are missing
                 or contain NULL values.
         """
-        required_columns = {"product_id", "table_name", "rule", "rule_type"}
         actual_columns = set(self.rules_df.columns)
         missing_columns = required_columns - actual_columns
         
-                # Check 1: Ensure required columns exist
         if missing_columns:
             raise SparkExpectationsUserInputOrConfigInvalidException(
                 f"rules_df is missing required columns: {sorted(missing_columns)}"
             )
-        
-        # Check 2: Ensure required columns don't have NULL values
-        null_check_expr = [
-            F.sum(F.when(F.col(c).isNull(), 1).otherwise(0)).alias(c)
-            for c in required_columns
+
+    def _check_null_or_empty_values(self, columns: set) -> None:
+        """
+        Check that the specified columns don't have NULL or empty string values.
+
+        Args:
+            columns: Set of column names to validate.
+
+        Raises:
+            SparkExpectationsUserInputOrConfigInvalidException: If any columns contain
+                NULL or empty string values.
+        """
+        null_or_empty_check_expr = [
+            F.sum(
+                F.when(
+                    F.col(c).isNull() | (F.trim(F.col(c)) == ""), 1
+                ).otherwise(0)
+            ).alias(c)
+            for c in columns if c in self.rules_df.columns
         ]
-        null_counts = self.rules_df.select(null_check_expr).collect()[0]
-        columns_with_nulls = [c for c in required_columns if null_counts[c] > 0]
+        invalid_counts = self.rules_df.select(null_or_empty_check_expr).collect()[0]
+        columns_with_invalid = [c for c in columns if c in invalid_counts and invalid_counts[c] > 0]
         
-        if columns_with_nulls:
+        if columns_with_invalid:
             raise SparkExpectationsUserInputOrConfigInvalidException(
-                f"rules_df contains NULL values in required columns: {sorted(columns_with_nulls)}"
+                f"rules_df contains NULL or empty values in required columns: {sorted(columns_with_invalid)}"
             )
+
+    def _validate_rules(self) -> None:
+        """
+        Validate the rules DataFrame for required structure and content.
+
+        Raises:
+            SparkExpectationsUserInputOrConfigInvalidException: If the rules DataFrame is empty
+                or fails other validation checks.
+        """
+        if self.rules_df.isEmpty():
+            raise SparkExpectationsUserInputOrConfigInvalidException(
+                "rules_df is empty. At least one rule must be provided."
+            )
+        
+        required_columns = {"product_id", "table_name", "rule", "rule_type"}
+        self._check_missing_columns(required_columns)
+        self._check_null_or_empty_values(required_columns)
 
     def __post_init__(self) -> None:
         if isinstance(self.rules_df, DataFrame):  # type: ignore
