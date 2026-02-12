@@ -1,7 +1,7 @@
 import functools
 import importlib
 from dataclasses import dataclass
-from typing import Dict, Optional, Any, Union, List, TypeAlias, overload
+from typing import Dict, Optional, Any, Union, List, TypeAlias, overload, TYPE_CHECKING
 
 from pyspark.version import __version__ as spark_version
 from pyspark import StorageLevel
@@ -64,8 +64,9 @@ if check_if_pyspark_connect_is_supported():
     from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
     from pyspark.sql.connect.session import SparkSession as ConnectSparkSession
 
-DataFrame: TypeAlias = Union[sql.DataFrame, ConnectDataFrame]  # type: ignore
-SparkSession: TypeAlias = Union[sql.SparkSession, ConnectSparkSession]  # type: ignore
+if TYPE_CHECKING:
+    DataFrame: TypeAlias = Union[sql.DataFrame, ConnectDataFrame]  # type: ignore
+    SparkSession: TypeAlias = Union[sql.SparkSession, ConnectSparkSession]  # type: ignore
 
 
 __all__ = [
