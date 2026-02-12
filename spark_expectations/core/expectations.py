@@ -123,11 +123,11 @@ class SparkExpectations:
     
     def _check_missing_columns(self, required_columns: set) -> None:
         """
-        Validate that the rules DataFrame contains all required columns and they are not null.
+        Validate that the rules DataFrame contains all required columns.
 
         Raises:
-            SparkExpectationsUserInputOrConfigInvalidException: If any required columns are missing
-                or contain NULL values.
+            SparkExpectationsUserInputOrConfigInvalidException: If any required columns are
+                missing from rules_df.
         """
         actual_columns = set(self.rules_df.columns)
         missing_columns = required_columns - actual_columns
