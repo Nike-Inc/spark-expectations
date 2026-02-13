@@ -64,11 +64,11 @@ if check_if_pyspark_connect_is_supported():
     from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
     from pyspark.sql.connect.session import SparkSession as ConnectSparkSession
 
-    DataFrame: TypeAlias = Union[sql.DataFrame, ConnectDataFrame]  # type: ignore
-    SparkSession: TypeAlias = Union[sql.SparkSession, ConnectSparkSession]  # type: ignore
+    DataFrame: TypeAlias = Union[sql.DataFrame, ConnectDataFrame]
+    SparkSession: TypeAlias = Union[sql.SparkSession, ConnectSparkSession]
 else:
-    DataFrame: TypeAlias = sql.DataFrame
-    SparkSession: TypeAlias = sql.SparkSession
+    DataFrame = sql.DataFrame # type: ignore
+    SparkSession = sql.SparkSession # type: ignore
 
 
 
