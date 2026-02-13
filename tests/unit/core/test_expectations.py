@@ -1,6 +1,247 @@
 """
 Unit tests for spark_expectations.core.expectations module.
 """
+import pytest
+
+from spark_expectations.core.exceptions import SparkExpectationsUserInputOrConfigInvalidException
+from spark_expectations.core.expectations import SparkExpectations, WrappedDataFrameWriter
+
+
+class TestValidateRules:
+    """Test cases for SparkExpectations._validate_rules method."""
+
+    def test_validate_rules_passes_with_valid_df(self, spark, rules_df_schema, base_rule_data):
+        """Test that _validate_rules passes when all required columns exist and have no NULL values."""
+        rules_df = spark.createDataFrame(base_rule_data, schema=rules_df_schema)
+        writer = WrappedDataFrameWriter().mode("append").format("parquet")
+        
+        # Should not raise any exception
+        se = SparkExpectations(
+            product_id="test_product",
+            rules_df=rules_df,
+            stats_table="test_stats_table",
+            stats_table_writer=writer,
+            target_and_error_table_writer=writer,
+        )
+        assert se is not None
+
+    # ==========================================================================
+    # Empty DataFrame Tests
+    # ==========================================================================
+
+    def test_validate_rules_raises_error_when_dataframe_is_empty(self, spark, empty_rules_df):
+        """Test that _validate_rules raises error when rules_df is empty."""
+        writer = WrappedDataFrameWriter().mode("append").format("parquet")
+        
+        with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException) as exc_info:
+            SparkExpectations(
+                product_id="test_product",
+                rules_df=empty_rules_df,
+                stats_table="test_stats_table",
+                stats_table_writer=writer,
+                target_and_error_table_writer=writer,
+            )
+        
+        assert "empty" in str(exc_info.value).lower()
+
+    # ==========================================================================
+    # Missing Columns Tests
+    # ==========================================================================
+
+    def test_validate_rules_raises_error_when_missing_single_column(
+        self, spark, rules_df_schema_missing_product_id, rule_data_missing_product_id
+    ):
+        """Test that _validate_rules raises error when a single required column is missing."""
+        rules_df = spark.createDataFrame(rule_data_missing_product_id, schema=rules_df_schema_missing_product_id)
+        writer = WrappedDataFrameWriter().mode("append").format("parquet")
+        
+        with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException) as exc_info:
+            SparkExpectations(
+                product_id="test_product",
+                rules_df=rules_df,
+                stats_table="test_stats_table",
+                stats_table_writer=writer,
+                target_and_error_table_writer=writer,
+            )
+        
+        assert "missing required columns" in str(exc_info.value)
+        assert "product_id" in str(exc_info.value)
+
+    def test_validate_rules_raises_error_when_missing_multiple_columns(
+        self, spark, rules_df_schema_missing_multiple, rule_data_missing_multiple
+    ):
+        """Test that _validate_rules raises error when multiple required columns are missing."""
+        rules_df = spark.createDataFrame(rule_data_missing_multiple, schema=rules_df_schema_missing_multiple)
+        writer = WrappedDataFrameWriter().mode("append").format("parquet")
+        
+        with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException) as exc_info:
+            SparkExpectations(
+                product_id="test_product",
+                rules_df=rules_df,
+                stats_table="test_stats_table",
+                stats_table_writer=writer,
+                target_and_error_table_writer=writer,
+            )
+        
+        assert "missing required columns" in str(exc_info.value)
+        assert "product_id" in str(exc_info.value)
+        assert "rule_type" in str(exc_info.value)
+
+    # ==========================================================================
+    # NULL Value Tests
+    # ==========================================================================
+
+    def test_validate_rules_raises_error_when_single_column_has_null(
+        self, spark, rules_df_schema, rule_data_null_product_id
+    ):
+        """Test that _validate_rules raises error when a required column has NULL value."""
+        rules_df = spark.createDataFrame(rule_data_null_product_id, schema=rules_df_schema)
+        writer = WrappedDataFrameWriter().mode("append").format("parquet")
+        
+        with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException) as exc_info:
+            SparkExpectations(
+                product_id="test_product",
+                rules_df=rules_df,
+                stats_table="test_stats_table",
+                stats_table_writer=writer,
+                target_and_error_table_writer=writer,
+            )
+        
+        assert "NULL or empty" in str(exc_info.value)
+        assert "product_id" in str(exc_info.value)
+
+    def test_validate_rules_raises_error_when_multiple_columns_have_null(
+        self, spark, rules_df_schema, rule_data_all_null_ids
+    ):
+        """Test that _validate_rules raises error when multiple required columns have NULL values."""
+        rules_df = spark.createDataFrame(rule_data_all_null_ids, schema=rules_df_schema)
+        writer = WrappedDataFrameWriter().mode("append").format("parquet")
+        
+        with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException) as exc_info:
+            SparkExpectations(
+                product_id="test_product",
+                rules_df=rules_df,
+                stats_table="test_stats_table",
+                stats_table_writer=writer,
+                target_and_error_table_writer=writer,
+            )
+        
+        assert "NULL or empty" in str(exc_info.value)
+        # All four required columns should be mentioned
+        assert "product_id" in str(exc_info.value)
+        assert "table_name" in str(exc_info.value)
+        assert "rule" in str(exc_info.value)
+        assert "rule_type" in str(exc_info.value)
+
+    def test_validate_rules_raises_error_when_null_in_any_row(
+        self, spark, rules_df_with_partial_null_rows
+    ):
+        """Test that _validate_rules raises error even if only some rows have NULL values."""
+        writer = WrappedDataFrameWriter().mode("append").format("parquet")
+        
+        with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException) as exc_info:
+            SparkExpectations(
+                product_id="test_product",
+                rules_df=rules_df_with_partial_null_rows,
+                stats_table="test_stats_table",
+                stats_table_writer=writer,
+                target_and_error_table_writer=writer,
+            )
+        
+        assert "NULL or empty" in str(exc_info.value)
+        assert "product_id" in str(exc_info.value)
+
+    # ==========================================================================
+    # Empty String Tests
+    # ==========================================================================
+
+    def test_validate_rules_raises_error_when_column_has_empty_string(
+        self, spark, rules_df_schema, rule_data_empty_string_product_id
+    ):
+        """Test that _validate_rules raises error when a required column has empty string value."""
+        rules_df = spark.createDataFrame(rule_data_empty_string_product_id, schema=rules_df_schema)
+        writer = WrappedDataFrameWriter().mode("append").format("parquet")
+        
+        with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException) as exc_info:
+            SparkExpectations(
+                product_id="test_product",
+                rules_df=rules_df,
+                stats_table="test_stats_table",
+                stats_table_writer=writer,
+                target_and_error_table_writer=writer,
+            )
+        
+        assert "NULL or empty" in str(exc_info.value)
+        assert "product_id" in str(exc_info.value)
+
+    def test_validate_rules_raises_error_when_column_has_whitespace_only(
+        self, spark, rules_df_schema, rule_data_whitespace_only_product_id
+    ):
+        """Test that _validate_rules raises error when a required column has whitespace-only value."""
+        rules_df = spark.createDataFrame(rule_data_whitespace_only_product_id, schema=rules_df_schema)
+        writer = WrappedDataFrameWriter().mode("append").format("parquet")
+        
+        with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException) as exc_info:
+            SparkExpectations(
+                product_id="test_product",
+                rules_df=rules_df,
+                stats_table="test_stats_table",
+                stats_table_writer=writer,
+                target_and_error_table_writer=writer,
+            )
+        
+        assert "NULL or empty" in str(exc_info.value)
+        assert "product_id" in str(exc_info.value)
+
+    def test_validate_rules_raises_error_when_multiple_columns_have_empty_values(
+        self, spark, rules_df_schema, rule_data_multiple_empty_columns
+    ):
+        """Test that _validate_rules raises error when multiple columns have empty/whitespace values."""
+        rules_df = spark.createDataFrame(rule_data_multiple_empty_columns, schema=rules_df_schema)
+        writer = WrappedDataFrameWriter().mode("append").format("parquet")
+        
+        with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException) as exc_info:
+            SparkExpectations(
+                product_id="test_product",
+                rules_df=rules_df,
+                stats_table="test_stats_table",
+                stats_table_writer=writer,
+                target_and_error_table_writer=writer,
+            )
+        
+        assert "NULL or empty" in str(exc_info.value)
+        assert "product_id" in str(exc_info.value)
+        assert "table_name" in str(exc_info.value)
+        assert "rule_type" in str(exc_info.value)
+
+    # ==========================================================================
+    # Error Message Format Tests
+    # ==========================================================================
+
+    def test_validate_rules_error_message_lists_columns_sorted(
+        self, spark, rules_df_schema, rule_data_all_null_ids
+    ):
+        """Test that error message lists missing/null columns in sorted order."""
+        rules_df = spark.createDataFrame(rule_data_all_null_ids, schema=rules_df_schema)
+        writer = WrappedDataFrameWriter().mode("append").format("parquet")
+        
+        with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException) as exc_info:
+            SparkExpectations(
+                product_id="test_product",
+                rules_df=rules_df,
+                stats_table="test_stats_table",
+                stats_table_writer=writer,
+                target_and_error_table_writer=writer,
+            )
+        
+        error_msg = str(exc_info.value)
+        # Columns should appear in sorted order
+        product_id_pos = error_msg.index("product_id")
+        rule_pos = error_msg.index("'rule'")  # Use quotes to distinguish from rule_type
+        rule_type_pos = error_msg.index("rule_type")
+        table_name_pos = error_msg.index("table_name")
+        
+        assert product_id_pos < rule_pos < rule_type_pos < table_name_pos
 
 
 class TestAddHashColumns:
