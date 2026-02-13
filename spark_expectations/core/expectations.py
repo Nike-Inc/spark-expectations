@@ -1,7 +1,7 @@
 import functools
 import importlib
 from dataclasses import dataclass
-from typing import Dict, Optional, Any, Union, List, TypeAlias, overload, TYPE_CHECKING
+from typing import Dict, Optional, Any, Union, List, TypeAlias, overload
 
 from pyspark.version import __version__ as spark_version
 from pyspark import StorageLevel
