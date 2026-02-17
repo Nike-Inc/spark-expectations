@@ -181,6 +181,265 @@ class SparkExpectations:
         self._check_missing_columns(required_columns)
         self._check_null_or_empty_values(required_columns)
 
+    def _check_serverless_config(
+        self, 
+        user_conf: Optional[Dict[str, Union[str, int, bool, Dict[str, str]]]]
+    ) -> None:
+        """
+        Check if running in serverless mode and persist rules DataFrame if not.
+
+        In non-serverless environments, the rules DataFrame is persisted to
+        MEMORY_AND_DISK storage level to optimize repeated access during
+        data quality processing.
+
+        Args:
+            user_conf: User configuration dictionary that may contain serverless setting.
+        """
+        is_serverless = user_conf.get("spark.expectations.is.serverless", False) if user_conf else False
+        if not is_serverless:
+            self.rules_df = self.rules_df.persist(StorageLevel.MEMORY_AND_DISK)
+
+    def _build_config_dicts(
+        self,
+        user_conf: Optional[Dict[str, Union[str, int, bool, Dict[str, str]]]]
+    ) -> tuple[Dict[str, Union[str, int, bool, Dict[str, str]]], Dict[str, Any]]:
+        """
+        Build notification and stats streaming configuration dictionaries.
+
+        Merges default configurations with user-provided configurations to create
+        the final notification and stats streaming settings.
+
+        Args:
+            user_conf: User configuration dictionary to merge with defaults.
+
+        Returns:
+            A tuple containing:
+                - notification_dict: Configuration for notifications including
+                  email, Slack, and other notification settings.
+                - se_stats_streaming_dict: Configuration for stats streaming
+                  including Kafka settings.
+        """
+        _default_notification_dict, _default_stats_streaming_dict = get_config_dict(self.spark, user_conf)
+        _default_notification_dict[
+            user_config.querydq_output_custom_table_name
+        ] = f"{self.stats_table}_querydq_output"
+
+        _notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = (
+            {**_default_notification_dict, **user_conf} if user_conf else _default_notification_dict
+        )
+
+        _se_stats_streaming_dict: Dict[str, Any] = (
+            {**self.stats_streaming_options} if self.stats_streaming_options else _default_stats_streaming_dict
+        )
+        return _notification_dict, _se_stats_streaming_dict
+
+    def _set_kafka_configs(self, se_stats_streaming_dict: Dict[str, Any]) -> None:
+        """
+        Configure Kafka settings for stats streaming in the context.
+
+        Sets up Kafka-related configurations including custom config enablement
+        and bootstrap server settings based on the provided streaming dictionary.
+
+        Args:
+            se_stats_streaming_dict: Dictionary containing Kafka streaming
+                configuration options such as custom config enable flag and
+                bootstrap server address.
+        """
+        enable_kafka_custom_config = se_stats_streaming_dict.get('se.streaming.stats.kafka.custom.config.enable', False)
+        self._context.set_se_streaming_stats_kafka_custom_config_enable(
+            enable_kafka_custom_config if isinstance(enable_kafka_custom_config, bool) else False
+        )
+
+        if 'se.streaming.stats.kafka.bootstrap.server' in se_stats_streaming_dict:
+            self._context.set_se_streaming_stats_kafka_bootstrap_server(str(se_stats_streaming_dict['se.streaming.stats.kafka.bootstrap.server']))
+
+    def _set_notification_configs(self, notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]]) -> None:
+        """
+        Configure notification-related settings in the context.
+
+        Sets up error table enablement, DQ rules parameters, and job metadata
+        based on the provided notification configuration dictionary.
+
+        Args:
+            notification_dict: Dictionary containing notification configuration
+                options including error table settings, DQ rules parameters,
+                and job metadata.
+        """
+        enable_error_table = notification_dict.get(user_config.se_enable_error_table, True)
+        self._context.set_se_enable_error_table(
+            enable_error_table if isinstance(enable_error_table, bool) else True
+        )
+
+        dq_rules_params = notification_dict.get(user_config.se_dq_rules_params, {})
+        self._context.set_dq_rules_params(dq_rules_params if isinstance(dq_rules_params, dict) else {})
+
+        self._context.set_se_job_metadata(notification_dict.get(user_config.se_job_metadata))
+
+    def _set_agg_query_detailed_stats(self, notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]]) -> None:
+        """
+        Configure detailed statistics settings for aggregate and query DQ.
+
+        Enables detailed result collection for aggregate DQ and/or query DQ
+        based on the notification configuration. When enabled, sets up the
+        custom table name for storing detailed query DQ output.
+
+        Args:
+            notification_dict: Dictionary containing notification configuration
+                options including flags for enabling detailed aggregate and
+                query DQ results, and the custom table name for query DQ output.
+        """
+        _agg_dq_detailed_stats: bool = (
+            bool(notification_dict[user_config.se_enable_agg_dq_detailed_result])
+            if isinstance(
+                notification_dict[user_config.se_enable_agg_dq_detailed_result],
+                bool,
+            )
+            else False
+        )
+
+        _query_dq_detailed_stats: bool = (
+            bool(notification_dict[user_config.se_enable_query_dq_detailed_result])
+            if isinstance(
+                notification_dict[user_config.se_enable_query_dq_detailed_result],
+                bool,
+            )
+            else False
+        )
+
+        if _agg_dq_detailed_stats or _query_dq_detailed_stats:
+            if _agg_dq_detailed_stats:
+                self._context.set_agg_dq_detailed_stats_status(_agg_dq_detailed_stats)
+
+            if _query_dq_detailed_stats:
+                self._context.set_query_dq_detailed_stats_status(_query_dq_detailed_stats)
+
+            self._context.set_query_dq_output_custom_table_name(
+                str(notification_dict[user_config.querydq_output_custom_table_name])
+            )
+
+    def _set_notification_context(
+        self,
+        notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]],
+        se_stats_streaming_dict: Dict[str, Any]
+    ) -> tuple[bool, bool, int]:
+        """
+        Configure notification context settings and extract threshold parameters.
+
+        Sets up notification triggers (on start, completion, fail) and streaming
+        stats configuration in the context. Also extracts and returns error
+        threshold-related settings for use in the DQ processing workflow.
+
+        Args:
+            notification_dict: Dictionary containing notification configuration
+                options including triggers for start, completion, and failure
+                notifications, job metadata, and error threshold settings.
+            se_stats_streaming_dict: Dictionary containing stats streaming
+                configuration for Kafka and other streaming options.
+
+        Returns:
+            A tuple containing:
+                - notification_on_error_drop_exceeds_threshold_breach: Whether to
+                  notify when error drop exceeds threshold.
+                - notifications_on_rules_action_if_failed_set_ignore: Whether to
+                  notify on rules with action_if_failed set to ignore.
+                - error_drop_threshold: The threshold percentage for error drops.
+        """
+        _notification_on_start: bool = (
+            bool(notification_dict[user_config.se_notifications_on_start])
+            if isinstance(
+                notification_dict[user_config.se_notifications_on_start],
+                bool,
+            )
+            else False
+        )
+        _notification_on_completion: bool = (
+            bool(notification_dict[user_config.se_notifications_on_completion])
+            if isinstance(
+                notification_dict[user_config.se_notifications_on_completion],
+                bool,
+            )
+            else False
+        )
+        _notification_on_fail: bool = (
+            bool(notification_dict[user_config.se_notifications_on_fail])
+            if isinstance(
+                notification_dict[user_config.se_notifications_on_fail],
+                bool,
+            )
+            else False
+        )
+        _notification_on_error_drop_exceeds_threshold_breach: bool = (
+            bool(notification_dict[user_config.se_notifications_on_error_drop_exceeds_threshold_breach])
+            if isinstance(
+                notification_dict[user_config.se_notifications_on_error_drop_exceeds_threshold_breach],
+                bool,
+            )
+            else False
+        )
+        _notifications_on_rules_action_if_failed_set_ignore: bool = (
+            bool(notification_dict[user_config.se_notifications_on_rules_action_if_failed_set_ignore])
+            if isinstance(
+                notification_dict[user_config.se_notifications_on_rules_action_if_failed_set_ignore],
+                bool,
+            )
+            else False
+        )
+
+        _job_metadata: Optional[str] = (
+            str(notification_dict[user_config.se_job_metadata])
+            if isinstance(notification_dict[user_config.se_job_metadata], str)
+            else None
+        )
+
+        notifications_on_error_drop_threshold = notification_dict.get(
+            user_config.se_notifications_on_error_drop_threshold, 100
+        )
+        _error_drop_threshold: int = (
+            notifications_on_error_drop_threshold if isinstance(notifications_on_error_drop_threshold, int) else 100
+        )
+
+        min_priority_slack = user_config.se_notifications_min_priority_slack
+
+        self.reader.set_notification_param(notification_dict)
+        self._context.set_notification_on_start(_notification_on_start)
+        self._context.set_notification_on_completion(_notification_on_completion)
+        self._context.set_notification_on_fail(_notification_on_fail)
+
+        self._context.set_se_streaming_stats_dict(se_stats_streaming_dict)
+        self._context.set_job_metadata(_job_metadata)
+        self._context.set_min_priority_slack(
+            str(notification_dict[min_priority_slack])
+        )
+        return (_notification_on_error_drop_exceeds_threshold_breach, _notifications_on_rules_action_if_failed_set_ignore, _error_drop_threshold)
+
+    def _check_invalid_rules(self, df: "DataFrame", rules: List[Dict]) -> None:
+        """
+        Validate rules and log any invalid ones.
+
+        Args:
+            df: The DataFrame to validate rules against.
+            rules: List of rule dictionaries to validate.
+        """
+        invalid_results = SparkExpectationsValidateRules.validate_expectations(
+            df=df,
+            rules=rules,
+            spark=self.spark,
+        )
+        if invalid_results:
+            failed_rules = [
+                result.rule.get("rule") if result.rule else "unknown"
+                for results_list in invalid_results.values()
+                for result in results_list
+            ]
+            # pylint: disable=logging-too-many-args
+            _log.warning(
+                "Some rules failed validation: %s. "
+                "Check earlier log messages for details on each invalid rule.",
+                failed_rules
+            )
+        else:
+            _log.info("Validation for rules completed successfully - all rules are valid")
+    
     def __post_init__(self) -> None:
         if isinstance(self.rules_df, DataFrame):  # type: ignore
             try:
@@ -232,8 +491,6 @@ class SparkExpectations:
         self.rules_df = self._add_hash_columns(self.rules_df)
         # self.rules_df = self.rules_df.persist(StorageLevel.MEMORY_AND_DISK)
 
-    # TODO Add target_error_table_writer and stats_table_writer as parameters to this function so this takes precedence
-    #  if user provides it
     def with_expectations(
         self,
         target_table: str,
@@ -260,234 +517,17 @@ class SparkExpectations:
         Returns:
             Any: Returns a function which applied the expectations on dataset
         """
-
-        def _check_serverless_config() -> None:
-            """
-            Check if running in serverless mode and persist rules DataFrame if not.
-
-            In non-serverless environments, the rules DataFrame is persisted to
-            MEMORY_AND_DISK storage level to optimize repeated access during
-            data quality processing.
-            """
-            is_serverless = user_conf.get("spark.expectations.is.serverless", False) if user_conf else False
-            if not is_serverless:
-                self.rules_df = self.rules_df.persist(StorageLevel.MEMORY_AND_DISK)
-
-        def _build_config_dicts() -> tuple[Dict[str, Union[str, int, bool, Dict[str, str]]], Dict[str, Any]]:
-            """
-            Build notification and stats streaming configuration dictionaries.
-
-            Merges default configurations with user-provided configurations to create
-            the final notification and stats streaming settings.
-
-            Returns:
-                A tuple containing:
-                    - notification_dict: Configuration for notifications including
-                      email, Slack, and other notification settings.
-                    - se_stats_streaming_dict: Configuration for stats streaming
-                      including Kafka settings.
-            """
-            _default_notification_dict, _default_stats_streaming_dict = get_config_dict(self.spark, user_conf)
-            _default_notification_dict[
-                user_config.querydq_output_custom_table_name
-            ] = f"{self.stats_table}_querydq_output"
-
-            _notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]] = (
-                {**_default_notification_dict, **user_conf} if user_conf else _default_notification_dict
-            )
-
-            _se_stats_streaming_dict: Dict[str, Any] = (
-                {**self.stats_streaming_options} if self.stats_streaming_options else _default_stats_streaming_dict
-            )
-            return _notification_dict, _se_stats_streaming_dict
-        
-        def _set_kafka_configs(se_stats_streaming_dict: Dict[str, Any]) -> None:
-            """
-            Configure Kafka settings for stats streaming in the context.
-
-            Sets up Kafka-related configurations including custom config enablement
-            and bootstrap server settings based on the provided streaming dictionary.
-
-            Args:
-                se_stats_streaming_dict: Dictionary containing Kafka streaming
-                    configuration options such as custom config enable flag and
-                    bootstrap server address.
-            """
-            enable_kafka_custom_config = se_stats_streaming_dict.get('se.streaming.stats.kafka.custom.config.enable', False)
-            self._context.set_se_streaming_stats_kafka_custom_config_enable(
-                enable_kafka_custom_config if isinstance(enable_kafka_custom_config, bool) else False
-            )
-            
-            if 'se.streaming.stats.kafka.bootstrap.server' in se_stats_streaming_dict:
-                self._context.set_se_streaming_stats_kafka_bootstrap_server(str(se_stats_streaming_dict['se.streaming.stats.kafka.bootstrap.server']))
-
-        def _set_notification_configs(notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]]) -> None:
-            """
-            Configure notification-related settings in the context.
-
-            Sets up error table enablement, DQ rules parameters, and job metadata
-            based on the provided notification configuration dictionary.
-
-            Args:
-                notification_dict: Dictionary containing notification configuration
-                    options including error table settings, DQ rules parameters,
-                    and job metadata.
-            """
-            enable_error_table = notification_dict.get(user_config.se_enable_error_table, True)
-            self._context.set_se_enable_error_table(
-                enable_error_table if isinstance(enable_error_table, bool) else True
-            )
-
-            dq_rules_params = notification_dict.get(user_config.se_dq_rules_params, {})
-            self._context.set_dq_rules_params(dq_rules_params if isinstance(dq_rules_params, dict) else {})
-            
-            self._context.set_se_job_metadata(notification_dict.get(user_config.se_job_metadata))
-
-        def _set_agg_query_detailed_stats(notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]]) -> None:
-            """
-            Configure detailed statistics settings for aggregate and query DQ.
-
-            Enables detailed result collection for aggregate DQ and/or query DQ
-            based on the notification configuration. When enabled, sets up the
-            custom table name for storing detailed query DQ output.
-
-            Args:
-                notification_dict: Dictionary containing notification configuration
-                    options including flags for enabling detailed aggregate and
-                    query DQ results, and the custom table name for query DQ output.
-            """
-            _agg_dq_detailed_stats: bool = (
-                bool(notification_dict[user_config.se_enable_agg_dq_detailed_result])
-                if isinstance(
-                    notification_dict[user_config.se_enable_agg_dq_detailed_result],
-                    bool,
-                )
-                else False
-            )
-
-            _query_dq_detailed_stats: bool = (
-                bool(notification_dict[user_config.se_enable_query_dq_detailed_result])
-                if isinstance(
-                    notification_dict[user_config.se_enable_query_dq_detailed_result],
-                    bool,
-                )
-                else False
-            )
-
-            if _agg_dq_detailed_stats or _query_dq_detailed_stats:
-                if _agg_dq_detailed_stats:
-                    self._context.set_agg_dq_detailed_stats_status(_agg_dq_detailed_stats)
-
-                if _query_dq_detailed_stats:
-                    self._context.set_query_dq_detailed_stats_status(_query_dq_detailed_stats)
-
-                self._context.set_query_dq_output_custom_table_name(
-                    str(notification_dict[user_config.querydq_output_custom_table_name])
-                )
-        def _set_notification_context(
-            notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]],
-            se_stats_streaming_dict: Dict[str, Any]
-        ) -> tuple[bool, bool, int]:
-            """
-            Configure notification context settings and extract threshold parameters.
-
-            Sets up notification triggers (on start, completion, fail) and streaming
-            stats configuration in the context. Also extracts and returns error
-            threshold-related settings for use in the DQ processing workflow.
-
-            Args:
-                notification_dict: Dictionary containing notification configuration
-                    options including triggers for start, completion, and failure
-                    notifications, job metadata, and error threshold settings.
-                se_stats_streaming_dict: Dictionary containing stats streaming
-                    configuration for Kafka and other streaming options.
-
-            Returns:
-                A tuple containing:
-                    - notification_on_error_drop_exceeds_threshold_breach: Whether to
-                      notify when error drop exceeds threshold.
-                    - notifications_on_rules_action_if_failed_set_ignore: Whether to
-                      notify on rules with action_if_failed set to ignore.
-                    - error_drop_threshold: The threshold percentage for error drops.
-            """
-            _notification_on_start: bool = (
-                bool(notification_dict[user_config.se_notifications_on_start])
-                if isinstance(
-                    notification_dict[user_config.se_notifications_on_start],
-                    bool,
-                )
-                else False
-            )
-            _notification_on_completion: bool = (
-                bool(notification_dict[user_config.se_notifications_on_completion])
-                if isinstance(
-                    notification_dict[user_config.se_notifications_on_completion],
-                    bool,
-                )
-                else False
-            )
-            _notification_on_fail: bool = (
-                bool(notification_dict[user_config.se_notifications_on_fail])
-                if isinstance(
-                    notification_dict[user_config.se_notifications_on_fail],
-                    bool,
-                )
-                else False
-            )
-            _notification_on_error_drop_exceeds_threshold_breach: bool = (
-                bool(notification_dict[user_config.se_notifications_on_error_drop_exceeds_threshold_breach])
-                if isinstance(
-                    notification_dict[user_config.se_notifications_on_error_drop_exceeds_threshold_breach],
-                    bool,
-                )
-                else False
-            )
-            _notifications_on_rules_action_if_failed_set_ignore: bool = (
-                bool(notification_dict[user_config.se_notifications_on_rules_action_if_failed_set_ignore])
-                if isinstance(
-                    notification_dict[user_config.se_notifications_on_rules_action_if_failed_set_ignore],
-                    bool,
-                )
-                else False
-            )
-
-            _job_metadata: Optional[str] = (
-                str(notification_dict[user_config.se_job_metadata])
-                if isinstance(notification_dict[user_config.se_job_metadata], str)
-                else None
-            )
-
-            notifications_on_error_drop_threshold = notification_dict.get(
-                user_config.se_notifications_on_error_drop_threshold, 100
-            )
-            _error_drop_threshold: int = (
-                notifications_on_error_drop_threshold if isinstance(notifications_on_error_drop_threshold, int) else 100
-            )
-
-            min_priority_slack = user_config.se_notifications_min_priority_slack
-
-            self.reader.set_notification_param(notification_dict)
-            self._context.set_notification_on_start(_notification_on_start)
-            self._context.set_notification_on_completion(_notification_on_completion)
-            self._context.set_notification_on_fail(_notification_on_fail)
-
-            self._context.set_se_streaming_stats_dict(se_stats_streaming_dict)
-            self._context.set_job_metadata(_job_metadata)
-            self._context.set_min_priority_slack(
-                        str(notification_dict[min_priority_slack])
-                    )
-            return (_notification_on_error_drop_exceeds_threshold_breach, _notifications_on_rules_action_if_failed_set_ignore, _error_drop_threshold)
         
         def _except(func: Any) -> Any:
-            
-            _check_serverless_config()
-            _notification_dict, _se_stats_streaming_dict = _build_config_dicts()
-            _set_kafka_configs(_se_stats_streaming_dict)
-            _set_notification_configs(_notification_dict)
+
+            self._check_serverless_config(user_conf)
+            _notification_dict, _se_stats_streaming_dict = self._build_config_dicts(user_conf)
+            self._set_kafka_configs(_se_stats_streaming_dict)
+            self._set_notification_configs(_notification_dict)
             if target_and_error_table_writer:
                 self._context.set_target_and_error_table_writer_config(target_and_error_table_writer.build())
-            _set_agg_query_detailed_stats(_notification_dict)
-            
+            self._set_agg_query_detailed_stats(_notification_dict)
+
             (
                 dq_queries_dict,
                 expectations,
@@ -505,44 +545,23 @@ class SparkExpectations:
                 _notification_on_error_drop_exceeds_threshold_breach,
                 _notifications_on_rules_action_if_failed_set_ignore,
                 _error_drop_threshold
-            ) = _set_notification_context(_notification_dict, _se_stats_streaming_dict)
+            ) = self._set_notification_context(_notification_dict, _se_stats_streaming_dict)
         
             self._context.set_dq_expectations(expectations)
             self._context.set_rules_execution_settings_config(rules_execution_settings)
             self._context.set_querydq_secondary_queries(dq_queries_dict)
-
+            
             @self._notification.send_notification_decorator
             @self._statistics_decorator.collect_stats_decorator
             @functools.wraps(func)
             def wrapper(*args: tuple, **kwargs: dict) -> DataFrame:
                 try:
                     _log.info("The function dataframe is getting created")
-                    # _df: DataFrame = func(*args, **kwargs)
                     _df: DataFrame = func(*args, **kwargs)
                     table_name: str = self._context.get_table_name
 
-                    # run rule validations (non-blocking - invalid rules are logged but don't stop execution)
                     rules = [row.asDict() for row in self.rules_df.collect()]
-                    invalid_results = SparkExpectationsValidateRules.validate_expectations(
-                        df=_df,
-                        rules=rules,
-                        spark=self.spark,
-                    )
-                    if invalid_results:
-                        # Log failed rule names - validation continues with valid rules only
-                        failed_rules = [
-                            result.rule.get("rule") if result.rule else "unknown"
-                            for results_list in invalid_results.values()
-                            for result in results_list
-                        ]
-                        # pylint: disable=logging-too-many-args
-                        _log.warning(
-                            "Some rules failed validation: %s. "
-                            "Check earlier log messages for details on each invalid rule.",
-                            failed_rules
-                        )
-                    else:
-                        _log.info("Validation for rules completed successfully - all rules are valid")
+                    self._check_invalid_rules(_df, rules)
 
                     _input_count = _df.count() if not _df.isStreaming else 0
                     _log.info(f"data frame input record count: {_input_count}")
