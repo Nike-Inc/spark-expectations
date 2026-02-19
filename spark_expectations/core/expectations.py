@@ -1,7 +1,7 @@
 import functools
 import importlib
 from dataclasses import dataclass
-from typing import Dict, Optional, Any, Union, List, TypeAlias, overload
+from typing import Dict, Optional, Any, Union, List, TypeAlias, overload, Callable, Tuple
 
 from pyspark.version import __version__ as spark_version
 from pyspark import StorageLevel
@@ -65,10 +65,14 @@ if check_if_pyspark_connect_is_supported():
     # Import the connect module if the current version of PySpark supports it
     from pyspark.sql.connect.dataframe import DataFrame as ConnectDataFrame
     from pyspark.sql.connect.session import SparkSession as ConnectSparkSession
+    DataFrame: TypeAlias = Union[sql.DataFrame, ConnectDataFrame]
+    SparkSession: TypeAlias = Union[sql.SparkSession, ConnectSparkSession]
+else:
+    DataFrame: TypeAlias = sql.DataFrame  # type: ignore
+    SparkSession: TypeAlias = sql.SparkSession  # type: ignore
 
-DataFrame: TypeAlias = Union[sql.DataFrame, ConnectDataFrame]  # type: ignore
-SparkSession: TypeAlias = Union[sql.SparkSession, ConnectSparkSession]  # type: ignore
-
+# Type alias for the DQ process function returned by execute_dq_process
+DQProcessFunc: TypeAlias = Callable[..., Tuple["DataFrame", Optional[List[Dict[str, str]]], int, str]]
 
 __all__ = [
     "SparkExpectations",
@@ -439,7 +443,423 @@ class SparkExpectations:
             )
         else:
             _log.info("Validation for rules completed successfully - all rules are valid")
+
+    def _init_default_values(
+        self,
+        input_count: int,
+        error_drop_threshold: int,
+        expectations: Dict[str, List[Dict[str, str]]]
+    ) -> None:
+        """
+        Initialize context variables with default values before each DQ run.
+
+        Resets all DQ status flags, counts, results, and timing variables to their
+        default states to ensure a clean slate for each data quality processing run.
+
+        Args:
+            input_count: The number of input records in the DataFrame.
+            error_drop_threshold: The threshold percentage for error drops.
+            expectations: Dictionary containing the DQ expectations/rules to be applied.
+        """
+        _log.info("initialize variable with default values before next run")
+        self._context.set_dq_run_status()
+        self._context.set_source_agg_dq_status()
+        self._context.set_source_query_dq_status()
+        self._context.set_row_dq_status()
+        self._context.set_final_agg_dq_status()
+        self._context.set_final_query_dq_status()
+        self._context.set_input_count()
+        self._context.set_error_count()
+        self._context.set_output_count()
+        self._context.set_source_agg_dq_result()
+        self._context.set_final_agg_dq_result()
+        self._context.set_source_query_dq_result()
+        self._context.set_final_query_dq_result()
+        self._context.set_summarized_row_dq_res()
+        self._context.set_rules_exceeds_threshold()
+        self._context.set_dq_expectations(expectations)
+
+        # initialize variables of start and end time with default values
+        self._context._source_agg_dq_start_time = None
+        self._context._final_agg_dq_start_time = None
+        self._context._source_query_dq_start_time = None
+        self._context._final_query_dq_start_time = None
+        self._context._row_dq_start_time = None
+
+        self._context._source_agg_dq_end_time = None
+        self._context._final_agg_dq_end_time = None
+        self._context._source_query_dq_end_time = None
+        self._context._final_query_dq_end_time = None
+        self._context._row_dq_end_time = None
+
+        self._context.set_input_count(input_count)
+        self._context.set_error_drop_threshold(error_drop_threshold)
     
+    def _use_temp_table(self, table_name: str, df: "DataFrame") -> "DataFrame":
+        """
+        Write DataFrame to a temporary table and read it back to break the Spark plan.
+
+        This method is used to materialize intermediate results by writing the DataFrame
+        to a temporary table and reading it back, which can help optimize complex Spark
+        execution plans.
+
+        Args:
+            table_name: The base name for the temporary table (will be suffixed with '_temp').
+            df: The DataFrame to write to the temporary table.
+
+        Returns:
+            A new DataFrame read from the temporary table with original column ordering.
+        """
+        _log.info("Dropping temp table started")
+        self.spark.sql(f"drop table if exists {table_name}_temp")  # type: ignore
+        _log.info("Dropping temp table completed")
+        _log.info("Writing to temp table started")
+        source_columns = df.columns
+        self._writer.save_df_as_table(
+            df,
+            f"{table_name}_temp",
+            self._context.get_target_and_error_table_writer_config,
+        )
+        _log.info("Read from temp table started")
+        _df = self.spark.sql(f"select * from {table_name}_temp")  # type: ignore
+        _df = _df.select(source_columns)
+        _log.info("Read from temp table completed")
+        return _df
+    
+    def _check_streaming_agg_query_dq(
+        self,
+        df: "DataFrame",
+        source_agg_dq: bool,
+        source_query_dq: bool
+    ) -> None:
+        """
+        Log warnings if aggregate or query DQ rules are provided for streaming DataFrames.
+
+        Streaming DataFrames only support row-level DQ checks. This method logs
+        informational messages when aggregate or query DQ expectations are provided
+        but cannot be applied to streaming data.
+
+        Args:
+            df: The DataFrame to check for streaming status.
+            source_agg_dq: Whether source aggregate DQ rules are enabled.
+            source_query_dq: Whether source query DQ rules are enabled.
+        """
+        if df.isStreaming:
+            _log.info("Streaming dataframe detected. Only row_dq checks applicable.")
+            if source_agg_dq is True:
+                _log.info("agg_dq expectations provided. Not applicable for streaming dataframe.")
+            if source_query_dq:
+                _log.info("query_dq expectations provided. Not applicable for streaming dataframe.")
+    
+    def _run_source_agg_dq_batch(
+        self,
+        df: "DataFrame",
+        func_process: DQProcessFunc
+    ) -> None:
+        """
+        Execute aggregate-level data quality rules on the source DataFrame.
+
+        Processes aggregate DQ expectations on the source data before any row-level
+        transformations. Updates the context with start/end times and status.
+
+        Args:
+            df: The source DataFrame to validate.
+            func_process: The DQ process function that executes the validation rules.
+        """
+        _log.info(
+            "started processing data quality rules for agg level expectations on source dataframe"
+        )
+        self._context.set_source_agg_dq_status("Failed")
+        self._context.set_source_agg_dq_start_time()
+        (
+            _source_dq_df,
+            _dq_source_agg_results,
+            _,
+            status,
+        ) = func_process(
+            df,
+            self._context.get_agg_dq_rule_type_name,
+            source_agg_dq_flag=True,
+        )
+        self._context.set_source_agg_dq_status(status)
+        self._context.set_source_agg_dq_end_time()
+
+        _log.info(
+            "ended processing data quality rules for agg level expectations on source dataframe"
+        )
+
+    def _run_source_query_dq_batch(
+        self,
+        df: "DataFrame",
+        func_process: DQProcessFunc
+    ) -> None:
+        """
+        Execute query-level data quality rules on the source DataFrame.
+
+        Processes query DQ expectations on the source data before any row-level
+        transformations. Query DQ rules can execute custom SQL queries for validation.
+        Updates the context with start/end times and status.
+
+        Args:
+            df: The source DataFrame to validate.
+            func_process: The DQ process function that executes the validation rules.
+        """
+        _log.info(
+            "started processing data quality rules for query level expectations on source dataframe"
+        )
+        self._context.set_source_query_dq_status("Failed")
+        self._context.set_source_query_dq_start_time()
+
+        (
+            _source_query_dq_df,
+            _dq_source_query_results,
+            _,
+            status,
+        ) = func_process(
+            df,
+            self._context.get_query_dq_rule_type_name,
+            source_query_dq_flag=True,
+        )
+        self._context.set_source_query_dq_status(status)
+        self._context.set_source_query_dq_end_time()
+        _log.info(
+            "ended processing data quality rules for query level expectations on source dataframe"
+        )
+
+    def _run_row_dq(
+        self,
+        df: "DataFrame",
+        func_process: DQProcessFunc,
+        target_table_view: str
+    ) -> Tuple["DataFrame", int, int]:
+        """
+        Execute row-level data quality rules on the DataFrame.
+
+        Processes row DQ expectations which validate individual records against
+        defined rules. Creates a temporary view for subsequent query/aggregate DQ
+        processing and updates context with counts and status.
+
+        Args:
+            df: The DataFrame to validate at row level.
+            func_process: The DQ process function that executes the validation rules.
+            target_table_view: Name of the temporary view to create for the result DataFrame.
+
+        Returns:
+            A tuple containing:
+                - The DataFrame after row DQ processing (with DQ columns added).
+                - The count of error/failed records.
+                - The count of output records (0 for streaming DataFrames).
+        """
+        _log.info("started processing data quality rules for row level expectations")
+        self._context.set_row_dq_status("Failed")
+        self._context.set_row_dq_start_time()
+    
+        (_row_dq_df, _, _error_count, status) = func_process(
+            df,
+            self._context.get_row_dq_rule_type_name,
+            row_dq_flag=True,
+        )
+        self._context.set_error_count(_error_count)
+
+        _row_dq_df.createOrReplaceTempView(target_table_view)
+
+        _output_count = _row_dq_df.count() if not _row_dq_df.isStreaming else 0
+        self._context.set_output_count(_output_count)
+
+        self._context.set_row_dq_status(status)
+        self._context.set_row_dq_end_time()
+
+        return _row_dq_df, _error_count, _output_count
+
+    def _call_row_dq_notifications(
+        self,
+        notification_on_error_drop_exceeds_threshold_breach: bool,
+        error_drop_threshold: int,
+        notifications_on_rules_action_if_failed_set_ignore: bool
+    ) -> List[Dict[str, Any]]:
+        """
+        Send notifications based on row DQ results and error thresholds.
+
+        Triggers notifications when error drop exceeds the configured threshold
+        and collects failed rules with 'ignore' action for potential notification.
+
+        Args:
+            notification_on_error_drop_exceeds_threshold_breach: Whether to notify
+                when error drop exceeds threshold.
+            error_drop_threshold: The threshold percentage for triggering notifications.
+            notifications_on_rules_action_if_failed_set_ignore: Whether to collect
+                and return rules with action_if_failed set to 'ignore'.
+
+        Returns:
+            List of failed rule dictionaries with action_if_failed='ignore' that
+            have failed_row_count > 0, or empty list if conditions aren't met.
+        """
+        if (
+            notification_on_error_drop_exceeds_threshold_breach is True
+            and (100 - self._context.get_output_percentage) >= error_drop_threshold
+        ):
+            self._notification.notify_on_exceeds_of_error_threshold()
+
+        if (
+            notifications_on_rules_action_if_failed_set_ignore is True
+            and isinstance(self._context.get_error_percentage, (int, float))
+            and self._context.get_error_percentage >= error_drop_threshold
+        ):
+            failed_ignored_row_dq_res = [
+                rule
+                for rule in self._context.get_summarized_row_dq_res or []
+                if rule["action_if_failed"] == "ignore"
+                and isinstance(rule["failed_row_count"], int)
+                and rule["failed_row_count"] > 0
+            ]
+            
+            _log.info("ended processing data quality rules for row level expectations")
+
+            return failed_ignored_row_dq_res
+        else:
+            return []
+
+    def _run_target_agg_dq_batch(
+        self,
+        func_process: DQProcessFunc,
+        row_dq_df: "DataFrame",
+        error_count: int,
+        output_count: int
+    ) -> None:
+        """
+        Execute aggregate-level data quality rules on the final/target DataFrame.
+
+        Processes aggregate DQ expectations on the data after row-level DQ processing.
+        Uses the error and output counts from row DQ for aggregate validations.
+        Updates the context with start/end times and status.
+
+        Args:
+            func_process: The DQ process function that executes the validation rules.
+            row_dq_df: The DataFrame after row DQ processing.
+            error_count: The count of error records from row DQ.
+            output_count: The count of output records from row DQ.
+        """
+        _log.info(
+            "started processing data quality rules for agg level expectations on final dataframe"
+        )
+        self._context.set_final_agg_dq_status("Failed")
+        self._context.set_final_agg_dq_start_time()
+    
+        (
+            _final_dq_df,
+            _dq_final_agg_results,
+            _,
+            status,
+        ) = func_process(
+            row_dq_df,
+            self._context.get_agg_dq_rule_type_name,
+            final_agg_dq_flag=True,
+            error_count=error_count,
+            output_count=output_count,
+        )
+        self._context.set_final_agg_dq_status(status)
+        self._context.set_final_agg_dq_end_time()
+        _log.info(
+            "ended processing data quality rules for agg level expectations on final dataframe"
+        )
+
+    def _run_target_query_dq_batch(
+        self,
+        func_process: DQProcessFunc,
+        row_dq_df: "DataFrame",
+        target_table_view: str,
+        error_count: int,
+        output_count: int
+    ) -> None:
+        """
+        Execute query-level data quality rules on the final/target DataFrame.
+
+        Processes query DQ expectations on the data after row-level DQ processing.
+        Creates a temporary view for SQL-based query validations. Uses the error
+        and output counts from row DQ for query validations. Updates the context
+        with start/end times and status.
+
+        Args:
+            func_process: The DQ process function that executes the validation rules.
+            row_dq_df: The DataFrame after row DQ processing.
+            target_table_view: Name of the temporary view to create for query execution.
+            error_count: The count of error records from row DQ.
+            output_count: The count of output records from row DQ.
+        """
+        _log.info(
+            "started processing data quality rules for query level expectations on final dataframe"
+        )
+        self._context.set_final_query_dq_status("Failed")
+        self._context.set_final_query_dq_start_time()
+
+        row_dq_df.createOrReplaceTempView(target_table_view)
+
+        (
+            _final_query_dq_df,
+            _dq_final_query_results,
+            _,
+            status,
+        ) = func_process(
+            row_dq_df,
+            self._context.get_query_dq_rule_type_name,
+            final_query_dq_flag=True,
+            error_count=error_count,
+            output_count=output_count,
+        )
+        self._context.set_final_query_dq_status(status)
+        self._context.set_final_query_dq_end_time()
+
+        _log.info(
+            "ended processing data quality rules for query level expectations on final dataframe"
+        )
+
+    def _check_ignore_rules_result(
+        self,
+        notifications_on_rules_action_if_failed_set_ignore: bool,
+        failed_ignored_row_dq_res: List[Dict[str, Any]],
+        ignore_rules_result: List[Optional[List[Dict[str, Any]]]]
+    ) -> List[Dict[str, str]]:
+        """
+        Collect and flatten all ignored rule results from various DQ stages.
+
+        Aggregates failed rules with 'ignore' action from row DQ, source/target
+        aggregate DQ, and source/target query DQ stages into a single flattened list.
+
+        Args:
+            notifications_on_rules_action_if_failed_set_ignore: Whether to collect
+                ignored rules for notification.
+            failed_ignored_row_dq_res: List of failed row DQ rules with ignore action.
+            ignore_rules_result: Accumulator list for collecting all ignored rule results.
+
+        Returns:
+            Flattened list of all ignored rule dictionaries from all DQ stages,
+            or empty list if no ignored rules exist.
+        """
+        if notifications_on_rules_action_if_failed_set_ignore and (
+            failed_ignored_row_dq_res
+            or self._context.get_final_query_dq_result
+            or self._context.get_final_agg_dq_result
+            or self._context.get_source_query_dq_result
+            or self._context.get_source_agg_dq_result
+        ):
+            ignore_rules_result.extend(
+                [
+                    failed_ignored_row_dq_res,
+                    self._context.get_final_query_dq_result,
+                    self._context.get_final_agg_dq_result,
+                    self._context.get_source_query_dq_result,
+                    self._context.get_source_agg_dq_result,
+                ]
+            )
+        
+        if ignore_rules_result:
+            flattened_ignore_rules_result: List[Dict[str, str]] = [
+                item for sublist in filter(None, ignore_rules_result) for item in sublist
+            ]
+            return flattened_ignore_rules_result
+        else:
+            return []
+
     def __post_init__(self) -> None:
         if isinstance(self.rules_df, DataFrame):  # type: ignore
             try:
@@ -567,48 +987,11 @@ class SparkExpectations:
                     _log.info(f"data frame input record count: {_input_count}")
                     _output_count: int = 0
                     _error_count: int = 0
-                    _source_dq_df: Optional[DataFrame] = None
-                    _source_query_dq_df: Optional[DataFrame] = None
-                    failed_ignored_row_dq_res: List[Dict[str, str]] = []
+                    failed_ignored_row_dq_res: List[Dict[str, Any]] = []
                     _row_dq_df: DataFrame = _df
-                    _final_dq_df: Optional[DataFrame] = None
-                    _final_query_dq_df: Optional[DataFrame] = None
-                    _ignore_rules_result: List[Optional[List[Dict[str, str]]]] = []
+                    _ignore_rules_result: List[Optional[List[Dict[str, Any]]]] = []
 
-                    # initialize variable with default values through set
-                    _log.info("initialize variable with default values before next run")
-                    self._context.set_dq_run_status()
-                    self._context.set_source_agg_dq_status()
-                    self._context.set_source_query_dq_status()
-                    self._context.set_row_dq_status()
-                    self._context.set_final_agg_dq_status()
-                    self._context.set_final_query_dq_status()
-                    self._context.set_input_count()
-                    self._context.set_error_count()
-                    self._context.set_output_count()
-                    self._context.set_source_agg_dq_result()
-                    self._context.set_final_agg_dq_result()
-                    self._context.set_source_query_dq_result()
-                    self._context.set_final_query_dq_result()
-                    self._context.set_summarized_row_dq_res()
-                    self._context.set_rules_exceeds_threshold()
-                    self._context.set_dq_expectations(expectations)
-
-                    # initialize variables of start and end time with default values
-                    self._context._source_agg_dq_start_time = None
-                    self._context._final_agg_dq_start_time = None
-                    self._context._source_query_dq_start_time = None
-                    self._context._final_query_dq_start_time = None
-                    self._context._row_dq_start_time = None
-
-                    self._context._source_agg_dq_end_time = None
-                    self._context._final_agg_dq_end_time = None
-                    self._context._source_query_dq_end_time = None
-                    self._context._final_query_dq_end_time = None
-                    self._context._row_dq_end_time = None
-
-                    self._context.set_input_count(_input_count)
-                    self._context.set_error_drop_threshold(_error_drop_threshold)
+                    self._init_default_values(_input_count, _error_drop_threshold, expectations)
 
                     _log.info(f"Spark Expectations run id for this run: {self._context.get_run_id}")
 
@@ -616,21 +999,8 @@ class SparkExpectations:
                         _log.info("The function dataframe is created")
                         self._context.set_table_name(table_name)
                         if write_to_temp_table:
-                            _log.info("Dropping to temp table started")
-                            self.spark.sql(f"drop table if exists {table_name}_temp")  # type: ignore
-                            _log.info("Dropping to temp table completed")
-                            _log.info("Writing to temp table started")
-                            source_columns = _df.columns
-                            self._writer.save_df_as_table(
-                                _df,
-                                f"{table_name}_temp",
-                                self._context.get_target_and_error_table_writer_config,
-                            )
-                            _log.info("Read from temp table started")
-                            _df = self.spark.sql(f"select * from {table_name}_temp")  # type: ignore
-                            _df = _df.select(source_columns)
-                            _log.info("Read from temp table completed")
-
+                            _df = self._use_temp_table(table_name, _df)
+                            
                         func_process = self._process.execute_dq_process(
                             _context=self._context,
                             _actions=self.actions,
@@ -640,213 +1010,32 @@ class SparkExpectations:
                             _input_count=_input_count,
                         )
 
-                        if _df.isStreaming:
-                            _log.info("Streaming dataframe detected. Only row_dq checks applicable.")
-                            if _source_agg_dq is True:
-                                _log.info("agg_dq expectations provided. Not applicable for streaming dataframe.")
-                            if _source_query_dq:
-                                _log.info("query_dq expectations provided. Not applicable for streaming dataframe.")
+                        self._check_streaming_agg_query_dq(_df, _source_agg_dq, _source_query_dq)
 
                         if _source_agg_dq is True and not _df.isStreaming:
-                            _log.info(
-                                "started processing data quality rules for agg level expectations on soure dataframe"
-                            )
-                            self._context.set_source_agg_dq_status("Failed")
-                            self._context.set_source_agg_dq_start_time()
-                            # In this steps source agg data quality expectations runs on raw_data
-                            # returns:
-                            #        _source_dq_df: applied data quality dataframe,
-                            #        _dq_source_agg_results: source aggregation result in dictionary
-                            #        _: place holder for error data at row level
-                            #        status: status of the execution
-
-                            (
-                                _source_dq_df,
-                                _dq_source_agg_results,
-                                _,
-                                status,
-                            ) = func_process(
-                                _df,
-                                self._context.get_agg_dq_rule_type_name,
-                                source_agg_dq_flag=True,
-                            )
-                            self._context.set_source_agg_dq_status(status)
-                            self._context.set_source_agg_dq_end_time()
-
-                            _log.info(
-                                "ended processing data quality rules for agg level expectations on source dataframe"
-                            )
-
+                            self._run_source_agg_dq_batch(_df, func_process)
+                           
                         if _source_query_dq is True and not _df.isStreaming:
-                            _log.info(
-                                "started processing data quality rules for query level expectations on soure dataframe"
-                            )
-                            self._context.set_source_query_dq_status("Failed")
-                            self._context.set_source_query_dq_start_time()
-                            # In this steps source query data quality expectations runs on raw_data
-                            # returns:
-                            #        _source_query_dq_df: applied data quality dataframe,
-                            #        _dq_source_query_results: source query dq results in dictionary
-                            #        _: place holder for error data at row level
-                            #        status: status of the execution
-
-                            (
-                                _source_query_dq_df,
-                                _dq_source_query_results,
-                                _,
-                                status,
-                            ) = func_process(
-                                _df,
-                                self._context.get_query_dq_rule_type_name,
-                                source_query_dq_flag=True,
-                            )
-                            self._context.set_source_query_dq_status(status)
-                            self._context.set_source_query_dq_end_time()
-                            _log.info(
-                                "ended processing data quality rules for query level expectations on source dataframe"
-                            )
-
-                        if _row_dq is True:
-                            _log.info("started processing data quality rules for row level expectations")
-                            self._context.set_row_dq_status("Failed")
-                            self._context.set_row_dq_start_time()
-                            # In this steps row level data quality expectations runs on raw_data
-                            # returns:
-                            #        _row_dq_df: applied data quality dataframe at row level on raw dataframe,
-                            #        _: place holder for aggregation
-                            #        _error_count: number of error records
-                            #        status: status of the execution
-                            (_row_dq_df, _, _error_count, status) = func_process(
-                                _df,
-                                self._context.get_row_dq_rule_type_name,
-                                row_dq_flag=True,
-                            )
-                            self._context.set_error_count(_error_count)
-
-                            _row_dq_df.createOrReplaceTempView(_target_table_view)
-
-                            _output_count = _row_dq_df.count() if not _row_dq_df.isStreaming else 0
-                            self._context.set_output_count(_output_count)
-
-                            self._context.set_row_dq_status(status)
-                            self._context.set_row_dq_end_time()
-
-                            if (
-                                _notification_on_error_drop_exceeds_threshold_breach is True
-                                and (100 - self._context.get_output_percentage) >= _error_drop_threshold
-                            ):
-                                self._notification.notify_on_exceeds_of_error_threshold()
-
-                            if (
-                                _notifications_on_rules_action_if_failed_set_ignore is True
-                                and isinstance(self._context.get_error_percentage, (int, float))
-                                and self._context.get_error_percentage >= _error_drop_threshold
-                            ):
-                                failed_ignored_row_dq_res = [
-                                    rule
-                                    for rule in self._context.get_summarized_row_dq_res or []
-                                    if rule["action_if_failed"] == "ignore"
-                                    and isinstance(rule["failed_row_count"], int)
-                                    and rule["failed_row_count"] > 0
-                                ]
-                                # raise SparkExpectationsErrorThresholdExceedsException(
-                                #     "An error has taken place because"
-                                #     " the set limit for acceptable"
-                                #     " errors, known as the error"
-                                #     " threshold, has been surpassed"
-                                # )
-                            _log.info("ended processing data quality rules for row level expectations")
+                            self._run_source_query_dq_batch(_df, func_process)
+                           
+                        if _row_dq is True:                            
+                            _row_dq_df, _error_count, _output_count = self._run_row_dq(_df, func_process, _target_table_view)
+                            failed_ignored_row_dq_res = self._call_row_dq_notifications(
+                                                        _notification_on_error_drop_exceeds_threshold_breach,
+                                                        _error_drop_threshold,
+                                                        _notifications_on_rules_action_if_failed_set_ignore
+                                                    )
 
                         if _row_dq is True and _target_agg_dq is True and not _df.isStreaming:
-                            _log.info(
-                                "started processing data quality rules for agg level expectations on final dataframe"
-                            )
-                            self._context.set_final_agg_dq_status("Failed")
-                            self._context.set_final_agg_dq_start_time()
-                            # In this steps final agg data quality expectations run on final dataframe
-                            # returns:
-                            #        _final_dq_df: applied data quality dataframe at row level on raw dataframe,
-                            #        _dq_final_agg_results: final agg dq result in dictionary
-                            #        _: number of error records
-                            #        status: status of the execution
-
-                            (
-                                _final_dq_df,
-                                _dq_final_agg_results,
-                                _,
-                                status,
-                            ) = func_process(
-                                _row_dq_df,
-                                self._context.get_agg_dq_rule_type_name,
-                                final_agg_dq_flag=True,
-                                error_count=_error_count,
-                                output_count=_output_count,
-                            )
-                            self._context.set_final_agg_dq_status(status)
-                            self._context.set_final_agg_dq_end_time()
-                            _log.info(
-                                "ended processing data quality rules for agg level expectations on final dataframe"
-                            )
-
+                            self._run_target_agg_dq_batch(func_process, _row_dq_df, _error_count, _output_count)
+                            
                         if _row_dq is True and _target_query_dq is True and not _df.isStreaming:
-                            _log.info(
-                                "started processing data quality rules for query level expectations on final dataframe"
-                            )
-                            self._context.set_final_query_dq_status("Failed")
-                            self._context.set_final_query_dq_start_time()
-                            # In this steps final query dq data quality expectations run on final dataframe
-                            # returns:
-                            #        _final_query_dq_df: applied data quality dataframe at row level on raw dataframe,
-                            #        _dq_final_query_results: final query dq result in dictionary
-                            #        _: number of error records
-                            #        status: status of the execution
-
-                            _row_dq_df.createOrReplaceTempView(_target_table_view)
-
-                            (
-                                _final_query_dq_df,
-                                _dq_final_query_results,
-                                _,
-                                status,
-                            ) = func_process(
-                                _row_dq_df,
-                                self._context.get_query_dq_rule_type_name,
-                                final_query_dq_flag=True,
-                                error_count=_error_count,
-                                output_count=_output_count,
-                            )
-                            self._context.set_final_query_dq_status(status)
-                            self._context.set_final_query_dq_end_time()
-
-                            _log.info(
-                                "ended processing data quality rules for query level expectations on final dataframe"
-                            )
-
-                        if _notifications_on_rules_action_if_failed_set_ignore and (
-                            failed_ignored_row_dq_res
-                            or self._context.get_final_query_dq_result
-                            or self._context.get_final_agg_dq_result
-                            or self._context.get_source_query_dq_result
-                            or self._context.get_source_agg_dq_result
-                        ):
-                            _ignore_rules_result.extend(
-                                [
-                                    failed_ignored_row_dq_res,
-                                    self._context.get_final_query_dq_result,
-                                    self._context.get_final_agg_dq_result,
-                                    self._context.get_source_query_dq_result,
-                                    self._context.get_source_agg_dq_result,
-                                ]
-                            )
-
-                        if _ignore_rules_result:
-                            flattened_ignore_rules_result: List[Dict[str, str]] = [
-                                item for sublist in filter(None, _ignore_rules_result) for item in sublist
-                            ]
+                            self._run_target_query_dq_batch(func_process, _row_dq_df, _target_table_view, _error_count, _output_count)
+                            
+                        flattened_ignore_rules_result = self._check_ignore_rules_result(_notifications_on_rules_action_if_failed_set_ignore, failed_ignored_row_dq_res, _ignore_rules_result)
+                        if flattened_ignore_rules_result:
                             self._notification.notify_on_ignore_rules(flattened_ignore_rules_result)
 
-                        # TODO if row_dq is False and source_agg/source_query is True then we need to write the
-                        #  dataframe into the target table
                         streaming_query = None
                         if write_to_table:
                             _log.info("Writing into the final table started")
@@ -862,9 +1051,7 @@ class SparkExpectations:
                             "error occurred while processing spark "
                             "expectations due to given dataframe is not type of dataframe"
                         )
-                    # self.spark.catalog.clearCache()
-
-                    # Return streaming query if available (for streaming DataFrames), otherwise return DataFrame
+                        
                     return streaming_query if streaming_query is not None else _row_dq_df
 
                 except Exception as e:
