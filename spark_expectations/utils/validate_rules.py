@@ -12,6 +12,7 @@ from spark_expectations.core.exceptions import (
     SparkExpectationsInvalidAggDQExpectationException,
     SparkExpectationsInvalidQueryDQExpectationException,
     SparkExpectationsInvalidRowDQExpectationException,
+    SparkExpectationsUserInputOrConfigInvalidException,
 )
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,12 @@ class RuleType(Enum):
     ROW_DQ = "row_dq"
     AGG_DQ = "agg_dq"
     QUERY_DQ = "query_dq"
+
+
+class ActionIfFailed(Enum):
+    DROP = "drop"
+    IGNORE = "ignore"
+    FAIL = "fail"
 
 class SparkExpectationsValidateRules:
     """
@@ -439,6 +446,42 @@ class SparkExpectationsValidateRules:
         
         return ValidationResult(is_valid=True, rule=rule, rule_type="query_dq")
     @staticmethod
+    def validate_action_if_failed(rule: Dict, raise_exception: bool = False) -> ValidationResult:
+        """
+        Validates that the action_if_failed field contains an accepted value.
+        
+        Accepted values are: "drop", "ignore", "fail".
+        
+        Args:
+            rule (Dict): Rule dictionary containing 'action_if_failed'.
+            raise_exception (bool): If True, raises exception on invalid value.
+                                    If False, returns ValidationResult. Default is False.
+        Returns:
+            ValidationResult: Result containing validation status and error message if any.
+        Raises:
+            SparkExpectationsUserInputOrConfigInvalidException: If raise_exception is True
+                and the value is not one of the accepted options.
+        """
+        action = rule.get("action_if_failed", "")
+        if not action:
+            return ValidationResult(is_valid=True, rule=rule, rule_type=rule.get("rule_type", "unknown"))
+        valid_actions = {e.value for e in ActionIfFailed}
+        if action not in valid_actions:
+            error_msg = (
+                f"Rule '{rule.get('rule', 'unknown')}' has invalid action_if_failed value: "
+                f"'{action}'. Accepted values are: {sorted(valid_actions)}"
+            )
+            if raise_exception:
+                raise SparkExpectationsUserInputOrConfigInvalidException(error_msg)
+            return ValidationResult(
+                is_valid=False,
+                error_message=error_msg,
+                rule=rule,
+                rule_type=rule.get("rule_type", "unknown"),
+            )
+        return ValidationResult(is_valid=True, rule=rule, rule_type=rule.get("rule_type", "unknown"))
+
+    @staticmethod
     def validate_expectations(
         df: DataFrame, rules: list, spark: SparkSession, raise_exception: bool = False
     ) -> Dict[str, List[ValidationResult]]:
@@ -480,6 +523,20 @@ class SparkExpectationsValidateRules:
                     result.error_message
                 )
                 invalid_results.setdefault(rule_type_str, []).append(result)
+                continue
+            
+            action_result = SparkExpectationsValidateRules.validate_action_if_failed(
+                rule, raise_exception=raise_exception
+            )
+            if not action_result.is_valid:
+                # pylint: disable=logging-too-many-args
+                logger.warning(
+                    "Invalid rule detected: rule='%s', rule_type='%s', error='%s'",
+                    rule.get("rule", "unknown"),
+                    rule_type_str,
+                    action_result.error_message
+                )
+                invalid_results.setdefault(rule_type_str, []).append(action_result)
                 continue
             
             if rule_type == RuleType.ROW_DQ:
