@@ -206,7 +206,7 @@ class SparkExpectations:
     def _build_config_dicts(
         self,
         user_conf: Optional[Dict[str, Union[str, int, bool, Dict[str, str]]]]
-    ) -> tuple[Dict[str, Union[str, int, bool, Dict[str, str]]], Dict[str, Any]]:
+    ) -> Tuple[Dict[str, Union[str, int, bool, Dict[str, str]]], Dict[str, Any]]:
         """
         Build notification and stats streaming configuration dictionaries.
 
@@ -321,11 +321,11 @@ class SparkExpectations:
                 str(notification_dict[user_config.querydq_output_custom_table_name])
             )
 
-    def _set_notification_context(
+    def _get_configs_notification_context(
         self,
         notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]],
         se_stats_streaming_dict: Dict[str, Any]
-    ) -> tuple[bool, bool, int]:
+    ) -> Tuple[bool, bool, int]:
         """
         Configure notification context settings and extract threshold parameters.
 
@@ -712,9 +712,6 @@ class SparkExpectations:
                 and isinstance(rule["failed_row_count"], int)
                 and rule["failed_row_count"] > 0
             ]
-            
-            _log.info("ended processing data quality rules for row level expectations")
-
             return failed_ignored_row_dq_res
         else:
             return []
@@ -818,7 +815,7 @@ class SparkExpectations:
         notifications_on_rules_action_if_failed_set_ignore: bool,
         failed_ignored_row_dq_res: List[Dict[str, Any]],
         ignore_rules_result: List[Optional[List[Dict[str, Any]]]]
-    ) -> List[Dict[str, str]]:
+    ) -> List[Dict[str, Any]]:
         """
         Collect and flatten all ignored rule results from various DQ stages.
 
@@ -853,7 +850,7 @@ class SparkExpectations:
             )
         
         if ignore_rules_result:
-            flattened_ignore_rules_result: List[Dict[str, str]] = [
+            flattened_ignore_rules_result: List[Dict[str, Any]] = [
                 item for sublist in filter(None, ignore_rules_result) for item in sublist
             ]
             return flattened_ignore_rules_result
@@ -965,7 +962,7 @@ class SparkExpectations:
                 _notification_on_error_drop_exceeds_threshold_breach,
                 _notifications_on_rules_action_if_failed_set_ignore,
                 _error_drop_threshold
-            ) = self._set_notification_context(_notification_dict, _se_stats_streaming_dict)
+            ) = self._get_configs_notification_context(_notification_dict, _se_stats_streaming_dict)
         
             self._context.set_dq_expectations(expectations)
             self._context.set_rules_execution_settings_config(rules_execution_settings)
@@ -1025,6 +1022,7 @@ class SparkExpectations:
                                                         _error_drop_threshold,
                                                         _notifications_on_rules_action_if_failed_set_ignore
                                                     )
+                        _log.info("ended processing data quality rules for row level expectations")
 
                         if _row_dq is True and _target_agg_dq is True and not _df.isStreaming:
                             self._run_target_agg_dq_batch(func_process, _row_dq_df, _error_count, _output_count)
