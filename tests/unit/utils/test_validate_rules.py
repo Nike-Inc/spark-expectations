@@ -726,10 +726,17 @@ class TestValidateActionIfFailed:
         assert "Accepted values" in result.error_message
 
     def test_missing_action_if_failed_key(self):
-        """Test that a rule missing the action_if_failed key fails validation."""
+        """Test that a rule missing the action_if_failed key passes validation (field is optional)."""
         rule = {"rule": "test_rule", "rule_type": "row_dq"}
         result = SparkExpectationsValidateRules.validate_action_if_failed(rule)
-        assert result.is_valid is False
+        assert result.is_valid is True
+
+    @pytest.mark.parametrize("action", ["", None])
+    def test_empty_or_none_action_if_failed(self, action):
+        """Test that empty string or None action_if_failed passes validation (treated as unset)."""
+        rule = {"rule": "test_rule", "rule_type": "row_dq", "action_if_failed": action}
+        result = SparkExpectationsValidateRules.validate_action_if_failed(rule)
+        assert result.is_valid is True
 
     @pytest.mark.parametrize("action", INVALID_ACTION_IF_FAILED_VALUES)
     def test_invalid_action_if_failed_raises_exception(self, action):

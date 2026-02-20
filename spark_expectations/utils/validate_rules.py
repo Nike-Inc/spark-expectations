@@ -463,6 +463,8 @@ class SparkExpectationsValidateRules:
                 and the value is not one of the accepted options.
         """
         action = rule.get("action_if_failed", "")
+        if not action:
+            return ValidationResult(is_valid=True, rule=rule, rule_type=rule.get("rule_type", "unknown"))
         valid_actions = {e.value for e in ActionIfFailed}
         if action not in valid_actions:
             error_msg = (

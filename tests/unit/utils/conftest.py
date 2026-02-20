@@ -226,7 +226,6 @@ CHECK_AGG_OUTSIDE_SUBQUERIES_FALSE = [
 VALID_ACTION_IF_FAILED_VALUES = ["drop", "ignore", "fail"]
 
 INVALID_ACTION_IF_FAILED_VALUES = [
-    "",
     "abort",
     "drp",
     "Drop",
@@ -234,7 +233,6 @@ INVALID_ACTION_IF_FAILED_VALUES = [
     "Ignore",
     "skip",
     "warn",
-    None,
 ]
 
 # ==================== get_subqueries Test Parameters ====================
