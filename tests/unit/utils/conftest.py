@@ -221,6 +221,22 @@ CHECK_AGG_OUTSIDE_SUBQUERIES_FALSE = [
     ("col1 = (SELECT max(val) FROM (SELECT val FROM table1))", ["max"]),
 ]
 
+# ==================== validate_action_if_failed Test Parameters ====================
+
+VALID_ACTION_IF_FAILED_VALUES = ["drop", "ignore", "fail"]
+
+INVALID_ACTION_IF_FAILED_VALUES = [
+    "",
+    "abort",
+    "drp",
+    "Drop",
+    "FAIL",
+    "Ignore",
+    "skip",
+    "warn",
+    None,
+]
+
 # ==================== get_subqueries Test Parameters ====================
 
 # Expressions with NO subqueries (should return empty list)

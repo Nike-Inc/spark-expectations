@@ -2,11 +2,12 @@ import pytest
 import sqlglot
 from unittest.mock import MagicMock
 
-from spark_expectations.utils.validate_rules import SparkExpectationsValidateRules
+from spark_expectations.utils.validate_rules import SparkExpectationsValidateRules, ActionIfFailed
 from spark_expectations.core.exceptions import (
     SparkExpectationsInvalidRowDQExpectationException,
     SparkExpectationsInvalidQueryDQExpectationException,
     SparkExpectationsInvalidAggDQExpectationException,
+    SparkExpectationsUserInputOrConfigInvalidException,
 )
 from tests.unit.utils.conftest import (
     VALIDATE_SUBQUERY_VALID,
@@ -30,6 +31,8 @@ from tests.unit.utils.conftest import (
     GET_SUBQUERIES_NESTED,
     CHECK_AGG_OUTSIDE_SUBQUERIES_TRUE,
     CHECK_AGG_OUTSIDE_SUBQUERIES_FALSE,
+    VALID_ACTION_IF_FAILED_VALUES,
+    INVALID_ACTION_IF_FAILED_VALUES,
 )
 
 class TestValidateSingleSubquery:
@@ -478,7 +481,7 @@ class TestValidateExpectationsRaisesExceptions:
     def test_raises_row_dq_exception_from_validate_expectations(self, mock_df, mock_spark, mock_expr):
         """Test that invalid row_dq rule raises SparkExpectationsInvalidRowDQExpectationException."""
         rules = [
-            {"rule_type": "row_dq", "expectation": "sum(col1) > 10", "rule": "invalid_row_dq"}
+            {"rule_type": "row_dq", "expectation": "sum(col1) > 10", "rule": "invalid_row_dq", "action_if_failed": "drop"}
         ]
         with pytest.raises(SparkExpectationsInvalidRowDQExpectationException):
             SparkExpectationsValidateRules.validate_expectations(
@@ -488,7 +491,7 @@ class TestValidateExpectationsRaisesExceptions:
     def test_raises_agg_dq_exception_from_validate_expectations(self, mock_df, mock_spark, mock_expr):
         """Test that invalid agg_dq rule raises SparkExpectationsInvalidAggDQExpectationException."""
         rules = [
-            {"rule_type": "agg_dq", "expectation": "col1 > 10", "rule": "invalid_agg_dq"}
+            {"rule_type": "agg_dq", "expectation": "col1 > 10", "rule": "invalid_agg_dq", "action_if_failed": "ignore"}
         ]
         with pytest.raises(SparkExpectationsInvalidAggDQExpectationException):
             SparkExpectationsValidateRules.validate_expectations(
@@ -498,7 +501,7 @@ class TestValidateExpectationsRaisesExceptions:
     def test_raises_query_dq_exception_from_validate_expectations(self, mock_df, mock_spark, mock_expr):
         """Test that invalid query_dq rule raises SparkExpectationsInvalidQueryDQExpectationException."""
         rules = [
-            {"rule_type": "query_dq", "expectation": "col1 > 10", "rule": "invalid_query_dq"}
+            {"rule_type": "query_dq", "expectation": "col1 > 10", "rule": "invalid_query_dq", "action_if_failed": "fail"}
         ]
         with pytest.raises(SparkExpectationsInvalidQueryDQExpectationException):
             SparkExpectationsValidateRules.validate_expectations(
@@ -508,8 +511,8 @@ class TestValidateExpectationsRaisesExceptions:
     def test_stops_at_first_invalid_rule_when_raise_exception_true(self, mock_df, mock_spark, mock_expr):
         """Test that validation stops at first invalid rule when raise_exception=True."""
         rules = [
-            {"rule_type": "row_dq", "expectation": "sum(col1) > 10", "rule": "first_invalid"},
-            {"rule_type": "agg_dq", "expectation": "col1 > 10", "rule": "second_invalid"},
+            {"rule_type": "row_dq", "expectation": "sum(col1) > 10", "rule": "first_invalid", "action_if_failed": "drop"},
+            {"rule_type": "agg_dq", "expectation": "col1 > 10", "rule": "second_invalid", "action_if_failed": "ignore"},
         ]
         # Should raise on first invalid rule (row_dq exception, not agg_dq)
         with pytest.raises(SparkExpectationsInvalidRowDQExpectationException):
@@ -520,9 +523,9 @@ class TestValidateExpectationsRaisesExceptions:
     def test_valid_rules_pass_without_exception(self, mock_df, mock_spark, mock_expr):
         """Test that valid rules don't raise exceptions."""
         rules = [
-            {"rule_type": "row_dq", "expectation": "col1 > 10", "rule": "valid_row_dq"},
-            {"rule_type": "agg_dq", "expectation": "sum(col1) > 100", "rule": "valid_agg_dq"},
-            {"rule_type": "query_dq", "expectation": "SELECT count(*) FROM table1", "rule": "valid_query_dq"},
+            {"rule_type": "row_dq", "expectation": "col1 > 10", "rule": "valid_row_dq", "action_if_failed": "drop"},
+            {"rule_type": "agg_dq", "expectation": "sum(col1) > 100", "rule": "valid_agg_dq", "action_if_failed": "ignore"},
+            {"rule_type": "query_dq", "expectation": "SELECT count(*) FROM table1", "rule": "valid_query_dq", "action_if_failed": "fail"},
         ]
         # Should not raise any exception
         result = SparkExpectationsValidateRules.validate_expectations(
@@ -535,7 +538,7 @@ class TestValidateExpectationsRaisesExceptions:
     def test_row_dq_raises_on_parse_error(self, mock_df, mock_spark, mock_expr):
         """Test row_dq raises exception on unparseable expression."""
         rules = [
-            {"rule_type": "row_dq", "expectation": "col1 >>> invalid ===", "rule": "parse_error_rule"}
+            {"rule_type": "row_dq", "expectation": "col1 >>> invalid ===", "rule": "parse_error_rule", "action_if_failed": "drop"}
         ]
         with pytest.raises(SparkExpectationsInvalidRowDQExpectationException):
             SparkExpectationsValidateRules.validate_expectations(
@@ -548,7 +551,8 @@ class TestValidateExpectationsRaisesExceptions:
             {
                 "rule_type": "row_dq",
                 "expectation": "sum(col1) > (SELECT max(col2) FROM table1)",
-                "rule": "agg_outside_with_subquery"
+                "rule": "agg_outside_with_subquery",
+                "action_if_failed": "drop"
             }
         ]
         with pytest.raises(SparkExpectationsInvalidRowDQExpectationException):
@@ -562,7 +566,8 @@ class TestValidateExpectationsRaisesExceptions:
             {
                 "rule_type": "row_dq",
                 "expectation": "col1 IN (SELECT col2)",
-                "rule": "invalid_subquery_rule"
+                "rule": "invalid_subquery_rule",
+                "action_if_failed": "drop"
             }
         ]
         with pytest.raises(SparkExpectationsInvalidRowDQExpectationException):
@@ -576,7 +581,8 @@ class TestValidateExpectationsRaisesExceptions:
             {
                 "rule_type": "row_dq",
                 "expectation": "(SELECT col1 FROM table1)",
-                "rule": "query_as_expectation"
+                "rule": "query_as_expectation",
+                "action_if_failed": "drop"
             }
         ]
         with pytest.raises(SparkExpectationsInvalidRowDQExpectationException):
@@ -590,7 +596,7 @@ class TestValidateExpectationsRaisesExceptions:
         mock_df_error.select.side_effect = Exception("Column 'col1' does not exist")
         
         rules = [
-            {"rule_type": "row_dq", "expectation": "col1 > 10", "rule": "df_select_error"}
+            {"rule_type": "row_dq", "expectation": "col1 > 10", "rule": "df_select_error", "action_if_failed": "drop"}
         ]
         with pytest.raises(SparkExpectationsInvalidRowDQExpectationException):
             SparkExpectationsValidateRules.validate_expectations(
@@ -602,7 +608,7 @@ class TestValidateExpectationsRaisesExceptions:
     def test_agg_dq_raises_on_parse_error(self, mock_df, mock_spark):
         """Test agg_dq raises exception on unparseable expression."""
         rules = [
-            {"rule_type": "agg_dq", "expectation": "sum(col1 >>> invalid", "rule": "agg_parse_error"}
+            {"rule_type": "agg_dq", "expectation": "sum(col1 >>> invalid", "rule": "agg_parse_error", "action_if_failed": "ignore"}
         ]
         with pytest.raises(SparkExpectationsInvalidAggDQExpectationException):
             SparkExpectationsValidateRules.validate_expectations(
@@ -615,7 +621,7 @@ class TestValidateExpectationsRaisesExceptions:
         mock_df_error.selectExpr.side_effect = Exception("Column 'nonexistent' does not exist")
         
         rules = [
-            {"rule_type": "agg_dq", "expectation": "sum(nonexistent) > 10", "rule": "df_selectExpr_error"}
+            {"rule_type": "agg_dq", "expectation": "sum(nonexistent) > 10", "rule": "df_selectExpr_error", "action_if_failed": "ignore"}
         ]
         with pytest.raises(SparkExpectationsInvalidAggDQExpectationException):
             SparkExpectationsValidateRules.validate_expectations(
@@ -630,7 +636,8 @@ class TestValidateExpectationsRaisesExceptions:
             {
                 "rule_type": "query_dq",
                 "expectation": "((select count(*) from ({source_f1}) a)) < 3@source_f1@col1 > 10",
-                "rule": "composite_invalid_subquery"
+                "rule": "composite_invalid_subquery",
+                "action_if_failed": "fail"
             }
         ]
         with pytest.raises(SparkExpectationsInvalidQueryDQExpectationException):
@@ -644,7 +651,8 @@ class TestValidateExpectationsRaisesExceptions:
             {
                 "rule_type": "query_dq",
                 "expectation": "((select count(*) from ({source_f1}) a) - (select count(*) from ({target_f1}) b)) < 3@source_f1@select * from t1",
-                "rule": "composite_missing_key"
+                "rule": "composite_missing_key",
+                "action_if_failed": "fail"
             }
         ]
         with pytest.raises(SparkExpectationsInvalidQueryDQExpectationException):
@@ -658,10 +666,100 @@ class TestValidateExpectationsRaisesExceptions:
             {
                 "rule_type": "query_dq",
                 "expectation": "SELECT * FROM table1 WHERE col1 >>> invalid",
-                "rule": "invalid_sql_syntax"
+                "rule": "invalid_sql_syntax",
+                "action_if_failed": "fail"
             }
         ]
         with pytest.raises(SparkExpectationsInvalidQueryDQExpectationException):
             SparkExpectationsValidateRules.validate_expectations(
                 mock_df, rules, mock_spark, raise_exception=True
             )
+
+    def test_raises_on_invalid_action_if_failed(self, mock_df, mock_spark, mock_expr):
+        """Test that invalid action_if_failed raises SparkExpectationsUserInputOrConfigInvalidException."""
+        rules = [
+            {
+                "rule_type": "row_dq",
+                "expectation": "col1 > 10",
+                "rule": "bad_action_rule",
+                "action_if_failed": "abort",
+            }
+        ]
+        with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException):
+            SparkExpectationsValidateRules.validate_expectations(
+                mock_df, rules, mock_spark, raise_exception=True
+            )
+
+    def test_valid_action_if_failed_does_not_raise(self, mock_df, mock_spark, mock_expr):
+        """Test that valid action_if_failed values do not raise exceptions."""
+        rules = [
+            {
+                "rule_type": "row_dq",
+                "expectation": "col1 > 10",
+                "rule": "good_action_rule",
+                "action_if_failed": "fail",
+            }
+        ]
+        result = SparkExpectationsValidateRules.validate_expectations(
+            mock_df, rules, mock_spark, raise_exception=True
+        )
+        assert result == {}
+
+
+class TestValidateActionIfFailed:
+    """Unit tests for SparkExpectationsValidateRules.validate_action_if_failed"""
+
+    @pytest.mark.parametrize("action", VALID_ACTION_IF_FAILED_VALUES)
+    def test_valid_action_if_failed(self, action):
+        """Test that accepted action_if_failed values pass validation."""
+        rule = {"rule": "test_rule", "rule_type": "row_dq", "action_if_failed": action}
+        result = SparkExpectationsValidateRules.validate_action_if_failed(rule)
+        assert result.is_valid is True
+
+    @pytest.mark.parametrize("action", INVALID_ACTION_IF_FAILED_VALUES)
+    def test_invalid_action_if_failed(self, action):
+        """Test that unrecognized action_if_failed values fail validation."""
+        rule = {"rule": "test_rule", "rule_type": "row_dq", "action_if_failed": action}
+        result = SparkExpectationsValidateRules.validate_action_if_failed(rule)
+        assert result.is_valid is False
+        assert "action_if_failed" in result.error_message
+        assert "Accepted values" in result.error_message
+
+    def test_missing_action_if_failed_key(self):
+        """Test that a rule missing the action_if_failed key fails validation."""
+        rule = {"rule": "test_rule", "rule_type": "row_dq"}
+        result = SparkExpectationsValidateRules.validate_action_if_failed(rule)
+        assert result.is_valid is False
+
+    @pytest.mark.parametrize("action", INVALID_ACTION_IF_FAILED_VALUES)
+    def test_invalid_action_if_failed_raises_exception(self, action):
+        """Test that raise_exception=True raises SparkExpectationsUserInputOrConfigInvalidException."""
+        rule = {"rule": "test_rule", "rule_type": "row_dq", "action_if_failed": action}
+        with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException):
+            SparkExpectationsValidateRules.validate_action_if_failed(rule, raise_exception=True)
+
+    @pytest.mark.parametrize("action", VALID_ACTION_IF_FAILED_VALUES)
+    def test_valid_action_if_failed_does_not_raise(self, action):
+        """Test that valid values don't raise even with raise_exception=True."""
+        rule = {"rule": "test_rule", "rule_type": "row_dq", "action_if_failed": action}
+        result = SparkExpectationsValidateRules.validate_action_if_failed(rule, raise_exception=True)
+        assert result.is_valid is True
+
+    def test_error_message_includes_rule_name(self):
+        """Test that error message includes the rule name for debugging."""
+        rule = {"rule": "my_rule_name", "rule_type": "row_dq", "action_if_failed": "bad_value"}
+        result = SparkExpectationsValidateRules.validate_action_if_failed(rule)
+        assert "my_rule_name" in result.error_message
+
+    def test_error_message_includes_invalid_value(self):
+        """Test that error message includes the invalid value provided."""
+        rule = {"rule": "test_rule", "rule_type": "row_dq", "action_if_failed": "abort"}
+        result = SparkExpectationsValidateRules.validate_action_if_failed(rule)
+        assert "'abort'" in result.error_message
+
+    def test_case_sensitivity(self):
+        """Test that action_if_failed validation is case-sensitive."""
+        for action in ["Drop", "DROP", "IGNORE", "Fail", "FAIL"]:
+            rule = {"rule": "test_rule", "rule_type": "row_dq", "action_if_failed": action}
+            result = SparkExpectationsValidateRules.validate_action_if_failed(rule)
+            assert result.is_valid is False, f"Expected '{action}' to be invalid (case-sensitive)"
