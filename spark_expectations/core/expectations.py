@@ -129,6 +129,9 @@ class SparkExpectations:
         """
         Validate that the rules DataFrame contains all required columns.
 
+        Args:
+            required_columns: Set of column names that must be present in rules_df.
+
         Raises:
             SparkExpectationsUserInputOrConfigInvalidException: If any required columns are
                 missing from rules_df.
@@ -321,17 +324,17 @@ class SparkExpectations:
                 str(notification_dict[user_config.querydq_output_custom_table_name])
             )
 
-    def _get_configs_notification_context(
+    def _set_configs_notification_context(
         self,
         notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]],
         se_stats_streaming_dict: Dict[str, Any]
-    ) -> Tuple[bool, bool, int]:
+    ) -> None:
         """
-        Configure notification context settings and extract threshold parameters.
+        Configure notification context settings in the SparkExpectations context.
 
-        Sets up notification triggers (on start, completion, fail) and streaming
-        stats configuration in the context. Also extracts and returns error
-        threshold-related settings for use in the DQ processing workflow.
+        Sets up notification triggers (on start, completion, fail), error threshold
+        settings, and streaming stats configuration in the context. All settings are
+        stored in the context object for use during DQ processing.
 
         Args:
             notification_dict: Dictionary containing notification configuration
@@ -339,14 +342,6 @@ class SparkExpectations:
                 notifications, job metadata, and error threshold settings.
             se_stats_streaming_dict: Dictionary containing stats streaming
                 configuration for Kafka and other streaming options.
-
-        Returns:
-            A tuple containing:
-                - notification_on_error_drop_exceeds_threshold_breach: Whether to
-                  notify when error drop exceeds threshold.
-                - notifications_on_rules_action_if_failed_set_ignore: Whether to
-                  notify on rules with action_if_failed set to ignore.
-                - error_drop_threshold: The threshold percentage for error drops.
         """
         _notification_on_start: bool = (
             bool(notification_dict[user_config.se_notifications_on_start])
@@ -408,13 +403,15 @@ class SparkExpectations:
         self._context.set_notification_on_start(_notification_on_start)
         self._context.set_notification_on_completion(_notification_on_completion)
         self._context.set_notification_on_fail(_notification_on_fail)
+        self._context.set_notification_on_error_drop_exceeds_threshold_breach(_notification_on_error_drop_exceeds_threshold_breach)
+        self._context.set_notifications_on_rules_action_if_failed_set_ignore(_notifications_on_rules_action_if_failed_set_ignore)
 
         self._context.set_se_streaming_stats_dict(se_stats_streaming_dict)
         self._context.set_job_metadata(_job_metadata)
         self._context.set_min_priority_slack(
             str(notification_dict[min_priority_slack])
         )
-        return (_notification_on_error_drop_exceeds_threshold_breach, _notifications_on_rules_action_if_failed_set_ignore, _error_drop_threshold)
+        self._context.set_error_drop_threshold(_error_drop_threshold)
 
     def _check_invalid_rules(self, df: "DataFrame", rules: List[Dict]) -> None:
         """
@@ -447,7 +444,6 @@ class SparkExpectations:
     def _init_default_values(
         self,
         input_count: int,
-        error_drop_threshold: int,
         expectations: Dict[str, List[Dict[str, str]]]
     ) -> None:
         """
@@ -458,7 +454,6 @@ class SparkExpectations:
 
         Args:
             input_count: The number of input records in the DataFrame.
-            error_drop_threshold: The threshold percentage for error drops.
             expectations: Dictionary containing the DQ expectations/rules to be applied.
         """
         _log.info("initialize variable with default values before next run")
@@ -493,7 +488,6 @@ class SparkExpectations:
         self._context._row_dq_end_time = None
 
         self._context.set_input_count(input_count)
-        self._context.set_error_drop_threshold(error_drop_threshold)
     
     def _use_temp_table(self, table_name: str, df: "DataFrame") -> "DataFrame":
         """
@@ -672,38 +666,29 @@ class SparkExpectations:
         return _row_dq_df, _error_count, _output_count
 
     def _call_row_dq_notifications(
-        self,
-        notification_on_error_drop_exceeds_threshold_breach: bool,
-        error_drop_threshold: int,
-        notifications_on_rules_action_if_failed_set_ignore: bool
+        self
     ) -> List[Dict[str, Any]]:
         """
         Send notifications based on row DQ results and error thresholds.
 
         Triggers notifications when error drop exceeds the configured threshold
-        and collects failed rules with 'ignore' action for potential notification.
-
-        Args:
-            notification_on_error_drop_exceeds_threshold_breach: Whether to notify
-                when error drop exceeds threshold.
-            error_drop_threshold: The threshold percentage for triggering notifications.
-            notifications_on_rules_action_if_failed_set_ignore: Whether to collect
-                and return rules with action_if_failed set to 'ignore'.
+        (retrieved from context) and collects failed rules with 'ignore' action
+        for potential notification.
 
         Returns:
             List of failed rule dictionaries with action_if_failed='ignore' that
             have failed_row_count > 0, or empty list if conditions aren't met.
         """
         if (
-            notification_on_error_drop_exceeds_threshold_breach is True
-            and (100 - self._context.get_output_percentage) >= error_drop_threshold
+            self._context.get_notification_on_error_drop_exceeds_threshold_breach is True
+            and (100 - self._context.get_output_percentage) >= self._context.get_error_drop_threshold
         ):
             self._notification.notify_on_exceeds_of_error_threshold()
 
         if (
-            notifications_on_rules_action_if_failed_set_ignore is True
+            self._context.get_notifications_on_rules_action_if_failed_set_ignore is True
             and isinstance(self._context.get_error_percentage, (int, float))
-            and self._context.get_error_percentage >= error_drop_threshold
+            and self._context.get_error_percentage >= self._context.get_error_drop_threshold
         ):
             failed_ignored_row_dq_res = [
                 rule
@@ -812,7 +797,6 @@ class SparkExpectations:
 
     def _check_ignore_rules_result(
         self,
-        notifications_on_rules_action_if_failed_set_ignore: bool,
         failed_ignored_row_dq_res: List[Dict[str, Any]],
         ignore_rules_result: List[Optional[List[Dict[str, Any]]]]
     ) -> List[Dict[str, Any]]:
@@ -823,8 +807,6 @@ class SparkExpectations:
         aggregate DQ, and source/target query DQ stages into a single flattened list.
 
         Args:
-            notifications_on_rules_action_if_failed_set_ignore: Whether to collect
-                ignored rules for notification.
             failed_ignored_row_dq_res: List of failed row DQ rules with ignore action.
             ignore_rules_result: Accumulator list for collecting all ignored rule results.
 
@@ -832,7 +814,7 @@ class SparkExpectations:
             Flattened list of all ignored rule dictionaries from all DQ stages,
             or empty list if no ignored rules exist.
         """
-        if notifications_on_rules_action_if_failed_set_ignore and (
+        if self._context.get_notifications_on_rules_action_if_failed_set_ignore and (
             failed_ignored_row_dq_res
             or self._context.get_final_query_dq_result
             or self._context.get_final_agg_dq_result
@@ -958,12 +940,7 @@ class SparkExpectations:
             _target_query_dq: bool = rules_execution_settings.get("target_query_dq", False)
             _target_table_view: str = target_table_view if target_table_view else f"{target_table.split('.')[-1]}_view"
 
-            (
-                _notification_on_error_drop_exceeds_threshold_breach,
-                _notifications_on_rules_action_if_failed_set_ignore,
-                _error_drop_threshold
-            ) = self._get_configs_notification_context(_notification_dict, _se_stats_streaming_dict)
-        
+            self._set_configs_notification_context(_notification_dict, _se_stats_streaming_dict)
             self._context.set_dq_expectations(expectations)
             self._context.set_rules_execution_settings_config(rules_execution_settings)
             self._context.set_querydq_secondary_queries(dq_queries_dict)
@@ -988,8 +965,7 @@ class SparkExpectations:
                     _row_dq_df: DataFrame = _df
                     _ignore_rules_result: List[Optional[List[Dict[str, Any]]]] = []
 
-                    self._init_default_values(_input_count, _error_drop_threshold, expectations)
-
+                    self._init_default_values(_input_count, expectations)
                     _log.info(f"Spark Expectations run id for this run: {self._context.get_run_id}")
 
                     if isinstance(_df, DataFrame):  # type: ignore
@@ -1017,11 +993,7 @@ class SparkExpectations:
                            
                         if _row_dq is True:                            
                             _row_dq_df, _error_count, _output_count = self._run_row_dq(_df, func_process, _target_table_view)
-                            failed_ignored_row_dq_res = self._call_row_dq_notifications(
-                                                        _notification_on_error_drop_exceeds_threshold_breach,
-                                                        _error_drop_threshold,
-                                                        _notifications_on_rules_action_if_failed_set_ignore
-                                                    )
+                            failed_ignored_row_dq_res = self._call_row_dq_notifications()
                         _log.info("ended processing data quality rules for row level expectations")
 
                         if _row_dq is True and _target_agg_dq is True and not _df.isStreaming:
@@ -1030,7 +1002,7 @@ class SparkExpectations:
                         if _row_dq is True and _target_query_dq is True and not _df.isStreaming:
                             self._run_target_query_dq_batch(func_process, _row_dq_df, _target_table_view, _error_count, _output_count)
                             
-                        flattened_ignore_rules_result = self._check_ignore_rules_result(_notifications_on_rules_action_if_failed_set_ignore, failed_ignored_row_dq_res, _ignore_rules_result)
+                        flattened_ignore_rules_result = self._check_ignore_rules_result(failed_ignored_row_dq_res, _ignore_rules_result)
                         if flattened_ignore_rules_result:
                             self._notification.notify_on_ignore_rules(flattened_ignore_rules_result)
 
