@@ -68,8 +68,8 @@ if check_if_pyspark_connect_is_supported():
     DataFrame: TypeAlias = Union[sql.DataFrame, ConnectDataFrame]
     SparkSession: TypeAlias = Union[sql.SparkSession, ConnectSparkSession]
 else:
-    DataFrame: TypeAlias = sql.DataFrame  # type: ignore
-    SparkSession: TypeAlias = sql.SparkSession  # type: ignore
+    DataFrame: TypeAlias = sql.DataFrame  # type: ignore  # pragma: no cover
+    SparkSession: TypeAlias = sql.SparkSession  # type: ignore  # pragma: no cover
 
 # Type alias for the DQ process function returned by execute_dq_process
 DQProcessFunc: TypeAlias = Callable[..., Tuple["DataFrame", Optional[List[Dict[str, str]]], int, str]]
@@ -324,7 +324,7 @@ class SparkExpectations:
                 str(notification_dict[user_config.querydq_output_custom_table_name])
             )
 
-    def _set_configs_notification_context(
+    def _set_notification_context(
         self,
         notification_dict: Dict[str, Union[str, int, bool, Dict[str, str]]],
         se_stats_streaming_dict: Dict[str, Any]
@@ -940,7 +940,7 @@ class SparkExpectations:
             _target_query_dq: bool = rules_execution_settings.get("target_query_dq", False)
             _target_table_view: str = target_table_view if target_table_view else f"{target_table.split('.')[-1]}_view"
 
-            self._set_configs_notification_context(_notification_dict, _se_stats_streaming_dict)
+            self._set_notification_context(_notification_dict, _se_stats_streaming_dict)
             self._context.set_dq_expectations(expectations)
             self._context.set_rules_execution_settings_config(rules_execution_settings)
             self._context.set_querydq_secondary_queries(dq_queries_dict)
