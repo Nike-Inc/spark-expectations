@@ -333,7 +333,7 @@ class SparkExpectationsReport:
                 .withColumnRenamed("source_dq_error_row_count", "failed_records")
                 .withColumn(
                     "success_percentage",
-                    (col("valid_records") / col("total_records")) * 100,
+                    (col("valid_records").cast("double") / col("total_records").cast("double")) * 100,
                 )
             )
 
