@@ -118,6 +118,8 @@ class SparkExpectationsContext:
         self._notification_on_start: bool = False
         self._notification_on_completion: bool = False
         self._notification_on_fail: bool = False
+        self._notification_on_error_drop_exceeds_threshold_breach: bool = False
+        self._notifications_on_rules_action_if_failed_set_ignore: bool = False
         self._error_drop_threshold: int = 100
 
         self._cerberus_url: str = "your_cerberus_url"
@@ -412,6 +414,12 @@ class SparkExpectationsContext:
         return self._run_date
 
     def set_dq_stats_table_name(self, dq_stats_table_name: str) -> None:
+        """
+        Sets the DQ stats table name where final statistics will be written.
+
+        Args:
+            dq_stats_table_name: The fully qualified table name for DQ statistics
+        """
         self._dq_stats_table_name = dq_stats_table_name
 
     @property
@@ -430,6 +438,12 @@ class SparkExpectationsContext:
         )
 
     def set_dq_expectations(self, dq_expectations: dict) -> None:
+        """
+        Sets the data quality expectations/rules dictionary.
+
+        Args:
+            dq_expectations: Dictionary containing DQ rule definitions
+        """
         self._dq_expectations = dq_expectations
 
     @property
@@ -448,6 +462,12 @@ class SparkExpectationsContext:
         )
 
     def set_final_table_name(self, final_table_name: str) -> None:
+        """
+        Sets the final/target table name where validated data will be written.
+
+        Args:
+            final_table_name: The fully qualified target table name
+        """
         self._final_table_name = final_table_name
 
     @property
@@ -466,6 +486,13 @@ class SparkExpectationsContext:
         )
 
     def set_error_table_name(self, error_table_name: str, user_specified: bool = True) -> None:
+        """
+        Sets the error table name where failed records will be written.
+
+        Args:
+            error_table_name: The fully qualified error table name
+            user_specified: Flag indicating if user explicitly provided this name
+        """
         self._error_table_name = error_table_name
         self._error_table_name_user_specified = user_specified
 
@@ -492,6 +519,12 @@ class SparkExpectationsContext:
         return self._error_table_name_user_specified
 
     def set_min_priority_email(self, min_priority_email: str) -> None:
+        """
+        Sets the minimum priority level for email notifications.
+
+        Args:
+            min_priority_email: Minimum priority threshold for triggering email alerts
+        """
         self._min_priority_email = min_priority_email
 
     @property
@@ -504,6 +537,12 @@ class SparkExpectationsContext:
         return self._min_priority_email
 
     def set_min_priority_pagerduty(self, min_priority_pagerduty: str) -> None:
+        """
+        Sets the minimum priority level for PagerDuty notifications.
+
+        Args:
+            min_priority_pagerduty: Minimum priority threshold for triggering PagerDuty alerts
+        """
         self._min_priority_pagerduty = min_priority_pagerduty
 
     @property
@@ -516,6 +555,12 @@ class SparkExpectationsContext:
         return self._min_priority_pagerduty
 
     def set_min_priority_slack(self, min_priority_slack: str) -> None:
+        """
+        Sets the minimum priority level for Slack notifications.
+
+        Args:
+            min_priority_slack: Minimum priority threshold for triggering Slack alerts
+        """
         self._min_priority_slack = min_priority_slack
 
     @property
@@ -528,6 +573,12 @@ class SparkExpectationsContext:
         return self._min_priority_slack
 
     def set_min_priority_teams(self, min_priority_teams: str) -> None:
+        """
+        Sets the minimum priority level for Microsoft Teams notifications.
+
+        Args:
+            min_priority_teams: Minimum priority threshold for triggering Teams alerts
+        """
         self._min_priority_teams = min_priority_teams
 
     @property
@@ -540,6 +591,12 @@ class SparkExpectationsContext:
         return self._min_priority_teams
 
     def set_min_priority_zoom(self, min_priority_zoom: str) -> None:
+        """
+        Sets the minimum priority level for Zoom notifications.
+
+        Args:
+            min_priority_zoom: Minimum priority threshold for triggering Zoom alerts
+        """
         self._min_priority_zoom = min_priority_zoom
 
     @property
@@ -612,6 +669,12 @@ class SparkExpectationsContext:
         )
 
     def set_row_dq_status(self, row_dq_status: str = "Skipped") -> None:
+        """
+        Sets the row-level data quality check status.
+
+        Args:
+            row_dq_status: Status of row DQ execution (e.g., "Skipped", "Passed", "Failed")
+        """
         self._row_dq_status = row_dq_status
 
     @property
@@ -631,6 +694,12 @@ class SparkExpectationsContext:
         )
 
     def set_source_agg_dq_status(self, source_agg_dq_status: str = "Skipped") -> None:
+        """
+        Sets the source aggregate data quality check status.
+
+        Args:
+            source_agg_dq_status: Status of source agg DQ execution (e.g., "Skipped", "Passed", "Failed")
+        """
         self._source_agg_dq_status = source_agg_dq_status
 
     @property
@@ -650,6 +719,12 @@ class SparkExpectationsContext:
         )
 
     def set_final_agg_dq_status(self, final_agg_dq_status: str = "Skipped") -> None:
+        """
+        Sets the final/target aggregate data quality check status.
+
+        Args:
+            final_agg_dq_status: Status of final agg DQ execution (e.g., "Skipped", "Passed", "Failed")
+        """
         self._final_agg_dq_status = final_agg_dq_status
 
     @property
@@ -669,6 +744,12 @@ class SparkExpectationsContext:
         )
 
     def set_source_query_dq_status(self, source_query_dq_status: str = "Skipped") -> None:
+        """
+        Sets the source query data quality check status.
+
+        Args:
+            source_query_dq_status: Status of source query DQ execution (e.g., "Skipped", "Passed", "Failed")
+        """
         self._source_query_dq_status = source_query_dq_status
 
     @property
@@ -688,6 +769,12 @@ class SparkExpectationsContext:
         )
 
     def set_final_query_dq_status(self, final_query_dq_status: str = "Skipped") -> None:
+        """
+        Sets the final/target query data quality check status.
+
+        Args:
+            final_query_dq_status: Status of final query DQ execution (e.g., "Skipped", "Passed", "Failed")
+        """
         self._final_query_dq_status = final_query_dq_status
 
     @property
@@ -707,6 +794,12 @@ class SparkExpectationsContext:
         )
 
     def set_dq_run_status(self, dq_run_status: str = "Failed") -> None:
+        """
+        Sets the overall data quality pipeline run status.
+
+        Args:
+            dq_run_status: Overall DQ run status (e.g., "Failed", "Passed")
+        """
         self._dq_run_status = dq_run_status
 
     @property
@@ -778,6 +871,12 @@ class SparkExpectationsContext:
         )
 
     def set_mail_smtp_server(self, mail_smtp_server: str) -> None:
+        """
+        Sets the SMTP server hostname for email notifications.
+
+        Args:
+            mail_smtp_server: SMTP server hostname or IP address
+        """
         self._mail_smtp_server = mail_smtp_server
 
     @property
@@ -797,6 +896,12 @@ class SparkExpectationsContext:
         )
 
     def set_mail_smtp_port(self, mail_smtp_port: int) -> None:
+        """
+        Sets the SMTP server port for email notifications.
+
+        Args:
+            mail_smtp_port: SMTP server port number (e.g., 25, 465, 587)
+        """
         self._mail_smtp_port = mail_smtp_port
 
     @property
@@ -816,6 +921,12 @@ class SparkExpectationsContext:
         )
 
     def set_mail_smtp_password(self, mail_smtp_password: str) -> None:
+        """
+        Sets the SMTP password for authentication.
+
+        Args:
+            mail_smtp_password: Password for SMTP authentication
+        """
         self._mail_smtp_password = mail_smtp_password
 
     @property
@@ -862,6 +973,12 @@ class SparkExpectationsContext:
         return self._smtp_creds_dict
 
     def set_enable_mail(self, enable_mail: bool) -> None:
+        """
+        Enables or disables email notifications.
+
+        Args:
+            enable_mail: True to enable email notifications, False to disable
+        """
         self._enable_mail = bool(enable_mail)
 
     @property
@@ -875,6 +992,12 @@ class SparkExpectationsContext:
         return self._enable_mail
 
     def set_enable_smtp_server_auth(self, enable_smtp_server_auth: bool) -> None:
+        """
+        Enables or disables SMTP server authentication.
+
+        Args:
+            enable_smtp_server_auth: True to enable SMTP authentication, False to disable
+        """
         self._enable_smtp_server_auth = bool(enable_smtp_server_auth)
 
     @property
@@ -888,6 +1011,12 @@ class SparkExpectationsContext:
         return self._enable_smtp_server_auth
 
     def set_to_mail(self, to_mail: str) -> None:
+        """
+        Sets the recipient email addresses for notifications.
+
+        Args:
+            to_mail: Comma-separated email addresses of recipients
+        """
         self._to_mail = to_mail
 
     @property
@@ -907,6 +1036,12 @@ class SparkExpectationsContext:
         )
 
     def set_enable_custom_email_body(self, enable_custom_email_body: bool) -> None:
+        """
+        Enables or disables custom email body content.
+
+        Args:
+            enable_custom_email_body: True to enable custom email body, False to use default
+        """
         self._enable_custom_email_body = bool(enable_custom_email_body)
 
     @property
@@ -920,6 +1055,12 @@ class SparkExpectationsContext:
         return self._enable_custom_email_body
 
     def set_enable_templated_basic_email_body(self, enable_templated_basic_email_body: bool) -> None:
+        """
+        Enables or disables HTML templating for basic email notifications.
+
+        Args:
+            enable_templated_basic_email_body: True to enable HTML templating, False to disable
+        """
         self._enable_templated_basic_email_body = bool(enable_templated_basic_email_body)
 
     @property
@@ -933,6 +1074,12 @@ class SparkExpectationsContext:
         return self._enable_templated_basic_email_body
 
     def set_enable_templated_custom_email(self, enable_templated_custom_email: bool) -> None:
+        """
+        Enables or disables HTML templating for custom email notifications.
+
+        Args:
+            enable_templated_custom_email: True to enable HTML templating for custom emails, False to disable
+        """
         self._enable_templated_custom_email = bool(enable_templated_custom_email)
 
     @property
@@ -946,6 +1093,12 @@ class SparkExpectationsContext:
         return self._enable_templated_custom_email
 
     def set_mail_from(self, mail_from: str) -> None:
+        """
+        Sets the sender email address for notifications.
+
+        Args:
+            mail_from: Email address of the sender
+        """
         self._mail_from = mail_from
 
     @property
@@ -964,6 +1117,12 @@ class SparkExpectationsContext:
         )
 
     def set_mail_subject(self, mail_subject: str) -> None:
+        """
+        Sets the email subject line for notifications.
+
+        Args:
+            mail_subject: Subject line for email notifications
+        """
         self._mail_subject = mail_subject
 
     @property
@@ -983,6 +1142,12 @@ class SparkExpectationsContext:
         )
 
     def set_email_custom_body(self, email_custom_body: str) -> None:
+        """
+        Sets the custom email body content.
+
+        Args:
+            email_custom_body: Custom HTML or text content for email body
+        """
         self._email_custom_body = email_custom_body
 
     @property
@@ -1021,6 +1186,12 @@ class SparkExpectationsContext:
         return self._enable_slack
 
     def set_slack_webhook_url(self, slack_webhook_url: str) -> None:
+        """
+        Sets the Slack webhook URL for notifications.
+
+        Args:
+            slack_webhook_url: Slack incoming webhook URL
+        """
         self._slack_webhook_url = slack_webhook_url
 
     @property
@@ -1060,6 +1231,12 @@ class SparkExpectationsContext:
         return self._enable_teams
 
     def set_teams_webhook_url(self, teams_webhook_url: str) -> None:
+        """
+        Sets the Microsoft Teams webhook URL for notifications.
+
+        Args:
+            teams_webhook_url: Teams incoming webhook URL
+        """
         self._teams_webhook_url = teams_webhook_url
 
     @property
@@ -1228,6 +1405,12 @@ class SparkExpectationsContext:
         return self._pagerduty_creds_dict
 
     def set_table_name(self, table_name: str) -> None:
+        """
+        Sets the table name being processed.
+
+        Args:
+            table_name: Name of the table being processed
+        """
         self._table_name = table_name
 
     @property
@@ -1246,6 +1429,12 @@ class SparkExpectationsContext:
         )
 
     def set_input_count(self, input_count: int = 0) -> None:
+        """
+        Sets the input record count before DQ processing.
+
+        Args:
+            input_count: Number of input records
+        """
         self._input_count = input_count
 
     @property
@@ -1259,6 +1448,12 @@ class SparkExpectationsContext:
         return self._input_count
 
     def set_error_count(self, error_count: int = 0) -> None:
+        """
+        Sets the error record count after DQ processing.
+
+        Args:
+            error_count: Number of records that failed DQ rules
+        """
         self._error_count = error_count
 
     @property
@@ -1272,6 +1467,12 @@ class SparkExpectationsContext:
         return self._error_count
 
     def set_output_count(self, output_count: int = 0) -> None:
+        """
+        Sets the output record count after DQ processing.
+
+        Args:
+            output_count: Number of records that passed DQ rules
+        """
         self._output_count = output_count
 
     @property
@@ -1285,6 +1486,12 @@ class SparkExpectationsContext:
         return self._output_count
 
     def set_source_agg_dq_result(self, source_agg_dq_result: Optional[List[Dict[str, str]]] = None) -> None:
+        """
+        Sets the source aggregate data quality check results.
+
+        Args:
+            source_agg_dq_result: List of dictionaries containing source agg DQ results
+        """
         self._source_agg_dq_result = source_agg_dq_result
 
     @property
@@ -1299,6 +1506,12 @@ class SparkExpectationsContext:
         return self._source_agg_dq_result
 
     def set_final_agg_dq_result(self, final_agg_dq_result: Optional[List[Dict[str, str]]] = None) -> None:
+        """
+        Sets the final/target aggregate data quality check results.
+
+        Args:
+            final_agg_dq_result: List of dictionaries containing final agg DQ results
+        """
         self._final_agg_dq_result = final_agg_dq_result
 
     @property
@@ -1312,6 +1525,12 @@ class SparkExpectationsContext:
         return self._final_agg_dq_result
 
     def set_source_query_dq_result(self, source_query_dq_result: Optional[List[Dict[str, str]]] = None) -> None:
+        """
+        Sets the source query data quality check results.
+
+        Args:
+            source_query_dq_result: List of dictionaries containing source query DQ results
+        """
         self._source_query_dq_result = source_query_dq_result
 
     @property
@@ -1325,6 +1544,12 @@ class SparkExpectationsContext:
         return self._source_query_dq_result
 
     def set_final_query_dq_result(self, final_query_dq_result: Optional[List[Dict[str, str]]] = None) -> None:
+        """
+        Sets the final/target query data quality check results.
+
+        Args:
+            final_query_dq_result: List of dictionaries containing final query DQ results
+        """
         self._final_query_dq_result = final_query_dq_result
 
     @property
@@ -1338,6 +1563,12 @@ class SparkExpectationsContext:
         return self._final_query_dq_result
 
     def set_notification_on_start(self, notification_on_start: bool) -> None:
+        """
+        Enables or disables notifications when DQ processing starts.
+
+        Args:
+            notification_on_start: True to send notification on start, False to disable
+        """
         self._notification_on_start = notification_on_start
 
     @property
@@ -1351,6 +1582,12 @@ class SparkExpectationsContext:
         return self._notification_on_start
 
     def set_notification_on_completion(self, notification_on_completion: bool) -> None:
+        """
+        Enables or disables notifications when DQ processing completes.
+
+        Args:
+            notification_on_completion: True to send notification on completion, False to disable
+        """
         self._notification_on_completion = notification_on_completion
 
     @property
@@ -1364,6 +1601,12 @@ class SparkExpectationsContext:
         return self._notification_on_completion
 
     def set_notification_on_fail(self, notification_on_fail: bool) -> None:
+        """
+        Enables or disables notifications when DQ processing fails.
+
+        Args:
+            notification_on_fail: True to send notification on failure, False to disable
+        """
         self._notification_on_fail = notification_on_fail
 
     @property
@@ -1375,6 +1618,46 @@ class SparkExpectationsContext:
 
         """
         return self._notification_on_fail
+    
+    def set_notification_on_error_drop_exceeds_threshold_breach(self, notification_on_error_drop_exceeds_threshold_breach: bool) -> None:
+        """
+        Enables or disables notifications when error drop exceeds threshold.
+
+        Args:
+            notification_on_error_drop_exceeds_threshold_breach: True to send notification on threshold breach, False to disable
+        """
+        self._notification_on_error_drop_exceeds_threshold_breach = notification_on_error_drop_exceeds_threshold_breach
+
+    @property
+    def get_notification_on_error_drop_exceeds_threshold_breach(self) -> bool:
+        """
+        Returns whether notification is enabled when error drop exceeds threshold.
+
+        Returns:
+            bool: True if notification on threshold breach is enabled, False otherwise
+        """
+        return self._notification_on_error_drop_exceeds_threshold_breach
+    
+    def set_notifications_on_rules_action_if_failed_set_ignore(self, notifications_on_rules_action_if_failed_set_ignore: bool) -> None:
+        """
+        Enables or disables notifications for rules with action_if_failed set to 'ignore'.
+
+        Args:
+            notifications_on_rules_action_if_failed_set_ignore: True to send notifications for ignored failures, False to disable
+        """
+        self._notifications_on_rules_action_if_failed_set_ignore = notifications_on_rules_action_if_failed_set_ignore
+
+    @property
+    def get_notifications_on_rules_action_if_failed_set_ignore(self) -> bool:
+        """
+        Returns whether notifications are enabled for rules with action_if_failed set to 'ignore'.
+
+        Returns:
+            bool: True if notifications for ignored failures are enabled, False otherwise
+        """
+        return self._notifications_on_rules_action_if_failed_set_ignore
+
+    
 
     def set_env(self, env: Optional[str]) -> None:
         """
@@ -1450,6 +1733,12 @@ class SparkExpectationsContext:
         return 0.0
 
     def set_error_drop_threshold(self, error_drop_threshold: int) -> None:
+        """
+        Sets the error drop threshold percentage.
+
+        Args:
+            error_drop_threshold: Maximum allowed error percentage before alerting
+        """
         self._error_drop_threshold = error_drop_threshold
 
     @property
@@ -2348,6 +2637,12 @@ class SparkExpectationsContext:
         return self._target_query_dq_detailed_stats
 
     def set_dq_detailed_stats_table_name(self, dq_detailed_stats_table_name: str) -> None:
+        """
+        Sets the table name for detailed DQ statistics.
+
+        Args:
+            dq_detailed_stats_table_name: Fully qualified table name for detailed stats
+        """
         self._dq_detailed_stats_table_name = dq_detailed_stats_table_name
 
     @property
@@ -2369,6 +2664,12 @@ class SparkExpectationsContext:
         )
 
     def set_query_dq_output_custom_table_name(self, query_dq_output_custom_table_name: str) -> None:
+        """
+        Sets the custom table name for query DQ output results.
+
+        Args:
+            query_dq_output_custom_table_name: Fully qualified table name for query DQ output
+        """
         self._query_dq_output_custom_table_name = query_dq_output_custom_table_name
 
     @property
@@ -2661,24 +2962,60 @@ class SparkExpectationsContext:
         return self._custom_default_template
 
     def set_stats_detailed_dataframe(self, dataframe: DataFrame) -> None:
+        """
+        Sets the DataFrame containing detailed statistics.
+
+        Args:
+            dataframe: DataFrame with detailed DQ statistics
+        """
         self._dataframe = dataframe
 
     @property
     def get_stats_detailed_dataframe(self) -> DataFrame:
+        """
+        Returns the DataFrame containing detailed statistics.
+
+        Returns:
+            DataFrame: DataFrame with detailed DQ statistics
+        """
         return self._dataframe
 
     def set_custom_detailed_dataframe(self, dataframe: DataFrame) -> None:
+        """
+        Sets the DataFrame containing custom detailed statistics.
+
+        Args:
+            dataframe: DataFrame with custom detailed DQ statistics
+        """
         self._custom_dataframe = dataframe
 
     @property
     def get_custom_detailed_dataframe(self) -> DataFrame:
+        """
+        Returns the DataFrame containing custom detailed statistics.
+
+        Returns:
+            DataFrame: DataFrame with custom detailed DQ statistics
+        """
         return self._custom_dataframe
 
     def set_report_table_name(self, report_table_name: str) -> None:
+        """
+        Sets the report table name for DQ observability reports.
+
+        Args:
+            report_table_name: Fully qualified table name for DQ reports
+        """
         self._report_table_name = report_table_name
 
     @property
     def get_report_table_name(self) -> str:
+        """
+        Returns the report table name for DQ observability reports.
+
+        Returns:
+            str: Fully qualified table name for DQ reports
+        """
         return self._report_table_name
 
     def set_dq_obs_rpt_gen_status_flag(self, dq_obs_rpt_gen_status_flag: bool) -> None:
@@ -2702,8 +3039,20 @@ class SparkExpectationsContext:
         return self._dq_obs_rpt_gen_status_flag
 
     def set_df_dq_obs_report_dataframe(self, dataframe: DataFrame) -> None:
+        """
+        Sets the DataFrame for DQ observability report.
+
+        Args:
+            dataframe: DataFrame containing DQ observability report data
+        """
         self._df_dq_obs_report_dataframe = dataframe
 
     @property
     def get_df_dq_obs_report_dataframe(self) -> DataFrame:
+        """
+        Returns the DataFrame for DQ observability report.
+
+        Returns:
+            DataFrame: DataFrame containing DQ observability report data
+        """
         return self._df_dq_obs_report_dataframe
