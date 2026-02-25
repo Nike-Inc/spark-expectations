@@ -994,7 +994,7 @@ class SparkExpectations:
                         if _row_dq is True:                            
                             _row_dq_df, _error_count, _output_count = self._run_row_dq(_df, func_process, _target_table_view)
                             failed_ignored_row_dq_res = self._call_row_dq_notifications()
-                        _log.info("ended processing data quality rules for row level expectations")
+                            _log.info("ended processing data quality rules for row level expectations")
 
                         if _row_dq is True and _target_agg_dq is True and not _df.isStreaming:
                             self._run_target_agg_dq_batch(func_process, _row_dq_df, _error_count, _output_count)
