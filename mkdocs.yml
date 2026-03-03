@@ -58,7 +58,9 @@ nav:
               - Example Config: user_guide/user_config/user_config.md
               - Kafka Custom Config: user_guide/user_config/kafka_custom_config.md
           - Notifications:
-              - Email: user_guide/notifications/email_notifications.md
+              - Email:
+                  - Email Notification Config: user_guide/notifications/email_notifications.md
+                  - Email Notification Types: user_guide/notifications/email_notification_types.md
               - Slack: user_guide/notifications/slack_notifications.md
               - PagerDuty: user_guide/notifications/pagerduty_notifications.md
           - Observability: Observability_examples.md

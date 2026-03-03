@@ -4,7 +4,7 @@ Spark Expectations can send three kinds of emails.
 
 ## 1. Data Quality Report Emails
 
-Please see the [Observability Examples doc](Observability_examples.md) for more detailed information on emails that contain the DQ report.
+Please see the [Observability Examples doc](../../Observability_examples.md) for more detailed information on emails that contain the DQ report.
 
 
 ## 2. Basic Email Notifications/Alerts
@@ -229,5 +229,5 @@ user_config.se_notifications_email_custom_template: ""
 As seen in the template, some of the results values are nested data structures (often an array of maps/dicts) and their elements can be accessed directly with the right syntax, or using `for` loops or other options that Jinja2 supports.
 
 __Note:__
-- If an empty string `""` is passed in to the template field in the user config, the default template will be used: ([spark_expectations/config/templates/custom_email_alert_template.jinja](../spark_expectations/config/templates/custom_email_alert_template.jinja)).
+- If an empty string `""` is passed in to the template field in the user config, the default template will be used: ([spark_expectations/config/templates/custom_email_alert_template.jinja](../../../spark_expectations/config/templates/custom_email_alert_template.jinja)).
 - A metric name must be specified in `user_config.se_notifications_email_custom_body` if it is being referenced in the template. For example, if `{{ final_agg_dq_results }}` is referenced in the template, then `"'final_agg_dq_results': {},\n "` must be in the user config.
