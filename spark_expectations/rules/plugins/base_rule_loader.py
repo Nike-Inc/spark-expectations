@@ -25,7 +25,7 @@ class SparkExpectationsRuleLoader:
         self,
         path: str,
         format: str,
-        options: Optional[Dict[str, str]] = None,
+        options: Dict[str, str],
     ) -> Optional[DataFrame]:
         """Load rules from *path* and return a Spark DataFrame.
 

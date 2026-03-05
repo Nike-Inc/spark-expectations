@@ -49,7 +49,11 @@ def test_two_plugins_registered():
 def yaml_file(tmp_path):
     content = textwrap.dedent("""\
         product_id: test_product
-        table_name: db.t1
+        dq_env:
+          DEV:
+            table_name: db.t1
+            action_if_failed: ignore
+            priority: medium
         rules:
           - rule: r1
             rule_type: row_dq
@@ -66,7 +70,13 @@ def yaml_file(tmp_path):
 def json_file(tmp_path):
     data = {
         "product_id": "test_product",
-        "table_name": "db.t1",
+        "dq_env": {
+            "DEV": {
+                "table_name": "db.t1",
+                "action_if_failed": "ignore",
+                "priority": "medium",
+            },
+        },
         "rules": [
             {
                 "rule": "r1",
@@ -83,24 +93,24 @@ def json_file(tmp_path):
 
 
 def test_load_rules_auto_yaml(yaml_file):
-    df = load_rules(yaml_file)
+    df = load_rules(yaml_file, options={"dq_env": "DEV"})
     assert df.count() == 1
     assert set(df.columns) == set(RULES_SCHEMA_COLUMNS)
 
 
 def test_load_rules_auto_json(json_file):
-    df = load_rules(json_file)
+    df = load_rules(json_file, options={"dq_env": "DEV"})
     assert df.count() == 1
     assert set(df.columns) == set(RULES_SCHEMA_COLUMNS)
 
 
 def test_load_rules_explicit_yaml(yaml_file):
-    df = load_rules(yaml_file, format="yaml")
+    df = load_rules(yaml_file, format="yaml", options={"dq_env": "DEV"})
     assert df.count() == 1
 
 
 def test_load_rules_explicit_json(json_file):
-    df = load_rules(json_file, format="json")
+    df = load_rules(json_file, format="json", options={"dq_env": "DEV"})
     assert df.count() == 1
 
 
@@ -112,18 +122,18 @@ def test_load_rules_unsupported_format_raises(tmp_path):
 
 
 def test_load_rules_from_yaml(yaml_file):
-    df = load_rules_from_yaml(yaml_file)
+    df = load_rules_from_yaml(yaml_file, options={"dq_env": "DEV"})
     assert df.count() == 1
 
 
 def test_load_rules_from_json(json_file):
-    df = load_rules_from_json(json_file)
+    df = load_rules_from_json(json_file, options={"dq_env": "DEV"})
     assert df.count() == 1
 
 
 def test_load_rules_with_explicit_spark_session(yaml_file):
     """Exercise the `spark is not None` branch in load_rules."""
     spark = get_spark_session()
-    df = load_rules(yaml_file, spark=spark)
+    df = load_rules(yaml_file, spark=spark, options={"dq_env": "DEV"})
     assert df.count() == 1
     assert set(df.columns) == set(RULES_SCHEMA_COLUMNS)

@@ -1,14 +1,14 @@
 """Pluggy plugin that loads DQ rules from a JSON file."""
 
 import json
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 from pyspark.sql import DataFrame
 from pyspark.sql.session import SparkSession
 from pyspark.sql.types import StringType, StructField, StructType
 
 from spark_expectations.core.exceptions import SparkExpectationsUserInputOrConfigInvalidException
-from spark_expectations.rules.plugins._flatten import RULES_SCHEMA_COLUMNS, flatten_rules
+from spark_expectations.rules.plugins._flatten import RULES_SCHEMA_COLUMNS, flatten_rules_list
 from spark_expectations.rules.plugins.base_rule_loader import spark_expectations_rule_loader_impl
 
 JSON_EXTENSIONS = {".json"}
@@ -18,7 +18,7 @@ def _rules_schema() -> StructType:
     return StructType([StructField(col, StringType(), True) for col in RULES_SCHEMA_COLUMNS])
 
 
-def _read_json(path: str) -> object:
+def _read_json(path: str) -> Dict[str, Any]:
     try:
         with open(path, "r", encoding="utf-8") as fh:
             data = json.load(fh)
@@ -50,7 +50,7 @@ class SparkExpectationsJsonRuleLoaderImpl:
         self,
         path: str,
         format: str,
-        options: Optional[Dict[str, str]] = None,
+        options: Dict[str, str],
     ) -> Optional[DataFrame]:
         import os
 
@@ -68,5 +68,6 @@ class SparkExpectationsJsonRuleLoaderImpl:
             )
 
         data = _read_json(path)
-        rows = flatten_rules(data)
+        env = (options or {}).get("dq_env")
+        rows = flatten_rules_list(data, env=env)
         return _rows_to_dataframe(rows, spark)

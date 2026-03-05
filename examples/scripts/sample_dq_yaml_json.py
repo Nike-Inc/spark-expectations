@@ -39,17 +39,23 @@ your_product = 'your_product'
 rules_df = load_rules_from_yaml(
     os.path.join(RESOURCES_DIR, "sample_rules.yaml"),
     spark,
+    options={"dq_env": "DEV"},
 )
 
 # ── Alternatively, load rules from JSON ─────────────────────────────────
 # rules_df = load_rules_from_json(
 #     os.path.join(RESOURCES_DIR, "sample_rules.json"),
 #     spark,
+#     options={"dq_env": "DEV"},
 # )
 
 # ── Or auto-detect the format from the file extension ───────────────────
 # from spark_expectations.rules import load_rules
-# rules_df = load_rules(os.path.join(RESOURCES_DIR, "sample_rules.yaml"), spark)
+# rules_df = load_rules(
+#     os.path.join(RESOURCES_DIR, "sample_rules.yaml"),
+#     spark,
+#     options={"dq_env": "DEV"},
+# )
 
 se: SparkExpectations = SparkExpectations(
     product_id="your_product",

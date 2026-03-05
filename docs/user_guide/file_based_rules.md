@@ -10,9 +10,9 @@ and share across environments.
 ```python
 from spark_expectations.rules import load_rules
 
-# Auto-detect format from file extension
-rules_df = load_rules("path/to/rules.yaml")
-rules_df = load_rules("path/to/rules.json")
+# Auto-detect format from file extension, selecting the "DEV" environment
+rules_df = load_rules("path/to/rules.yaml", options={"dq_env": "DEV"})
+rules_df = load_rules("path/to/rules.json", options={"dq_env": "DEV"})
 ```
 
 You can also be explicit about the format or use the format-specific helpers:
@@ -21,12 +21,16 @@ You can also be explicit about the format or use the format-specific helpers:
 from spark_expectations.rules import load_rules, load_rules_from_yaml, load_rules_from_json
 
 # Explicit format
-rules_df = load_rules("path/to/rules.yaml", format="yaml")
+rules_df = load_rules("path/to/rules.yaml", format="yaml", options={"dq_env": "DEV"})
 
 # Convenience helpers
-rules_df = load_rules_from_yaml("path/to/rules.yaml")
-rules_df = load_rules_from_json("path/to/rules.json")
+rules_df = load_rules_from_yaml("path/to/rules.yaml", options={"dq_env": "DEV"})
+rules_df = load_rules_from_json("path/to/rules.json", options={"dq_env": "DEV"})
 ```
+
+The `options={"dq_env": "<env>"}` parameter selects which environment block to use
+when the rules file contains a `dq_env` section. See [Environment-Aware Rules](#environment-aware-rules-dq_env)
+below.
 
 The returned `rules_df` has the same schema as the rules table and can be passed
 directly to `SparkExpectations`:
@@ -45,125 +49,111 @@ se = SparkExpectations(
 
 ---
 
-## File Formats
+## Environment-Aware Rules (`dq_env`)
 
-Rules files support **four authoring styles**. The loader auto-detects which style
-you are using and normalises all of them into the same flat DataFrame. Pick whichever
-structure fits your use case best.
-
-### Defaults
-
-All formats (except flat) support a `defaults` block. Values set in `defaults`
-apply to every rule unless a rule explicitly overrides them. This avoids repeating
-common settings on every single rule.
-
-The built-in defaults (used when neither the file nor the rule specifies a value) are:
-
-| Field                              | Default   |
-|------------------------------------|-----------|
-| `action_if_failed`                 | `ignore`  |
-| `enable_for_source_dq_validation`  | `true`    |
-| `enable_for_target_dq_validation`  | `true`    |
-| `is_active`                        | `true`    |
-| `enable_error_drop_alert`          | `false`   |
-| `error_drop_threshold`             | `0`       |
-| `priority`                         | `medium`  |
-
----
-
-### Format 1: Validations (multi-product)
-
-Best for: **multiple products or tables in a single file**.
+The recommended format uses a `dq_env` section to define per-environment settings
+such as `table_name`, `action_if_failed`, and `priority`. This lets you keep a
+single rules file that works across dev, QA, and production by simply switching
+the `dq_env` option at load time.
 
 === "YAML"
 
     ```yaml
-    defaults:
-      action_if_failed: ignore
-      is_active: true
-      priority: medium
+    product_id: your_product
 
-    validations:
-      - product_id: product_a
-        table_name: catalog.schema.orders
-        rules:
-          - rule: order_id_not_null
-            rule_type: row_dq
-            column_name: order_id
-            expectation: "order_id IS NOT NULL"
-            action_if_failed: drop
-            tag: completeness
-            description: "Order ID must not be null"
-            priority: high
+    dq_env:
+      DEV:
+        table_name: catalog_dev.schema.orders
+        action_if_failed: ignore
+        is_active: true
+        priority: medium
+      QA:
+        table_name: catalog_qa.schema.orders
+        action_if_failed: ignore
+        is_active: true
+        priority: medium
+      PROD:
+        table_name: catalog_prod.schema.orders
+        action_if_failed: fail
+        is_active: true
+        priority: high
 
-          - rule: total_positive
-            rule_type: row_dq
-            column_name: total
-            expectation: "total > 0"
-            tag: validity
-            description: "Total must be positive"
+    rules:
+      - rule: order_id_not_null
+        rule_type: row_dq
+        column_name: order_id
+        expectation: "order_id IS NOT NULL"
+        action_if_failed: drop
+        tag: completeness
+        description: "Order ID must not be null"
+        priority: high
 
-          - rule: row_count
-            rule_type: agg_dq
-            expectation: "count(*) > 0"
-            action_if_failed: fail
-            tag: completeness
-            description: "Table must have rows"
+      - rule: total_positive
+        rule_type: row_dq
+        column_name: total
+        expectation: "total > 0"
+        tag: validity
+        description: "Total must be positive"
 
-      - product_id: product_b
-        table_name: catalog.schema.customers
-        defaults:
-          action_if_failed: fail    # override for this block
-        rules:
-          - rule: name_not_null
-            rule_type: row_dq
-            column_name: name
-            expectation: "name IS NOT NULL"
-            tag: completeness
-            description: "Customer name is required"
+      - rule: row_count
+        rule_type: agg_dq
+        expectation: "count(*) > 0"
+        action_if_failed: fail
+        tag: completeness
+        description: "Table must have rows"
     ```
 
 === "JSON"
 
     ```json
     {
-      "defaults": {
-        "action_if_failed": "ignore",
-        "is_active": true,
-        "priority": "medium"
+      "product_id": "your_product",
+      "dq_env": {
+        "DEV": {
+          "table_name": "catalog_dev.schema.orders",
+          "action_if_failed": "ignore",
+          "is_active": true,
+          "priority": "medium"
+        },
+        "QA": {
+          "table_name": "catalog_qa.schema.orders",
+          "action_if_failed": "ignore",
+          "is_active": true,
+          "priority": "medium"
+        },
+        "PROD": {
+          "table_name": "catalog_prod.schema.orders",
+          "action_if_failed": "fail",
+          "is_active": true,
+          "priority": "high"
+        }
       },
-      "validations": [
+      "rules": [
         {
-          "product_id": "product_a",
-          "table_name": "catalog.schema.orders",
-          "rules": [
-            {
-              "rule": "order_id_not_null",
-              "rule_type": "row_dq",
-              "column_name": "order_id",
-              "expectation": "order_id IS NOT NULL",
-              "action_if_failed": "drop",
-              "tag": "completeness",
-              "description": "Order ID must not be null",
-              "priority": "high"
-            },
-            {
-              "rule": "total_positive",
-              "rule_type": "row_dq",
-              "column_name": "total",
-              "expectation": "total > 0",
-              "tag": "validity",
-              "description": "Total must be positive"
-            },
-            {
-              "rule": "row_count",
-              "rule_type": "agg_dq",
-              "expectation": "count(*) > 0",
-              "action_if_failed": "fail",
-              "tag": "completeness",
-              "description": "Table must have rows"
-            }
-          ]
+          "rule": "order_id_not_null",
+          "rule_type": "row_dq",
+          "column_name": "order_id",
+          "expectation": "order_id IS NOT NULL",
+          "action_if_failed": "drop",
+          "tag": "completeness",
+          "description": "Order ID must not be null",
+          "priority": "high"
+        },
+        {
+          "rule": "total_positive",
+          "rule_type": "row_dq",
+          "column_name": "total",
+          "expectation": "total > 0",
+          "tag": "validity",
+          "description": "Total must be positive"
+        },
+        {
+          "rule": "row_count",
+          "rule_type": "agg_dq",
+          "expectation": "count(*) > 0",
+          "action_if_failed": "fail",
+          "tag": "completeness",
+          "description": "Table must have rows"
         }
       ]
     }
@@ -171,16 +161,32 @@ Best for: **multiple products or tables in a single file**.
 
 **Structure:**
 
-- Top-level `defaults` (optional) -- shared across all entries.
-- `validations` -- a list where each entry has `product_id`, `table_name`, optional
-  entry-level `defaults`, and a `rules` list.
-- Defaults cascade: built-in --> top-level `defaults` --> entry-level `defaults` --> per-rule overrides.
+- Top-level `product_id` identifies the product.
+- `dq_env` is a mapping of environment names (e.g. `DEV`, `QA`, `PROD`) to
+  environment-specific settings. Each environment block can contain:
+    - `table_name` -- the table the rules apply to in that environment.
+    - Any default field (`action_if_failed`, `is_active`, `priority`, etc.) that
+      applies to all rules unless a rule overrides it.
+- `rules` is a flat list of rule definitions. Each rule needs at least `rule` and
+  `expectation`.
+- When loading, pass `options={"dq_env": "<env>"}` to select the environment:
+
+```python
+# For development
+rules_df = load_rules_from_yaml("rules.yaml", options={"dq_env": "DEV"})
+
+# For production
+rules_df = load_rules_from_yaml("rules.yaml", options={"dq_env": "PROD"})
+```
+
+**Defaults cascade:** built-in defaults --> `dq_env[<env>]` values --> per-rule overrides.
 
 ---
 
-### Format 2: Rules List (single product)
+## Simple Format (without `dq_env`)
 
-Best for: **one product and one table** with a simple flat list of rules.
+If you don't need multi-environment support, you can use a simpler variant with a
+fixed `table_name` and optional `defaults`:
 
 === "YAML"
 
@@ -255,180 +261,23 @@ Best for: **one product and one table** with a simple flat list of rules.
 
 ---
 
-### Format 3: Hierarchical (grouped by table and rule type)
+## Defaults
 
-Best for: **organising rules by table and then by rule type** (`row_dq`, `agg_dq`,
-`query_dq`). The `table_name` and `rule_type` are inferred from the nesting, so you
-never repeat them on individual rules.
+The `defaults` block (or `dq_env` environment values) lets you set values that
+apply to every rule unless a rule explicitly overrides them. This avoids repeating
+common settings on every single rule.
 
-=== "YAML"
+The built-in defaults (used when neither the file nor the rule specifies a value) are:
 
-    ```yaml
-    product_id: your_product
-    defaults:
-      action_if_failed: ignore
-
-    tables:
-      catalog.schema.orders:
-        row_dq:
-          - rule: id_not_null
-            column_name: id
-            expectation: "id IS NOT NULL"
-            action_if_failed: drop
-            tag: completeness
-            description: "ID must not be null"
-
-          - rule: amount_positive
-            column_name: amount
-            expectation: "amount > 0"
-            tag: validity
-            description: "Amount must be positive"
-
-        agg_dq:
-          - rule: row_count
-            expectation: "count(*) > 0"
-            action_if_failed: fail
-            tag: completeness
-            description: "Table must have rows"
-
-      catalog.schema.customers:
-        row_dq:
-          - rule: name_not_null
-            column_name: name
-            expectation: "name IS NOT NULL"
-            tag: completeness
-            description: "Customer name is required"
-    ```
-
-=== "JSON"
-
-    ```json
-    {
-      "product_id": "your_product",
-      "defaults": {
-        "action_if_failed": "ignore"
-      },
-      "tables": {
-        "catalog.schema.orders": {
-          "row_dq": [
-            {
-              "rule": "id_not_null",
-              "column_name": "id",
-              "expectation": "id IS NOT NULL",
-              "action_if_failed": "drop",
-              "tag": "completeness",
-              "description": "ID must not be null"
-            },
-            {
-              "rule": "amount_positive",
-              "column_name": "amount",
-              "expectation": "amount > 0",
-              "tag": "validity",
-              "description": "Amount must be positive"
-            }
-          ],
-          "agg_dq": [
-            {
-              "rule": "row_count",
-              "expectation": "count(*) > 0",
-              "action_if_failed": "fail",
-              "tag": "completeness",
-              "description": "Table must have rows"
-            }
-          ]
-        }
-      }
-    }
-    ```
-
-**Structure:**
-
-- `tables` is a nested mapping: `table_name` --> `rule_type` --> list of rules.
-- `rule_type` must be one of `row_dq`, `agg_dq`, or `query_dq`.
-- Each rule only needs `rule` and `expectation`.
-
----
-
-### Format 4: Flat (fully explicit)
-
-Best for: **maximum explicitness** -- every rule is a self-contained dict with all
-required fields. No defaults, no nesting, no inference.
-
-=== "YAML"
-
-    ```yaml
-    - product_id: your_product
-      table_name: catalog.schema.orders
-      rule_type: row_dq
-      rule: id_not_null
-      column_name: id
-      expectation: "id IS NOT NULL"
-      action_if_failed: drop
-      tag: completeness
-      description: "ID must not be null"
-
-    - product_id: your_product
-      table_name: catalog.schema.orders
-      rule_type: agg_dq
-      rule: row_count
-      expectation: "count(*) > 0"
-      action_if_failed: fail
-      tag: completeness
-      description: "Table must have rows"
-    ```
-
-=== "JSON"
-
-    ```json
-    [
-      {
-        "product_id": "your_product",
-        "table_name": "catalog.schema.orders",
-        "rule_type": "row_dq",
-        "rule": "id_not_null",
-        "column_name": "id",
-        "expectation": "id IS NOT NULL",
-        "action_if_failed": "drop",
-        "tag": "completeness",
-        "description": "ID must not be null"
-      },
-      {
-        "product_id": "your_product",
-        "table_name": "catalog.schema.orders",
-        "rule_type": "agg_dq",
-        "rule": "row_count",
-        "expectation": "count(*) > 0",
-        "action_if_failed": "fail",
-        "tag": "completeness",
-        "description": "Table must have rows"
-      }
-    ]
-    ```
-
-**Structure:**
-
-- The file is a bare list (no wrapping object).
-- Every rule must include all five required fields: `product_id`, `table_name`,
-  `rule_type`, `rule`, and `expectation`.
-- Optional fields that are omitted get filled in with built-in defaults.
-
----
-
-## Format Comparison
-
-| Format         | Top-level key  | Multi-table | Defaults | `rule_type` specified where  |
-|----------------|----------------|:-----------:|:--------:|------------------------------|
-| Validations    | `validations`  | Yes         | Yes      | On each rule                 |
-| Rules List     | `rules`        | No          | Yes      | On each rule (or as default) |
-| Hierarchical   | `tables`       | Yes         | Yes      | Inferred from nesting        |
-| Flat           | *(bare list)*  | Yes         | No       | On each rule (required)      |
-
-The format is auto-detected based on the top-level structure:
-
-1. Dict with `validations` key --> **validations**
-2. Dict with `rules` key --> **rules list**
-3. Dict with `tables` key --> **hierarchical**
-4. Bare list --> **flat**
+| Field                              | Default   |
+|------------------------------------|-----------|
+| `action_if_failed`                 | `ignore`  |
+| `enable_for_source_dq_validation`  | `true`    |
+| `enable_for_target_dq_validation`  | `true`    |
+| `is_active`                        | `true`    |
+| `enable_error_drop_alert`          | `false`   |
+| `error_drop_threshold`             | `0`       |
+| `priority`                         | `medium`  |
 
 ---
 
@@ -460,19 +309,16 @@ Every rule, regardless of input format, is normalised into a row with these 17 c
 
 ## Full Example
 
-Here is a complete example loading rules from YAML and running DQ checks:
+Here is a complete example loading rules from YAML with `dq_env` and running DQ checks:
 
 ```python
 from pyspark.sql import DataFrame
 from spark_expectations.rules import load_rules_from_yaml
 from spark_expectations.core.expectations import SparkExpectations, WrappedDataFrameWriter
 from spark_expectations.config.user_config import Constants as user_config
-from spark_expectations.core import load_configurations
 
-load_configurations(spark)
-
-# Load rules from YAML
-rules_df = load_rules_from_yaml("path/to/rules.yaml")
+# Load rules from YAML, selecting the "DEV" environment
+rules_df = load_rules_from_yaml("path/to/rules.yaml", options={"dq_env": "DEV"})
 
 # Configure writer and streaming
 writer = WrappedDataFrameWriter().mode("append").format("delta")

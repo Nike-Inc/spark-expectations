@@ -6,13 +6,8 @@ from spark_expectations.core.exceptions import SparkExpectationsUserInputOrConfi
 from spark_expectations.rules.plugins._flatten import (
     COLUMN_DEFAULTS,
     RULES_SCHEMA_COLUMNS,
-    _detect_format,
     _to_str,
-    flatten_flat,
-    flatten_hierarchical,
-    flatten_rules,
     flatten_rules_list,
-    flatten_validations,
 )
 
 
@@ -34,48 +29,42 @@ def minimal_rules_list():
 
 
 @pytest.fixture
-def minimal_hierarchical():
+def minimal_dq_env_rules():
     return {
         "product_id": "prod1",
-        "tables": {
-            "db.table1": {
-                "row_dq": [
-                    {
-                        "rule": "col1_not_null",
-                        "expectation": "col1 IS NOT NULL",
-                        "column_name": "col1",
-                        "tag": "completeness",
-                    }
-                ]
-            }
+        "dq_env": {
+            "DEV": {
+                "table_name": "catalog.schema.orders",
+                "action_if_failed": "ignore",
+                "is_active": True,
+                "priority": "medium",
+            },
+            "QA": {
+                "table_name": "catalog2.schema.orders",
+                "action_if_failed": "ignore",
+                "is_active": True,
+                "priority": "medium",
+            },
+            "PROD": {
+                "table_name": "catalog3.schema.orders",
+                "action_if_failed": "fail",
+                "is_active": True,
+                "priority": "high",
+            },
         },
+        "rules": [
+            {
+                "rule": "col1_not_null",
+                "rule_type": "row_dq",
+                "expectation": "col1 IS NOT NULL",
+                "column_name": "col1",
+                "tag": "completeness",
+            }
+        ],
     }
 
 
-def test_detect_format_flat_list():
-    assert _detect_format([{"rule": "r1"}]) == "flat"
-
-
-def test_detect_format_rules_list_dict():
-    assert _detect_format({"rules": []}) == "rules_list"
-
-
-def test_detect_format_hierarchical_dict():
-    assert _detect_format({"tables": {}}) == "hierarchical"
-
-
-def test_detect_format_rules_key_takes_precedence_over_tables():
-    assert _detect_format({"rules": [], "tables": {}}) == "rules_list"
-
-
-def test_detect_format_invalid_dict_no_known_key():
-    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException):
-        _detect_format({"product_id": "p1"})
-
-
-def test_detect_format_invalid_type():
-    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException):
-        _detect_format("not a dict or list")
+# ── rules-list format (classic with table_name) ────────────────────────
 
 
 def test_flatten_rules_list_basic(minimal_rules_list):
@@ -238,379 +227,154 @@ def test_flatten_rules_list_no_table_name_at_top_or_rule():
     assert rows[0]["table_name"] == ""
 
 
-def test_flatten_hierarchical_basic(minimal_hierarchical):
-    rows = flatten_hierarchical(minimal_hierarchical)
+# ── rules-list format (dq_env) ─────────────────────────────────────────
+
+
+def test_flatten_rules_list_dq_env_basic(minimal_dq_env_rules):
+    rows = flatten_rules_list(minimal_dq_env_rules, env="DEV")
     assert len(rows) == 1
     row = rows[0]
     assert row["product_id"] == "prod1"
-    assert row["table_name"] == "db.table1"
-    assert row["rule_type"] == "row_dq"
-    assert row["rule"] == "col1_not_null"
-    assert row["expectation"] == "col1 IS NOT NULL"
-    assert row["column_name"] == "col1"
-
-
-def test_flatten_hierarchical_all_schema_columns_present(minimal_hierarchical):
-    rows = flatten_hierarchical(minimal_hierarchical)
-    for col in RULES_SCHEMA_COLUMNS:
-        assert col in rows[0], f"Missing column: {col}"
-
-
-def test_flatten_hierarchical_defaults_applied(minimal_hierarchical):
-    rows = flatten_hierarchical(minimal_hierarchical)
-    row = rows[0]
-    assert row["action_if_failed"] == str(COLUMN_DEFAULTS["action_if_failed"])
-    assert row["is_active"] == str(COLUMN_DEFAULTS["is_active"])
-    assert row["priority"] == str(COLUMN_DEFAULTS["priority"])
-
-
-def test_flatten_hierarchical_user_defaults_override_column_defaults():
-    data = {
-        "product_id": "prod1",
-        "defaults": {
-            "action_if_failed": "fail",
-            "priority": "high",
-        },
-        "tables": {
-            "t1": {
-                "row_dq": [
-                    {"rule": "r1", "expectation": "x > 0"},
-                ]
-            }
-        },
-    }
-    rows = flatten_hierarchical(data)
-    assert rows[0]["action_if_failed"] == "fail"
-    assert rows[0]["priority"] == "high"
-
-
-def test_flatten_hierarchical_rule_level_overrides_defaults():
-    data = {
-        "product_id": "prod1",
-        "defaults": {"action_if_failed": "ignore"},
-        "tables": {
-            "t1": {
-                "row_dq": [
-                    {
-                        "rule": "r1",
-                        "expectation": "x > 0",
-                        "action_if_failed": "drop",
-                    },
-                ]
-            }
-        },
-    }
-    rows = flatten_hierarchical(data)
-    assert rows[0]["action_if_failed"] == "drop"
-
-
-def test_flatten_hierarchical_multiple_tables_and_rule_types():
-    data = {
-        "product_id": "prod1",
-        "tables": {
-            "t1": {
-                "row_dq": [{"rule": "r1", "expectation": "c1 > 0"}],
-                "agg_dq": [{"rule": "r2", "expectation": "count(*) > 10"}],
-            },
-            "t2": {
-                "query_dq": [{"rule": "r3", "expectation": "SELECT 1"}],
-            },
-        },
-    }
-    rows = flatten_hierarchical(data)
-    assert len(rows) == 3
-    assert {r["table_name"] for r in rows} == {"t1", "t2"}
-    assert {r["rule_type"] for r in rows} == {"row_dq", "agg_dq", "query_dq"}
-
-
-def test_flatten_hierarchical_missing_product_id_raises():
-    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="product_id"):
-        flatten_hierarchical({"tables": {"t1": {"row_dq": [{"rule": "r", "expectation": "x"}]}}})
-
-
-def test_flatten_hierarchical_missing_tables_raises():
-    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="tables"):
-        flatten_hierarchical({"product_id": "p1"})
-
-
-def test_flatten_hierarchical_empty_tables_raises():
-    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="tables"):
-        flatten_hierarchical({"product_id": "p1", "tables": {}})
-
-
-def test_flatten_hierarchical_invalid_rule_type_raises():
-    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="Invalid rule_type"):
-        flatten_hierarchical({
-            "product_id": "p1",
-            "tables": {"t1": {"bad_type": [{"rule": "r", "expectation": "x"}]}},
-        })
-
-
-def test_flatten_hierarchical_missing_rule_field_raises():
-    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="missing required"):
-        flatten_hierarchical({
-            "product_id": "p1",
-            "tables": {"t1": {"row_dq": [{"expectation": "x > 0"}]}},
-        })
-
-
-def test_flatten_hierarchical_missing_expectation_field_raises():
-    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="missing required"):
-        flatten_hierarchical({
-            "product_id": "p1",
-            "tables": {"t1": {"row_dq": [{"rule": "r1"}]}},
-        })
-
-
-def test_flatten_hierarchical_boolean_values_stringified(minimal_hierarchical):
-    rows = flatten_hierarchical(minimal_hierarchical)
-    row = rows[0]
-    assert row["is_active"] in ("True", "False")
-    assert row["enable_error_drop_alert"] in ("True", "False")
-
-
-def test_flatten_hierarchical_no_rules_raises():
-    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="No rules"):
-        flatten_hierarchical({
-            "product_id": "p1",
-            "tables": {"t1": {"row_dq": []}},
-        })
-
-
-def test_flatten_flat_basic():
-    data = [
-        {
-            "product_id": "p1",
-            "table_name": "t1",
-            "rule_type": "row_dq",
-            "rule": "r1",
-            "expectation": "col1 > 0",
-        }
-    ]
-    rows = flatten_flat(data)
-    assert len(rows) == 1
-    row = rows[0]
-    assert row["product_id"] == "p1"
-    assert row["action_if_failed"] == str(COLUMN_DEFAULTS["action_if_failed"])
-
-
-def test_flatten_flat_all_columns_present():
-    data = [
-        {
-            "product_id": "p1",
-            "table_name": "t1",
-            "rule_type": "row_dq",
-            "rule": "r1",
-            "expectation": "col1 > 0",
-        }
-    ]
-    rows = flatten_flat(data)
-    for col in RULES_SCHEMA_COLUMNS:
-        assert col in rows[0], f"Missing column: {col}"
-
-
-def test_flatten_flat_missing_required_field_raises():
-    for missing_field in ("product_id", "table_name", "rule_type", "rule", "expectation"):
-        data = [
-            {
-                "product_id": "p1",
-                "table_name": "t1",
-                "rule_type": "row_dq",
-                "rule": "r1",
-                "expectation": "col1 > 0",
-            }
-        ]
-        del data[0][missing_field]
-        with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match=missing_field):
-            flatten_flat(data)
-
-
-def test_flatten_flat_empty_list_raises():
-    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="empty"):
-        flatten_flat([])
-
-
-def test_flatten_rules_autodetect_flat():
-    data = [
-        {
-            "product_id": "p1",
-            "table_name": "t1",
-            "rule_type": "row_dq",
-            "rule": "r1",
-            "expectation": "x > 0",
-        }
-    ]
-    rows = flatten_rules(data)
-    assert len(rows) == 1
-
-
-def test_flatten_rules_autodetect_rules_list():
-    data = {
-        "product_id": "p1",
-        "table_name": "t1",
-        "rules": [{"rule": "r1", "rule_type": "row_dq", "expectation": "x > 0"}],
-    }
-    rows = flatten_rules(data)
-    assert len(rows) == 1
-    assert rows[0]["table_name"] == "t1"
-
-
-def test_flatten_rules_autodetect_hierarchical():
-    data = {
-        "product_id": "p1",
-        "tables": {"t1": {"row_dq": [{"rule": "r1", "expectation": "x > 0"}]}},
-    }
-    rows = flatten_rules(data)
-    assert len(rows) == 1
-    assert rows[0]["table_name"] == "t1"
-
-
-# ── validations format ─────────────────────────────────────────────────
-
-
-def test_detect_format_validations():
-    assert _detect_format({"validations": []}) == "validations"
-
-
-def test_detect_format_validations_takes_precedence_over_rules():
-    assert _detect_format({"validations": [], "rules": []}) == "validations"
-
-
-@pytest.fixture
-def minimal_validations():
-    return {
-        "defaults": {"action_if_failed": "ignore", "priority": "medium"},
-        "validations": [
-            {
-                "product_id": "prod1",
-                "table_name": "db.table1",
-                "rules": [
-                    {
-                        "rule": "col1_not_null",
-                        "rule_type": "row_dq",
-                        "expectation": "col1 IS NOT NULL",
-                        "column_name": "col1",
-                        "tag": "completeness",
-                    }
-                ],
-            }
-        ],
-    }
-
-
-def test_flatten_validations_basic(minimal_validations):
-    rows = flatten_validations(minimal_validations)
-    assert len(rows) == 1
-    row = rows[0]
-    assert row["product_id"] == "prod1"
-    assert row["table_name"] == "db.table1"
+    assert row["table_name"] == "catalog.schema.orders"
     assert row["rule"] == "col1_not_null"
     assert row["action_if_failed"] == "ignore"
     assert row["priority"] == "medium"
 
 
-def test_flatten_validations_all_schema_columns_present(minimal_validations):
-    rows = flatten_validations(minimal_validations)
+def test_flatten_rules_list_dq_env_selects_correct_env(minimal_dq_env_rules):
+    rows_dev = flatten_rules_list(minimal_dq_env_rules, env="DEV")
+    rows_prod = flatten_rules_list(minimal_dq_env_rules, env="PROD")
+    assert rows_dev[0]["table_name"] == "catalog.schema.orders"
+    assert rows_prod[0]["table_name"] == "catalog3.schema.orders"
+    assert rows_prod[0]["action_if_failed"] == "fail"
+    assert rows_prod[0]["priority"] == "high"
+
+
+def test_flatten_rules_list_dq_env_qa_env(minimal_dq_env_rules):
+    rows = flatten_rules_list(minimal_dq_env_rules, env="QA")
+    assert rows[0]["table_name"] == "catalog2.schema.orders"
+
+
+def test_flatten_rules_list_dq_env_all_schema_columns(minimal_dq_env_rules):
+    rows = flatten_rules_list(minimal_dq_env_rules, env="DEV")
     for col in RULES_SCHEMA_COLUMNS:
         assert col in rows[0], f"Missing column: {col}"
 
 
-def test_flatten_validations_multiple_entries():
+def test_flatten_rules_list_dq_env_rule_overrides_env_defaults():
     data = {
-        "defaults": {"action_if_failed": "ignore"},
-        "validations": [
-            {
-                "product_id": "p1",
+        "product_id": "prod1",
+        "dq_env": {
+            "DEV": {
                 "table_name": "t1",
-                "rules": [{"rule": "r1", "rule_type": "row_dq", "expectation": "x > 0"}],
+                "action_if_failed": "ignore",
+                "priority": "medium",
+            },
+        },
+        "rules": [
+            {
+                "rule": "r1",
+                "rule_type": "row_dq",
+                "expectation": "x > 0",
+                "action_if_failed": "drop",
+                "priority": "high",
+            }
+        ],
+    }
+    rows = flatten_rules_list(data, env="DEV")
+    assert rows[0]["action_if_failed"] == "drop"
+    assert rows[0]["priority"] == "high"
+
+
+def test_flatten_rules_list_dq_env_case_insensitive_lookup(minimal_dq_env_rules):
+    for env_value in ("DEV", "dev", "Dev", "dEv"):
+        rows = flatten_rules_list(minimal_dq_env_rules, env=env_value)
+        assert rows[0]["table_name"] == "catalog.schema.orders"
+
+
+def test_flatten_rules_list_dq_env_lowercase_option_matches_uppercase_key():
+    data = {
+        "product_id": "prod1",
+        "dq_env": {
+            "DEV": {
+                "table_name": "dev.orders",
+                "priority": "medium",
+            },
+        },
+        "rules": [
+            {"rule": "r1", "rule_type": "row_dq", "expectation": "x > 0"}
+        ],
+    }
+    rows = flatten_rules_list(data, env="dev")
+    assert rows[0]["table_name"] == "dev.orders"
+
+
+def test_flatten_rules_list_dq_env_no_env_raises(minimal_dq_env_rules):
+    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="no environment"):
+        flatten_rules_list(minimal_dq_env_rules)
+
+
+def test_flatten_rules_list_dq_env_missing_env_raises(minimal_dq_env_rules):
+    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="not found"):
+        flatten_rules_list(minimal_dq_env_rules, env="staging")
+
+
+def test_flatten_rules_list_dq_env_empty_raises():
+    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="non-empty mapping"):
+        flatten_rules_list({
+            "product_id": "p1",
+            "dq_env": {},
+            "rules": [{"rule": "r1", "expectation": "x > 0"}],
+        }, env="DEV")
+
+
+def test_flatten_rules_list_dq_env_not_dict_raises():
+    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="non-empty mapping"):
+        flatten_rules_list({
+            "product_id": "p1",
+            "dq_env": "not_a_dict",
+            "rules": [{"rule": "r1", "expectation": "x > 0"}],
+        }, env="DEV")
+
+
+def test_flatten_rules_list_dq_env_with_multiple_rules():
+    data = {
+        "product_id": "prod1",
+        "dq_env": {
+            "DEV": {
+                "table_name": "dev.orders",
+                "action_if_failed": "ignore",
+                "is_active": True,
+                "priority": "medium",
+            },
+        },
+        "rules": [
+            {
+                "rule": "r1",
+                "rule_type": "row_dq",
+                "expectation": "col1 IS NOT NULL",
+                "action_if_failed": "drop",
+                "priority": "high",
             },
             {
-                "product_id": "p2",
-                "table_name": "t2",
-                "rules": [{"rule": "r2", "rule_type": "agg_dq", "expectation": "count(*) > 0"}],
+                "rule": "r2",
+                "rule_type": "agg_dq",
+                "expectation": "count(*) > 0",
+                "action_if_failed": "fail",
             },
         ],
     }
-    rows = flatten_validations(data)
+    rows = flatten_rules_list(data, env="DEV")
     assert len(rows) == 2
-    assert rows[0]["product_id"] == "p1"
-    assert rows[1]["product_id"] == "p2"
-    assert rows[0]["action_if_failed"] == "ignore"
-    assert rows[1]["action_if_failed"] == "ignore"
+    assert rows[0]["table_name"] == "dev.orders"
+    assert rows[0]["action_if_failed"] == "drop"
+    assert rows[0]["priority"] == "high"
+    assert rows[1]["table_name"] == "dev.orders"
+    assert rows[1]["action_if_failed"] == "fail"
+    assert rows[1]["priority"] == "medium"
 
 
-def test_flatten_validations_entry_defaults_override_top_defaults():
-    data = {
-        "defaults": {"action_if_failed": "ignore", "priority": "low"},
-        "validations": [
-            {
-                "product_id": "p1",
-                "table_name": "t1",
-                "defaults": {"action_if_failed": "fail"},
-                "rules": [{"rule": "r1", "rule_type": "row_dq", "expectation": "x > 0"}],
-            },
-        ],
-    }
-    rows = flatten_validations(data)
-    assert rows[0]["action_if_failed"] == "fail"
-    assert rows[0]["priority"] == "low"
-
-
-def test_flatten_validations_no_top_defaults():
-    data = {
-        "validations": [
-            {
-                "product_id": "p1",
-                "table_name": "t1",
-                "rules": [{"rule": "r1", "rule_type": "row_dq", "expectation": "x > 0"}],
-            },
-        ],
-    }
-    rows = flatten_validations(data)
-    assert len(rows) == 1
-    assert rows[0]["action_if_failed"] == str(COLUMN_DEFAULTS["action_if_failed"])
-
-
-def test_flatten_validations_empty_list_raises():
-    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="non-empty"):
-        flatten_validations({"validations": []})
-
-
-def test_flatten_validations_not_a_list_raises():
-    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="non-empty"):
-        flatten_validations({"validations": "bad"})
-
-
-def test_flatten_validations_entry_not_a_dict_raises():
-    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="must be a dict"):
-        flatten_validations({"validations": ["not_a_dict"]})
-
-
-def test_flatten_validations_missing_product_id_raises():
-    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="product_id"):
-        flatten_validations({
-            "validations": [
-                {"table_name": "t1", "rules": [{"rule": "r1", "expectation": "x"}]},
-            ],
-        })
-
-
-def test_flatten_rules_autodetect_validations():
-    data = {
-        "validations": [
-            {
-                "product_id": "p1",
-                "table_name": "t1",
-                "rules": [{"rule": "r1", "rule_type": "row_dq", "expectation": "x > 0"}],
-            },
-        ],
-    }
-    rows = flatten_rules(data)
-    assert len(rows) == 1
-    assert rows[0]["product_id"] == "p1"
-
-
-# ── additional coverage for uncovered error paths ──────────────────────
+# ── helper coverage ────────────────────────────────────────────────────
 
 
 def test_flatten_rules_list_non_dict_rule_entry_raises():
@@ -621,19 +385,11 @@ def test_flatten_rules_list_non_dict_rule_entry_raises():
         })
 
 
-def test_flatten_hierarchical_non_dict_rule_types_raises():
-    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="Expected a mapping"):
-        flatten_hierarchical({
+def test_flatten_rules_list_rules_not_a_list_raises():
+    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="non-empty"):
+        flatten_rules_list({
             "product_id": "p1",
-            "tables": {"t1": "not_a_dict"},
-        })
-
-
-def test_flatten_hierarchical_non_list_rules_raises():
-    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="must be a list"):
-        flatten_hierarchical({
-            "product_id": "p1",
-            "tables": {"t1": {"row_dq": "not_a_list"}},
+            "rules": "not_a_list",
         })
 
 
@@ -652,11 +408,3 @@ def test_to_str_int():
 
 def test_to_str_string():
     assert _to_str("hello") == "hello"
-
-
-def test_flatten_rules_list_rules_not_a_list_raises():
-    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="non-empty"):
-        flatten_rules_list({
-            "product_id": "p1",
-            "rules": "not_a_list",
-        })
