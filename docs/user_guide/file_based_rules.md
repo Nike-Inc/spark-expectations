@@ -183,87 +183,9 @@ rules_df = load_rules_from_yaml("rules.yaml", options={"dq_env": "PROD"})
 
 ---
 
-## Simple Format (without `dq_env`)
-
-If you don't need multi-environment support, you can use a simpler variant with a
-fixed `table_name` and optional `defaults`:
-
-=== "YAML"
-
-    ```yaml
-    product_id: your_product
-    table_name: catalog.schema.orders
-    defaults:
-      action_if_failed: ignore
-      rule_type: row_dq
-
-    rules:
-      - rule: id_not_null
-        expectation: "id IS NOT NULL"
-        action_if_failed: drop
-        tag: completeness
-        description: "ID must not be null"
-
-      - rule: amount_positive
-        expectation: "amount > 0"
-        tag: validity
-        description: "Amount must be positive"
-
-      - rule: row_count
-        rule_type: agg_dq
-        expectation: "count(*) > 0"
-        action_if_failed: fail
-        tag: completeness
-        description: "Table must have rows"
-    ```
-
-=== "JSON"
-
-    ```json
-    {
-      "product_id": "your_product",
-      "table_name": "catalog.schema.orders",
-      "defaults": {
-        "action_if_failed": "ignore",
-        "rule_type": "row_dq"
-      },
-      "rules": [
-        {
-          "rule": "id_not_null",
-          "expectation": "id IS NOT NULL",
-          "action_if_failed": "drop",
-          "tag": "completeness",
-          "description": "ID must not be null"
-        },
-        {
-          "rule": "amount_positive",
-          "expectation": "amount > 0",
-          "tag": "validity",
-          "description": "Amount must be positive"
-        },
-        {
-          "rule": "row_count",
-          "rule_type": "agg_dq",
-          "expectation": "count(*) > 0",
-          "action_if_failed": "fail",
-          "tag": "completeness",
-          "description": "Table must have rows"
-        }
-      ]
-    }
-    ```
-
-**Structure:**
-
-- Top-level `product_id` and `table_name` apply to every rule.
-- `defaults` (optional) can set any column value, including `rule_type`.
-- Each rule only needs `rule` and `expectation`; everything else inherits from defaults.
-
----
-
 ## Defaults
 
-The `defaults` block (or `dq_env` environment values) lets you set values that
+The `dq_env` environment values let you set values that
 apply to every rule unless a rule explicitly overrides them. This avoids repeating
 common settings on every single rule.
 
