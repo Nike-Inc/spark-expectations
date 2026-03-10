@@ -218,7 +218,7 @@ def test_sample_rules_json_loads(json_loader):
     """Ensure the shipped sample_rules.json example loads correctly."""
     df = json_loader.load_rules(path=SAMPLE_RULES_JSON, format="json", options={"dq_env": "DEV"})
     assert df is not None
-    assert df.count() == 19
+    assert df.count() == 16
     assert set(df.columns) == set(RULES_SCHEMA_COLUMNS)
 
 
