@@ -47,70 +47,50 @@ rules:
     tag: completeness
     description: "Order ID must not be null"
     priority: high
-  - rule: customer_name_not_null
-    rule_type: row_dq
-    column_name: customer_name
-    expectation: "customer_name IS NOT NULL"
-    action_if_failed: drop
-    tag: completeness
-    description: "Customer name must not be null"
-    priority: high
   - rule: order_date_not_null
     rule_type: row_dq
     column_name: order_date
     expectation: "order_date IS NOT NULL"
     tag: completeness
     description: "Order date must not be null"
-  - rule: product_name_not_null
+  - rule: product_id_not_null
     rule_type: row_dq
-    column_name: product_name
-    expectation: "product_name IS NOT NULL"
+    column_name: product_id
+    expectation: "product_id IS NOT NULL"
     tag: completeness
-    description: "Product name must not be null"
+    description: "Product ID must not be null"
 
   # ── row_dq: validity ──
-  - rule: order_quantity_positive
+  - rule: quantity_positive
     rule_type: row_dq
-    column_name: order_quantity
-    expectation: "order_quantity > 0"
+    column_name: quantity
+    expectation: "quantity > 0"
     action_if_failed: drop
     tag: validity
     description: "Order quantity must be greater than zero"
     priority: high
-  - rule: unit_price_positive
+  - rule: sales_greater_than_zero
     rule_type: row_dq
-    column_name: unit_price
-    expectation: "unit_price > 0"
-    action_if_failed: drop
-    tag: validity
-    description: "Unit price must be greater than zero"
-    priority: high
-  - rule: total_amount_non_negative
-    rule_type: row_dq
-    column_name: total_amount
-    expectation: "total_amount >= 0"
-    tag: validity
-    description: "Total amount must not be negative"
+    column_name: sales
+    expectation: "sales > 2"
+    tag: accuracy
+    description: "Sales value should be greater than 2"
   - rule: discount_within_range
     rule_type: row_dq
     column_name: discount
-    expectation: "discount >= 0 AND discount <= 100"
+    expectation: "discount >= 0 AND discount * 100 < 60"
+    action_if_failed: drop
     tag: validity
-    description: "Discount must be between 0 and 100"
-  - rule: email_format_valid
+    description: "Discount must be between 0 and 0.6"
+  - rule: ship_mode_in_set
     rule_type: row_dq
-    column_name: customer_email
-    expectation: "customer_email RLIKE '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$'"
+    column_name: ship_mode
+    expectation: "lower(trim(ship_mode)) in ('second class', 'standard class')"
+    action_if_failed: drop
     tag: validity
-    description: "Customer email must match a valid format"
+    description: "Ship mode must belong to the allowed set"
 
   # ── row_dq: consistency ──
-  - rule: total_matches_qty_times_price
-    rule_type: row_dq
-    column_name: total_amount
-    expectation: "abs(total_amount - (order_quantity * unit_price * (1 - discount / 100))) < 0.01"
-    tag: consistency
-    description: "Total amount must equal quantity * unit price after discount"
   - rule: ship_date_after_order_date
     rule_type: row_dq
     column_name: ship_date
@@ -119,19 +99,12 @@ rules:
     description: "Ship date must not be earlier than order date"
 
   # ── row_dq: accuracy ──
-  - rule: order_status_valid
+  - rule: profit_threshold
     rule_type: row_dq
-    column_name: order_status
-    expectation: "order_status IN ('pending', 'shipped', 'delivered', 'cancelled', 'returned')"
-    action_if_failed: drop
+    column_name: profit
+    expectation: "profit > 0"
     tag: accuracy
-    description: "Order status must be one of the allowed values"
-  - rule: country_code_valid
-    rule_type: row_dq
-    column_name: country_code
-    expectation: "length(country_code) = 2 AND country_code = upper(country_code)"
-    tag: accuracy
-    description: "Country code must be a 2-letter uppercase ISO code"
+    description: "Profit should be greater than zero"
 
   # ── agg_dq: completeness ──
   - rule: table_row_count
@@ -148,20 +121,22 @@ rules:
     tag: completeness
     description: "At least 99% of rows must have a customer ID"
 
-  # ── agg_dq: uniqueness ──
-  - rule: order_id_uniqueness
-    rule_type: agg_dq
-    expectation: "count(distinct order_id) = count(order_id)"
-    action_if_failed: fail
-    tag: uniqueness
-    description: "Order IDs must be unique across all rows"
-
   # ── agg_dq: validity ──
-  - rule: avg_order_quantity_reasonable
+  - rule: sum_of_sales
     rule_type: agg_dq
-    expectation: "avg(order_quantity) BETWEEN 1 AND 1000"
+    expectation: "sum(sales) > 10000"
     tag: validity
-    description: "Average order quantity must be within a reasonable range"
+    description: "Total sales must exceed 10000"
+  - rule: sum_of_quantity
+    rule_type: agg_dq
+    expectation: "sum(quantity) > 10000"
+    tag: validity
+    description: "Total quantity must exceed 10000"
+  - rule: distinct_of_ship_mode
+    rule_type: agg_dq
+    expectation: "count(distinct ship_mode) <= 4"
+    tag: validity
+    description: "Ship mode should have at most 4 distinct values"
   - rule: max_discount_within_bounds
     rule_type: agg_dq
     expectation: "max(discount) <= 100"
