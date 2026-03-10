@@ -6,6 +6,7 @@ from spark_expectations.core.exceptions import SparkExpectationsUserInputOrConfi
 from spark_expectations.rules.plugins._flatten import (
     COLUMN_DEFAULTS,
     RULES_SCHEMA_COLUMNS,
+    _cast_value,
     flatten_rules_list,
 )
 
@@ -406,5 +407,37 @@ def test_flatten_rules_list_non_numeric_error_drop_threshold_raises():
                 }
             ],
         })
+
+
+# ── _cast_value coverage ───────────────────────────────────────────────
+
+
+def test_cast_value_none_boolean_column():
+    assert _cast_value("is_active", None) is True
+    assert _cast_value("enable_error_drop_alert", None) is False
+
+
+def test_cast_value_none_int_column():
+    assert _cast_value("error_drop_threshold", None) == 0
+
+
+def test_cast_value_none_string_column():
+    assert _cast_value("description", None) == ""
+    assert _cast_value("tag", None) == ""
+
+
+def test_cast_value_boolean_from_string():
+    assert _cast_value("is_active", "true") is True
+    assert _cast_value("is_active", "True") is True
+    assert _cast_value("is_active", "1") is True
+    assert _cast_value("is_active", "yes") is True
+    assert _cast_value("is_active", "false") is False
+    assert _cast_value("is_active", "0") is False
+    assert _cast_value("is_active", "no") is False
+
+
+def test_cast_value_boolean_from_non_bool_non_str():
+    assert _cast_value("is_active", 1) is True
+    assert _cast_value("is_active", 0) is False
 
 
