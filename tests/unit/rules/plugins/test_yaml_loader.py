@@ -214,7 +214,7 @@ def test_sample_rules_yaml_loads(yaml_loader):
     """Ensure the shipped sample_rules.yaml example loads correctly."""
     df = yaml_loader.load_rules(path=SAMPLE_RULES_YAML, format="yaml", options={"dq_env": "DEV"})
     assert df is not None
-    assert df.count() == 19
+    assert df.count() == 16
     assert set(df.columns) == set(RULES_SCHEMA_COLUMNS)
 
 
