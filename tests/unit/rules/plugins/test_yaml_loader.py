@@ -247,3 +247,11 @@ def test_no_active_spark_session_raises(yaml_loader, dq_env_yaml_file):
         mock_spark.getActiveSession.return_value = None
         with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="No active SparkSession"):
             yaml_loader.load_rules(path=dq_env_yaml_file, format="yaml", options={"dq_env": "DEV"})
+
+
+def test_non_dict_yaml_raises(yaml_loader, tmp_path):
+    """Verify error when YAML top-level is not a mapping."""
+    list_yaml = tmp_path / "list.yaml"
+    list_yaml.write_text("- item1\n- item2\n")
+    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="mapping at the top level"):
+        yaml_loader.load_rules(path=str(list_yaml), format="yaml", options={})

@@ -28,6 +28,16 @@ rules_df = load_rules_from_yaml("path/to/rules.yaml", options={"dq_env": "DEV"})
 rules_df = load_rules_from_json("path/to/rules.json", options={"dq_env": "DEV"})
 ```
 
+All loader functions accept an optional `spark` parameter. If omitted, the active
+`SparkSession` is used automatically. You can pass one explicitly when needed:
+
+```python
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.getOrCreate()
+rules_df = load_rules_from_yaml("path/to/rules.yaml", spark, options={"dq_env": "DEV"})
+```
+
 The `options={"dq_env": "<env>"}` parameter selects which environment block to use
 when the rules file contains a `dq_env` section. See [Environment-Aware Rules](#environment-aware-rules-dq_env)
 below.
@@ -234,13 +244,15 @@ Every rule, regardless of input format, is normalised into a row with these 17 c
 Here is a complete example loading rules from YAML with `dq_env` and running DQ checks:
 
 ```python
-from pyspark.sql import DataFrame
+from pyspark.sql import DataFrame, SparkSession
 from spark_expectations.rules import load_rules_from_yaml
 from spark_expectations.core.expectations import SparkExpectations, WrappedDataFrameWriter
 from spark_expectations.config.user_config import Constants as user_config
 
+spark = SparkSession.builder.getOrCreate()
+
 # Load rules from YAML, selecting the "DEV" environment
-rules_df = load_rules_from_yaml("path/to/rules.yaml", options={"dq_env": "DEV"})
+rules_df = load_rules_from_yaml("path/to/rules.yaml", spark, options={"dq_env": "DEV"})
 
 # Configure writer and streaming
 writer = WrappedDataFrameWriter().mode("append").format("delta")
@@ -260,7 +272,7 @@ se = SparkExpectations(
     write_to_table=True,
     write_to_temp_table=True,
 )
-def process_orders():
+def process_orders() -> DataFrame:
     return spark.read.table("catalog.schema.raw_orders")
 
 process_orders()

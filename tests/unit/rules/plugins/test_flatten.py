@@ -392,3 +392,19 @@ def test_flatten_rules_list_rules_not_a_list_raises():
         })
 
 
+def test_flatten_rules_list_non_numeric_error_drop_threshold_raises():
+    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="expects an integer"):
+        flatten_rules_list({
+            "product_id": "p1",
+            "table_name": "t1",
+            "rules": [
+                {
+                    "rule": "r1",
+                    "rule_type": "row_dq",
+                    "expectation": "x > 0",
+                    "error_drop_threshold": "abc",
+                }
+            ],
+        })
+
+

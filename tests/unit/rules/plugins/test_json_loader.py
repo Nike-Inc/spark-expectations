@@ -250,3 +250,11 @@ def test_no_active_spark_session_raises(json_loader, dq_env_json_file):
         mock_spark.getActiveSession.return_value = None
         with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="No active SparkSession"):
             json_loader.load_rules(path=dq_env_json_file, format="json", options={"dq_env": "DEV"})
+
+
+def test_non_dict_json_raises(json_loader, tmp_path):
+    """Verify error when JSON top-level is not an object."""
+    list_json = tmp_path / "list.json"
+    list_json.write_text('[1, 2, 3]')
+    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="object at the top level"):
+        json_loader.load_rules(path=str(list_json), format="json", options={})

@@ -1,8 +1,31 @@
-"""Shared logic for converting rule definitions to flat row dicts.
+"""Shared logic for converting rule definitions to flat row dicts,
+and helpers for building the standard rules DataFrame schema.
 
-The supported input format is a **rules-list** dict with top-level
-``product_id``, optional ``table_name`` or ``dq_env``, optional
-``defaults``, and a ``rules`` list::
+The recommended input format uses ``dq_env`` to define per-environment
+settings (``table_name``, ``action_if_failed``, etc.) alongside a flat
+``rules`` list::
+
+    product_id: my_product
+    dq_env:
+      DEV:
+        table_name: catalog_dev.schema.orders
+        action_if_failed: ignore
+        is_active: true
+        priority: medium
+      PROD:
+        table_name: catalog_prod.schema.orders
+        action_if_failed: fail
+        is_active: true
+        priority: high
+    rules:
+      - rule: col1_not_null
+        rule_type: row_dq
+        column_name: col1
+        expectation: "col1 IS NOT NULL"
+        tag: completeness
+
+A simpler format without ``dq_env`` is also supported, using a top-level
+``table_name`` and optional ``defaults``::
 
     product_id: my_product
     table_name: db.my_table
@@ -12,28 +35,13 @@ The supported input format is a **rules-list** dict with top-level
       - rule: col1_not_null
         rule_type: row_dq
         expectation: "col1 IS NOT NULL"
-
-When ``dq_env`` is present instead of ``table_name``/``defaults``,
-an ``env`` parameter selects which environment block to use::
-
-    product_id: my_product
-    dq_env:
-      DEV:
-        table_name: catalog.schema.orders
-        action_if_failed: ignore
-        is_active: true
-        priority: medium
-      PROD:
-        table_name: catalog.schema.orders
-        action_if_failed: fail
-        priority: high
-    rules:
-      - rule: col1_not_null
-        rule_type: row_dq
-        expectation: "col1 IS NOT NULL"
 """
 
 from typing import Any, Dict, List, Optional
+
+from pyspark.sql import DataFrame
+from pyspark.sql.session import SparkSession
+from pyspark.sql.types import BooleanType, DataType, IntegerType, StringType, StructField, StructType
 
 from spark_expectations.core.exceptions import SparkExpectationsUserInputOrConfigInvalidException
 
@@ -90,41 +98,61 @@ INT_COLUMNS = {
 REQUIRED_RULE_FIELDS = {"rule", "expectation"}
 
 
+def _col_type(col: str) -> DataType:
+    """Return the Spark DataType for a rules-schema column."""
+    if col in BOOLEAN_COLUMNS:
+        return BooleanType()
+    if col in INT_COLUMNS:
+        return IntegerType()
+    return StringType()
+
+
+def rules_schema() -> StructType:
+    """Build the StructType for the standard 17-column rules DataFrame."""
+    return StructType([StructField(col, _col_type(col), True) for col in RULES_SCHEMA_COLUMNS])
+
+
+def rows_to_dataframe(rows: List[Dict[str, Any]], spark: SparkSession) -> DataFrame:
+    """Convert a list of normalised row dicts into a Spark DataFrame."""
+    return spark.createDataFrame(rows, schema=rules_schema())
+
+
 def flatten_rules_list(
     data: Dict[str, Any], env: Optional[str] = None
 ) -> List[Dict[str, Any]]:
     """Convert a rules-list definition into a flat list of row dicts.
 
-    Expected structure (classic)::
-
-        product_id: ...
-        table_name: ...          # applied to every rule unless overridden
-        defaults:
-          rule_type: row_dq      # any column can be defaulted
-          action_if_failed: ignore
-          ...
-        rules:
-          - rule: ...
-            expectation: ...
-            rule_type: row_dq    # can override per-rule
-
-    Expected structure (dq_env)::
+    Expected structure (dq_env -- recommended)::
 
         product_id: ...
         dq_env:
-          dev:
+          DEV:
             table_name: ...
             action_if_failed: ignore
             ...
-          prod:
+          PROD:
             table_name: ...
+            action_if_failed: fail
             ...
         rules:
           - rule: ...
+            rule_type: row_dq
             expectation: ...
 
     When ``dq_env`` is present the *env* parameter selects which
     environment block supplies the ``table_name`` and default values.
+    Environment lookup is case-insensitive (``DEV``, ``dev``, ``Dev``
+    all match).
+
+    A simpler structure without ``dq_env`` is also supported::
+
+        product_id: ...
+        table_name: ...
+        defaults:
+          action_if_failed: ignore
+        rules:
+          - rule: ...
+            expectation: ...
 
     Returns:
         List of dicts, each representing one rule row.
@@ -222,6 +250,11 @@ def _cast_value(col: str, value: Any) -> Any:
         return value.lower() in ("true", "1", "yes") if isinstance(value, str) else bool(value)
 
     if col in INT_COLUMNS:
-        return int(value)
+        try:
+            return int(value)
+        except (ValueError, TypeError) as exc:
+            raise SparkExpectationsUserInputOrConfigInvalidException(
+                f"Column '{col}' expects an integer value, got: {value!r}"
+            ) from exc
 
     return str(value)
