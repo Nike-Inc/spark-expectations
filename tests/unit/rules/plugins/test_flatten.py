@@ -6,7 +6,6 @@ from spark_expectations.core.exceptions import SparkExpectationsUserInputOrConfi
 from spark_expectations.rules.plugins._flatten import (
     COLUMN_DEFAULTS,
     RULES_SCHEMA_COLUMNS,
-    _to_str,
     flatten_rules_list,
 )
 
@@ -87,9 +86,9 @@ def test_flatten_rules_list_all_schema_columns_present(minimal_rules_list):
 def test_flatten_rules_list_defaults_applied(minimal_rules_list):
     rows = flatten_rules_list(minimal_rules_list)
     row = rows[0]
-    assert row["action_if_failed"] == str(COLUMN_DEFAULTS["action_if_failed"])
-    assert row["is_active"] == str(COLUMN_DEFAULTS["is_active"])
-    assert row["priority"] == str(COLUMN_DEFAULTS["priority"])
+    assert row["action_if_failed"] == COLUMN_DEFAULTS["action_if_failed"]
+    assert row["is_active"] == COLUMN_DEFAULTS["is_active"]
+    assert row["priority"] == COLUMN_DEFAULTS["priority"]
 
 
 def test_flatten_rules_list_user_defaults_override_column_defaults():
@@ -211,11 +210,11 @@ def test_flatten_rules_list_invalid_rule_type_raises():
         })
 
 
-def test_flatten_rules_list_boolean_values_stringified(minimal_rules_list):
+def test_flatten_rules_list_boolean_values_are_native(minimal_rules_list):
     rows = flatten_rules_list(minimal_rules_list)
     row = rows[0]
-    assert row["is_active"] in ("True", "False")
-    assert row["enable_error_drop_alert"] in ("True", "False")
+    assert isinstance(row["is_active"], bool)
+    assert isinstance(row["enable_error_drop_alert"], bool)
 
 
 def test_flatten_rules_list_no_table_name_at_top_or_rule():
@@ -393,18 +392,3 @@ def test_flatten_rules_list_rules_not_a_list_raises():
         })
 
 
-def test_to_str_none_returns_empty():
-    assert _to_str(None) == ""
-
-
-def test_to_str_bool():
-    assert _to_str(True) == "True"
-    assert _to_str(False) == "False"
-
-
-def test_to_str_int():
-    assert _to_str(42) == "42"
-
-
-def test_to_str_string():
-    assert _to_str("hello") == "hello"

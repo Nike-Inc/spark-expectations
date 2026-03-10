@@ -6,17 +6,30 @@ import yaml
 
 from pyspark.sql import DataFrame
 from pyspark.sql.session import SparkSession
-from pyspark.sql.types import StringType, StructField, StructType
+from pyspark.sql.types import BooleanType, DataType, IntegerType, StringType, StructField, StructType
 
 from spark_expectations.core.exceptions import SparkExpectationsUserInputOrConfigInvalidException
-from spark_expectations.rules.plugins._flatten import RULES_SCHEMA_COLUMNS, flatten_rules_list
+from spark_expectations.rules.plugins._flatten import (
+    BOOLEAN_COLUMNS,
+    INT_COLUMNS,
+    RULES_SCHEMA_COLUMNS,
+    flatten_rules_list,
+)
 from spark_expectations.rules.plugins.base_rule_loader import spark_expectations_rule_loader_impl
 
 YAML_EXTENSIONS = {".yaml", ".yml"}
 
 
+def _col_type(col: str) -> DataType:
+    if col in BOOLEAN_COLUMNS:
+        return BooleanType()
+    if col in INT_COLUMNS:
+        return IntegerType()
+    return StringType()
+
+
 def _rules_schema() -> StructType:
-    return StructType([StructField(col, StringType(), True) for col in RULES_SCHEMA_COLUMNS])
+    return StructType([StructField(col, _col_type(col), True) for col in RULES_SCHEMA_COLUMNS])
 
 
 def _read_yaml(path: str) -> Dict[str, Any]:
@@ -52,6 +65,7 @@ class SparkExpectationsYamlRuleLoaderImpl:
         path: str,
         format: str,
         options: Dict[str, str],
+        spark: Optional[SparkSession] = None,
     ) -> Optional[DataFrame]:
         import os
 
@@ -62,7 +76,8 @@ class SparkExpectationsYamlRuleLoaderImpl:
         else:
             return None
 
-        spark = SparkSession.getActiveSession()
+        if spark is None:
+            spark = SparkSession.getActiveSession()
         if spark is None:
             raise SparkExpectationsUserInputOrConfigInvalidException(
                 "No active SparkSession found. Please create a SparkSession before loading rules."

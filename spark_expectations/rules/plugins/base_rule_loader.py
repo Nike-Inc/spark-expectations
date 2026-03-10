@@ -5,6 +5,7 @@ from typing import Dict, Optional
 import pluggy
 
 from pyspark.sql import DataFrame
+from pyspark.sql.session import SparkSession
 
 SPARK_EXPECTATIONS_RULE_LOADER_PLUGIN = "spark_expectations_rule_loader_plugins"
 
@@ -26,6 +27,7 @@ class SparkExpectationsRuleLoader:
         path: str,
         format: str,
         options: Dict[str, str],
+        spark: Optional[SparkSession] = None,
     ) -> Optional[DataFrame]:
         """Load rules from *path* and return a Spark DataFrame.
 
@@ -33,6 +35,7 @@ class SparkExpectationsRuleLoader:
             path: File path readable by Python (local, DBFS fuse, mounted volume).
             format: Requested format (``yaml``, ``json``, or ``auto``).
             options: Extra loader-specific options forwarded by the caller.
+            spark: Optional SparkSession; if ``None`` the active session is used.
 
         Returns:
             A Spark DataFrame with the standard rules schema, or ``None``

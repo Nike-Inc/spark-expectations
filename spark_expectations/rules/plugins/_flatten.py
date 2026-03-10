@@ -75,6 +75,18 @@ COLUMN_DEFAULTS: Dict[str, Any] = {
     "priority": "medium",
 }
 
+BOOLEAN_COLUMNS = {
+    "enable_for_source_dq_validation",
+    "enable_for_target_dq_validation",
+    "is_active",
+    "enable_error_drop_alert",
+    "enable_querydq_custom_output",
+}
+
+INT_COLUMNS = {
+    "error_drop_threshold",
+}
+
 REQUIRED_RULE_FIELDS = {"rule", "expectation"}
 
 
@@ -191,17 +203,25 @@ def flatten_rules_list(
 
 
 def _normalise_row(row: Dict[str, Any]) -> Dict[str, Any]:
-    """Ensure all schema columns are present and cast booleans/ints to strings."""
+    """Ensure all schema columns are present with their correct types."""
     normalised: Dict[str, Any] = {}
     for col in RULES_SCHEMA_COLUMNS:
         value = row.get(col, COLUMN_DEFAULTS.get(col, ""))
-        normalised[col] = _to_str(value)
+        normalised[col] = _cast_value(col, value)
     return normalised
 
 
-def _to_str(value: Any) -> str:
+def _cast_value(col: str, value: Any) -> Any:
+    """Cast a value to its expected type based on the column name."""
     if value is None:
-        return ""
-    if isinstance(value, bool):
-        return str(value)
+        return COLUMN_DEFAULTS.get(col, False if col in BOOLEAN_COLUMNS else 0 if col in INT_COLUMNS else "")
+
+    if col in BOOLEAN_COLUMNS:
+        if isinstance(value, bool):
+            return value
+        return value.lower() in ("true", "1", "yes") if isinstance(value, str) else bool(value)
+
+    if col in INT_COLUMNS:
+        return int(value)
+
     return str(value)

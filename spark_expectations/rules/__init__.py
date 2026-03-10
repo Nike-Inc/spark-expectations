@@ -68,10 +68,7 @@ def load_rules(
         SparkExpectationsUserInputOrConfigInvalidException: When no plugin can
             handle the requested format or the file is invalid.
     """
-    if spark is not None:
-        SparkSession.builder.getOrCreate()  # ensure active session for plugins
-
-    result = _rule_loader_hook.load_rules(path=path, format=format, options=options or {})
+    result = _rule_loader_hook.load_rules(path=path, format=format, options=options or {}, spark=spark)
 
     if result is None:
         raise SparkExpectationsUserInputOrConfigInvalidException(
