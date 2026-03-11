@@ -78,7 +78,7 @@ COLUMN_DEFAULTS: Dict[str, Any] = {
     "is_active": True,
     "enable_error_drop_alert": False,
     "error_drop_threshold": 0,
-    "query_dq_delimiter": "",
+    "query_dq_delimiter": None,
     "enable_querydq_custom_output": False,
     "priority": "medium",
 }
@@ -216,7 +216,12 @@ def flatten_rules_list(
             row["table_name"] = table_name
 
         rule_type = row.get("rule_type", "")
-        if rule_type and rule_type not in VALID_RULE_TYPES:
+        if not rule_type:
+            raise SparkExpectationsUserInputOrConfigInvalidException(
+                f"Rule '{row.get('rule')}' is missing 'rule_type'. "
+                f"Must be one of {sorted(VALID_RULE_TYPES)}."
+            )
+        if rule_type not in VALID_RULE_TYPES:
             raise SparkExpectationsUserInputOrConfigInvalidException(
                 f"Invalid rule_type '{rule_type}' for rule '{row.get('rule')}'. "
                 f"Must be one of {sorted(VALID_RULE_TYPES)}."

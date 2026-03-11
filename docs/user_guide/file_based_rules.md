@@ -233,7 +233,7 @@ Every rule, regardless of input format, is normalised into a row with these 17 c
 | `is_active`                        |          | Whether the rule is active                                                                        |
 | `enable_error_drop_alert`          |          | Send alert when rows are dropped                                                                  |
 | `error_drop_threshold`             |          | Threshold for error drop alerts                                                                   |
-| `query_dq_delimiter`               |          | Delimiter for custom query_dq alias queries (default `$`)                                         |
+| `query_dq_delimiter`               |          | Delimiter for custom query_dq alias queries (default `@`)                                         |
 | `enable_querydq_custom_output`     |          | Capture custom query output in a separate table                                                   |
 | `priority`                         |          | `low`, `medium`, or `high`                                                                        |
 

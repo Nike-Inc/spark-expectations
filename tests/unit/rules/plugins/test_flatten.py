@@ -203,6 +203,15 @@ def test_flatten_rules_list_missing_expectation_field_raises():
         })
 
 
+def test_flatten_rules_list_missing_rule_type_raises():
+    with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="missing 'rule_type'"):
+        flatten_rules_list({
+            "product_id": "p1",
+            "table_name": "t1",
+            "rules": [{"rule": "r1", "expectation": "x > 0"}],
+        })
+
+
 def test_flatten_rules_list_invalid_rule_type_raises():
     with pytest.raises(SparkExpectationsUserInputOrConfigInvalidException, match="Invalid rule_type"):
         flatten_rules_list({
