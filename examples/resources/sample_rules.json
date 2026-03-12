@@ -1,0 +1,170 @@
+{
+  "product_id": "your_product",
+  "dq_env": {
+    "DEV": {
+      "table_name": "dq_spark_dev.customer_order",
+      "action_if_failed": "ignore",
+      "enable_for_source_dq_validation": true,
+      "enable_for_target_dq_validation": false,
+      "is_active": true,
+      "enable_error_drop_alert": false,
+      "error_drop_threshold": 0,
+      "priority": "medium"
+    },
+    "QA": {
+      "table_name": "dq_spark_qa.customer_order",
+      "action_if_failed": "ignore",
+      "enable_for_source_dq_validation": true,
+      "enable_for_target_dq_validation": false,
+      "is_active": true,
+      "enable_error_drop_alert": false,
+      "error_drop_threshold": 0,
+      "priority": "medium"
+    },
+    "PROD": {
+      "table_name": "dq_spark_prod.customer_order",
+      "action_if_failed": "ignore",
+      "enable_for_source_dq_validation": true,
+      "enable_for_target_dq_validation": false,
+      "is_active": true,
+      "enable_error_drop_alert": false,
+      "error_drop_threshold": 0,
+      "priority": "medium"
+    }
+  },
+  "rules": [
+    {
+      "rule": "customer_id_not_null",
+      "rule_type": "row_dq",
+      "column_name": "customer_id",
+      "expectation": "customer_id IS NOT NULL",
+      "action_if_failed": "drop",
+      "tag": "completeness",
+      "description": "Customer ID must not be null",
+      "priority": "high"
+    },
+    {
+      "rule": "order_id_not_null",
+      "rule_type": "row_dq",
+      "column_name": "order_id",
+      "expectation": "order_id IS NOT NULL",
+      "action_if_failed": "drop",
+      "tag": "completeness",
+      "description": "Order ID must not be null",
+      "priority": "high"
+    },
+    {
+      "rule": "order_date_not_null",
+      "rule_type": "row_dq",
+      "column_name": "order_date",
+      "expectation": "order_date IS NOT NULL",
+      "tag": "completeness",
+      "description": "Order date must not be null"
+    },
+    {
+      "rule": "product_id_not_null",
+      "rule_type": "row_dq",
+      "column_name": "product_id",
+      "expectation": "product_id IS NOT NULL",
+      "tag": "completeness",
+      "description": "Product ID must not be null"
+    },
+    {
+      "rule": "quantity_positive",
+      "rule_type": "row_dq",
+      "column_name": "quantity",
+      "expectation": "quantity > 0",
+      "action_if_failed": "drop",
+      "tag": "validity",
+      "description": "Order quantity must be greater than zero",
+      "priority": "high"
+    },
+    {
+      "rule": "sales_greater_than_zero",
+      "rule_type": "row_dq",
+      "column_name": "sales",
+      "expectation": "sales > 2",
+      "tag": "accuracy",
+      "description": "Sales value should be greater than 2"
+    },
+    {
+      "rule": "discount_within_range",
+      "rule_type": "row_dq",
+      "column_name": "discount",
+      "expectation": "discount >= 0 AND discount * 100 < 60",
+      "action_if_failed": "drop",
+      "tag": "validity",
+      "description": "Discount must be between 0 and 0.6"
+    },
+    {
+      "rule": "ship_mode_in_set",
+      "rule_type": "row_dq",
+      "column_name": "ship_mode",
+      "expectation": "lower(trim(ship_mode)) in ('second class', 'standard class')",
+      "action_if_failed": "drop",
+      "tag": "validity",
+      "description": "Ship mode must belong to the allowed set"
+    },
+    {
+      "rule": "ship_date_after_order_date",
+      "rule_type": "row_dq",
+      "column_name": "ship_date",
+      "expectation": "ship_date IS NULL OR ship_date >= order_date",
+      "tag": "consistency",
+      "description": "Ship date must not be earlier than order date"
+    },
+    {
+      "rule": "profit_threshold",
+      "rule_type": "row_dq",
+      "column_name": "profit",
+      "expectation": "profit > 0",
+      "tag": "accuracy",
+      "description": "Profit should be greater than zero"
+    },
+    {
+      "rule": "table_row_count",
+      "rule_type": "agg_dq",
+      "expectation": "count(*) > 0",
+      "action_if_failed": "fail",
+      "tag": "completeness",
+      "description": "Table must contain at least one row",
+      "priority": "high"
+    },
+    {
+      "rule": "customer_id_completeness_ratio",
+      "rule_type": "agg_dq",
+      "expectation": "count(customer_id) / count(*) > 0.99",
+      "action_if_failed": "fail",
+      "tag": "completeness",
+      "description": "At least 99% of rows must have a customer ID"
+    },
+    {
+      "rule": "sum_of_sales",
+      "rule_type": "agg_dq",
+      "expectation": "sum(sales) > 10000",
+      "tag": "validity",
+      "description": "Total sales must exceed 10000"
+    },
+    {
+      "rule": "sum_of_quantity",
+      "rule_type": "agg_dq",
+      "expectation": "sum(quantity) > 10000",
+      "tag": "validity",
+      "description": "Total quantity must exceed 10000"
+    },
+    {
+      "rule": "distinct_of_ship_mode",
+      "rule_type": "agg_dq",
+      "expectation": "count(distinct ship_mode) <= 4",
+      "tag": "validity",
+      "description": "Ship mode should have at most 4 distinct values"
+    },
+    {
+      "rule": "max_discount_within_bounds",
+      "rule_type": "agg_dq",
+      "expectation": "max(discount) <= 100",
+      "tag": "validity",
+      "description": "No discount should exceed 100%"
+    }
+  ]
+}

@@ -29,6 +29,7 @@ dic_job_info = {
 }
 job_info = str(dic_job_info)
 
+# --- Option 1: Load rules from a Delta table (default) ---
 se: SparkExpectations = SparkExpectations(
     product_id="your_product",
     rules_df=spark.table("dq_spark_dev.dq_rules"),

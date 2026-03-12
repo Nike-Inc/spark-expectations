@@ -53,6 +53,7 @@ nav:
           - Quickstart: user_guide/quickstart.md
       - Reference:
           - Data Quality Rules: user_guide/data_quality_rules.md
+          - File-Based Rules (YAML & JSON): user_guide/file_based_rules.md
           - Data Quality Metrics: user_guide/data_quality_metrics.md
           - User Config:
               - Example Config: user_guide/user_config/user_config.md
