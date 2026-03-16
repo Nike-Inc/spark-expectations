@@ -119,7 +119,7 @@ se_user_conf = {
     user_config.se_dq_obs_alert_flag: True,
     user_config.se_dq_obs_default_email_template: "",
     user_config.se_notifications_email_from: "<sender_email_id>",
-    user_config.se_notifications_email_to_other_nike_mail_id: "<receiver_email_id's>",
+    user_config.se_notifications_email_to_other_mail_id: "<receiver_email_id's>",
     user_config.se_notifications_email_subject: "spark expectations - data quality - notifications", 
     user_config.se_notifications_enable_slack: True,
     user_config.se_notifications_slack_webhook_url: "<slack-webhook-url>", 
@@ -131,8 +131,8 @@ se_user_conf = {
     user_config.se_notifications_on_error_drop_threshold: 15,
     #Optional
     #Below two params are optional and need to be enabled to capture the detailed stats in the <stats_table_name>_detailed.
-    #user_config.enable_query_dq_detailed_result: True,
-    #user_config.enable_agg_dq_detailed_result: True,
+    #user_config.se_enable_query_dq_detailed_result: True,
+    #user_config.se_enable_agg_dq_detailed_result: True,
     #Below two params are optional and need to be enabled to pass the custom email body
     #user_config.se_notifications_enable_custom_email_body: True,
     #user_config.se_notifications_email_custom_body: "'product_id': {}",

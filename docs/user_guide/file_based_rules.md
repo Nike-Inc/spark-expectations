@@ -277,3 +277,123 @@ def process_orders() -> DataFrame:
 
 process_orders()
 ```
+
+---
+
+## Simple Format (Without `dq_env`)
+
+If you don't need per-environment configuration, a simpler format is supported with a top-level `table_name` and optional `defaults`:
+
+=== "YAML"
+
+    ```yaml
+    product_id: my_product
+    table_name: catalog.schema.orders
+    defaults:
+      action_if_failed: ignore
+      is_active: true
+      priority: medium
+    rules:
+      - rule: order_id_not_null
+        rule_type: row_dq
+        column_name: order_id
+        expectation: "order_id IS NOT NULL"
+        action_if_failed: drop
+        tag: completeness
+        description: "Order ID must not be null"
+    ```
+
+=== "JSON"
+
+    ```json
+    {
+      "product_id": "my_product",
+      "table_name": "catalog.schema.orders",
+      "defaults": {
+        "action_if_failed": "ignore",
+        "is_active": true,
+        "priority": "medium"
+      },
+      "rules": [
+        {
+          "rule": "order_id_not_null",
+          "rule_type": "row_dq",
+          "column_name": "order_id",
+          "expectation": "order_id IS NOT NULL",
+          "action_if_failed": "drop",
+          "tag": "completeness",
+          "description": "Order ID must not be null"
+        }
+      ]
+    }
+    ```
+
+---
+
+## `query_dq` Rules in YAML/JSON
+
+Query DQ rules use SQL queries as expectations. For composite queries with custom delimiters, encode them as a single string:
+
+```yaml
+rules:
+  - rule: product_count_threshold
+    rule_type: query_dq
+    column_name: ""
+    expectation: >-
+      ((select count(*) from ({source_f1}) a) -
+       (select count(*) from ({target_f1}) b)) > 3
+      @source_f1@SELECT DISTINCT product_id, order_id FROM order_source
+      @target_f1@SELECT DISTINCT product_id, order_id FROM order_target
+    action_if_failed: ignore
+    tag: validity
+    description: "Row count difference between source and target must exceed 3"
+    query_dq_delimiter: "@"
+    enable_querydq_custom_output: true
+```
+
+!!! tip
+    Use YAML's `>-` folded block scalar to write long expectations across multiple lines without embedded newlines.
+
+---
+
+## Additional Behaviors
+
+- **Case-insensitive `dq_env` lookup**: `DEV`, `dev`, and `Dev` all match the same environment block.
+- **Per-rule overrides**: Any field set directly on a rule overrides the value from `dq_env` or `defaults`. For example, a single rule can set its own `table_name` or `action_if_failed`.
+- **Type casting**: String values like `"true"`, `"false"`, `"1"`, `"0"` are automatically cast to their correct Python types for boolean and integer columns.
+- **Validation**: The loader validates that every rule has the required fields (`rule`, `expectation`) and a valid `rule_type` (`row_dq`, `agg_dq`, `query_dq`). Invalid rules raise `SparkExpectationsUserInputOrConfigInvalidException` with a descriptive message.
+
+---
+
+## When to Use File-Based vs Table-Based Rules
+
+| | File-Based (YAML/JSON) | Table-Based (Delta/BigQuery) |
+|---|---|---|
+| **Version control** | Rules live alongside code in git, reviewable in PRs | Changes require SQL updates or a separate process |
+| **Environment management** | `dq_env` selects dev/qa/prod from a single file | Separate tables or filtered queries per environment |
+| **Dynamic updates** | Requires code deployment to change rules | Rules can be updated without redeploying code |
+| **Discoverability** | Rules are visible in the repo | Rules live in the data platform |
+
+!!! tip
+    File-based rules are ideal for teams that want rules reviewed in pull requests. Table-based rules work well when business users or data stewards need to manage rules independently of code deployments.
+
+---
+
+## Working Examples
+
+- **Sample YAML rules**: [`examples/resources/sample_rules.yaml`](https://github.com/Nike-Inc/spark-expectations/blob/main/examples/resources/sample_rules.yaml)
+- **Sample JSON rules**: [`examples/resources/sample_rules.json`](https://github.com/Nike-Inc/spark-expectations/blob/main/examples/resources/sample_rules.json)
+- **Runnable script**: [`examples/scripts/sample_dq_yaml_json.py`](https://github.com/Nike-Inc/spark-expectations/blob/main/examples/scripts/sample_dq_yaml_json.py)
+
+---
+
+## Custom Rule Loader Plugins
+
+The rule loader system uses [pluggy](https://pluggy.readthedocs.io/), so you can register custom loaders for other formats (e.g., TOML, CSV, remote APIs). Implement the `SparkExpectationsRuleLoader` hookspec and register via a setuptools entry point:
+
+```toml
+[project.entry-points."spark_expectations_rule_loader"]
+my_loader = "my_package.loaders:MyCustomRuleLoaderImpl"
+```
+
+The plugin manager loads all registered entry points automatically alongside the built-in YAML and JSON loaders.

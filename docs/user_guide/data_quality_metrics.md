@@ -1,5 +1,17 @@
 
 
+## Output Tables Overview
+
+Spark Expectations creates several tables during a DQ run. The relationships between them:
+
+| Table | Created | Description |
+|---|---|---|
+| **Target Table** | Always (if `write_to_table=True`) | Clean rows that passed DQ checks |
+| **Error Table** | By default | Rows that failed one or more rules, with failure metadata |
+| **Stats Table** | Always | Run-level metrics: input/output/error counts, rule results, timings |
+| **Stats Detailed** | Optional (`se_enable_agg_dq_detailed_result`) | Per-rule execution status and outcomes |
+| **Query DQ Output** | Optional (`se_enable_query_dq_detailed_result`) | Results from custom query DQ sub-queries |
+
 ### DQ Stats Table
 
 In order to collect the stats/metrics for each data quality job run, the spark-expectations job will
@@ -185,11 +197,11 @@ create table if not exists `<catalog>`.`<schema>`.`<stats_table_name>_querydq_ou
 
 1. `run_id` Run Id for a specific run 
 2. `product_id` Unique product identifier 
-3. `table_name` --
+3. `table_name` The target table the query DQ rule applies to
 4. `rule`  Rule name
-5. `column_name` column name
-6. `alias` --
-7. `dq_type` --
-8. `source_output` --
-9. `target_output` --
+5. `column_name` Column name associated with the rule (if applicable)
+6. `alias` Alias extracted from the custom query DQ expectation (used to label sub-queries)
+7. `dq_type` The type of query DQ check (e.g., source or target)
+8. `source_output` The result of evaluating the query on the source DataFrame
+9. `target_output` The result of evaluating the query on the target DataFrame (post row_dq)
 10. `dq_time` Dq executed timestamp

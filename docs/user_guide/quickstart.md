@@ -1,20 +1,14 @@
 # Quick Start
 
-To successfully run spark-expectations user needs to create `Rules` table as a first step. 
-
+This guide walks you through a minimal working example of Spark Expectations.
 
 ## Required Tables
 
-Spark expectation expects that Rules table is created for spark-expectations to run seamlessly and integrate with a spark job.
-
+Spark Expectations requires a **rules table** to define your data quality expectations.
 
 ### Rules Table
 
-The below SQL statements used three namespaces which works with Databricks Unity Catalog, but if you are using hive
-please update the namespaces accordingly and also provide necessary table metadata.
-
-We need to create a rules tables which contains all the data quality rules. Please use the below template to create
-your rules table for your project.
+The SQL below uses three-part names compatible with Databricks Unity Catalog. Adjust for Hive or other catalogs as needed.
 
 ```sql
 create table if not exists `catalog`.`schema`.`{product}_rules` (
@@ -40,51 +34,51 @@ create table if not exists `catalog`.`schema`.`{product}_rules` (
 
 1. `product_id` A unique name at the level of dq rules execution
 2. `table_name` The table for which the rule is being defined for
-3. `rule_type` 3 different type of rules. They are 'row_dq', 'agg_dq' and 'query_dq'
-4. `rule` Short description of the rule 
-5. `column_name` The column name for which the rule is defined for. This only applies for row_dq. For agg_dq and query_dq, use blank/empty value. 
-6. `expectation` Provide the DQ rule condition 
-7. `action_if_failed` There are 3 different types of actions. These are 'ignore', 'drop', and 'fail'. 
-    Ignore: The rule is run and the output is logged. No action is performed regardless of whether the rule has succeeded or failed. Applies for all 3 rule types. 
-    Drop: The rows that fail the rule get dropped from the dataset. Applies for only row_dq rule type.
-    Fail: job fails if the rule fails. Applies for all 3 rule types.
-8. `tag` provide some tag name to dq rule example:  completeness, validity, uniqueness etc. 
-9. `description`  Long description for the rule
-10. `enable_for_source_dq_validation` flag to run the agg rule
-11. `enable_for_target_dq_validation` flag to run the query rule
-12. `is_active` true or false to indicate if the rule is active or not. 
-13. `enable_error_drop_alert` true or false. This determines if an alert notification should be sent out if row(s) is(are) dropped from the data set
-14. `error_drop_threshold` Threshold for the alert notification that gets triggered when row(s) is(are) dropped from the data set
-15. `query_dq_delimiter` segregate custom queries delimiter ex: $, @ etc. By default it is @. Users can override it with any other delimiter based on the need. The same delimiter mentioned here has to be used in the custom query.
-16. `enable_querydq_custom_output` required custom query output in separate table
-17. `priority` Priority level for the rule. Supported values are: 'low', 'medium' and 'high'.
+3. `rule_type` One of `'row_dq'`, `'agg_dq'`, or `'query_dq'`
+4. `rule` Short name for the rule
+5. `column_name` The column the rule applies to. For `agg_dq` and `query_dq`, use an empty string.
+6. `expectation` The DQ rule condition (SQL expression)
+7. `action_if_failed` One of `'ignore'`, `'drop'` (row_dq only), or `'fail'`
+8. `tag` Category tag (e.g., completeness, validity, uniqueness)
+9. `description` Long description for the rule
+10. `enable_for_source_dq_validation` When true, run agg_dq/query_dq on the source DataFrame **before** row_dq
+11. `enable_for_target_dq_validation` When true, run agg_dq/query_dq on the DataFrame **after** row_dq
+12. `is_active` Whether the rule is active
+13. `enable_error_drop_alert` Send alert when rows are dropped by this rule
+14. `error_drop_threshold` Threshold percentage for triggering the error drop alert
+15. `query_dq_delimiter` Delimiter for composite query_dq expectations (default: `@`)
+16. `enable_querydq_custom_output` Capture custom query output in a separate table
+17. `priority` Rule priority: `'low'`, `'medium'`, or `'high'`
 
+The DQ process runs in three phases:
 
-The Spark Expectation process consists of three phases:
-1. When enable_for_source_dq_validation is true, execute agg_dq and query_dq on the source Dataframe
-2. If the first step is successful, proceed to run row_dq
-3. When enable_for_target_dq_validation is true, execute agg_dq and query_dq on the Dataframe resulting from row_dq
+1. **Source validation** -- When `enable_for_source_dq_validation` is true, execute `agg_dq` and `query_dq` on the input DataFrame
+2. **Row validation** -- Run `row_dq` rules on every row
+3. **Target validation** -- When `enable_for_target_dq_validation` is true, execute `agg_dq` and `query_dq` on the DataFrame after row_dq filtering
 
-### Rule Type
+### Rule Type Constraint
 
-The rules column has a column called "rule_type". It is important that this column should only accept one of 
-these three values - `[row_dq, agg_dq, query_dq]`. If other values are provided, the library may cause unforeseen errors.
-Please run the below command to add constraints to the above created rules table
+Add this constraint to prevent invalid `rule_type` values:
 
 ```sql
 ALTER TABLE `catalog`.`schema`.`{product}_rules` 
 ADD CONSTRAINT rule_type_action CHECK (rule_type in ('row_dq', 'agg_dq', 'query_dq'));
 ```
 
-For further information about creating individual rules please refer to the [Rules Guide](../data_quality_rules/)
+For details on writing rules, see the [Rules Guide](data_quality_rules.md).
 
 
-## Initiating Spark Expectation
+## Complete Working Example
 
+The following is a self-contained example. Replace `catalog`, `schema`, and table names with your own.
 
-#### Sample input data 
+### 1. Sample input data 
 
 ```python
+import pandas as pd
+from pyspark.sql import SparkSession
+
+spark = SparkSession.builder.getOrCreate()
 
 data = [
     {"id": 1, "age": 25,   "email": "alice@example.com"},
@@ -97,20 +91,19 @@ data = [
 
 input_df = spark.createDataFrame(pd.DataFrame(data))
 input_df.show(truncate=False)
-
 ```
-#### Insert expectations into Rules table
+
+### 2. Insert expectations into Rules table
 
 ```python
-
-# Name of the rules table previously created 
-rules_table = f"{catalog}.{schema}.{product}_rules"
 product_identifier = "test_product"
+target_table_name = "my_target_table"
+rules_table = "catalog.schema.test_product_rules"
 
 rules_data = [
     {
         "product_id": product_identifier,
-        "table_name": f"{catalog}.{schema}.{target_table_name}",
+        "table_name": f"catalog.schema.{target_table_name}",
         "rule_type": "row_dq",
         "rule": "age_not_null",
         "column_name": "age",
@@ -127,99 +120,47 @@ rules_data = [
     }
 ]
 
-import pandas as pd
-
 rules_df = spark.createDataFrame(pd.DataFrame(rules_data))
-rules_df.show(truncate=True)
 rules_df.write.mode("overwrite").saveAsTable(rules_table)
-
 ```
 
-
-#### Streaming and User config
-
-Following example let's spark-expectation use default configuration. 
-
-Only configuration we are passing is to disable streaming option
-
+### 3. Configure and run SparkExpectations
 
 ```python
-
-from spark_expectations.config.user_config import Constants as user_config
-
-stats_streaming_config_dict = {
-    user_config.se_enable_streaming: False
-}
-
-user_config = {}
-
-```
-
-#### Run SparkExpectations job
-
-Please reference [Spark Expectation notebooks](https://github.com/Nike-Inc/spark-expectations/tree/main/examples/notebooks) for fully functioning examples. 
-
-!!! note
-    Spark-Expectation repository itself provides [docker compose yaml file](https://github.com/Nike-Inc/spark-expectations/blob/main/containers/compose.yaml) for running those notebooks.
-     
-    ```bash
-        # Generate self signed certs for mailpit server
-        make generate-mailserver-certs 
-
-        # running following makefile target will spin up spark, jupyter, mailpit and kafka service
-        make local-se-server-start ARGS="--build"` 
-    ```
-
-
-```python
-
 from pyspark.sql import DataFrame
+from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.expectations import (
     SparkExpectations, WrappedDataFrameWriter
 )
-
 from spark_expectations.core import load_configurations
-# Initialize Default Config: in a future release this will not be required 
-load_configurations(spark) 
+
+load_configurations(spark)
 
 writer = WrappedDataFrameWriter().mode("append").format("delta")
 
 se = SparkExpectations(
-    product_id=f"{product_identifier}",                   # (1)!
-    rules_df=rules_dataframe,                             # (2)!
-    stats_table=f"{catalog}.{schema}.{stats_table_name}", # (3)!
+    product_id=product_identifier,                       # (1)!
+    rules_df=spark.table(rules_table),                   # (2)!
+    stats_table="catalog.schema.dq_stats",               # (3)!
     stats_table_writer=writer,                            # (4)!
     target_and_error_table_writer=writer,                 # (5)!
-    stats_streaming_options=stats_streaming_config_dict   # (6)!
+    stats_streaming_options={                             # (6)!
+        user_config.se_enable_streaming: False,
+    },
 )
 
-# Optional: override the default error table name (default: `<target_table>_error`)
-se._context.set_error_table_name(f"{catalog}.{schema}.{target_table_name}_dq_error")
-
-"""
-This decorator helps to wrap a function which returns dataframe and apply dataframe rules on it
-
-Args:
-    target_table: Name of the table where the final dataframe need to be written
-    write_to_table: Mark it as "True" if the dataframe need to be written as table
-    write_to_temp_table: Mark it as "True" if the input dataframe need to be written to the temp table to break
-                        the spark plan
-    user_conf: Provide options to override the defaults, while writing into the stats streaming table
-    target_table_view: This view is created after the _row_dq process to run the target agg_dq and query_dq.
-        If value is not provided, defaulted to {target_table}_view
-    target_and_error_table_writer: Provide the writer to write the target and error table,
-        this will take precedence over the class level writer
-
-Returns:
-    Any: Returns a function which applied the expectations on dataset
-"""
-
+user_conf = {
+    user_config.se_notifications_on_start: False,
+    user_config.se_notifications_on_completion: False,
+    user_config.se_notifications_on_fail: False,
+    user_config.se_enable_error_table: True,
+}
 
 @se.with_expectations(
-    target_table=f"{catalog}.{schema}.{target_table_name}",
+    target_table=f"catalog.schema.{target_table_name}",
     write_to_table=True,
     write_to_temp_table=True,
-    user_conf=user_config,
+    user_conf=user_conf,
 )
 def get_dataset():
     _df_source: DataFrame = input_df
@@ -227,15 +168,70 @@ def get_dataset():
     return _df_source
 
 
-# This will run the DQ checks and raise if any "fail" rules are violated
 get_dataset()
-
-
 ```
 <!-- Annotations for tooltips -->
-1. The unique product identifier for DQ execution.
-2. DataFrame containing the rules to apply.
-3. Name of the stats table for logging results.If it doesn't exist it will be generated
-4. Writer object for the stats table.
-5. Writer object for target and error tables.
-6. Dictionary of streaming options for stats.
+1. Must match the `product_id` in your rules table.
+2. Read the rules table as a DataFrame. Can also use `load_rules_from_yaml()` for file-based rules.
+3. Stats table for logging DQ metrics. Auto-created if it doesn't exist.
+4. Writer config for the stats table.
+5. Writer config for target and error tables.
+6. Pass `se_enable_streaming: False` to disable Kafka stats streaming.
+
+!!! tip "Try it locally"
+    The repository provides a [Docker Compose setup](https://github.com/Nike-Inc/spark-expectations/blob/main/containers/compose.yaml) with Jupyter Lab, Kafka, and Mailpit (SMTP test server):
+
+    ```bash
+    make generate-mailserver-certs
+    make local-se-server-start ARGS="--build"
+    ```
+
+    Then open [http://localhost:8888](http://localhost:8888) and run any of the [example notebooks](https://github.com/Nike-Inc/spark-expectations/tree/main/examples/notebooks).
+
+---
+
+## `with_expectations` Decorator Parameters
+
+| Parameter | Type | Default | Description |
+|---|---|---|---|
+| `target_table` | `str` | *required* | Fully qualified name of the target table |
+| `write_to_table` | `bool` | `False` | Write the result DataFrame as a table. Set `False` if you only want DQ checks without writing. |
+| `write_to_temp_table` | `bool` | `False` | Write the input DataFrame to a temp table first, then read it back. This breaks the Spark execution plan and can speed up jobs with complex DataFrame lineage. |
+| `user_conf` | `Dict` | `None` | Configuration overrides for notifications, streaming, error tables, etc. See [Configuration Reference](configuration_reference.md). |
+| `target_table_view` | `str` | `{target_table}_view` | Name of the temporary view created after row DQ. Target `agg_dq` and `query_dq` rules run against this view. If you write `query_dq` rules, they must reference this view name. |
+| `target_and_error_table_writer` | `Writer` | `None` | Per-call writer override. Takes precedence over the class-level writer. |
+
+!!! tip "When to use `write_to_temp_table`"
+    Set this to `True` when your input DataFrame has complex lineage (e.g., multiple joins, UDFs, or external data sources). Writing to a temp table materializes the DataFrame, breaking the Spark plan into two stages and often improving performance.
+
+!!! tip "Understanding `target_table_view`"
+    After row DQ runs, the cleaned DataFrame is registered as a temporary view. Target `agg_dq` and `query_dq` rules execute SQL against this view. If your `query_dq` expectation references a table name, make sure it matches `target_table_view` (or the default `{table_name}_view`).
+
+---
+
+## `load_configurations()`
+
+The `load_configurations(spark)` function reads default settings from `spark-expectations-default-config.yaml` and returns the streaming and notification config dictionaries. The full configuration resolution order is:
+
+1. **Built-in defaults** from `spark-expectations-default-config.yaml`
+2. **Spark session config** (`spark.conf.get(...)`) can override defaults
+3. **`user_conf` dict** passed to `with_expectations` takes highest precedence
+
+!!! note
+    In serverless environments (Databricks Serverless), Spark session config access is limited. Use the `user_conf` dict to set all configuration explicitly.
+
+---
+
+## Common Exceptions
+
+When working with Spark Expectations, you may encounter these exceptions:
+
+| Exception | When It's Raised |
+|---|---|
+| `SparkExpectOrFailException` | A rule with `action_if_failed = "fail"` has failed |
+| `SparkExpectationsDataframeNotReturnedException` | The decorated function did not return a DataFrame |
+| `SparkExpectationsUserInputOrConfigInvalidException` | Invalid configuration, rule definition, or input |
+| `SparkExpectationsErrorThresholdExceedsException` | Error drop percentage exceeds the configured threshold |
+| `SparkExpectationsMiscException` | General internal error |
+
+Notification-specific exceptions (`SparkExpectationsEmailException`, `SparkExpectationsSlackNotificationException`, etc.) are raised when a notification channel fails but do not affect the DQ processing itself.
