@@ -32,8 +32,8 @@ se_user_conf = {
     user_config.se_notifications_on_rules_action_if_failed_set_ignore: True,  # (18)! 
    user_config.se_notifications_on_error_drop_threshold: 15,  # (19)!
     user_config.se_enable_error_table: True,  # (20)!
-    user_config.enable_query_dq_detailed_result: True, # (21)!
-    user_config.enable_agg_dq_detailed_result: True, # (22)!
+    user_config.se_enable_query_dq_detailed_result: True, # (21)!
+    user_config.se_enable_agg_dq_detailed_result: True, # (22)!
     user_config.querydq_output_custom_table_name: "<catalog.schema.table-name>", #23
     user_config.se_dq_rules_params: {
         "env": "local",
@@ -56,7 +56,7 @@ se_user_conf = {
 10. The `user_config.se_notifications_email_subject` parameter captures the subject line of the email
 11. The `user_config.se_notifications_email_custom_body` optional parameter, captures the custom email body, need to be compliant with certain syntax
 12. The `user_config.se_notifications_enable_slack` parameter, which controls whether notifications are sent via slack, is set to false by default 
-13. The `user_config/se_notifications_slack_webhook_url` parameter accepts the webhook URL of a Slack channel for sending notifications 
+13. The `user_config.se_notifications_slack_webhook_url` parameter accepts the webhook URL of a Slack channel for sending notifications 
 14. When `user_config.se_notifications_on_start` parameter set to `True` enables notification on start of the spark-expectations, variable by default set to `False`
 15. When `user_config.se_notifications_on_completion` parameter set to `True` enables notification on completion of spark-expectations framework, variable by default set to `False`
 16. When `user_config.se_notifications_on_fail` parameter set to `True` enables notification on failure of spark-expectations data quality framework, variable by default set to `True`
@@ -64,8 +64,8 @@ se_user_conf = {
 18. When `user_config.se_notifications_on_rules_action_if_failed_set_ignore` parameter set to `True` enables notification when rules action is set to ignore if failed 
 19. The `user_config.se_notifications_on_error_drop_threshold` parameter captures error drop threshold value 
 20. The `user_config.se_enable_error_table` parameter, which controls whether error data to load into error table, is set to true by default. The default error table name is `<target_table>_error`; users can override it by calling `set_error_table_name(...)` on the `SparkExpectations` instance context (for example, `se._context.set_error_table_name("catalog.schema.custom_error_table")`) before executing the decorated function.
-21. When `user_config.enable_query_dq_detailed_result` parameter set to `True`, enables the option to capture the query_dq detailed stats to detailed_stats table. By default set to `False`
-22. When `user_config.enable_agg_dq_detailed_result` parameter set to `True`, enables the option to capture the agg_dq detailed stats to detailed_stats table. By default set to `False`
+21. When `user_config.se_enable_query_dq_detailed_result` parameter set to `True`, enables the option to capture the query_dq detailed stats to detailed_stats table. By default set to `False`
+22. When `user_config.se_enable_agg_dq_detailed_result` parameter set to `True`, enables the option to capture the agg_dq detailed stats to detailed_stats table. By default set to `False`
 23. The `user_config.querydq_output_custom_table_name` parameter is used to specify the name of the custom query_dq output table which captures the output of the alias queries passed in the query dq expectation. Default is <stats_table>_custom_output 
 24. The `user_config.se_dq_rules_params` parameter, which are required to dynamically update dq rules
 25. The `user_config.se_notifications_enable_templated_basic_email_body` optional parameter is used to enable using a Jinja template for basic email notifications (notifying on job start, completion, failure, etc.)
@@ -152,7 +152,7 @@ from spark_expectations.config.user_config import Constants as user_config
 
 stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
     user_config.se_enable_streaming: True, # (1)!
-    user_config.secret_type: "databricks", # (2)!
+    user_config.secret_type: "cerberus", # (2)!
     user_config.cbs_url  : "https://<url>.cerberus.com", # (3)!
     user_config.cbs_sdb_path: "cerberus_sdb_path", # (4)!
     user_config.cbs_kafka_server_url: "se_streaming_server_url_secret_sdb_path", # (5)!

@@ -63,19 +63,13 @@ user_conf: Dict[str, Union[str, int, bool, Dict[str, str]]] = {
     target_table_view="order",
 )
 def build_new() -> DataFrame:
-    _df_order_source: DataFrame = (
+    _df_order: DataFrame = (
         spark.read.option("header", "true")
         .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "..", "resources", "order_s.csv"))
+        .csv(os.path.join(os.path.dirname(__file__), "..", "resources", "order.csv"))
     )
-    _df_order_source.createOrReplaceTempView("order_source")
-
-    _df_order_target: DataFrame = (
-        spark.read.option("header", "true")
-        .option("inferSchema", "true")
-        .csv(os.path.join(os.path.dirname(__file__), "..", "resources", "order_t.csv"))
-    )
-    _df_order_target.createOrReplaceTempView("order_target")
+    _df_order.createOrReplaceTempView("order_source")
+    _df_order.createOrReplaceTempView("order_target")
 
     _df_product: DataFrame = (
         spark.read.option("header", "true")
@@ -99,7 +93,7 @@ def build_new() -> DataFrame:
     )
     _df_customer_target.createOrReplaceTempView("customer_target")
 
-    return _df_order_source
+    return _df_order
 
 
 if __name__ == "__main__":

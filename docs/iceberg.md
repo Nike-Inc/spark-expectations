@@ -1,6 +1,6 @@
-### Example - Write to Delta
+### Example - Write to Iceberg
 
-Setup SparkSession for iceberg to test in your local environment. Configure accordingly for higher environments.
+Setup SparkSession for Iceberg to test in your local environment. Configure accordingly for higher environments.
 Refer to Examples in [base_setup.py](https://github.com/Nike-Inc/spark-expectations/blob/main/examples/scripts/base_setup.py) and
 [iceberg.py](https://github.com/Nike-Inc/spark-expectations/blob/main/examples/scripts/sample_dq_iceberg.py)
 
@@ -29,7 +29,7 @@ builder = (
 spark = builder.getOrCreate()
 ```
 
-Below is the configuration that can be used to run SparkExpectations and write to Delta Lake
+Below is the configuration that can be used to run SparkExpectations and write to Iceberg
 
 ```python title="iceberg_write"
 import os
@@ -85,8 +85,8 @@ user_conf = {
     # user_config.se_notifications_on_error_drop_exceeds_threshold_breach: True,
     # user_config.se_notifications_on_error_drop_threshold: 15,
     # user_config.se_enable_error_table: True,
-    # user_config.enable_query_dq_detailed_result: True,
-    # user_config.enable_agg_dq_detailed_result: True,
+    # user_config.se_enable_query_dq_detailed_result: True,
+    # user_config.se_enable_agg_dq_detailed_result: True,
     # user_config.se_dq_rules_params: { "env": "local", "table": "product", },
 }
 

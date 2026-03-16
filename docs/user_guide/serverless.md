@@ -27,42 +27,40 @@ To use Spark Expectations on Databricks Serverless Compute, simply set the serve
 
 ```python
 from spark_expectations.core.expectations import SparkExpectations, WrappedDataFrameWriter
+from spark_expectations.config.user_config import Constants as user_config
 
 # Configure for serverless environment
 user_conf = {
-    user_config.is_serverless: True,  # Enable serverless mode
-    user_config.se_notifications_enable_email: False,  # Email may not work in serverless
-    user_config.se_notifications_enable_slack: True,   # Use Slack instead (recommended)
+    user_config.is_serverless: True,
+    user_config.se_notifications_enable_email: False,
+    user_config.se_notifications_enable_slack: True,
     user_config.se_enable_error_table: True,
-    user_config.se_enable_query_dq_detailed_result: True,    
+    user_config.se_enable_query_dq_detailed_result: True,
     user_config.se_dq_rules_params: {
         "env": "local",
         "table": "orders",
     },
-    user_config.se_enable_streaming: False
 }
 
 writer = WrappedDataFrameWriter().mode("append").format("delta")
-# Create SparkExpectations instance
+
 se = SparkExpectations(
     product_id="your_product_id",
     rules_df=your_rules_dataframe,
     stats_table="your_stats_table",
     target_and_error_table_writer=writer,
     stats_table_writer=writer,
-    user_conf=user_conf  # Enable serverless mode
+    stats_streaming_options={user_config.se_enable_streaming: False},
 )
 
-# Use the decorator as normal
 @se.with_expectations(
     target_table="your_target_table",
-    user_conf=user_conf  # Also pass to decorator
+    write_to_table=True,
+    user_conf=user_conf,
 )
 def process_data():
-    # Your data processing logic
     return processed_dataframe
 
-# Execute your data pipeline
 result_df = process_data()
 ```
 
