@@ -194,6 +194,20 @@ class SparkExpectationsContext:
         self._kafka_write_status: str = "Disabled"
         self._kafka_write_error_message: str = ""
 
+        # ANSI mode detection
+        self._ansi_enabled: bool = False
+        try:
+            self._ansi_enabled = self.spark.conf.get("spark.sql.ansi.enabled", "false").lower() == "true"
+        except Exception:
+            self._ansi_enabled = False
+
+        if self._ansi_enabled:
+            _log.info("ANSI mode detected (spark.sql.ansi.enabled=true). Using ANSI-safe type conversions.")
+
+    @property
+    def get_ansi_enabled(self) -> bool:
+        return self._ansi_enabled
+
     @property
     def get_dbr_version(self) -> Optional[str]:
         """

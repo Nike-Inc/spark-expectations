@@ -206,6 +206,12 @@ class SparkExpectations:
         if not is_serverless:
             self.rules_df = self.rules_df.persist(StorageLevel.MEMORY_AND_DISK)
 
+        if is_serverless and self._context.get_ansi_enabled:
+            _log.warning(
+                "Running in serverless mode with ANSI enabled. "
+                "Spark Expectations will use try_cast for all internal type conversions."
+            )
+
     def _build_config_dicts(
         self,
         user_conf: Optional[Dict[str, Union[str, int, bool, Dict[str, str]]]]
@@ -968,61 +974,86 @@ class SparkExpectations:
                     self._init_default_values(_input_count, expectations)
                     _log.info(f"Spark Expectations run id for this run: {self._context.get_run_id}")
 
-                    if isinstance(_df, DataFrame):  # type: ignore
-                        _log.info("The function dataframe is created")
-                        self._context.set_table_name(table_name)
-                        if write_to_temp_table:
-                            _df = self._use_temp_table(table_name, _df)
-                            
-                        func_process = self._process.execute_dq_process(
-                            _context=self._context,
-                            _actions=self.actions,
-                            _writer=self._writer,
-                            _notification=self._notification,
-                            expectations=expectations,
-                            _input_count=_input_count,
-                        )
-
-                        self._check_streaming_agg_query_dq(_df, _source_agg_dq, _source_query_dq)
-
-                        if _source_agg_dq is True and not _df.isStreaming:
-                            self._run_source_agg_dq_batch(_df, func_process)
-                           
-                        if _source_query_dq is True and not _df.isStreaming:
-                            self._run_source_query_dq_batch(_df, func_process)
-                           
-                        if _row_dq is True:                            
-                            _row_dq_df, _error_count, _output_count = self._run_row_dq(_df, func_process, _target_table_view)
-                            failed_ignored_row_dq_res = self._call_row_dq_notifications()
-                            _log.info("ended processing data quality rules for row level expectations")
-
-                        if _row_dq is True and _target_agg_dq is True and not _df.isStreaming:
-                            self._run_target_agg_dq_batch(func_process, _row_dq_df, _error_count, _output_count)
-                            
-                        if _row_dq is True and _target_query_dq is True and not _df.isStreaming:
-                            self._run_target_query_dq_batch(func_process, _row_dq_df, _target_table_view, _error_count, _output_count)
-                            
-                        flattened_ignore_rules_result = self._check_ignore_rules_result(failed_ignored_row_dq_res, _ignore_rules_result)
-                        if flattened_ignore_rules_result:
-                            self._notification.notify_on_ignore_rules(flattened_ignore_rules_result)
-
-                        streaming_query = None
-                        if write_to_table:
-                            _log.info("Writing into the final table started")
-                            streaming_query = self._writer.save_df_as_table(
-                                _row_dq_df,
-                                f"{table_name}",
-                                self._context.get_target_and_error_table_writer_config,
+                    # ANSI safety net: temporarily disable ANSI mode if enabled
+                    _original_ansi: Optional[str] = None
+                    _ansi_was_disabled = False
+                    if self._context.get_ansi_enabled:
+                        try:
+                            _original_ansi = self.spark.conf.get("spark.sql.ansi.enabled", "false")
+                            self.spark.conf.set("spark.sql.ansi.enabled", "false")
+                            _ansi_was_disabled = True
+                            _log.info(
+                                "ANSI mode temporarily disabled for Spark Expectations processing."
                             )
-                            _log.info("Writing into the final table ended")
+                        except Exception as ansi_err:
+                            _log.warning(
+                                f"Could not disable ANSI mode: {ansi_err}. "
+                                "Relying on try_cast for ANSI-safe type conversions."
+                            )
 
-                    else:
-                        raise SparkExpectationsDataframeNotReturnedException(
-                            "error occurred while processing spark "
-                            "expectations due to given dataframe is not type of dataframe"
-                        )
-                        
-                    return streaming_query if streaming_query is not None else _row_dq_df
+                    try:
+                        if isinstance(_df, DataFrame):  # type: ignore
+                            _log.info("The function dataframe is created")
+                            self._context.set_table_name(table_name)
+                            if write_to_temp_table:
+                                _df = self._use_temp_table(table_name, _df)
+                                
+                            func_process = self._process.execute_dq_process(
+                                _context=self._context,
+                                _actions=self.actions,
+                                _writer=self._writer,
+                                _notification=self._notification,
+                                expectations=expectations,
+                                _input_count=_input_count,
+                            )
+
+                            self._check_streaming_agg_query_dq(_df, _source_agg_dq, _source_query_dq)
+
+                            if _source_agg_dq is True and not _df.isStreaming:
+                                self._run_source_agg_dq_batch(_df, func_process)
+                               
+                            if _source_query_dq is True and not _df.isStreaming:
+                                self._run_source_query_dq_batch(_df, func_process)
+                               
+                            if _row_dq is True:                            
+                                _row_dq_df, _error_count, _output_count = self._run_row_dq(_df, func_process, _target_table_view)
+                                failed_ignored_row_dq_res = self._call_row_dq_notifications()
+                                _log.info("ended processing data quality rules for row level expectations")
+
+                            if _row_dq is True and _target_agg_dq is True and not _df.isStreaming:
+                                self._run_target_agg_dq_batch(func_process, _row_dq_df, _error_count, _output_count)
+                                
+                            if _row_dq is True and _target_query_dq is True and not _df.isStreaming:
+                                self._run_target_query_dq_batch(func_process, _row_dq_df, _target_table_view, _error_count, _output_count)
+                                
+                            flattened_ignore_rules_result = self._check_ignore_rules_result(failed_ignored_row_dq_res, _ignore_rules_result)
+                            if flattened_ignore_rules_result:
+                                self._notification.notify_on_ignore_rules(flattened_ignore_rules_result)
+
+                            streaming_query = None
+                            if write_to_table:
+                                _log.info("Writing into the final table started")
+                                streaming_query = self._writer.save_df_as_table(
+                                    _row_dq_df,
+                                    f"{table_name}",
+                                    self._context.get_target_and_error_table_writer_config,
+                                )
+                                _log.info("Writing into the final table ended")
+
+                        else:
+                            raise SparkExpectationsDataframeNotReturnedException(
+                                "error occurred while processing spark "
+                                "expectations due to given dataframe is not type of dataframe"
+                            )
+                            
+                        return streaming_query if streaming_query is not None else _row_dq_df
+                    finally:
+                        if _ansi_was_disabled and _original_ansi is not None:
+                            try:
+                                self.spark.conf.set("spark.sql.ansi.enabled", _original_ansi)
+                                _log.info("Restored original ANSI mode setting.")
+                            except Exception:
+                                _log.warning("Could not restore original ANSI setting.")
 
                 except Exception as e:
                     raise SparkExpectationsMiscException(f"error occurred while processing spark expectations {e}")

@@ -3036,3 +3036,25 @@ def test_get_kafka_write_error_message_default():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     # Test default value when attribute not set
     assert context.get_kafka_write_error_message == ""
+
+
+def test_context_detects_ansi_enabled():
+    """get_ansi_enabled should return True when spark.sql.ansi.enabled is true."""
+    original_ansi = spark.conf.get("spark.sql.ansi.enabled", "false")
+    try:
+        spark.conf.set("spark.sql.ansi.enabled", "true")
+        context = SparkExpectationsContext(product_id="product1", spark=spark)
+        assert context.get_ansi_enabled is True
+    finally:
+        spark.conf.set("spark.sql.ansi.enabled", original_ansi)
+
+
+def test_context_detects_ansi_disabled():
+    """get_ansi_enabled should return False when spark.sql.ansi.enabled is false."""
+    original_ansi = spark.conf.get("spark.sql.ansi.enabled", "false")
+    try:
+        spark.conf.set("spark.sql.ansi.enabled", "false")
+        context = SparkExpectationsContext(product_id="product1", spark=spark)
+        assert context.get_ansi_enabled is False
+    finally:
+        spark.conf.set("spark.sql.ansi.enabled", original_ansi)

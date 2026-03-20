@@ -879,6 +879,31 @@ def test_agg_query_dq_detailed_result_with_upper_lower_rule(
     )
 
 
+def test_agg_query_dq_detailed_result_ansi_mode(
+    _fixture_df, _fixture_agg_dq_rule, _fixture_agg_dq_detailed_expected_result, _fixture_mock_context
+):
+    """agg_query_dq_detailed_result must produce identical results with ANSI mode enabled."""
+    original_ansi = spark.conf.get("spark.sql.ansi.enabled", "false")
+    try:
+        spark.conf.set("spark.sql.ansi.enabled", "true")
+
+        result_out, result_df = SparkExpectationsActions.agg_query_dq_detailed_result(
+            _fixture_mock_context, _fixture_agg_dq_rule, _fixture_df, []
+        )
+
+        assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get("result").get("product_id")
+        assert result_df[2] == _fixture_agg_dq_detailed_expected_result.get("result").get("table_name")
+        assert result_df[3] == _fixture_agg_dq_detailed_expected_result.get("result").get("rule_type")
+        assert result_df[4] == _fixture_agg_dq_detailed_expected_result.get("result").get("rule")
+        assert result_df[5] == _fixture_agg_dq_detailed_expected_result.get("result").get("column_name")
+        assert result_df[6] == _fixture_agg_dq_detailed_expected_result.get("result").get("expectation")
+        assert result_df[9] == _fixture_agg_dq_detailed_expected_result.get("result").get("status")
+        assert result_df[10] == _fixture_agg_dq_detailed_expected_result.get("result").get("actual_value")
+        assert result_df[11] == _fixture_agg_dq_detailed_expected_result.get("result").get("expected_value")
+    finally:
+        spark.conf.set("spark.sql.ansi.enabled", original_ansi)
+
+
 def test_agg_query_dq_detailed_result_with_querdq(
     _fixture_df, _fixture_query_dq_rule, _fixture_agg_dq_detailed_expected_result, _fixture_mock_context
 ):

@@ -252,7 +252,10 @@ class SparkExpectationsActions:
 
                         _agg_dq_expectation_cond_expr = expr(_agg_dq_expectation_aggstring)
 
-                        _agg_dq_actual_count_value = int(df.agg(_agg_dq_expectation_cond_expr).collect()[0][0])
+                        _agg_dq_raw_value = df.agg(_agg_dq_expectation_cond_expr).collect()[0][0]
+                        if _agg_dq_raw_value is None:
+                            raise ValueError("Aggregation result is None (possibly due to empty data).")
+                        _agg_dq_actual_count_value = int(_agg_dq_raw_value)
 
                         _agg_dq_expression_str_lower = (
                             str(_agg_dq_actual_count_value) + _agg_dq_expectation_expr_lowerbound
@@ -380,7 +383,8 @@ class SparkExpectationsActions:
 
                 _querydq_status_query = "SELECT (" + str(_dq_rule["expectation"]) + ") AS OUTPUT"
 
-                _query_dq_result = int(_context.spark.sql(_querydq_status_query).collect()[0][0])
+                _raw_query_result = _context.spark.sql(_querydq_status_query).collect()[0][0]
+                _query_dq_result = int(_raw_query_result) if _raw_query_result is not None else 0
 
                 status = "pass" if _query_dq_result else "fail"
 

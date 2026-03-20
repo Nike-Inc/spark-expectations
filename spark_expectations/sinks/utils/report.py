@@ -176,7 +176,7 @@ class SparkExpectationsReport:
                 .withColumn(
                     "total_records_only_nbr",
                     when(col("_total_records_str") == "", lit(None).cast("bigint"))
-                    .otherwise(col("_total_records_str").cast("bigint")),
+                    .otherwise(expr("try_cast(_total_records_str as bigint)")),
                 )
                 .withColumn(
                     "_valid_records_str",
@@ -185,7 +185,7 @@ class SparkExpectationsReport:
                 .withColumn(
                     "valid_records_only_nbr",
                     when(col("_valid_records_str") == "", lit(None).cast("bigint"))
-                    .otherwise(col("_valid_records_str").cast("bigint")),
+                    .otherwise(expr("try_cast(_valid_records_str as bigint)")),
                 )
                 .drop("_total_records_str", "_valid_records_str")
                 .withColumn(
@@ -255,11 +255,11 @@ class SparkExpectationsReport:
                     abs(
                         coalesce(
                             coalesce(
-                                trim(col("total_records_only_nbr")).cast("bigint"),
+                                expr("try_cast(trim(total_records_only_nbr) as bigint)"),
                                 lit(0),
                             )
                             - coalesce(
-                                trim(col("valid_records_only_nbr")).cast("bigint"),
+                                expr("try_cast(trim(valid_records_only_nbr) as bigint)"),
                                 lit(0),
                             ),
                             lit(0),
@@ -333,7 +333,13 @@ class SparkExpectationsReport:
                 .withColumnRenamed("source_dq_error_row_count", "failed_records")
                 .withColumn(
                     "success_percentage",
-                    (col("valid_records").cast("double") / col("total_records").cast("double")) * 100,
+                    when(
+                        expr("try_cast(total_records as double)").isNull()
+                        | (expr("try_cast(total_records as double)") == 0),
+                        lit(None).cast("double"),
+                    ).otherwise(
+                        (expr("try_cast(valid_records as double)") / expr("try_cast(total_records as double)")) * 100
+                    ),
                 )
             )
 

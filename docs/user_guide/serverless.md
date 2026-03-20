@@ -66,3 +66,17 @@ def process_data():
 result_df = process_data()
 ```
 
+## ANSI Mode Compatibility
+
+Databricks Serverless Compute runs with `spark.sql.ansi.enabled=true` by default. Spark Expectations automatically detects ANSI mode and uses `try_cast` for all internal type conversions to prevent `CAST_INVALID_INPUT` errors on empty or malformed strings.
+
+**No user action is required** -- the framework handles this transparently. If you are writing custom `query_dq` expectations that include `CAST()` operations, consider using `try_cast()` instead to ensure compatibility:
+
+| Instead of | Use |
+|-----------|-----|
+| `CAST(column AS BIGINT)` | `try_cast(column AS BIGINT)` |
+| `CAST(column AS DOUBLE)` | `try_cast(column AS DOUBLE)` |
+
+!!! note "Spark Version Requirement"
+    `try_cast` requires Spark 3.4+ (Databricks Runtime 13.0+). All Databricks Serverless environments meet this requirement.
+

@@ -66,6 +66,9 @@ Please find the different types of possible expectations
 | Expect referential integrity  | expect_referential_integrity_between_two_table_should_be_less_than_100 | accuracy |  ```( select * from [table_a] left join [table_b] on [condition] where [table_b.column] is null) select count(*) from refrentail_check) < 100``` |
 | Compare the source table and target table output (by default @ is the delimiter. can be overriden by query_dq_delimiter atttribute in rules table)| customer_missing_count_threshold | validity | The_alias_within_the_curly_bracket_is_added_to_the_expectation_which_gets_resolved_at_compile_time_with_alias_values```((select count(*) from ({source_f1}) a join ({source_f2}) b on a.customer_id = b.customer_id) - (select count(*) from ({target_f1}) a join ({target_f2}) b on source_column = target_column)) > ({target_f3})@source_f1@select column, count(*) from source_tbl group by column@source_f2@select column2, count(*) from table2 group by column2@target_f1@select column, count(*) from target_tbl  group by column@target_f2@select column2, count(*) from target_tbl2 group by column2@target_f3@select count(*) from source_tbl ``` |
 
+!!! tip "ANSI Mode and Custom Expectations"
+    When running on Databricks Serverless (ANSI mode enabled), use `try_cast` instead of `CAST` in your custom expectations to avoid `CAST_INVALID_INPUT` errors on empty or null values. For example, use `try_cast(column AS BIGINT)` instead of `CAST(column AS BIGINT)`.
+
 
 
 

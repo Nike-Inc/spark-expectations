@@ -718,3 +718,83 @@ def test_report_with_zero_string_total_records():
 
     zero_run = test_df.filter(test_df["run_id"] == "run_zero_test")
     assert zero_run.count() == 1
+
+
+# ---------------------------------------------------------------------------
+# ANSI mode tests
+#
+# Databricks Serverless has spark.sql.ansi.enabled=true by default.
+# These tests verify that the report works correctly with ANSI enabled,
+# particularly that try_cast prevents CAST_INVALID_INPUT errors on
+# empty strings and malformed values.
+# ---------------------------------------------------------------------------
+
+
+def test_report_with_empty_string_row_counts_ansi_mode():
+    """Empty string row-count columns must not raise CAST_INVALID_INPUT
+    when ANSI mode is enabled."""
+    original_ansi = spark.conf.get("spark.sql.ansi.enabled", "false")
+    try:
+        spark.conf.set("spark.sql.ansi.enabled", "true")
+
+        empty_str_row = (
+            "run_ansi_empty_test",
+            "your_product",
+            "dq_spark_dev.customer_order",
+            "query_dq",
+            "ansi_empty_check",
+            "some_col",
+            "SELECT 1",
+            "validity",
+            "desc",
+            "fail",
+            "0",
+            "0",
+            "",     # source_dq_actual_row_count = empty string
+            "0",
+            "",     # source_dq_row_count = empty string
+            "2025-02-11 00:07:39",
+            "2025-02-11 00:07:40",
+            None, None, None, None, None, None, None, None, None,
+            "2025-02-10",
+            "2025-02-11 00:07:46",
+            "{'job': 'test_job', 'Region': 'NA', 'Snapshot': '2024-04-15', 'data_object_name': 'customer_order'}",
+        )
+
+        df_detailed = _build_string_typed_detailed_df(extra_rows=[empty_str_row])
+        df_custom = _build_custom_detailed_df()
+
+        test_result, test_df = _run_report(df_detailed, df_custom)
+        assert test_result is True
+
+        ansi_run = test_df.filter(test_df["run_id"] == "run_ansi_empty_test")
+        assert ansi_run.count() == 1
+    finally:
+        spark.conf.set("spark.sql.ansi.enabled", original_ansi)
+
+
+def test_report_string_typed_columns_ansi_mode():
+    """The full string-typed report must produce valid results with ANSI
+    mode enabled -- success_percentage should be DoubleType and in [0, 100]."""
+    original_ansi = spark.conf.get("spark.sql.ansi.enabled", "false")
+    try:
+        spark.conf.set("spark.sql.ansi.enabled", "true")
+
+        df_detailed = _build_string_typed_detailed_df()
+        df_custom = _build_custom_detailed_df()
+
+        test_result, test_df = _run_report(df_detailed, df_custom)
+        assert test_result is True
+        assert isinstance(test_df, DataFrame)
+        assert test_df.count() > 0
+
+        sp_field = next(f for f in test_df.schema.fields if f.name == "success_percentage")
+        assert sp_field.dataType == DoubleType(), (
+            f"Expected success_percentage to be DoubleType, got {sp_field.dataType}"
+        )
+
+        non_null_rows = test_df.filter(test_df["success_percentage"].isNotNull())
+        assert non_null_rows.filter(non_null_rows["success_percentage"] > 100).count() == 0
+        assert non_null_rows.filter(non_null_rows["success_percentage"] < 0).count() == 0
+    finally:
+        spark.conf.set("spark.sql.ansi.enabled", original_ansi)
