@@ -3058,3 +3058,40 @@ def test_context_detects_ansi_disabled():
         assert context.get_ansi_enabled is False
     finally:
         spark.conf.set("spark.sql.ansi.enabled", original_ansi)
+
+
+def test_context_ansi_enabled_case_insensitive():
+    """Detection should be case-insensitive (e.g. 'True', 'TRUE')."""
+    original_ansi = spark.conf.get("spark.sql.ansi.enabled", "false")
+    try:
+        spark.conf.set("spark.sql.ansi.enabled", "True")
+        context = SparkExpectationsContext(product_id="product1", spark=spark)
+        assert context.get_ansi_enabled is True
+
+        spark.conf.set("spark.sql.ansi.enabled", "TRUE")
+        context2 = SparkExpectationsContext(product_id="product1", spark=spark)
+        assert context2.get_ansi_enabled is True
+    finally:
+        spark.conf.set("spark.sql.ansi.enabled", original_ansi)
+
+
+def test_context_ansi_property_is_bool():
+    """get_ansi_enabled should always return a bool, not a string."""
+    context = SparkExpectationsContext(product_id="product1", spark=spark)
+    assert isinstance(context.get_ansi_enabled, bool)
+
+
+def test_context_ansi_toggle_independent_per_instance():
+    """Each context instance captures the ANSI setting at construction time."""
+    original_ansi = spark.conf.get("spark.sql.ansi.enabled", "false")
+    try:
+        spark.conf.set("spark.sql.ansi.enabled", "true")
+        ctx_ansi_on = SparkExpectationsContext(product_id="product1", spark=spark)
+
+        spark.conf.set("spark.sql.ansi.enabled", "false")
+        ctx_ansi_off = SparkExpectationsContext(product_id="product1", spark=spark)
+
+        assert ctx_ansi_on.get_ansi_enabled is True
+        assert ctx_ansi_off.get_ansi_enabled is False
+    finally:
+        spark.conf.set("spark.sql.ansi.enabled", original_ansi)

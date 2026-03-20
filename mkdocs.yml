@@ -67,6 +67,7 @@ nav:
           - Observability: Observability_examples.md
           - Stream Writer Guide: user_guide/Stream_write_guide.md
           - Serverless: user_guide/serverless.md
+          - ANSI Mode Testing Guide: user_guide/ansi_testing_guide.md
   - Developer Guide:
       - Contributing: developer_guide/contributing.md
       - Setup: developer_guide/setup.md

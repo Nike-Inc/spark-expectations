@@ -904,6 +904,116 @@ def test_agg_query_dq_detailed_result_ansi_mode(
         spark.conf.set("spark.sql.ansi.enabled", original_ansi)
 
 
+def test_query_dq_detailed_result_ansi_mode(
+    _fixture_df, _fixture_query_dq_rule, _fixture_agg_dq_detailed_expected_result, _fixture_mock_context
+):
+    """query_dq rules must produce correct results with ANSI mode enabled."""
+    original_ansi = spark.conf.get("spark.sql.ansi.enabled", "false")
+    try:
+        spark.conf.set("spark.sql.ansi.enabled", "true")
+
+        _fixture_df.createOrReplaceTempView("query_test_table")
+        _fixture_df.createOrReplaceTempView("query_test_table_target")
+        result_out, result_df = SparkExpectationsActions.agg_query_dq_detailed_result(
+            _fixture_mock_context, _fixture_query_dq_rule, _fixture_df, []
+        )
+
+        assert result_df[1] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("product_id")
+        assert result_df[3] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("rule_type")
+        assert result_df[9] == _fixture_agg_dq_detailed_expected_result.get("result_query_dq").get("status")
+    finally:
+        spark.conf.set("spark.sql.ansi.enabled", original_ansi)
+
+
+def test_row_dq_rules_ansi_mode(
+    _fixture_df, _fixture_expectations, _fixture_row_dq_expected_result, _fixture_mock_context
+):
+    """Row-level DQ rules should produce identical results with ANSI mode on."""
+    original_ansi = spark.conf.get("spark.sql.ansi.enabled", "false")
+    try:
+        spark.conf.set("spark.sql.ansi.enabled", "true")
+
+        result_df = SparkExpectationsActions.run_dq_rules(
+            _fixture_mock_context, _fixture_df, _fixture_expectations, "row_dq"
+        )
+
+        assert len(result_df.columns) == 6
+
+        for row in result_df.collect():
+            row_id = row["row_id"]
+            assert row.row_dq_col1_gt_eq_1 == _fixture_row_dq_expected_result.get("result")[row_id].get(
+                "row_dq_col1_gt_eq_1"
+            )
+            assert row.row_dq_col1_gt_eq_2 == _fixture_row_dq_expected_result.get("result")[row_id].get(
+                "row_dq_col1_gt_eq_2"
+            )
+            assert row.row_dq_col1_gt_eq_3 == _fixture_row_dq_expected_result.get("result")[row_id].get(
+                "row_dq_col1_gt_eq_3"
+            )
+    finally:
+        spark.conf.set("spark.sql.ansi.enabled", original_ansi)
+
+
+def test_agg_dq_range_rule_ansi_mode(
+    _fixture_df, _fixture_expectations, _fixture_agg_dq_expected_result, _fixture_mock_context
+):
+    """Aggregation DQ rules with range expressions should work with ANSI mode."""
+    original_ansi = spark.conf.get("spark.sql.ansi.enabled", "false")
+    try:
+        spark.conf.set("spark.sql.ansi.enabled", "true")
+
+        result_df = SparkExpectationsActions.run_dq_rules(
+            _fixture_mock_context,
+            _fixture_df,
+            _fixture_expectations,
+            "agg_dq",
+            True,
+            False,
+        )
+
+        assert len(result_df.columns) == 1
+        result_df.show(truncate=False)
+    finally:
+        spark.conf.set("spark.sql.ansi.enabled", original_ansi)
+
+
+def test_agg_dq_with_try_cast_expression_ansi_mode(_fixture_mock_context):
+    """try_cast expressions used in custom expectations should work under ANSI."""
+    original_ansi = spark.conf.get("spark.sql.ansi.enabled", "false")
+    try:
+        spark.conf.set("spark.sql.ansi.enabled", "true")
+
+        df = spark.createDataFrame(
+            [
+                {"row_id": 0, "amount": "100"},
+                {"row_id": 1, "amount": "200"},
+                {"row_id": 2, "amount": ""},
+                {"row_id": 3, "amount": None},
+            ]
+        )
+
+        dq_rule = {
+            "rule_type": "agg_dq",
+            "rule": "sum_amount_gt_zero",
+            "column_name": "amount",
+            "expectation": "sum(try_cast(amount as int))>=0",
+            "action_if_failed": "ignore",
+            "table_name": "test_table",
+            "tag": "validity",
+            "enable_for_source_dq_validation": True,
+            "description": "sum of amount should be non-negative",
+            "product_id": "product_1",
+        }
+
+        result_out, result_df = SparkExpectationsActions.agg_query_dq_detailed_result(
+            _fixture_mock_context, dq_rule, df, []
+        )
+        assert result_df[9] == "pass"
+        assert result_df[10] == 300
+    finally:
+        spark.conf.set("spark.sql.ansi.enabled", original_ansi)
+
+
 def test_agg_query_dq_detailed_result_with_querdq(
     _fixture_df, _fixture_query_dq_rule, _fixture_agg_dq_detailed_expected_result, _fixture_mock_context
 ):

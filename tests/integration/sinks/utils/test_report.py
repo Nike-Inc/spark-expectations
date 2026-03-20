@@ -798,3 +798,115 @@ def test_report_string_typed_columns_ansi_mode():
         assert non_null_rows.filter(non_null_rows["success_percentage"] < 0).count() == 0
     finally:
         spark.conf.set("spark.sql.ansi.enabled", original_ansi)
+
+
+def test_report_with_malformed_numeric_strings_ansi_mode():
+    """Non-numeric strings in row-count columns must not raise
+    CAST_INVALID_INPUT when ANSI mode is enabled. try_cast should
+    produce NULL instead of an error."""
+    original_ansi = spark.conf.get("spark.sql.ansi.enabled", "false")
+    try:
+        spark.conf.set("spark.sql.ansi.enabled", "true")
+
+        malformed_row = (
+            "run_ansi_malformed_test",
+            "your_product",
+            "dq_spark_dev.customer_order",
+            "query_dq",
+            "ansi_malformed_check",
+            "some_col",
+            "SELECT 1",
+            "validity",
+            "desc",
+            "fail",
+            "0",
+            "0",
+            "N/A",      # source_dq_actual_row_count = non-numeric
+            "0",
+            "abc",      # source_dq_row_count = non-numeric
+            "2025-02-11 00:07:39",
+            "2025-02-11 00:07:40",
+            None, None, None, None, None, None, None, None, None,
+            "2025-02-10",
+            "2025-02-11 00:07:46",
+            "{'job': 'test_job', 'Region': 'NA', 'Snapshot': '2024-04-15', 'data_object_name': 'customer_order'}",
+        )
+
+        df_detailed = _build_string_typed_detailed_df(extra_rows=[malformed_row])
+        df_custom = _build_custom_detailed_df()
+
+        test_result, test_df = _run_report(df_detailed, df_custom)
+        assert test_result is True
+
+        malformed_run = test_df.filter(test_df["run_id"] == "run_ansi_malformed_test")
+        assert malformed_run.count() == 1
+    finally:
+        spark.conf.set("spark.sql.ansi.enabled", original_ansi)
+
+
+def test_report_with_null_row_counts_ansi_mode():
+    """NULL row-count columns should produce a valid report row
+    when ANSI mode is enabled."""
+    original_ansi = spark.conf.get("spark.sql.ansi.enabled", "false")
+    try:
+        spark.conf.set("spark.sql.ansi.enabled", "true")
+
+        null_row = (
+            "run_ansi_null_test",
+            "your_product",
+            "dq_spark_dev.customer_order",
+            "query_dq",
+            "ansi_null_check",
+            "some_col",
+            "SELECT 1",
+            "validity",
+            "desc",
+            "pass",
+            "0",
+            "0",
+            None,       # source_dq_actual_row_count = NULL
+            "0",
+            None,       # source_dq_row_count = NULL
+            "2025-02-11 00:07:39",
+            "2025-02-11 00:07:40",
+            None, None, None, None, None, None, None, None, None,
+            "2025-02-10",
+            "2025-02-11 00:07:46",
+            "{'job': 'test_job', 'Region': 'NA', 'Snapshot': '2024-04-15', 'data_object_name': 'customer_order'}",
+        )
+
+        df_detailed = _build_string_typed_detailed_df(extra_rows=[null_row])
+        df_custom = _build_custom_detailed_df()
+
+        test_result, test_df = _run_report(df_detailed, df_custom)
+        assert test_result is True
+
+        null_run = test_df.filter(test_df["run_id"] == "run_ansi_null_test")
+        assert null_run.count() == 1
+    finally:
+        spark.conf.set("spark.sql.ansi.enabled", original_ansi)
+
+
+def test_report_failed_records_calculation_ansi_mode():
+    """Verify failed_records = total - valid is computed correctly with
+    ANSI mode enabled and numeric string values."""
+    original_ansi = spark.conf.get("spark.sql.ansi.enabled", "false")
+    try:
+        spark.conf.set("spark.sql.ansi.enabled", "true")
+
+        df_detailed = _build_string_typed_detailed_df()
+        df_custom = _build_custom_detailed_df()
+
+        test_result, test_df = _run_report(df_detailed, df_custom)
+        assert test_result is True
+
+        from pyspark.sql.functions import col
+        rows_with_failed = test_df.filter(
+            col("failed_records").isNotNull()
+        ).collect()
+        for row in rows_with_failed:
+            assert row["failed_records"] >= 0, (
+                f"failed_records should be non-negative, got {row['failed_records']}"
+            )
+    finally:
+        spark.conf.set("spark.sql.ansi.enabled", original_ansi)

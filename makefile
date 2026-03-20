@@ -113,4 +113,12 @@ test: kafka-cluster-start
 test-arg:
 	@hatch -e $(DEFAULT_HATCH_ENV) run pytest -ra -vv $(TEST)
 
-.PHONY: black-check build check cov coverage deploy-docs deploy_env_setup dev docs env-remove-all env-remove-default fmt generate-mailserver-certs get-version kafka-cluster-start kafka-cluster-stop local-kafka-cluster-start local-se-server-start local-se-server-stop mypy python-versions set-git-remote test test-arg
+# Run ANSI mode tests (TLE-1230) - Context, Report, Actions
+test-ansi:
+	@SPARKEXPECTATIONS_ENV=local hatch -e $(DEFAULT_HATCH_ENV) run pytest -k "ansi" -v
+
+# Run integration tests
+test-integration:
+	@SPARKEXPECTATIONS_ENV=local hatch -e $(DEFAULT_HATCH_ENV) run pytest tests/integration/ -v
+
+.PHONY: black-check build check cov coverage deploy-docs deploy_env_setup dev docs env-remove-all env-remove-default fmt generate-mailserver-certs get-version kafka-cluster-start kafka-cluster-stop local-kafka-cluster-start local-se-server-start local-se-server-stop mypy python-versions set-git-remote test test-ansi test-arg test-integration

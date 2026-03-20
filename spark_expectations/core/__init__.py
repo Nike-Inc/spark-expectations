@@ -111,9 +111,15 @@ def get_spark_session() -> SparkSession:
     if (os.environ.get("UNIT_TESTING_ENV") == "spark_expectations_unit_testing_on_github_actions") or (
         os.environ.get("SPARKEXPECTATIONS_ENV") == "local"
     ):
+        # Default: Delta 4.0 for Spark 4.0 (Scala 2.13). Override with SPARKEXPECTATIONS_DELTA_PACKAGE
+        # for Spark 3.x (Scala 2.12), e.g. "io.delta:delta-spark_2.12:3.0.0" to fix
+        # ClassNotFoundException: scala.collection.SeqOps
+        delta_package = os.environ.get(
+            "SPARKEXPECTATIONS_DELTA_PACKAGE", "io.delta:delta-spark_2.13:4.0.0"
+        )
         builder = (
             SparkSession.builder.config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-            .config("spark.jars.packages", "io.delta:delta-spark_2.13:4.0.0")
+            .config("spark.jars.packages", delta_package)
             .config(
                 "spark.sql.catalog.spark_catalog",
                 "org.apache.spark.sql.delta.catalog.DeltaCatalog",
