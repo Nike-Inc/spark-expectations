@@ -21,6 +21,7 @@ from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.exceptions import (
     SparkExpectationsMiscException,
     SparkExpectOrFailException,
+    raise_if_ansi_exception
 )
 from spark_expectations.utils.udf import get_actions_list, remove_empty_maps
 
@@ -174,8 +175,11 @@ class SparkExpectationsActions:
                         _agg_dq_expectation_aggstring = _agg_dq_expectation_match.group(1)
                         _agg_dq_expectation_expr = _agg_dq_expectation_match.group(2)
                         _agg_dq_expectation_cond_expr = expr(_agg_dq_expectation_aggstring)
-
-                        _agg_dq_actual_count_value_raw = df.agg(_agg_dq_expectation_cond_expr).collect()[0][0]
+                        try:
+                            _agg_dq_actual_count_value_raw = df.agg(_agg_dq_expectation_cond_expr).collect()[0][0]
+                        except Exception as e:
+                            raise_if_ansi_exception(e, _dq_rule["rule"], _dq_rule["expectation"])
+                            raise
 
                         # Handle NoneType (nulls)
                         if _agg_dq_actual_count_value_raw is None:
@@ -252,7 +256,11 @@ class SparkExpectationsActions:
 
                         _agg_dq_expectation_cond_expr = expr(_agg_dq_expectation_aggstring)
 
-                        _agg_dq_actual_count_value = int(df.agg(_agg_dq_expectation_cond_expr).collect()[0][0])
+                        try:
+                            _agg_dq_actual_count_value = int(df.agg(_agg_dq_expectation_cond_expr).collect()[0][0])
+                        except Exception as e:
+                            raise_if_ansi_exception(e, _dq_rule["rule"], _agg_dq_expectation_aggstring)
+                            raise
 
                         _agg_dq_expression_str_lower = (
                             str(_agg_dq_actual_count_value) + _agg_dq_expectation_expr_lowerbound
@@ -319,7 +327,11 @@ class SparkExpectationsActions:
                     )
                 ):
                     for _key, _querydq_query in sub_key_value.items():
-                        _querydq_df = _context.spark.sql(_dq_rule["expectation" + "_" + _key])
+                        try:
+                            _querydq_df = _context.spark.sql(_dq_rule["expectation" + "_" + _key])
+                        except Exception as e:
+                            raise_if_ansi_exception(e, _dq_rule["rule"], _dq_rule["expectation" + "_" + _key])
+                            raise
                         querydq_output.append(
                             (
                                 _context.get_run_id,
@@ -357,7 +369,15 @@ class SparkExpectationsActions:
                         def execute_sql_and_get_result(
                             _se_context: SparkExpectationsContext, query: str
                         ) -> Union[int, float, str]:
-                            return _se_context.spark.sql(f"SELECT ({query}) AS OUTPUT").collect()[0][0] if query else 0
+                            if query:
+                                try:
+                                    result = _se_context.spark.sql(f"SELECT ({query}) AS OUTPUT").collect()[0][0]
+                                except Exception as e:
+                                    raise_if_ansi_exception(e, _dq_rule["rule"], f"SELECT ({query}) AS OUTPUT")
+                                    raise
+                            else:
+                                result = 0
+                            return result
 
                         # function to get the query outputs
                         _querydq_source_query_output = execute_sql_and_get_result(_context, match.group(1))
@@ -380,8 +400,12 @@ class SparkExpectationsActions:
 
                 _querydq_status_query = "SELECT (" + str(_dq_rule["expectation"]) + ") AS OUTPUT"
 
-                _query_dq_result = int(_context.spark.sql(_querydq_status_query).collect()[0][0])
-
+                try:
+                    _query_dq_result = int(_context.spark.sql(_querydq_status_query).collect()[0][0])
+                except Exception as e:
+                    raise_if_ansi_exception(e, _dq_rule["rule"], _querydq_status_query)
+                    raise
+                
                 status = "pass" if _query_dq_result else "fail"
 
                 if _source_dq_status:
