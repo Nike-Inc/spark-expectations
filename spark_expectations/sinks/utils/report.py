@@ -204,11 +204,11 @@ class SparkExpectationsReport:
                                 100 
                                 * least(
                                         abs(valid_records_only_nbr),
-                                        abs(total_records_only_nbr),
+                                        abs(total_records_only_nbr)
                                     ) / nullif(
                                             greatest(
                                                 abs(valid_records_only_nbr),
-                                                abs(total_records_only_nbr),
+                                                abs(total_records_only_nbr)
                                             ),
                                             0
                                         )
