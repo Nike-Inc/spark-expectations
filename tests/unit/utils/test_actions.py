@@ -186,6 +186,25 @@ def test_agg_query_dq_detailed_result_ansi_expection_comparison(_fixture_agg_dq_
 
     with pytest.raises(SparkExpectationsMiscException):
         SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+    
+def test_agg_query_dq_detailed_result_not_ansi_expection_comparison(_fixture_agg_dq_rule):
+    # testing the following conditions in agg_query_dq_detailed_result:
+    #   _dq_rule["rule_type"] == _context.get_agg_dq_rule_type_name
+    #   _context.get_agg_dq_detailed_stats_status is True
+    #   if not (">" in _dq_rule["expectation"] and "<" in _dq_rule["expectation"])
+    #   if re.match(_re_compile, _dq_rule["expectation"])
+
+    ctx = Mock(spec=SparkExpectationsContext)
+    ctx.get_agg_dq_rule_type_name = "agg_dq"
+    ctx.get_agg_dq_detailed_stats_status = True
+
+    mock_df = MagicMock()
+    mock_agg_result = MagicMock()
+    mock_df.agg.return_value = mock_agg_result
+    mock_agg_result.collect.side_effect = Exception("Some other error message not having to do with ANSI casting.")
+
+    with pytest.raises(SparkExpectationsMiscException):
+        SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
 
 def test_agg_query_dq_detailed_result_ansi_expection_range(_fixture_agg_dq_rule):
     # testing the following conditions in agg_query_dq_detailed_result:
@@ -208,6 +227,27 @@ def test_agg_query_dq_detailed_result_ansi_expection_range(_fixture_agg_dq_rule)
         " to \"BIGINT\" because it is malformed. Correct the value as per the"
         " syntax, or change its target type. Use `try_cast` to tolerate malformed"
         " input and return NULL instead.")
+
+    with pytest.raises(SparkExpectationsMiscException):
+        SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+    
+def test_agg_query_dq_detailed_result_not_ansi_expection_range(_fixture_agg_dq_rule):
+    # testing the following conditions in agg_query_dq_detailed_result:
+    #   _dq_rule["rule_type"] == _context.get_agg_dq_rule_type_name #("agg_dq")
+    #   _context.get_agg_dq_detailed_stats_status is True
+    #   if (">" in _dq_rule["expectation"] and "<" in _dq_rule["expectation"])
+    #   if re.match(_re_compile, _dq_rule["expectation"])
+
+    ctx = Mock(spec=SparkExpectationsContext)
+    ctx.get_agg_dq_rule_type_name = "agg_dq"
+    ctx.get_agg_dq_detailed_stats_status = True
+
+    _fixture_agg_dq_rule["expectation"] = "sum(col1)>0 and sum(col1)<10"
+
+    mock_df = MagicMock()
+    mock_agg_result = MagicMock()
+    mock_df.agg.return_value = mock_agg_result
+    mock_agg_result.collect.side_effect = Exception("Some other error message not having to do with ANSI casting.")
 
     with pytest.raises(SparkExpectationsMiscException):
         SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
