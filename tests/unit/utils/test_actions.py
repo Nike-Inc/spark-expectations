@@ -317,9 +317,6 @@ def test_agg_query_dq_detailed_result_ansi_sql_query(_fixture_agg_dq_rule):
     #   SparkExpectationsActions.match_parentheses(_dq_rule["expectation"])
     #   expectation must match pattern = rf"({left_expr})\s*({operator})\s*({right_value}|({right_expr}))|({left_expr})"
 
-    actions = Mock(spec=SparkExpectationsActions)
-    actions.match_parentheses = True
-
     ctx = Mock(spec=SparkExpectationsContext)
     ctx.spark = Mock()
     ctx.get_query_dq_rule_type_name = "query_dq"
@@ -348,9 +345,6 @@ def test_agg_query_dq_detailed_result_not_ansi_sql_query(_fixture_agg_dq_rule):
     #   SparkExpectationsActions.match_parentheses(_dq_rule["expectation"])
     #   expectation must match pattern = rf"({left_expr})\s*({operator})\s*({right_value}|({right_expr}))|({left_expr})"
 
-    actions = Mock(spec=SparkExpectationsActions)
-    actions.match_parentheses = True
-
     ctx = Mock(spec=SparkExpectationsContext)
     ctx.spark = Mock()
     ctx.get_query_dq_rule_type_name = "query_dq"
@@ -369,13 +363,66 @@ def test_agg_query_dq_detailed_result_not_ansi_sql_query(_fixture_agg_dq_rule):
     with pytest.raises(SparkExpectationsMiscException):
         SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
 
+###########
+def test_agg_query_dq_detailed_result_ansi_sql_compare(_fixture_agg_dq_rule):
+    # testing the following conditions in agg_query_dq_detailed_result:
+    #   SparkExpectationsActions.match_parentheses(_dq_rule["expectation"])
+    #   expectation must match pattern = rf"({left_expr})\s*({operator})\s*({right_value}|({right_expr}))|({left_expr})"
+
+
+    ctx = Mock(spec=SparkExpectationsContext)
+    ctx.spark = Mock()
+    ctx.get_query_dq_rule_type_name = "query_dq"
+    ctx.get_query_dq_detailed_stats_status = True
+
+    ctx.spark.sql.side_effect = Exception(
+        "[CAST_INVALID_INPUT] The value '' of the type \"STRING\" cannot be cast"
+        " to \"BIGINT\" because it is malformed. Correct the value as per the"
+        " syntax, or change its target type. Use `try_cast` to tolerate malformed"
+        " input and return NULL instead.")
+
+    _fixture_agg_dq_rule["rule_type"] = "query_dq"
+    _fixture_agg_dq_rule["expectation"] = "(\"SELECT COUNT(*) FROM order_source\") >= 5"
+    _fixture_agg_dq_rule["enable_querydq_custom_output"] = False
+
+    mock_df = MagicMock()
+    mock_agg_result = MagicMock()
+    mock_df.agg.return_value = mock_agg_result
+
+    with pytest.raises(SparkExpectationsMiscException):
+        SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+
+
+def test_agg_query_dq_detailed_result_not_ansi_sql_compare(_fixture_agg_dq_rule):
+    # testing the following conditions in agg_query_dq_detailed_result:
+    #   SparkExpectationsActions.match_parentheses(_dq_rule["expectation"])
+    #   expectation must match pattern = rf"({left_expr})\s*({operator})\s*({right_value}|({right_expr}))|({left_expr})"
+
+
+    ctx = Mock(spec=SparkExpectationsContext)
+    ctx.spark = Mock()
+    ctx.get_query_dq_rule_type_name = "query_dq"
+    ctx.get_query_dq_detailed_stats_status = True
+
+    ctx.spark.sql.side_effect = Exception("Some other error message not having to do with ANSI casting.")
+
+    _fixture_agg_dq_rule["rule_type"] = "query_dq"
+    _fixture_agg_dq_rule["expectation"] = "(\"SELECT COUNT(*) FROM order_source\") >= 5"
+    _fixture_agg_dq_rule["enable_querydq_custom_output"] = False
+
+    mock_df = MagicMock()
+    mock_agg_result = MagicMock()
+    mock_df.agg.return_value = mock_agg_result
+
+    with pytest.raises(SparkExpectationsMiscException):
+        SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+#############
+
 
 def test_agg_query_dq_detailed_result_ansi_sql_query_post(_fixture_agg_dq_rule):
     # testing the following conditions in agg_query_dq_detailed_result:
     #   SparkExpectationsActions.match_parentheses(_dq_rule["expectation"])
 
-    actions = Mock(spec=SparkExpectationsActions)
-    actions.match_parentheses = True
 
     ctx = Mock(spec=SparkExpectationsContext)
     ctx.spark = Mock()
@@ -406,8 +453,6 @@ def test_agg_query_dq_detailed_result_not_ansi_sql_query_post(_fixture_agg_dq_ru
     # testing the following conditions in agg_query_dq_detailed_result:
     #   SparkExpectationsActions.match_parentheses(_dq_rule["expectation"])
 
-    actions = Mock(spec=SparkExpectationsActions)
-    actions.match_parentheses = True
 
     ctx = Mock(spec=SparkExpectationsContext)
     ctx.spark = Mock()
