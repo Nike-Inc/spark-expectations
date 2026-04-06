@@ -382,11 +382,7 @@ def test_agg_query_dq_detailed_result_ansi_sql_query_post(_fixture_agg_dq_rule):
     ctx.get_query_dq_rule_type_name = "query_dq"
     ctx.get_query_dq_detailed_stats_status = True
 
-
-    first_result = MagicMock()
-    first_result.collect.return_value = [[42]]
     ctx.spark.sql.side_effect = [
-        first_result,
         Exception(
         "[CAST_INVALID_INPUT] The value '' of the type \"STRING\" cannot be cast"
         " to \"BIGINT\" because it is malformed. Correct the value as per the"
@@ -418,11 +414,7 @@ def test_agg_query_dq_detailed_result_not_ansi_sql_query_post(_fixture_agg_dq_ru
     ctx.get_query_dq_rule_type_name = "query_dq"
     ctx.get_query_dq_detailed_stats_status = True
 
-
-    first_result = MagicMock()
-    first_result.collect.return_value = [[42]]
     ctx.spark.sql.side_effect = [
-        first_result,
         Exception("Some other error message not having to do with ANSI casting."),
     ]
 
