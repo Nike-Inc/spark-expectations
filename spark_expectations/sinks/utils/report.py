@@ -14,17 +14,15 @@ from pyspark.sql.functions import (
     size,
     concat_ws,
     abs,
-    least,
-    greatest,
     get_json_object,
     lit,
-    trim,
 )
-from pyspark.sql.types import DoubleType, StringType, DecimalType, TimestampType
+from pyspark.sql.types import DoubleType, StringType, TimestampType
 
 from spark_expectations import _log
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
+from spark_expectations.utils.udf import safe_cast
 
 
 @dataclass
@@ -176,7 +174,7 @@ class SparkExpectationsReport:
                 .withColumn(
                     "total_records_only_nbr",
                     when(col("_total_records_str") == "", lit(None).cast("bigint"))
-                    .otherwise(col("_total_records_str").cast("bigint")),
+                    .otherwise(safe_cast(self.spark, "_total_records_str", "bigint")),
                 )
                 .withColumn(
                     "_valid_records_str",
@@ -185,7 +183,7 @@ class SparkExpectationsReport:
                 .withColumn(
                     "valid_records_only_nbr",
                     when(col("_valid_records_str") == "", lit(None).cast("bigint"))
-                    .otherwise(col("_valid_records_str").cast("bigint")),
+                    .otherwise(safe_cast(self.spark, "_valid_records_str", "bigint")),
                 )
                 .drop("_total_records_str", "_valid_records_str")
                 .withColumn(
@@ -195,26 +193,29 @@ class SparkExpectationsReport:
                         lit(100),
                     )
                     .when(
-                        col("total_records_only_nbr").isNull() & col("valid_records_only_nbr").isNull(),
-                        lit(100),
-                    )
-                    .when(
                         col("total_records_only_nbr").isNotNull() & col("valid_records_only_nbr").isNull(),
                         lit(0),
                     )
                     .otherwise(
                         coalesce(
-                            (
-                                100
+                            safe_cast(
+                                self.spark,
+                                """
+                                100 
                                 * least(
-                                    abs(trim(col("valid_records_only_nbr"))),
-                                    abs(trim(col("total_records_only_nbr"))),
-                                )
-                                / greatest(
-                                    abs(trim(col("valid_records_only_nbr"))),
-                                    abs(trim(col("total_records_only_nbr"))),
-                                )
-                            ).cast(DecimalType(20, 2)),
+                                        abs(valid_records_only_nbr),
+                                        abs(total_records_only_nbr)
+                                    ) / nullif(
+                                            greatest(
+                                                abs(valid_records_only_nbr),
+                                                abs(total_records_only_nbr)
+                                            ),
+                                            0
+                                        )
+                                """,
+                                "decimal(20, 2)"
+                            )
+                            ,
                             lit(0),
                         )
                     ),
@@ -222,10 +223,6 @@ class SparkExpectationsReport:
                 .withColumn(
                     "failed_rec_perc_variance",
                     when(
-                        col("total_records_only_nbr").isNull() & col("valid_records_only_nbr").isNull(),
-                        lit(0),
-                    )
-                    .when(
                         col("total_records_only_nbr").isNull() & col("valid_records_only_nbr").isNull(),
                         lit(0),
                     )
@@ -255,11 +252,11 @@ class SparkExpectationsReport:
                     abs(
                         coalesce(
                             coalesce(
-                                trim(col("total_records_only_nbr")).cast("bigint"),
+                                col("total_records_only_nbr"),
                                 lit(0),
                             )
                             - coalesce(
-                                trim(col("valid_records_only_nbr")).cast("bigint"),
+                                col("valid_records_only_nbr"),
                                 lit(0),
                             ),
                             lit(0),
@@ -333,7 +330,7 @@ class SparkExpectationsReport:
                 .withColumnRenamed("source_dq_error_row_count", "failed_records")
                 .withColumn(
                     "success_percentage",
-                    (col("valid_records").cast("double") / col("total_records").cast("double")) * 100,
+                    (safe_cast(self.spark, "valid_records", "double") / safe_cast(self.spark, "total_records", "double")) * 100,
                 )
             )
 

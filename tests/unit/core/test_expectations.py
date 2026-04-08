@@ -3,7 +3,7 @@ Unit tests for spark_expectations.core.expectations module.
 """
 import pytest
 
-from spark_expectations.core.exceptions import SparkExpectationsUserInputOrConfigInvalidException
+from spark_expectations.core.exceptions import SparkExpectationsMiscException, SparkExpectationsUserInputOrConfigInvalidException, raise_if_ansi_exception
 from spark_expectations.core.expectations import SparkExpectations, WrappedDataFrameWriter
 
 
@@ -472,3 +472,30 @@ class TestAddHashColumns:
         assert row["id_hash"] is not None
         assert len(row["id_hash"]) == 32
         assert all(c in "0123456789abcdef" for c in row["id_hash"])
+
+
+class TestRaiseIfAnsiException:
+    """Test cases for SparkExpectations exception raise_if_ansi_exception method."""
+
+    def test_raise_if_ansi_exception(self):
+        ansi_exception = Exception("SparkExpectationsMiscException: error occurred while processing spark expectations"
+        " error occurred while executing func_process error occurred while running expectations error occurred"
+        " while running agg_query_dq_detailed_result [CAST_INVALID_INPUT] The value '' of the type \"STRING\""
+        " cannot be cast to \"BIGINT\" because it is malformed. Correct the value as per the syntax, or change its"
+        " target type. Use `try_cast` to tolerate malformed input and return NULL instead.")
+
+        rule_name = "Column A Greater than Column B"
+        rule_expectation = "[col_A] > [col_B]"
+
+        with pytest.raises(SparkExpectationsMiscException) as exception_info:
+            raise_if_ansi_exception(ansi_exception, rule_name, rule_expectation)
+        
+        assert f"{rule_name}" in str(exception_info.value)
+        assert f"{rule_expectation}" in str(exception_info.value)
+
+    def test_no_raise_ansi_exception(self):
+        non_ansi_exception = Exception("Exception message about some things that are not related to ANSI casting.")
+
+        result = raise_if_ansi_exception(non_ansi_exception, "Foo", "Bar")
+
+        assert result is None

@@ -106,6 +106,7 @@ ADD CONSTRAINT action CHECK (
 **Tip:**  
 - Match your expectation format to the rule type for correct validation.
 - Use `row_dq` for per-row checks, `agg_dq` for summary statistics, and `query_dq` for advanced SQL-based checks.
+- If running in Databricks serverless compute, expectations need to be ANSI compliant. See the ANSI Mode section of the [Serverless doc](serverless.md) for details.
 
 
 Below are the details and examples for each rule type:

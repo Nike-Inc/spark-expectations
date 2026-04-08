@@ -162,3 +162,208 @@ def test_multi_decorator_default_updates():
     reader.get_rules_from_df(rules_df=_mock_rules_df_empty(), target_table="db.table_b")
     assert ctx.get_error_table_name == "db.table_b_error"  # Not "db.table_a_error"
     assert ctx.get_error_table_name_user_specified is False
+
+
+def test_agg_query_dq_detailed_result_agg_dq_comparison_ansi_exception(_fixture_agg_dq_rule):
+    ctx = Mock(spec=SparkExpectationsContext)
+    ctx.get_agg_dq_rule_type_name = "agg_dq"
+    ctx.get_agg_dq_detailed_stats_status = True
+
+    mock_df = MagicMock()
+    mock_agg_result = MagicMock()
+    mock_df.agg.return_value = mock_agg_result
+    mock_agg_result.collect.side_effect = Exception(
+        "[CAST_INVALID_INPUT] The value '' of the type \"STRING\" cannot be cast"
+        " to \"BIGINT\" because it is malformed. Correct the value as per the"
+        " syntax, or change its target type. Use `try_cast` to tolerate malformed"
+        " input and return NULL instead.")
+
+    with pytest.raises(SparkExpectationsMiscException):
+        SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+
+
+def test_agg_query_dq_detailed_result_agg_dq_comparison_generic_exception(_fixture_agg_dq_rule):
+    ctx = Mock(spec=SparkExpectationsContext)
+    ctx.get_agg_dq_rule_type_name = "agg_dq"
+    ctx.get_agg_dq_detailed_stats_status = True
+
+    mock_df = MagicMock()
+    mock_agg_result = MagicMock()
+    mock_df.agg.return_value = mock_agg_result
+    mock_agg_result.collect.side_effect = Exception("Some other error message not having to do with ANSI casting.")
+
+    with pytest.raises(SparkExpectationsMiscException):
+        SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+
+
+def test_agg_query_dq_detailed_result_agg_dq_range_ansi_exception(_fixture_agg_dq_rule):
+    ctx = Mock(spec=SparkExpectationsContext)
+    ctx.get_agg_dq_rule_type_name = "agg_dq"
+    ctx.get_agg_dq_detailed_stats_status = True
+
+    _fixture_agg_dq_rule["expectation"] = "sum(col1)>0 and sum(col1)<10"
+
+    mock_df = MagicMock()
+    mock_agg_result = MagicMock()
+    mock_df.agg.return_value = mock_agg_result
+    mock_agg_result.collect.side_effect = Exception(
+        "[CAST_INVALID_INPUT] The value '' of the type \"STRING\" cannot be cast"
+        " to \"BIGINT\" because it is malformed. Correct the value as per the"
+        " syntax, or change its target type. Use `try_cast` to tolerate malformed"
+        " input and return NULL instead.")
+
+    with pytest.raises(SparkExpectationsMiscException):
+        SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+
+
+def test_agg_query_dq_detailed_result_agg_dq_range_generic_exception(_fixture_agg_dq_rule):
+    ctx = Mock(spec=SparkExpectationsContext)
+    ctx.get_agg_dq_rule_type_name = "agg_dq"
+    ctx.get_agg_dq_detailed_stats_status = True
+
+    _fixture_agg_dq_rule["expectation"] = "sum(col1)>0 and sum(col1)<10"
+
+    mock_df = MagicMock()
+    mock_agg_result = MagicMock()
+    mock_df.agg.return_value = mock_agg_result
+    mock_agg_result.collect.side_effect = Exception("Some other error message not having to do with ANSI casting.")
+
+    with pytest.raises(SparkExpectationsMiscException):
+        SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+
+
+def test_agg_query_dq_detailed_result_query_dq_custom_sql_ansi_exception(_fixture_agg_dq_rule):
+    ctx = Mock(spec=SparkExpectationsContext)
+    ctx.spark = Mock()
+    ctx.get_query_dq_rule_type_name = "query_dq"
+    ctx.get_query_dq_detailed_stats_status = True
+    ctx.get_querydq_secondary_queries = {
+        "product_1|test_table|col1_sum_gt_eq_6": {"source_f1": "some_query"}
+    }
+    ctx.spark.sql.side_effect = Exception(
+        "[CAST_INVALID_INPUT] The value '' of the type \"STRING\" cannot be cast"
+        " to \"BIGINT\" because it is malformed. Correct the value as per the"
+        " syntax, or change its target type. Use `try_cast` to tolerate malformed"
+        " input and return NULL instead.")
+
+    _fixture_agg_dq_rule["rule_type"] = "query_dq"
+    _fixture_agg_dq_rule["enable_querydq_custom_output"] = True
+    _fixture_agg_dq_rule["expectation_source_f1"] = "SELECT * FROM table"
+
+    mock_df = MagicMock()
+    mock_agg_result = MagicMock()
+    mock_df.agg.return_value = mock_agg_result
+
+    with pytest.raises(SparkExpectationsMiscException):
+        SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+
+
+def test_agg_query_dq_detailed_result_query_dq_custom_sql_generic_exception(_fixture_agg_dq_rule):
+    ctx = Mock(spec=SparkExpectationsContext)
+    ctx.spark = Mock()
+    ctx.get_query_dq_rule_type_name = "query_dq"
+    ctx.get_query_dq_detailed_stats_status = True
+    ctx.get_querydq_secondary_queries = {
+        "product_1|test_table|col1_sum_gt_eq_6": {"source_f1": "some_query"}
+    }
+    ctx.spark.sql.side_effect = Exception("Some other error message not having to do with ANSI casting.")
+
+    _fixture_agg_dq_rule["rule_type"] = "query_dq"
+    _fixture_agg_dq_rule["enable_querydq_custom_output"] = True
+    _fixture_agg_dq_rule["expectation_source_f1"] = "SELECT * FROM table"
+
+    mock_df = MagicMock()
+    mock_agg_result = MagicMock()
+    mock_df.agg.return_value = mock_agg_result
+
+    with pytest.raises(SparkExpectationsMiscException):
+        SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+
+
+def test_agg_query_dq_detailed_result_query_dq_sql_query_ansi_exception(_fixture_agg_dq_rule):
+    ctx = Mock(spec=SparkExpectationsContext)
+    ctx.spark = Mock()
+    ctx.get_query_dq_rule_type_name = "query_dq"
+    ctx.get_query_dq_detailed_stats_status = True
+
+    ctx.spark.sql.side_effect = Exception(
+        "[CAST_INVALID_INPUT] The value '' of the type \"STRING\" cannot be cast"
+        " to \"BIGINT\" because it is malformed. Correct the value as per the"
+        " syntax, or change its target type. Use `try_cast` to tolerate malformed"
+        " input and return NULL instead.")
+
+    _fixture_agg_dq_rule["rule_type"] = "query_dq"
+    _fixture_agg_dq_rule["expectation"] = "(\"SELECT COUNT(*) FROM order_source WHERE order_date IS NULL\")"
+    _fixture_agg_dq_rule["enable_querydq_custom_output"] = False
+
+    mock_df = MagicMock()
+    mock_agg_result = MagicMock()
+    mock_df.agg.return_value = mock_agg_result
+
+    with pytest.raises(SparkExpectationsMiscException):
+        SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+
+
+def test_agg_query_dq_detailed_result_query_dq_sql_query_generic_exception(_fixture_agg_dq_rule):
+    ctx = Mock(spec=SparkExpectationsContext)
+    ctx.spark = Mock()
+    ctx.get_query_dq_rule_type_name = "query_dq"
+    ctx.get_query_dq_detailed_stats_status = True
+
+    ctx.spark.sql.side_effect = Exception("Some other error message not having to do with ANSI casting.")
+
+    _fixture_agg_dq_rule["rule_type"] = "query_dq"
+    _fixture_agg_dq_rule["expectation"] = "(\"SELECT COUNT(*) FROM order_source WHERE order_date IS NULL\")"
+    _fixture_agg_dq_rule["enable_querydq_custom_output"] = False
+
+    mock_df = MagicMock()
+    mock_agg_result = MagicMock()
+    mock_df.agg.return_value = mock_agg_result
+
+    with pytest.raises(SparkExpectationsMiscException):
+        SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+
+
+def test_agg_query_dq_detailed_result_query_dq_sql_compare_ansi_exception(_fixture_agg_dq_rule):
+    ctx = Mock(spec=SparkExpectationsContext)
+    ctx.spark = Mock()
+    ctx.get_query_dq_rule_type_name = "query_dq"
+    ctx.get_query_dq_detailed_stats_status = True
+
+    ctx.spark.sql.side_effect = Exception(
+        "[CAST_INVALID_INPUT] The value '' of the type \"STRING\" cannot be cast"
+        " to \"BIGINT\" because it is malformed. Correct the value as per the"
+        " syntax, or change its target type. Use `try_cast` to tolerate malformed"
+        " input and return NULL instead.")
+
+    _fixture_agg_dq_rule["rule_type"] = "query_dq"
+    _fixture_agg_dq_rule["expectation"] = "(\"SELECT COUNT(*) FROM order_source\") >= 5"
+    _fixture_agg_dq_rule["enable_querydq_custom_output"] = False
+
+    mock_df = MagicMock()
+    mock_agg_result = MagicMock()
+    mock_df.agg.return_value = mock_agg_result
+
+    with pytest.raises(SparkExpectationsMiscException):
+        SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+
+
+def test_agg_query_dq_detailed_result_query_dq_sql_compare_generic_exception(_fixture_agg_dq_rule):
+    ctx = Mock(spec=SparkExpectationsContext)
+    ctx.spark = Mock()
+    ctx.get_query_dq_rule_type_name = "query_dq"
+    ctx.get_query_dq_detailed_stats_status = True
+
+    ctx.spark.sql.side_effect = Exception("Some other error message not having to do with ANSI casting.")
+
+    _fixture_agg_dq_rule["rule_type"] = "query_dq"
+    _fixture_agg_dq_rule["expectation"] = "(\"SELECT COUNT(*) FROM order_source\") >= 5"
+    _fixture_agg_dq_rule["enable_querydq_custom_output"] = False
+
+    mock_df = MagicMock()
+    mock_agg_result = MagicMock()
+    mock_df.agg.return_value = mock_agg_result
+
+    with pytest.raises(SparkExpectationsMiscException):
+        SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+
