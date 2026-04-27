@@ -29,6 +29,8 @@ Thanks to the contributors who helped on this project apart from the authors
 * [Sai Ram Chowdary Boddu](https://www.linkedin.com/in/sai-ram-chowdary-boddu-35a75382/)
 * [Rishab Gulati](https://www.linkedin.com/in/rishab-gulati/)
 * [Amani G.](https://www.linkedin.com/in/amani-g-a974759b/)
+* [Surendra Babu Athota](https://www.linkedin.com/in/surendra-babu-athota-b27a30b/)
+
 
 # Honorary Mentions
 Thanks to the team below for invaluable insights and support throughout the initial release of this project
