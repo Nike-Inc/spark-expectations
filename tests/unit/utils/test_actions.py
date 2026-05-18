@@ -77,7 +77,7 @@ def test_agg_query_dq_detailed_result_exception():
     # faulty user input is given to test the exception functionality of the agg_query_dq_detailed_result
 
     with pytest.raises(
-        SparkExpectationsMiscException, match=r"error occurred while running agg_query_dq_detailed_result .*"
+        SparkExpectationsMiscException, match=r"error occurred while running agg_query_dq_detailed_result: .*"
     ):
         SparkExpectationsActions().agg_query_dq_detailed_result(
             _mock_object_context, "_fixture_query_dq_rule", "<df>", []

@@ -36,6 +36,7 @@ class SparkExpectationsReport:
     def dq_obs_report_data_insert(self) -> tuple[bool, DataFrame]:
         try:
             context = self._context
+            ansi_enabled = context.get_ansi_enabled
 
             print("dq_obs_report_data_insert method called stats_detailed table")
             df_stats_detailed = context.get_stats_detailed_dataframe
@@ -174,7 +175,7 @@ class SparkExpectationsReport:
                 .withColumn(
                     "total_records_only_nbr",
                     when(col("_total_records_str") == "", lit(None).cast("bigint"))
-                    .otherwise(safe_cast(self.spark, "_total_records_str", "bigint")),
+                    .otherwise(safe_cast(ansi_enabled, "_total_records_str", "bigint")),
                 )
                 .withColumn(
                     "_valid_records_str",
@@ -183,7 +184,7 @@ class SparkExpectationsReport:
                 .withColumn(
                     "valid_records_only_nbr",
                     when(col("_valid_records_str") == "", lit(None).cast("bigint"))
-                    .otherwise(safe_cast(self.spark, "_valid_records_str", "bigint")),
+                    .otherwise(safe_cast(ansi_enabled, "_valid_records_str", "bigint")),
                 )
                 .drop("_total_records_str", "_valid_records_str")
                 .withColumn(
@@ -199,7 +200,7 @@ class SparkExpectationsReport:
                     .otherwise(
                         coalesce(
                             safe_cast(
-                                self.spark,
+                                ansi_enabled,
                                 """
                                 100 
                                 * least(
@@ -330,7 +331,7 @@ class SparkExpectationsReport:
                 .withColumnRenamed("source_dq_error_row_count", "failed_records")
                 .withColumn(
                     "success_percentage",
-                    (safe_cast(self.spark, "valid_records", "double") / safe_cast(self.spark, "total_records", "double")) * 100,
+                    (safe_cast(ansi_enabled, "valid_records", "double") / safe_cast(ansi_enabled, "total_records", "double")) * 100,
                 )
             )
 

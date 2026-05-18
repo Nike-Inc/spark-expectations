@@ -136,6 +136,8 @@ class SparkExpectationsContext:
         self._debugger_mode: bool = False
         self._supported_df_query_dq: DataFrame = self.set_supported_df_query_dq()
 
+        self._ansi_enabled: Optional[bool] = None
+
         self._source_agg_dq_start_time: Optional[datetime] = None
         self._final_agg_dq_start_time: Optional[datetime] = None
         self._source_query_dq_start_time: Optional[datetime] = None
@@ -3056,3 +3058,20 @@ class SparkExpectationsContext:
             DataFrame: DataFrame containing DQ observability report data
         """
         return self._df_dq_obs_report_dataframe
+
+    @property
+    def get_ansi_enabled(self) -> bool:
+        """
+        Returns whether Spark's ANSI mode is enabled. Value is cached after the first read.
+
+        Returns:
+            bool: Returns the ANSI mode enabled boolean
+        """
+        if self._ansi_enabled is None:
+            try:
+                self._ansi_enabled = self.spark.conf.get("spark.sql.ansi.enabled", "false").lower() == "true"
+            except Exception as e:
+                # Catch-all for any unexpected errors; return safe default
+                _log.warning(f"Failed to retrieve Spark ANSI mode, setting to 'false'. Error: {e}")
+                self._ansi_enabled = False
+        return self._ansi_enabled

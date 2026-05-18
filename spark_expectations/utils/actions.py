@@ -445,7 +445,7 @@ class SparkExpectationsActions:
                 row_count,
             )
         except Exception as e:
-            raise SparkExpectationsMiscException(f"error occurred while running agg_query_dq_detailed_result {e}")
+            raise SparkExpectationsMiscException(f"error occurred while running agg_query_dq_detailed_result: {e}")
 
     @staticmethod
     def create_agg_dq_results(
@@ -479,7 +479,7 @@ class SparkExpectationsActions:
                     return meta_results
             return None
         except Exception as e:
-            raise SparkExpectationsMiscException(f"error occurred while running create agg dq results {e}")
+            raise SparkExpectationsMiscException(f"error occurred while running create_agg_dq_results: {e}")
 
     @staticmethod
     def run_dq_rules(
@@ -632,7 +632,7 @@ class SparkExpectationsActions:
             return df
 
         except Exception as e:
-            raise SparkExpectationsMiscException(f"error occurred while running expectations {e}")
+            raise SparkExpectationsMiscException(f"error occurred while running expectations: {e}")
 
     @staticmethod
     def action_on_rules(
