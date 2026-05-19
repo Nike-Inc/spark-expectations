@@ -77,7 +77,7 @@ def test_agg_query_dq_detailed_result_exception():
     # faulty user input is given to test the exception functionality of the agg_query_dq_detailed_result
 
     with pytest.raises(
-        SparkExpectationsMiscException, match=r"error occurred while running agg_query_dq_detailed_result .*"
+        SparkExpectationsMiscException, match=r"error occurred while running agg_query_dq_detailed_result: .*"
     ):
         SparkExpectationsActions().agg_query_dq_detailed_result(
             _mock_object_context, "_fixture_query_dq_rule", "<df>", []
@@ -178,8 +178,11 @@ def test_agg_query_dq_detailed_result_agg_dq_comparison_ansi_exception(_fixture_
         " syntax, or change its target type. Use `try_cast` to tolerate malformed"
         " input and return NULL instead.")
 
-    with pytest.raises(SparkExpectationsMiscException):
+    with pytest.raises(SparkExpectationsMiscException) as exception_info:
         SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+    
+    assert "Cast error while evaluating rule" in str(exception_info.value)
+    assert "This may be caused by rule expectation/SQL incompatibility with spark.sql.ansi.enabled=true (default on Databricks Serverless). Please either update your expectation/SQL to be compliant with ANSI mode, disable ANSI mode, or run not on serverless." in str(exception_info.value)
 
 
 def test_agg_query_dq_detailed_result_agg_dq_comparison_generic_exception(_fixture_agg_dq_rule):
@@ -212,8 +215,12 @@ def test_agg_query_dq_detailed_result_agg_dq_range_ansi_exception(_fixture_agg_d
         " syntax, or change its target type. Use `try_cast` to tolerate malformed"
         " input and return NULL instead.")
 
-    with pytest.raises(SparkExpectationsMiscException):
+    with pytest.raises(SparkExpectationsMiscException) as exception_info:
         SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+    
+    assert "Cast error while evaluating rule" in str(exception_info.value)
+    assert "This may be caused by rule expectation/SQL incompatibility with spark.sql.ansi.enabled=true (default on Databricks Serverless). Please either update your expectation/SQL to be compliant with ANSI mode, disable ANSI mode, or run not on serverless." in str(exception_info.value)
+
 
 
 def test_agg_query_dq_detailed_result_agg_dq_range_generic_exception(_fixture_agg_dq_rule):
@@ -254,8 +261,12 @@ def test_agg_query_dq_detailed_result_query_dq_custom_sql_ansi_exception(_fixtur
     mock_agg_result = MagicMock()
     mock_df.agg.return_value = mock_agg_result
 
-    with pytest.raises(SparkExpectationsMiscException):
+    with pytest.raises(SparkExpectationsMiscException) as exception_info:
         SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+    
+    assert "Cast error while evaluating rule" in str(exception_info.value)
+    assert "This may be caused by rule expectation/SQL incompatibility with spark.sql.ansi.enabled=true (default on Databricks Serverless). Please either update your expectation/SQL to be compliant with ANSI mode, disable ANSI mode, or run not on serverless." in str(exception_info.value)
+
 
 
 def test_agg_query_dq_detailed_result_query_dq_custom_sql_generic_exception(_fixture_agg_dq_rule):
@@ -276,7 +287,7 @@ def test_agg_query_dq_detailed_result_query_dq_custom_sql_generic_exception(_fix
     mock_agg_result = MagicMock()
     mock_df.agg.return_value = mock_agg_result
 
-    with pytest.raises(SparkExpectationsMiscException):
+    with pytest.raises(SparkExpectationsMiscException) as exception_info:
         SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
 
 
@@ -300,8 +311,12 @@ def test_agg_query_dq_detailed_result_query_dq_sql_query_ansi_exception(_fixture
     mock_agg_result = MagicMock()
     mock_df.agg.return_value = mock_agg_result
 
-    with pytest.raises(SparkExpectationsMiscException):
+    with pytest.raises(SparkExpectationsMiscException) as exception_info:
         SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+    
+    assert "Cast error while evaluating rule" in str(exception_info.value)
+    assert "This may be caused by rule expectation/SQL incompatibility with spark.sql.ansi.enabled=true (default on Databricks Serverless). Please either update your expectation/SQL to be compliant with ANSI mode, disable ANSI mode, or run not on serverless." in str(exception_info.value)
+
 
 
 def test_agg_query_dq_detailed_result_query_dq_sql_query_generic_exception(_fixture_agg_dq_rule):

@@ -3036,3 +3036,41 @@ def test_get_kafka_write_error_message_default():
     context = SparkExpectationsContext(product_id="product1", spark=spark)
     # Test default value when attribute not set
     assert context.get_kafka_write_error_message == ""
+
+
+def test_get_ansi_enabled_happy_path():
+    """Test getting ANSI mode from spark conf"""
+    from unittest.mock import MagicMock
+
+    mock_spark = MagicMock()
+    mock_spark.conf.get.return_value = "True"
+
+    context = SparkExpectationsContext(product_id="product1", spark=mock_spark)
+    result = context.get_ansi_enabled
+    assert result == True
+
+def test_get_ansi_enabled_already_set():
+    """Test getting ANSI mode when it's already cached--should not call the conf"""
+    from unittest.mock import MagicMock
+
+    mock_spark = MagicMock()
+    context = SparkExpectationsContext(product_id="product1", spark=mock_spark)
+    context._ansi_enabled = False
+
+    result = context.get_ansi_enabled
+    assert result == False
+    mock_spark.conf.get.assert_not_called()
+
+def test_get_ansi_enabled_catches_exception():
+    """Test an exception when getting ANSI mode"""
+    class BadSpark:
+        @property
+        def version(self):
+            raise Exception("boom")
+
+    context = SparkExpectationsContext(product_id="test_product", spark=spark)
+    context.spark = BadSpark()
+
+    result = context.get_ansi_enabled
+    assert result == False
+  
