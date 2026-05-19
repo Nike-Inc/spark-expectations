@@ -58,5 +58,5 @@ def safe_cast(ansi_enabled: bool, column: str, target_type: str) -> Column:
     """
     if ansi_enabled:
         return expr(f"try_cast({column} as {target_type})")
-    else: 
+    else:
         return expr(f"cast({column} as {target_type})")

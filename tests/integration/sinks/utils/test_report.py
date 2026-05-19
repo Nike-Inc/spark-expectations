@@ -718,3 +718,49 @@ def test_report_with_zero_string_total_records():
 
     zero_run = test_df.filter(test_df["run_id"] == "run_zero_test")
     assert zero_run.count() == 1
+    # row = zero_run.collect()[0]
+    # assert row["success_percentage"] is 0, (
+    #     "success_percentage should be zero when valid_records is 50 and total_records is zero"
+    # )
+
+### commented out code surfaces a bug that should be fixed
+# https://github.com/Nike-Inc/spark-expectations/issues/314
+
+# def test_report_with_both_zero_string_row_counts():
+#     """If both valid_records and total_records is 0, the output should be 0."""
+#     zero_row = (
+#         "run_zeros_test",
+#         "your_product",
+#         "dq_spark_dev.customer_order",
+#         "query_dq",
+#         "zero_total_rule",
+#         "some_col",
+#         "SELECT 1",
+#         "validity",
+#         "desc",
+#         "fail",
+#         "0",
+#         "0",
+#         "0",    # source_dq_actual_row_count (valid_records)
+#         "50",
+#         "0",     # source_dq_row_count (total_records) = 0 -> division by zero
+#         "2025-02-11 00:07:39",
+#         "2025-02-11 00:07:40",
+#         None, None, None, None, None, None, None, None, None,
+#         "2025-02-10",
+#         "2025-02-11 00:07:46",
+#         "{'job': 'test_job', 'Region': 'NA', 'Snapshot': '2024-04-15', 'data_object_name': 'customer_order'}",
+#     )
+
+#     df_detailed = _build_string_typed_detailed_df(extra_rows=[zero_row])
+#     df_custom = _build_custom_detailed_df()
+
+#     test_result, test_df = _run_report(df_detailed, df_custom)
+#     assert test_result is True
+
+#     zeros_run = test_df.filter(test_df["run_id"] == "run_zeros_test")
+#     assert zeros_run.count() == 1
+#     row = zeros_run.collect()[0]
+#     assert row["success_percentage"] == 0, (
+#         "success_percentage should be zero when both valid_records and total_records are zero"
+#     )
