@@ -1954,6 +1954,49 @@ def test_action_on_rules_streaming_skip(_fixture_mock_context):
     assert result_df.isStreaming is True
 
 
+def test_action_on_rules_preserves_user_action_if_failed_column(_fixture_mock_context):
+    """
+    Regression test: a user-supplied column literally named ``action_if_failed``
+    must survive ``action_on_rules`` unchanged. Before the internal transient
+    column was renamed to ``__se_action_if_failed__``, this column was silently
+    overwritten by ``get_actions_list(...)`` and the user lost their data.
+    """
+    # User DF carries an ``action_if_failed`` column whose values look like
+    # business strings (intentionally NOT overlapping with SE's "fail" / "drop"
+    # / "ignore" verbs) so we can prove the original values come back intact.
+    user_values = ["promote", "rollback", "hold"]
+    input_df = spark.createDataFrame(
+        [
+            {"row_id": 0, "col1": 1, "action_if_failed": user_values[0]},
+            {"row_id": 1, "col1": 2, "action_if_failed": user_values[1]},
+            {"row_id": 2, "col1": 3, "action_if_failed": user_values[2]},
+        ]
+    ).withColumn(
+        # All rules pass, so get_actions_list returns ["ignore"] -- no rows are
+        # dropped, and the user's column must be returned untouched on every row.
+        "meta_row_dq_results",
+        array(create_map(lit("status"), lit("pass"), lit("action_if_failed"), lit("ignore"))),
+    )
+
+    result_df = SparkExpectationsActions.action_on_rules(
+        _fixture_mock_context, input_df, 3, 0, 3, "row_dq", True
+    )
+
+    # Schema: original ``action_if_failed`` is preserved as a string column;
+    # no internal sentinel column should leak through.
+    result_fields = {f.name: f.dataType.simpleString() for f in result_df.schema.fields}
+    assert "action_if_failed" in result_fields
+    assert result_fields["action_if_failed"] == "string", (
+        f"User's action_if_failed column should still be string, got "
+        f"{result_fields['action_if_failed']}"
+    )
+    assert "__se_action_if_failed__" not in result_fields
+
+    # Values: original user values survive in row order.
+    returned = {row["row_id"]: row["action_if_failed"] for row in result_df.collect()}
+    assert returned == {0: "promote", 1: "rollback", 2: "hold"}
+
+
 def test_agg_query_dq_detailed_result_type_error_line_210(_fixture_agg_dq_rule, _fixture_mock_context):
     """Test line 210: TypeError for unexpected aggregation result type"""
     df = spark.createDataFrame([{"col1": 1}])
