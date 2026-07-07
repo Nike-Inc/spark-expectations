@@ -64,3 +64,9 @@ def process_data():
 result_df = process_data()
 ```
 
+### IMPORTANT: ANSI Mode
+When using serverless compute on Databricks, ANSI mode is **on by default**, which enforces stricter standards. If you use serverless compute you have two options:
+- Turn ANSI mode off: set `spark.sql.ansi.enabled` to `false`
+- Or, make sure your expectations are written in an ANSI-compliant way
+    - Use `try_cast` instead of `CAST`
+    - Please see Databricks documentation on ANSI mode for more guidance on other requirements for ANSI compliance

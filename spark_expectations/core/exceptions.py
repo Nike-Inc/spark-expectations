@@ -80,3 +80,13 @@ class SparkExpectationsInvalidAggDQExpectationException(Exception):
     """
     Throw this exception when an invalid agg_dq expectation is encountered
     """
+
+def raise_if_ansi_exception(e: Exception, rule_name: str, rule_expectation: str) -> None:
+    """Check if exception is likely cast error due to ANSI mode. Add that info to error message and raise."""
+    if "CAST_INVALID_INPUT" in str(e):
+        raise SparkExpectationsMiscException(
+            f"Cast error while evaluating rule '{rule_name}' with expectation/SQL '{rule_expectation}'. "
+            f"This may be caused by rule expectation/SQL incompatibility with spark.sql.ansi.enabled=true "
+            f"(default on Databricks Serverless). Please either update your expectation/SQL "
+            f"to be compliant with ANSI mode, disable ANSI mode, or run not on serverless."
+        ) from e
