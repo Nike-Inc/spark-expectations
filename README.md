@@ -11,11 +11,7 @@
 ![PYPI - Python Version](https://img.shields.io/pypi/pyversions/spark-expectations.svg)
 
 <p align="center">
-Spark Expectations is a specialized tool designed with the primary goal of maintaining data integrity within your processing pipeline.
-By identifying and preventing malformed or incorrect data from reaching the target destination, it ensues that only quality data is
-passed through. Any erroneous records are not simply ignored but are filtered into a separate error table, allowing for 
-detailed analysis and reporting. Additionally, Spark Expectations provides valuable statistical data on the filtered content, 
-empowering you with insights into your data quality.
+Spark-Expectations is an open-source, PySpark-native data quality framework delivered as a Python library. It enforces expectation rules in-flight via decorators as pipelines run—quarantining failures, passing clean data downstream, and emitting metrics and alerts—or validates tables at rest.
 </p>
 
 <p align="center">
@@ -38,7 +34,7 @@ please carefully read and follow the guidelines provided in our [contributing](h
 Most recent updates can be found in the [GitHub Releases](https://github.com/Nike-Inc/spark-expectations/releases)
 
 # What is Spark Expectations?
-#### Spark Expectations is a Data quality framework built in PySpark as a solution for the following problem statements:
+#### Spark-Expectations solves the following problem statements:
 
 1. The existing data quality tools validates the data in a table at rest and provides the success and error metrics. Users need to manually check the metrics to identify the error records
 2. The error data is not quarantined to an error table or there are no corrective actions taken to send only the valid data to downstream

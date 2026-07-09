@@ -1,6 +1,6 @@
 # Welcome to Spark-Expectations
 
-Spark-Expectations is a data quality framework built in PySpark. It runs data quality rules **in-flight** using a decorator pattern while your Spark job is processing data, and can also validate data at rest.
+Spark-Expectations is an open-source, PySpark-native data quality framework delivered as a Python library. It enforces expectation rules in-flight via decorators as pipelines run—quarantining failures, passing clean data downstream, and emitting metrics and alerts—or validates tables at rest.
 
 ## How It Works
 
@@ -32,28 +32,36 @@ sequenceDiagram
     SE-->>User: Return DataFrame or StreamingQuery
 ```
 
+
+
+
+
 ## Architecture
 
-| Plugin Category | Implementations |
-|---|---|
-| **Sink Plugins** | Kafka Writer |
-| **Notification Plugins** | Email, Slack, Teams, Zoom, PagerDuty |
-| **Secret Plugins** | Cerberus, Databricks Secrets |
-| **Rule Loader Plugins** | YAML Loader, JSON Loader, Spark Table |
+
+| Plugin Category          | Implementations                       |
+| ------------------------ | ------------------------------------- |
+| **Sink Plugins**         | Kafka Writer                          |
+| **Notification Plugins** | Email, Slack, Teams, Zoom, PagerDuty  |
+| **Secret Plugins**       | Cerberus, Databricks Secrets          |
+| **Rule Loader Plugins**  | YAML Loader, JSON Loader, Spark Table |
+
 
 All plugin categories use [pluggy](https://pluggy.readthedocs.io/) and can be extended with custom implementations.
 
 ## Features
 
+
+
 ### Rules
 
 Rules define your data quality expectations. Three rule types are supported:
 
-- **`row_dq`** -- Row-level checks (e.g., `age IS NOT NULL`, `amount > 0`)
-- **`agg_dq`** -- Aggregate checks (e.g., `count(*) > 0`, `avg(score) > 80`)
-- **`query_dq`** -- SQL query-based checks for cross-table or complex validations
+- `row_dq` -- Row-level checks (e.g., `age IS NOT NULL`, `amount > 0`)
+- `agg_dq` -- Aggregate checks (e.g., `count(*) > 0`, `avg(score) > 80`)
+- `query_dq` -- SQL query-based checks for cross-table or complex validations
 
-Rules can be stored in a **Spark table** or defined in **YAML/JSON files** for version-controlled, PR-reviewable data quality.
+Rules are typically defined in **YAML or JSON files**, providing version-controlled, PR-reviewable data quality governance. Spark table–based rule storage is also supported.
 
 Proceed to [Data Quality Rules](user_guide/data_quality_rules.md) for details on how rules can be configured.
 
@@ -78,6 +86,8 @@ Notifications can be sent at different stages of the DQ run (start, completion, 
 - [Microsoft Teams](user_guide/notifications/teams_notifications.md)
 - [Zoom](user_guide/notifications/zoom_notifications.md)
 - [PagerDuty](user_guide/notifications/pagerduty_notifications.md)
+
+
 
 ### Integrations
 
