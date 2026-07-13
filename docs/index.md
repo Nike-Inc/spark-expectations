@@ -2,6 +2,40 @@
 
 Spark-Expectations is an open-source, PySpark-native data quality framework delivered as a Python library. It enforces expectation rules in-flight via decorators as pipelines run—quarantining failures, passing clean data downstream, and emitting metrics and alerts—or validates tables at rest.
 
+## Data Flow at a Glance
+
+```mermaid
+flowchart LR
+    Source[("Source DataFrame")]:::src
+    Rules[/"DQ Rules<br/>YAML·JSON.Table"/]:::cfg
+    Filter{{"Spark<br/>Expectations"}}:::filt
+    Target[("&nbsp;&nbsp;Target Table&nbsp;&nbsp;<br/>Clean Data")]:::good
+    Error[("Error<br/>Table")]:::bad
+    Stats[("Stats<br/>Table")]:::obs
+    Alerts(["Alerts &<br/>Notifications"]):::alrt
+
+    Source ==>|"data stream"| Filter ==>|"clean"| Target
+    Rules -.->|"configure"| Filter
+    Filter ==>|"failed"| Error
+    Filter -.->|"metrics"| Stats
+    Stats -.->|"trigger"| Alerts
+
+    classDef src fill:#E3E8F5,stroke:#7A88B0,color:#2E3A5C,stroke-width:1.5px
+    classDef cfg fill:#FFF0D9,stroke:#B89968,color:#6B4E1F,stroke-width:1.5px
+    classDef filt fill:#DFE4F0,stroke:#5C6B94,color:#262E4A,stroke-width:2px
+    classDef good fill:#E0EBD8,stroke:#7F9968,color:#354D2C,stroke-width:2px,font-size:15px
+    classDef bad fill:#F0D9D4,stroke:#A57A6E,color:#5C2E24,stroke-width:1.5px
+    classDef obs fill:#DEE8EA,stroke:#7A9599,color:#2E4548,stroke-width:1.5px
+    classDef alrt fill:#F5E4CE,stroke:#B08A5A,color:#5C4321,stroke-width:1.5px
+
+    linkStyle 0 stroke:#7A88B0,stroke-width:2.5px
+    linkStyle 1 stroke:#7F9968,stroke-width:2.5px
+    linkStyle 2 stroke:#B89968,stroke-width:1.5px,stroke-dasharray:5 5
+    linkStyle 3 stroke:#A57A6E,stroke-width:2px
+    linkStyle 4 stroke:#7A9599,stroke-width:1.5px,stroke-dasharray:5 5
+    linkStyle 5 stroke:#B08A5A,stroke-width:1.5px,stroke-dasharray:5 5
+```
+
 ## How It Works
 
 ```mermaid
@@ -55,7 +89,7 @@ All plugin categories use [pluggy](https://pluggy.readthedocs.io/) and can be ex
 
 ### Rules
 
-Rules define your data quality expectations. Three rule types are supported:
+Rules configure what the inline DQ filter checks (see [Data Flow at a Glance](#data-flow-at-a-glance)). Three rule types are supported:
 
 - `row_dq` -- Row-level checks (e.g., `age IS NOT NULL`, `amount > 0`)
 - `agg_dq` -- Aggregate checks (e.g., `count(*) > 0`, `avg(score) > 80`)
@@ -67,7 +101,7 @@ Proceed to [Data Quality Rules](user_guide/data_quality_rules.md) for details on
 
 ### Output Tables
 
-Spark Expectations creates multiple tables to store the output of each job:
+Spark Expectations routes pipeline output to multiple tables at the end of each run (shown in the diagram above):
 
 - **Target table** -- Clean data that passed all DQ checks
 - **Error table** -- Rows that failed one or more DQ rules, with metadata about which rules failed
