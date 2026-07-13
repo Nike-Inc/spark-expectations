@@ -392,7 +392,7 @@ rules:
 The rule loader system uses [pluggy](https://pluggy.readthedocs.io/), so you can register custom loaders for other formats (e.g., TOML, CSV, remote APIs). Implement the `SparkExpectationsRuleLoader` hookspec and register via a setuptools entry point:
 
 ```toml
-[project.entry-points."spark_expectations_rule_loader"]
+[project.entry-points."spark_expectations_rule_loader_plugins"]
 my_loader = "my_package.loaders:MyCustomRuleLoaderImpl"
 ```
 

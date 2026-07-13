@@ -116,9 +116,9 @@ tests = [
   "pytest -v",
 ]
 deploy-and-serve-docs = [
-  "mike deploy -u dev latest",
-	"mike set-default latest",
-	"mike serve"
+  "mike deploy -u dev latest --ignore-remote-status --allow-empty",
+  "mike set-default latest --ignore-remote-status",
+  "mike serve --ignore-remote-status",
 ]
 deploy-docs = [
   "mike deploy --push --update-aliases $VERSION latest"

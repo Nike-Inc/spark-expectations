@@ -71,7 +71,7 @@ The error table has the same columns as the input DataFrame, plus additional met
 | `meta_dq_run_id` | STRING | Unique identifier for this DQ run |
 | `meta_dq_run_date` | DATE | Date the DQ run was executed |
 | `meta_dq_run_datetime` | TIMESTAMP | Timestamp of the DQ run |
-| `meta_dq_rule_fail_records` | ARRAY&lt;MAP&lt;STRING, STRING&gt;&gt; | Array of maps describing each failed rule: `rule`, `rule_type`, `action_if_failed`, `description`, `tag` |
+| `meta_row_dq_results` | ARRAY&lt;MAP&lt;STRING, STRING&gt;&gt; | Array of maps describing each failed rule: `rule`, `rule_type`, `action_if_failed`, `status`, `description`, `tag` |
 
 ## Error Drop Alerts
 

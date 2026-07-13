@@ -197,7 +197,12 @@ The following example shows how to combine multiple configuration groups:
 
 ```python
 from spark_expectations.config.user_config import Constants as user_config
-from spark_expectations import SparkExpectations
+from spark_expectations.core.expectations import (
+    SparkExpectations,
+    WrappedDataFrameWriter,
+)
+
+writer = WrappedDataFrameWriter().mode("append").format("delta")
 
 # Disable streaming, enable email, and set DQ options
 user_conf = {
@@ -221,6 +226,8 @@ se = SparkExpectations(
     product_id="my_product",
     rules_df=spark.table("dq_rules"),
     stats_table="dq_stats",
+    stats_table_writer=writer,
+    target_and_error_table_writer=writer,
 )
 
 @se.with_expectations(

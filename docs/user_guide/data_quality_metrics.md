@@ -9,7 +9,7 @@ Spark Expectations creates several tables during a DQ run. The relationships bet
 | **Target Table** | Always (if `write_to_table=True`) | Clean rows that passed DQ checks |
 | **Error Table** | By default | Rows that failed one or more rules, with failure metadata |
 | **Stats Table** | Always | Run-level metrics: input/output/error counts, rule results, timings |
-| **Stats Detailed** | Optional (`se_enable_agg_dq_detailed_result`) | Per-rule execution status and outcomes |
+| **Stats Detailed** | Optional (`se_enable_agg_dq_detailed_result` or `se_enable_query_dq_detailed_result`) | Per-rule execution status and outcomes for agg_dq and/or query_dq |
 | **Query DQ Output** | Optional (`se_enable_query_dq_detailed_result`) | Results from custom query DQ sub-queries |
 
 ### DQ Stats Table
@@ -89,9 +89,10 @@ This table need not be created. It gets auto created with "_detailed " to the dq
 !!! warning
     Detailed Stats Tables are optional. It is auto created and named as stats table with suffix `_detailed`.
 
-    Default Behaviour: Detailed Stats table is disabled. To enable it pass 
+    Default Behaviour: Detailed Stats table is disabled. To enable it, set either or both flags in `user_conf`:
     ```
-    user_config.se_enable_agg_dq_detailed_result: True,
+    user_config.se_enable_agg_dq_detailed_result: True,   # agg_dq rows in _detailed
+    user_config.se_enable_query_dq_detailed_result: True, # query_dq rows in _detailed
     ```
     
 

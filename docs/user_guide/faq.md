@@ -19,8 +19,8 @@ To make the job continue instead of failing, change the rule's `action_if_failed
 ### How do I debug which rules failed?
 
 1. **Stats table**: Check `row_dq_res_summary`, `source_agg_dq_results`, and `final_agg_dq_results` columns.
-2. **Detailed stats table**: Enable `se_enable_agg_dq_detailed_result: True` in your user_conf to get per-rule results in the `<stats_table>_detailed` table.
-3. **Error table**: Query `<target_table>_error` and inspect the `meta_dq_rule_fail_records` column to see which rules each row failed.
+2. **Detailed stats table**: Enable `se_enable_agg_dq_detailed_result: True` and/or `se_enable_query_dq_detailed_result: True` in your user_conf to get per-rule results in the `<stats_table>_detailed` table.
+3. **Error table**: Query `<target_table>_error` and inspect the `meta_row_dq_results` column to see which rules each row failed.
 4. **Debugger mode**: Pass `debugger=True` to the `SparkExpectations` constructor to print intermediate DataFrames to the driver logs.
 
 ### Notifications are not being sent
@@ -73,7 +73,7 @@ In your rules, reference them with curly braces: `(select count(*) from dq_spark
 | Target table | Written if `write_to_table=True` | Clean data after DQ |
 | `<target>_error` | Yes (unless disabled) | Rows that failed DQ rules |
 | Stats table | Yes | Run-level metrics and results |
-| `<stats>_detailed` | Only if `se_enable_agg_dq_detailed_result=True` | Per-rule execution results |
+| `<stats>_detailed` | Only if `se_enable_agg_dq_detailed_result=True` or `se_enable_query_dq_detailed_result=True` | Per-rule execution results for agg_dq and/or query_dq |
 | `<stats>_querydq_output` | Only if `se_enable_query_dq_detailed_result=True` | Query DQ sub-query results |
 
 ## Getting Help

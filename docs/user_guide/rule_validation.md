@@ -1,6 +1,6 @@
 # Rule Validation
 
-Spark Expectations validates all rules before executing them. Invalid rules are **logged and skipped** rather than causing the entire job to fail. This non-blocking behavior ensures that a single malformed rule does not prevent the rest of your data quality checks from running.
+Spark Expectations validates rules before the DQ pipeline runs. Invalid rules produce **warning logs** instead of failing the validation step. They are **not skipped**, however — malformed rules can still cause runtime failures during execution.
 
 ## What Gets Validated
 
@@ -17,18 +17,18 @@ Additionally, for all rule types:
 - **`action_if_failed`** must be one of `"drop"`, `"ignore"`, or `"fail"` for `row_dq`, or one of `"ignore"` or `"fail"` for `agg_dq` and `query_dq`.
 - **`rule_type`** must be one of `"row_dq"`, `"agg_dq"`, or `"query_dq"`.
 
-## Non-Blocking Behavior
+## Non-Blocking Validation
 
 When a rule fails validation:
 
 1. A warning is logged with details about the validation failure.
-2. The invalid rule is **removed** from the set of rules to execute.
-3. All remaining valid rules continue to run normally.
+2. The validation step continues without raising an exception.
+3. The rule remains in the execution set and is still applied during the DQ pipeline.
 
-This means your job will not crash because of a typo in one expectation expression. However, you should monitor your logs for validation warnings to catch and fix issues.
+Monitor your driver logs for validation warnings and fix invalid rules in your rules table to avoid runtime failures.
 
 !!! tip
-    Check your Spark driver logs for messages containing `"rule validation"` to find any skipped rules after a run.
+    Check your Spark driver logs for messages containing `"Invalid rule detected"` or `"Some rules failed validation"` after a run.
 
 ## Validation Examples
 
@@ -73,4 +73,4 @@ col1 IS NOT NULL        -- No aggregate function; use row_dq instead
 | `agg_dq` | `ignore`, `fail` |
 | `query_dq` | `ignore`, `fail` |
 
-Using `drop` with `agg_dq` or `query_dq` will trigger a validation warning and the rule will be skipped.
+Using `drop` with `agg_dq` or `query_dq` will trigger a validation warning. The rule is still executed unless you fix or deactivate it in your rules table.
