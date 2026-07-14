@@ -36,3 +36,12 @@ a.autorefs-external:hover::after {
   min-width: 160px;
   white-space: nowrap;
 }
+
+/* Mermaid diagram - uniform light fills matching the sequence diagram style */
+:root {
+  --md-mermaid-node-bg-color: #E8EAF6;
+  --md-mermaid-node-fg-color: #1A237E;
+  --md-mermaid-edge-color: #546E7A;
+  --md-mermaid-label-bg-color: #ffffff;
+  --md-mermaid-label-fg-color: #263238;
+}

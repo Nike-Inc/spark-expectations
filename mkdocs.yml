@@ -32,7 +32,6 @@ theme:
     - navigation.tabs.sticky
     - navigation.top
     - navigation.tracking
-    - navigation.expand
     - search.highlight
     - search.share
     - search.suggest
@@ -47,36 +46,45 @@ nav:
   - Home:
       - Overview: index.md
       - Why Spark-Expectations: home/why_spark_expectations.md
+  - Getting Started:
+      - Installation & Prerequisites: user_guide/getting_started.md
+      - Quickstart: user_guide/quickstart.md
   - User Guide:
-      - Overview:
-          - Getting Started: user_guide/getting_started.md
-          - Quickstart: user_guide/quickstart.md
-      - Reference:
-          - Data Quality Rules: user_guide/data_quality_rules.md
+      - Data Quality Rules:
+          - Row, Aggregate & Query DQ: user_guide/data_quality_rules.md
           - File-Based Rules (YAML & JSON): user_guide/file_based_rules.md
+          - Rule Validation: user_guide/rule_validation.md
+          - Rule Examples: configurations/rules.md
+      - Configuration Reference: user_guide/configuration_reference.md
+      - Writers:
+          - Batch & Stream Writers: user_guide/writers.md
+          - Streaming Guide: user_guide/Stream_write_guide.md
+      - Output Tables:
           - Data Quality Metrics: user_guide/data_quality_metrics.md
-          - User Config:
-              - Example Config: user_guide/user_config/user_config.md
-              - Kafka Custom Config: user_guide/user_config/kafka_custom_config.md
-          - Notifications:
-              - Email:
-                  - Email Notification Config: user_guide/notifications/email_notifications.md
-                  - Email Notification Types: user_guide/notifications/email_notification_types.md
-              - Slack: user_guide/notifications/slack_notifications.md
-              - PagerDuty: user_guide/notifications/pagerduty_notifications.md
-          - Observability: Observability_examples.md
-          - Stream Writer Guide: user_guide/Stream_write_guide.md
-          - Serverless: user_guide/serverless.md
+          - Error Table: user_guide/error_table.md
+      - Notifications:
+          - Email:
+              - Email Notification Config: user_guide/notifications/email_notifications.md
+              - Email Notification Types: user_guide/notifications/email_notification_types.md
+          - Slack: user_guide/notifications/slack_notifications.md
+          - Teams: user_guide/notifications/teams_notifications.md
+          - Zoom: user_guide/notifications/zoom_notifications.md
+          - PagerDuty: user_guide/notifications/pagerduty_notifications.md
+      - Observability & Reports: Observability_examples.md
+      - Secrets Backend: user_guide/secrets_backend.md
+      - Integrations:
+          - Delta Lake: delta.md
+          - BigQuery: bigquery.md
+          - Iceberg: iceberg.md
+      - Kafka Streaming Config: user_guide/user_config/kafka_custom_config.md
+      - Serverless (Databricks): user_guide/serverless.md
+      - FAQ & Troubleshooting: user_guide/faq.md
+  - Examples:
+      - Notebooks & Scripts: examples_notebooks.md
+      - Configuration Examples: examples.md
   - Developer Guide:
       - Contributing: developer_guide/contributing.md
-      - Setup: developer_guide/setup.md
-  - Examples:
-      - Understand Args: examples.md
-      - Delta: delta.md
-      - BigQuery: bigquery.md
-      - Iceberg: iceberg.md
-      - Rules: configurations/rules.md
-      - Configure Rules: configurations/configure_rules.md
+      - Development Setup: developer_guide/setup.md
   - Python API:
       - Core:
           - Init: api/core_init.md
@@ -85,31 +93,31 @@ nav:
           - Expectations: api/expectations.md
       - Sinks:
           - Init: api/sinks_init.md
-          - Base_Writer_Plugin: api/base_sink_plugin.md
-          - Kafka_Sink_plugin: api/kafka_sink_plugin.md
+          - Base Writer Plugin: api/base_sink_plugin.md
+          - Kafka Sink Plugin: api/kafka_sink_plugin.md
           - Utils:
               - Writer: api/writer.md
-              - Sink_Decorater: api/sinks_decorater.md
-      - Notification:
+              - Sink Decorator: api/sinks_decorater.md
+      - Notifications:
           - Init: api/notifications_init.md
-          - Base_Notification_plugin: api/base_notification_plugin.md
-          - Email_Notification_plugin: api/email_plugin.md
-          - Slack_Notification_plugin: api/slack_plugin.md
-          - Teams_Notification_plugin: api/teams_plugin.md
-          - PagerDuty_Notification_plugin: api/pagerduty_plugin.md
-          - Zoom_Notification_plugin: api/zoom_plugin.md
+          - Base Notification Plugin: api/base_notification_plugin.md
+          - Email Plugin: api/email_plugin.md
+          - Slack Plugin: api/slack_plugin.md
+          - Teams Plugin: api/teams_plugin.md
+          - PagerDuty Plugin: api/pagerduty_plugin.md
+          - Zoom Plugin: api/zoom_plugin.md
           - Push:
-              - Notification_Decorater: api/notifications_decorater.md
+              - Notification Decorator: api/notifications_decorater.md
       - Utils:
           - Actions: api/actions.md
           - Reader: api/reader.md
-          - Regulate_flow: api/regulate_flow.md
-          - Udf: api/udf.md
+          - Regulate Flow: api/regulate_flow.md
+          - UDF: api/udf.md
       - Examples:
-          - Base_Setup: api/base_setup.md
-          - Sample_DQ_BigQuery: api/sample_dq_bigquery.md
-          - Sample_DQ_Delta: api/sample_dq_delta.md
-          - Sample_DQ_Iceberg: api/sample_dq_iceberg.md
+          - Base Setup: api/base_setup.md
+          - Sample DQ BigQuery: api/sample_dq_bigquery.md
+          - Sample DQ Delta: api/sample_dq_delta.md
+          - Sample DQ Iceberg: api/sample_dq_iceberg.md
 
 plugins:
   - search:

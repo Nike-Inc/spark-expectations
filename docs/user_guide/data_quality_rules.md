@@ -72,6 +72,16 @@ The Spark Expectation process consists of three phases:
 
 ### Action If Failed Configuration For Data Quality Rules
 
+```mermaid
+flowchart TD
+    RuleFails["Row fails one or more rules"] --> HasFail{"Any rule has\naction_if_failed = fail?"}
+    HasFail -->|Yes| JobFails["Job fails immediately"]
+    HasFail -->|No| HasDrop{"Any rule has\naction_if_failed = drop?"}
+    HasDrop -->|Yes| RowDropped["Row dropped from target,\nwritten to error table"]
+    HasDrop -->|No| RowKept["Row kept in target\nAND written to error table"]
+
+```
+
 The rules column has a column called `action_if_failed`. It is important that this column should only accept one of 
 these values:
 

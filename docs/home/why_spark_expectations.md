@@ -17,6 +17,34 @@ required for this activity
 
 `Spark-Expectations solves all of the above problems by following the below principles`
 
+## How It Works
+
+```mermaid
+sequenceDiagram
+    participant Input as Input DataFrame
+    participant SE as SparkExpectations
+    participant Target as Target Table
+    participant Error as Error Table
+    participant Stats as Stats Table
+
+    Input->>SE: Submit DataFrame
+    rect rgb(232, 234, 246)
+    Note over SE: Phase 1 — Source Validation
+    SE->>SE: Run agg_dq and query_dq on source
+    end
+    rect rgb(232, 234, 246)
+    Note over SE: Phase 2 — Row Validation
+    SE->>SE: Run row_dq on every row
+    SE->>Error: Failed rows written to error table
+    end
+    rect rgb(232, 234, 246)
+    Note over SE: Phase 3 — Target Validation
+    SE->>SE: Run agg_dq and query_dq on cleaned data
+    end
+    SE->>Target: Clean rows written to target table
+    SE->>Stats: Metrics and rule results logged
+```
+
 * Spark Expectations provides the ability to run both individual row-based and overall aggregated data quality rules 
 on both the source and validated data sets. In case a rules fails, the row-level error is recorded in the `_error` table 
 and a summarized report of all failed aggregated data quality rules is compiled in the `_stats` table. 

@@ -63,4 +63,4 @@ Users have two options for generating the report table:
    - If no custom template is provided by the user, the system will automatically fall back to the default jinja template ([spark_expectations/config/templates/advanced_email_alert_template.jinja](../spark_expectations/config/templates/advanced_email_alert_template.jinja)) for rendering the report table.
 
 ### *Sample for the alert received in the mail*
-![Spark Expectation alert](se_diagrams/alert_sample.png)
+![Spark Expectation alert](https://github.com/Nike-Inc/spark-expectations/blob/main/docs/se_diagrams/alert_sample.png?raw=true)
