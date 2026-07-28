@@ -334,7 +334,7 @@ class SparkExpectationsReader:
                         "rule": row["rule"].format(**params),
                         "column_name": row["column_name"],
                         "expectation": row["expectation"],
-                        "action_if_failed": row["action_if_failed"],
+                        "action_if_failed": row["action_if_failed"] if row["action_if_failed"] else "ignore",
                         "enable_for_source_dq_validation": row["enable_for_source_dq_validation"],
                         "enable_for_target_dq_validation": row["enable_for_target_dq_validation"],
                         "tag": row["tag"],
