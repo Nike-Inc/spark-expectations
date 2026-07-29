@@ -688,6 +688,71 @@ def test_get_rules_from_table(
     assert expectations == expected_expectations
     assert rule_execution_settings == expected_rule_execution_settings
 
+@pytest.mark.parametrize(
+    "action_input, expected_action",
+    [
+        (None, "ignore"),
+        ("", "ignore"),
+        ("drop", "drop"),
+        ("fail", "fail"),
+        ("ignore", "ignore"),
+    ]
+)
+def test_action_if_failed_defaults_to_ignore(action_input, expected_action):
+
+    # Create an instance of the class and set the product_id
+    mock_context = Mock(spec=SparkExpectationsContext)
+    setattr(mock_context, "get_row_dq_rule_type_name", "row_dq")
+    setattr(mock_context, "get_agg_dq_rule_type_name", "agg_dq")
+    setattr(mock_context, "get_query_dq_rule_type_name", "query_dq")
+    mock_context.spark = spark
+    mock_context.product_id = "product1"
+
+    reader_handler = SparkExpectationsReader(mock_context)
+
+    rules_schema = StructType(
+        [
+            StructField("product_id", StringType()),
+            StructField("table_name", StringType()),
+            StructField("rule_type", StringType()),
+            StructField("rule", StringType()),
+            StructField("column_name", StringType()),
+            StructField("expectation", StringType()),
+            StructField("action_if_failed", StringType()),
+            StructField("tag", StringType()),
+            StructField("description", StringType()),
+            StructField("enable_for_source_dq_validation", BooleanType()),
+            StructField("enable_for_target_dq_validation", BooleanType()),
+            StructField("is_active", BooleanType()),
+            StructField("enable_error_drop_alert", BooleanType()),
+            StructField("error_drop_threshold", IntegerType())
+        ]
+    )
+
+    rules_row = (
+        "product1",                 # product_id
+        "table1",                   # table_name
+        "row_dq",                   # rule_type
+        "rule_name",                # rule
+        "column1",                  # column_name
+        "column1 IS NOT NULL",      # expectation
+        action_input,               # action_if_failed
+        "completeness",             # tag
+        "test rule",                # description
+        True,                       # enable_for_source_dq_validation
+        True,                       # enable_for_target_dq_validation
+        True,                       # is_active
+        False,                         # enable_error_drop_alert
+        0,                         # error_drop_threshold
+    )
+
+    test_rules_df = spark.createDataFrame([rules_row], schema=rules_schema)
+
+    dq_queries_dict, expectations, rule_execution_settings = reader_handler.get_rules_from_df(test_rules_df, target_table="table1", is_dlt=False)
+
+    row_dq_rules = expectations["row_dq_rules"]
+    assert len(row_dq_rules) == 1
+    assert row_dq_rules[0]["action_if_failed"] == expected_action
 
 def test_set_notification_param_exception(_fixture_reader):
     with pytest.raises(
