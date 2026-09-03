@@ -3442,17 +3442,19 @@
 <h2 id="data-flow-at-a-glance">Data Flow at a Glance<a class="headerlink" href="#data-flow-at-a-glance" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>flowchart LR
     Source[("Source DataFrame")]:::src
-    Rules[/"DQ Rules&lt;br/&gt;YAML·JSON.Table"/]:::cfg
+    Rules[/"DQ Rules&lt;br/&gt;YAML·JSON·Table"/]:::cfg
     Filter{{"Spark&lt;br/&gt;Expectations"}}:::filt
     Target[("&amp;nbsp;&amp;nbsp;Target Table&amp;nbsp;&amp;nbsp;&lt;br/&gt;Clean Data")]:::good
     Error[("Error&lt;br/&gt;Table")]:::bad
     Stats[("Stats&lt;br/&gt;Table")]:::obs
+    Kafka[("Kafka Topic&lt;br/&gt;Metric Events")]:::kafka
     Alerts(["Alerts &amp;&lt;br/&gt;Notifications"]):::alrt
 
     Source ==&gt;|"data stream"| Filter ==&gt;|"clean"| Target
     Rules -.-&gt;|"configure"| Filter
     Filter ==&gt;|"failed"| Error
     Filter -.-&gt;|"metrics"| Stats
+    Filter -.-&gt;|"metric events"| Kafka
     Stats -.-&gt;|"trigger"| Alerts
 
     classDef src fill:#E3E8F5,stroke:#7A88B0,color:#2E3A5C,stroke-width:1.5px
@@ -3461,6 +3463,7 @@
     classDef good fill:#E0EBD8,stroke:#7F9968,color:#354D2C,stroke-width:2px,font-size:15px
     classDef bad fill:#F0D9D4,stroke:#A57A6E,color:#5C2E24,stroke-width:1.5px
     classDef obs fill:#DEE8EA,stroke:#7A9599,color:#2E4548,stroke-width:1.5px
+    classDef kafka fill:#E8E0F0,stroke:#8A7A99,color:#3D2E4A,stroke-width:1.5px
     classDef alrt fill:#F5E4CE,stroke:#B08A5A,color:#5C4321,stroke-width:1.5px
 
     linkStyle 0 stroke:#7A88B0,stroke-width:2.5px
@@ -3468,7 +3471,9 @@
     linkStyle 2 stroke:#B89968,stroke-width:1.5px,stroke-dasharray:5 5
     linkStyle 3 stroke:#A57A6E,stroke-width:2px
     linkStyle 4 stroke:#7A9599,stroke-width:1.5px,stroke-dasharray:5 5
-    linkStyle 5 stroke:#B08A5A,stroke-width:1.5px,stroke-dasharray:5 5</code></pre>
+    linkStyle 5 stroke:#8A7A99,stroke-width:1.5px,stroke-dasharray:5 5
+    linkStyle 6 stroke:#B08A5A,stroke-width:1.5px,stroke-dasharray:5 5</code></pre>
+<p>When <code>se_enable_streaming</code> is enabled, the same run-level metrics written to the stats table are also published as JSON events to a Kafka topic (see <a href="user_guide/configuration_reference/#streaming--kafka">Streaming / Kafka</a>).</p>
 <h2 id="how-it-works">How It Works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h2>
 <pre class="mermaid"><code>sequenceDiagram
     box rgb(232, 234, 246) User Setup
