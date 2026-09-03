@@ -7,17 +7,19 @@ Spark-Expectations is an open-source, PySpark-native data quality framework deli
 ```mermaid
 flowchart LR
     Source[("Source DataFrame")]:::src
-    Rules[/"DQ Rules<br/>YAML·JSON.Table"/]:::cfg
+    Rules[/"DQ Rules<br/>YAML·JSON·Table"/]:::cfg
     Filter{{"Spark<br/>Expectations"}}:::filt
     Target[("&nbsp;&nbsp;Target Table&nbsp;&nbsp;<br/>Clean Data")]:::good
     Error[("Error<br/>Table")]:::bad
     Stats[("Stats<br/>Table")]:::obs
+    Kafka[("Kafka Topic<br/>Metric Events")]:::kafka
     Alerts(["Alerts &<br/>Notifications"]):::alrt
 
     Source ==>|"data stream"| Filter ==>|"clean"| Target
     Rules -.->|"configure"| Filter
     Filter ==>|"failed"| Error
     Filter -.->|"metrics"| Stats
+    Filter -.->|"metric events"| Kafka
     Stats -.->|"trigger"| Alerts
 
     classDef src fill:#E3E8F5,stroke:#7A88B0,color:#2E3A5C,stroke-width:1.5px
@@ -26,6 +28,7 @@ flowchart LR
     classDef good fill:#E0EBD8,stroke:#7F9968,color:#354D2C,stroke-width:2px,font-size:15px
     classDef bad fill:#F0D9D4,stroke:#A57A6E,color:#5C2E24,stroke-width:1.5px
     classDef obs fill:#DEE8EA,stroke:#7A9599,color:#2E4548,stroke-width:1.5px
+    classDef kafka fill:#E8E0F0,stroke:#8A7A99,color:#3D2E4A,stroke-width:1.5px
     classDef alrt fill:#F5E4CE,stroke:#B08A5A,color:#5C4321,stroke-width:1.5px
 
     linkStyle 0 stroke:#7A88B0,stroke-width:2.5px
@@ -33,8 +36,11 @@ flowchart LR
     linkStyle 2 stroke:#B89968,stroke-width:1.5px,stroke-dasharray:5 5
     linkStyle 3 stroke:#A57A6E,stroke-width:2px
     linkStyle 4 stroke:#7A9599,stroke-width:1.5px,stroke-dasharray:5 5
-    linkStyle 5 stroke:#B08A5A,stroke-width:1.5px,stroke-dasharray:5 5
+    linkStyle 5 stroke:#8A7A99,stroke-width:1.5px,stroke-dasharray:5 5
+    linkStyle 6 stroke:#B08A5A,stroke-width:1.5px,stroke-dasharray:5 5
 ```
+
+When `se_enable_streaming` is enabled, the same run-level metrics written to the stats table are also published as JSON events to a Kafka topic (see [Streaming / Kafka](user_guide/configuration_reference.md#streaming--kafka)).
 
 ## How It Works
 
