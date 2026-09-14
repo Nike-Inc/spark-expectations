@@ -1933,6 +1933,89 @@ class SparkExpectationsContext:
             accessing it"""
         )
 
+    @property
+    def get_streaming_transport(self) -> str:
+        transport = self._se_streaming_stats_dict.get(user_config.se_streaming_transport)
+        if isinstance(transport, str) and transport:
+            return transport
+        return "kafka_native"
+
+    def _rest_secret_type(self) -> Optional[str]:
+        value = self._se_streaming_stats_dict.get(user_config.secret_type)
+        return value.lower() if isinstance(value, str) and value else None
+
+    @property
+    def get_rest_base_url_key(self) -> Optional[str]:
+        secret_type = self._rest_secret_type()
+        if secret_type == "cerberus":
+            key = self._se_streaming_stats_dict.get(user_config.cbs_rest_base_url)
+        elif secret_type == "databricks":
+            key = self._se_streaming_stats_dict.get(user_config.dbx_rest_base_url)
+        else:
+            key = None
+        return key if isinstance(key, str) and key else None
+
+    @property
+    def get_rest_base_url_direct(self) -> Optional[str]:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_base_url)
+        return value if isinstance(value, str) and value else None
+
+    @property
+    def get_rest_topic_key(self) -> Optional[str]:
+        secret_type = self._rest_secret_type()
+        if secret_type == "cerberus":
+            key = self._se_streaming_stats_dict.get(user_config.cbs_rest_topic_name)
+        elif secret_type == "databricks":
+            key = self._se_streaming_stats_dict.get(user_config.dbx_rest_topic_name)
+        else:
+            key = None
+        return key if isinstance(key, str) and key else None
+
+    @property
+    def get_rest_topic_direct(self) -> Optional[str]:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_topic_name)
+        return value if isinstance(value, str) and value else None
+
+    @property
+    def get_rest_embedded_format(self) -> str:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_embedded_format)
+        if isinstance(value, str) and value:
+            return value
+        return "json"
+
+    @property
+    def get_rest_api_version(self) -> str:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_api_version)
+        if isinstance(value, str) and value:
+            return value
+        return "v2"
+
+    @property
+    def get_rest_cluster_id(self) -> Optional[str]:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_cluster_id)
+        return value if isinstance(value, str) and value else None
+
+    @property
+    def get_rest_timeout_sec(self) -> int:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_timeout_sec)
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        if isinstance(value, str) and value:
+            try:
+                return int(value)
+            except ValueError:
+                return 30
+        return 30
+
+    @property
+    def get_rest_verify_ssl(self) -> bool:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_verify_ssl)
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            return value.strip().lower() != "false"
+        return True
+
     def set_se_streaming_stats_kafka_custom_config_enable(self, se_streaming_stats_kafka_config_enable: bool) -> None:
         self._se_streaming_stats_kafka_custom_config_enable = se_streaming_stats_kafka_config_enable
 

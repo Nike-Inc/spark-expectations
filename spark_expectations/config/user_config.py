@@ -93,6 +93,21 @@ class Constants:
     dbx_secret_token = "se.streaming.dbx.secret.token"
     dbx_topic_name = "se.streaming.dbx.topic.name"
 
+    se_streaming_transport = "se.streaming.transport"
+
+    se_streaming_rest_base_url = "se.streaming.rest.base.url"
+    se_streaming_rest_topic_name = "se.streaming.rest.topic.name"
+    dbx_rest_base_url = "se.streaming.dbx.rest.base.url"
+    dbx_rest_topic_name = "se.streaming.dbx.rest.topic.name"
+    cbs_rest_base_url = "se.streaming.cerberus.rest.base.url"
+    cbs_rest_topic_name = "se.streaming.cerberus.rest.topic.name"
+
+    se_streaming_rest_embedded_format = "se.streaming.rest.embedded.format"
+    se_streaming_rest_api_version = "se.streaming.rest.api.version"
+    se_streaming_rest_cluster_id = "se.streaming.rest.cluster.id"
+    se_streaming_rest_timeout_sec = "se.streaming.rest.timeout.sec"
+    se_streaming_rest_verify_ssl = "se.streaming.rest.verify.ssl"
+
     # declare const user config variables for agg query dq detailed stats
     se_enable_agg_dq_detailed_result = "spark.expectations.agg.dq.detailed.stats"
     se_enable_query_dq_detailed_result = "spark.expectations.query.dq.detailed.stats"
