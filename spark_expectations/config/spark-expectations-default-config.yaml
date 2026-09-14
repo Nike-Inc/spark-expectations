@@ -47,5 +47,11 @@ se.streaming.rest.embedded.format: "json"
 se.streaming.rest.api.version: "v2"
 se.streaming.rest.cluster.id: ""
 se.streaming.rest.timeout.sec: 30
-se.streaming.rest.verify.ssl: True
+se.streaming.rest.verify.ssl: true
+se.streaming.rest.max.retries: 3
+se.streaming.rest.backoff.factor: 0.5
+se.streaming.rest.pool.connections: 4
+se.streaming.rest.pool.maxsize: 10
+se.streaming.rest.connect.timeout.sec: 30
+se.streaming.rest.read.timeout.sec: 30
 spark.expectations.is.serverless : False

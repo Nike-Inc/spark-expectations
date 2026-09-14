@@ -2016,6 +2016,78 @@ class SparkExpectationsContext:
             return value.strip().lower() != "false"
         return True
 
+    @property
+    def get_rest_max_retries(self) -> int:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_max_retries)
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        if isinstance(value, str) and value:
+            try:
+                return int(value)
+            except ValueError:
+                return 5
+        return 5
+
+    @property
+    def get_rest_backoff_factor(self) -> float:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_backoff_factor)
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            return float(value)
+        if isinstance(value, str) and value:
+            try:
+                return float(value)
+            except ValueError:
+                return 0.5
+        return 0.5
+
+    @property
+    def get_rest_pool_connections(self) -> int:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_pool_connections)
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        if isinstance(value, str) and value:
+            try:
+                return int(value)
+            except ValueError:
+                return 4
+        return 4
+
+    @property
+    def get_rest_pool_maxsize(self) -> int:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_pool_maxsize)
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        if isinstance(value, str) and value:
+            try:
+                return int(value)
+            except ValueError:
+                return 10
+        return 10
+
+    @property
+    def get_rest_connect_timeout_sec(self) -> int:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_connect_timeout_sec)
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        if isinstance(value, str) and value:
+            try:
+                return int(value)
+            except ValueError:
+                return self.get_rest_timeout_sec
+        return self.get_rest_timeout_sec
+
+    @property
+    def get_rest_read_timeout_sec(self) -> int:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_read_timeout_sec)
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        if isinstance(value, str) and value:
+            try:
+                return int(value)
+            except ValueError:
+                return self.get_rest_timeout_sec
+        return self.get_rest_timeout_sec
+
     def set_se_streaming_stats_kafka_custom_config_enable(self, se_streaming_stats_kafka_config_enable: bool) -> None:
         self._se_streaming_stats_kafka_custom_config_enable = se_streaming_stats_kafka_config_enable
 
