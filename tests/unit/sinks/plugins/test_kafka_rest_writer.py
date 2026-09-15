@@ -83,13 +83,32 @@ def test_normalize_api_version_rejects_v3():
 
 
 def test_normalize_api_version_rejects_invalid():
-    with pytest.raises(SparkExpectationsMiscException, match="expected 'v2'"):
+    with pytest.raises(SparkExpectationsMiscException, match="only 'v2' is supported"):
         _normalize_api_version("v1")
 
 
 def test_normalize_embedded_format_rejects_binary():
-    with pytest.raises(SparkExpectationsMiscException, match="expected 'json'"):
+    with pytest.raises(SparkExpectationsMiscException, match="only 'json' is supported"):
         _normalize_embedded_format("binary")
+
+
+def test_normalize_embedded_format_rejects_avro():
+    with pytest.raises(SparkExpectationsMiscException, match="only 'json' is supported"):
+        _normalize_embedded_format("avro")
+
+
+def test_normalize_api_version_accepts_v2_variants():
+    # Case + optional leading "v" should all normalize to "v2".
+    assert _normalize_api_version("v2") == "v2"
+    assert _normalize_api_version("V2") == "v2"
+    assert _normalize_api_version("2") == "v2"
+    assert _normalize_api_version("  v2  ") == "v2"
+
+
+def test_normalize_embedded_format_accepts_json_variants():
+    assert _normalize_embedded_format("json") == "json"
+    assert _normalize_embedded_format("JSON") == "json"
+    assert _normalize_embedded_format("  json  ") == "json"
 
 
 def test_writer_posts_v2_json_body_and_headers():
@@ -120,7 +139,7 @@ def test_writer_rejects_binary_embedded_format():
     args = _write_args()
     args["rest_write_options"]["embedded_format"] = "binary"
     with patch("spark_expectations.sinks.plugins.kafka_rest_writer._build_session") as mock_build_session:
-        with pytest.raises(SparkExpectationsMiscException, match="expected 'json'"):
+        with pytest.raises(SparkExpectationsMiscException, match="only 'json' is supported"):
             plugin.writer(_write_args=args)
     mock_build_session.assert_not_called()
 

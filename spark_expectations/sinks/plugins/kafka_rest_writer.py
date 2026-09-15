@@ -1,5 +1,5 @@
 import json
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Callable, Dict, Tuple
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -23,78 +23,65 @@ from spark_expectations.sinks.plugins.base_writer import (
 
 _RETRYABLE_STATUS = (408, 429, 500, 502, 503, 504)
 
-# Supported values today; extend these sets when enabling additional REST flows.
+# Only v2 + json are supported today. When v3 (or another format) support is
+# introduced, extend these sets AND add the corresponding branch in the helpers
+# below along with the required configuration (e.g. cluster_id for v3).
 _SUPPORTED_API_VERSIONS = frozenset({"2"})
 _SUPPORTED_EMBEDDED_FORMATS = frozenset({"json"})
 
 
 def _normalize_api_version(api_version: Any) -> str:
+    """Validate + normalize the REST proxy API version.
+
+    Only ``v2`` is accepted. Any other value (including ``v3``) raises
+    :class:`SparkExpectationsMiscException`.
+    """
     version = str(api_version).strip().lower()
     if version.startswith("v"):
         version = version[1:]
     if version not in _SUPPORTED_API_VERSIONS:
-        if version == "3":
-            raise SparkExpectationsMiscException(
-                f"unsupported kafka REST api_version '{api_version}'; only 'v2' is supported"
-            )
         raise SparkExpectationsMiscException(
-            f"unsupported kafka REST api_version '{api_version}'; expected 'v2'"
+            f"unsupported kafka REST api_version '{api_version}'; only 'v2' is supported"
         )
     return f"v{version}"
 
 
 def _normalize_embedded_format(embedded_format: Any) -> str:
+    """Validate + normalize the REST proxy embedded format.
+
+    Only ``json`` is accepted today. Any other value raises
+    :class:`SparkExpectationsMiscException`.
+    """
     fmt = str(embedded_format).strip().lower()
     if fmt not in _SUPPORTED_EMBEDDED_FORMATS:
         raise SparkExpectationsMiscException(
-            f"unsupported kafka REST embedded_format '{embedded_format}'; expected 'json'"
+            f"unsupported kafka REST embedded_format '{embedded_format}'; only 'json' is supported"
         )
     return fmt
 
 
 def _build_rest_headers(api_version: str, embedded_format: str) -> Dict[str, str]:
-    """Build Confluent Kafka REST Accept / Content-Type headers."""
+    """Build Confluent Kafka REST v2 Accept / Content-Type headers for JSON payloads."""
     version = _normalize_api_version(api_version)
-    fmt = _normalize_embedded_format(embedded_format)
-
-    if version == "v3":
-        return {"Content-Type": "application/json", "Accept": "application/json"}
-
-    accept = f"application/vnd.kafka.{version}+json"
-    if fmt == "json":
-        content_type = f"application/vnd.kafka.json.{version}+json"
-    else:
-        raise SparkExpectationsMiscException(
-            f"unsupported kafka REST embedded_format '{embedded_format}'; expected 'json'"
-        )
-    return {"Content-Type": content_type, "Accept": accept}
+    _normalize_embedded_format(embedded_format)
+    return {
+        "Content-Type": f"application/vnd.kafka.json.{version}+json",
+        "Accept": f"application/vnd.kafka.{version}+json",
+    }
 
 
-def _build_topic_url(base_url: str, topic: str, api_version: str, cluster_id: Optional[str]) -> str:
-    version = _normalize_api_version(api_version)
+def _build_topic_url(base_url: str, topic: str, api_version: str) -> str:
+    """Build the v2 topic-produce URL: ``{base}/topics/{topic}``."""
+    _normalize_api_version(api_version)
     base = str(base_url).rstrip("/")
-    if version == "v3":
-        if not cluster_id:
-            raise SparkExpectationsMiscException(
-                "cluster_id is required in rest_write_options when api_version is v3"
-            )
-        return f"{base}/kafka/v3/clusters/{cluster_id}/topics/{topic}/records"
     return f"{base}/topics/{topic}"
 
 
 def _build_record_payload(raw_json: str, api_version: str, embedded_format: str) -> bytes:
-    version = _normalize_api_version(api_version)
-    if version == "v3":
-        v3_body: Dict[str, Any] = {"value": {"type": "JSON", "data": json.loads(raw_json)}}
-        return json.dumps(v3_body).encode("utf-8")
-
-    fmt = _normalize_embedded_format(embedded_format)
-    if fmt == "json":
-        body: Dict[str, Any] = {"records": [{"value": json.loads(raw_json)}]}
-    else:
-        raise SparkExpectationsMiscException(
-            f"unsupported kafka REST embedded_format '{embedded_format}'; expected 'json'"
-        )
+    """Wrap a single JSON row as a Kafka REST v2 records payload."""
+    _normalize_api_version(api_version)
+    _normalize_embedded_format(embedded_format)
+    body: Dict[str, Any] = {"records": [{"value": json.loads(raw_json)}]}
     return json.dumps(body).encode("utf-8")
 
 
@@ -103,13 +90,9 @@ def _resolve_publish_context(rest_options: Dict[str, Any]) -> Tuple[str, Dict[st
     embedded_format = rest_options.get("embedded_format", DEFAULT_REST_EMBEDDED_FORMAT)
     base_url = rest_options["base_url"]
     topic = rest_options["topic"]
-    cluster_id = rest_options.get("cluster_id")
 
-    url = _build_topic_url(base_url, topic, api_version, cluster_id)
-    if _normalize_api_version(api_version) == "v3":
-        headers = {"Content-Type": "application/json", "Accept": "application/json"}
-    else:
-        headers = _build_rest_headers(api_version, embedded_format)
+    url = _build_topic_url(base_url, topic, api_version)
+    headers = _build_rest_headers(api_version, embedded_format)
 
     def build_payload(raw_json: str) -> bytes:
         return _build_record_payload(raw_json, api_version, embedded_format)
