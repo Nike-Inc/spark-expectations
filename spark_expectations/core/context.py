@@ -2001,11 +2001,6 @@ class SparkExpectationsContext:
         return DEFAULT_REST_API_VERSION
 
     @property
-    def get_rest_cluster_id(self) -> Optional[str]:
-        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_cluster_id)
-        return value if isinstance(value, str) and value else None
-
-    @property
     def get_rest_timeout_sec(self) -> int:
         value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_timeout_sec)
         if isinstance(value, int) and not isinstance(value, bool):

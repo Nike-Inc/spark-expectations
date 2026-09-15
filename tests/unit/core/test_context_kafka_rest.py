@@ -107,14 +107,6 @@ def test_rest_api_version_defaults_to_v2(spark):
     assert ctx.get_rest_api_version == "v3"
 
 
-def test_rest_cluster_id_returns_none_when_missing(spark):
-    ctx = _ctx(spark, {})
-    assert ctx.get_rest_cluster_id is None
-
-    ctx = _ctx(spark, {user_config.se_streaming_rest_cluster_id: "lkc-abc"})
-    assert ctx.get_rest_cluster_id == "lkc-abc"
-
-
 def test_rest_timeout_sec_defaults_and_parses(spark):
     ctx = _ctx(spark, {})
     assert ctx.get_rest_timeout_sec == 30

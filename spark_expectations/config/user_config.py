@@ -104,7 +104,6 @@ class Constants:
 
     se_streaming_rest_embedded_format = "se.streaming.rest.embedded.format"
     se_streaming_rest_api_version = "se.streaming.rest.api.version"
-    se_streaming_rest_cluster_id = "se.streaming.rest.cluster.id"
     se_streaming_rest_timeout_sec = "se.streaming.rest.timeout.sec"
     se_streaming_rest_verify_ssl = "se.streaming.rest.verify.ssl"
     se_streaming_rest_max_retries = "se.streaming.rest.max.retries"

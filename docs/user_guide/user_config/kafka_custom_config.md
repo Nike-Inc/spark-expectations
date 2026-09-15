@@ -71,19 +71,34 @@ If a secret key is configured for the active `secret_type`, that key is resolved
 ### REST client options
 
 !!! info "user_config.se_streaming_rest_embedded_format"
-    Embedded record format for the REST produce request. Default: `json`.
+    Embedded record format for the REST produce request. Only `json` is supported today (default: `json`).
 
 !!! info "user_config.se_streaming_rest_api_version"
-    Kafka REST API version. Default: `v2`.
-
-!!! info "user_config.se_streaming_rest_cluster_id"
-    Optional cluster identifier for managed Kafka REST endpoints (for example, Confluent Cloud `lkc-...`).
+    Kafka REST API version. Only `v2` is supported today (default: `v2`). Requests use `POST /topics/{topic}` with Confluent v2 media types.
 
 !!! info "user_config.se_streaming_rest_timeout_sec"
-    HTTP request timeout in seconds. Default: `30`.
+    Legacy HTTP timeout in seconds, applied to both connect and read phases when the split timeout keys below are not set. Default: `30`.
+
+!!! info "user_config.se_streaming_rest_connect_timeout_sec"
+    Connect-phase timeout in seconds. Defaults to `se_streaming_rest_timeout_sec` when unset.
+
+!!! info "user_config.se_streaming_rest_read_timeout_sec"
+    Read-phase timeout in seconds. Defaults to `se_streaming_rest_timeout_sec` when unset.
 
 !!! info "user_config.se_streaming_rest_verify_ssl"
     Whether to verify TLS certificates on REST requests. Default: `True`. Set to `False` for local HTTP endpoints.
+
+!!! info "user_config.se_streaming_rest_max_retries"
+    Maximum urllib3 retries for retryable HTTP statuses and connection errors on REST `POST` requests. Default: `3`.
+
+!!! info "user_config.se_streaming_rest_backoff_factor"
+    Exponential backoff factor between REST retries. Default: `0.5`.
+
+!!! info "user_config.se_streaming_rest_pool_connections"
+    Number of connection pools to cache in the REST HTTP client. Default: `4`.
+
+!!! info "user_config.se_streaming_rest_pool_maxsize"
+    Maximum pooled connections per host for the REST HTTP client. Default: `10`.
 
 ## Configuration Examples
 
@@ -116,7 +131,11 @@ stats_streaming_config_dict: Dict[str, Union[bool, str, int]] = {
     user_config.se_streaming_rest_embedded_format: "json",
     user_config.se_streaming_rest_api_version: "v2",
     user_config.se_streaming_rest_timeout_sec: 30,
+    user_config.se_streaming_rest_connect_timeout_sec: 10,
+    user_config.se_streaming_rest_read_timeout_sec: 60,
     user_config.se_streaming_rest_verify_ssl: False,
+    user_config.se_streaming_rest_max_retries: 3,
+    user_config.se_streaming_rest_backoff_factor: 0.5,
 }
 ```
 

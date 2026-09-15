@@ -1,5 +1,5 @@
 import json
-from typing import Any, Callable, Dict, Tuple
+from typing import Any, Callable, Dict, Optional, Tuple
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -70,7 +70,7 @@ def _build_rest_headers(api_version: str, embedded_format: str) -> Dict[str, str
     return {"Content-Type": content_type, "Accept": accept}
 
 
-def _build_topic_url(base_url: str, topic: str, api_version: str, cluster_id: str | None) -> str:
+def _build_topic_url(base_url: str, topic: str, api_version: str, cluster_id: Optional[str]) -> str:
     version = _normalize_api_version(api_version)
     base = str(base_url).rstrip("/")
     if version == "v3":
