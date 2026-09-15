@@ -2,13 +2,18 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
+import requests
+from urllib3.util.retry import Retry
 
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from spark_expectations.sinks.plugins.kafka_rest_writer import (
     SparkExpectationsKafkaRestWritePluginImpl,
     _build_rest_headers,
+    _build_session,
     _normalize_api_version,
     _normalize_embedded_format,
+    _resolve_timeout,
+    _retry_count_from_response,
 )
 
 
@@ -205,3 +210,293 @@ def test_writer_iterates_all_rows():
     assert mock_session.post.call_count == 3
     for idx, call in enumerate(mock_session.post.call_args_list):
         assert _decode_post_body(call.kwargs["data"]) == {"records": [{"value": {"i": idx}}]}
+
+
+# ---------------------------------------------------------------------------
+# _resolve_timeout
+# ---------------------------------------------------------------------------
+
+
+def test_resolve_timeout_defaults_to_scalar_timeout_sec():
+    # Legacy scalar `timeout_sec` is applied to both connect and read.
+    assert _resolve_timeout({"timeout_sec": 45}) == (45.0, 45.0)
+
+
+def test_resolve_timeout_uses_split_connect_and_read_overrides():
+    resolved = _resolve_timeout(
+        {
+            "timeout_sec": 30,
+            "connect_timeout_sec": 5,
+            "read_timeout_sec": 60,
+        }
+    )
+    assert resolved == (5.0, 60.0)
+
+
+def test_resolve_timeout_falls_back_to_default_when_absent():
+    from spark_expectations.config.rest_streaming_defaults import DEFAULT_REST_TIMEOUT_SEC
+
+    assert _resolve_timeout({}) == (float(DEFAULT_REST_TIMEOUT_SEC), float(DEFAULT_REST_TIMEOUT_SEC))
+
+
+def test_writer_uses_split_connect_and_read_timeouts():
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _write_args()
+    args["rest_write_options"]["connect_timeout_sec"] = 3
+    args["rest_write_options"]["read_timeout_sec"] = 90
+    mock_session = _mock_session(
+        post_return=_response(200, {"offsets": [{"partition": 0, "offset": 1, "error_code": None}]}),
+    )
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        plugin.writer(_write_args=args)
+    assert mock_session.post.call_args.kwargs["timeout"] == (3.0, 90.0)
+
+
+# ---------------------------------------------------------------------------
+# _build_session — retry + connection pool wiring
+# ---------------------------------------------------------------------------
+
+
+def test_build_session_configures_retry_and_pool():
+    session = _build_session(
+        {
+            "max_retries": 5,
+            "backoff_factor": 1.25,
+            "pool_connections": 7,
+            "pool_maxsize": 21,
+        }
+    )
+    try:
+        assert isinstance(session, requests.Session)
+        adapter_https = session.get_adapter("https://example.com")
+        adapter_http = session.get_adapter("http://example.com")
+        # Same HTTPAdapter class mounted on both schemes.
+        assert type(adapter_https).__name__ == "HTTPAdapter"
+        assert type(adapter_http).__name__ == "HTTPAdapter"
+
+        # Pool sizes are stored on the adapter.
+        assert adapter_https._pool_connections == 7
+        assert adapter_https._pool_maxsize == 21
+
+        # Retry policy is attached and covers all four channels.
+        retry = adapter_https.max_retries
+        assert isinstance(retry, Retry)
+        assert retry.total == 5
+        assert retry.connect == 5
+        assert retry.read == 5
+        assert retry.status == 5
+        assert retry.backoff_factor == 1.25
+        # POST must be retried explicitly (urllib3 excludes it by default).
+        assert "POST" in {m.upper() for m in retry.allowed_methods}
+        # Retryable HTTP statuses are respected.
+        for code in (408, 429, 500, 502, 503, 504):
+            assert code in retry.status_forcelist
+        assert retry.raise_on_status is False
+    finally:
+        session.close()
+
+
+def test_build_session_uses_defaults_when_options_missing():
+    from spark_expectations.config.rest_streaming_defaults import (
+        DEFAULT_REST_BACKOFF_FACTOR,
+        DEFAULT_REST_MAX_RETRIES,
+        DEFAULT_REST_POOL_CONNECTIONS,
+        DEFAULT_REST_POOL_MAXSIZE,
+    )
+
+    session = _build_session({})
+    try:
+        adapter = session.get_adapter("https://example.com")
+        retry = adapter.max_retries
+        assert retry.total == DEFAULT_REST_MAX_RETRIES
+        assert retry.backoff_factor == DEFAULT_REST_BACKOFF_FACTOR
+        assert adapter._pool_connections == DEFAULT_REST_POOL_CONNECTIONS
+        assert adapter._pool_maxsize == DEFAULT_REST_POOL_MAXSIZE
+    finally:
+        session.close()
+
+
+# ---------------------------------------------------------------------------
+# _retry_count_from_response
+# ---------------------------------------------------------------------------
+
+
+def test_retry_count_from_response_returns_zero_when_no_raw():
+    response = MagicMock(spec=requests.Response)
+    response.raw = None
+    assert _retry_count_from_response(response) == 0
+
+
+def test_retry_count_from_response_returns_zero_when_no_history():
+    response = MagicMock(spec=requests.Response)
+    response.raw = MagicMock()
+    response.raw.retries = MagicMock()
+    response.raw.retries.history = ()
+    assert _retry_count_from_response(response) == 0
+
+
+def test_retry_count_from_response_returns_history_length():
+    response = MagicMock(spec=requests.Response)
+    response.raw = MagicMock()
+    response.raw.retries = MagicMock()
+    # Two retry attempts recorded before final response.
+    response.raw.retries.history = (MagicMock(), MagicMock())
+    assert _retry_count_from_response(response) == 2
+
+
+def test_retry_count_from_response_handles_missing_retries_attr():
+    response = MagicMock(spec=requests.Response)
+    response.raw = MagicMock(spec=[])  # no `retries` attribute
+    assert _retry_count_from_response(response) == 0
+
+
+def test_writer_logs_warning_on_retried_response():
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    response = _response(200, {"offsets": [{"partition": 0, "offset": 1, "error_code": None}]})
+    # Simulate urllib3 retry history so _retry_count_from_response returns 2.
+    response.raw = MagicMock()
+    response.raw.retries = MagicMock()
+    response.raw.retries.history = (MagicMock(), MagicMock())
+    mock_session = _mock_session(post_return=response)
+
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ), patch("spark_expectations.sinks.plugins.kafka_rest_writer._log") as mock_log:
+        plugin.writer(_write_args=_write_args())
+
+    # Warning line should mention "retried 2 time(s)".
+    warning_calls = [c.args[0] for c in mock_log.warning.call_args_list]
+    assert any("retried 2 time(s)" in msg for msg in warning_calls)
+    # Final info log includes total_retries=2.
+    info_calls = [c.args[0] for c in mock_log.info.call_args_list]
+    assert any("total_retries=2" in msg for msg in info_calls)
+
+
+# ---------------------------------------------------------------------------
+# _raise_for_record_errors — additional branches
+# ---------------------------------------------------------------------------
+
+
+def test_writer_raises_on_top_level_error_code_with_http_200():
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    # No offsets array, but a top-level error_code should still raise.
+    mock_session = _mock_session(
+        post_return=_response(200, {"error_code": 40403, "message": "topic not found"}),
+    )
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        with pytest.raises(SparkExpectationsMiscException, match="REST proxy record error for topic 'dq-stats'"):
+            plugin.writer(_write_args=_write_args())
+
+
+def test_writer_accepts_empty_response_body():
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    # HTTP 200 with an empty body should not raise (no offsets, no error_code).
+    resp = MagicMock()
+    resp.status_code = 200
+    resp.text = ""
+    resp.content = b""
+    resp.json.return_value = {}
+    mock_session = _mock_session(post_return=resp)
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        plugin.writer(_write_args=_write_args())
+    assert mock_session.post.call_count == 1
+
+
+def test_writer_tolerates_non_json_response_body():
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    # HTTP 200 but body isn't valid JSON — code path should swallow ValueError
+    # and treat payload as empty.
+    resp = MagicMock()
+    resp.status_code = 200
+    resp.text = "<html>oops</html>"
+    resp.content = b"<html>oops</html>"
+    resp.json.side_effect = ValueError("not json")
+    mock_session = _mock_session(post_return=resp)
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        plugin.writer(_write_args=_write_args())
+    assert mock_session.post.call_count == 1
+
+
+# ---------------------------------------------------------------------------
+# Additional guard-clause coverage
+# ---------------------------------------------------------------------------
+
+
+def test_writer_noops_when_transport_is_missing():
+    # No `transport` key at all (equivalent to None) must be treated as non-REST.
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _write_args()
+    args.pop("transport")
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session"
+    ) as mock_build_session:
+        plugin.writer(_write_args=args)
+    mock_build_session.assert_not_called()
+
+
+def test_writer_raises_when_rest_options_missing_entirely():
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _write_args()
+    args["rest_write_options"] = None
+    with pytest.raises(SparkExpectationsMiscException, match="'base_url' and 'topic' are required"):
+        plugin.writer(_write_args=args)
+
+
+def test_writer_raises_when_only_topic_missing():
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _write_args()
+    args["rest_write_options"] = {"base_url": "https://kafka-rest.example.com"}
+    with pytest.raises(SparkExpectationsMiscException, match="'base_url' and 'topic' are required"):
+        plugin.writer(_write_args=args)
+
+
+def test_writer_defaults_api_version_and_embedded_format():
+    # When rest_write_options omits api_version / embedded_format, the writer
+    # should fall back to the module-level defaults (v2 / json) and still succeed.
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _write_args()
+    args["rest_write_options"] = {
+        "base_url": "https://kafka-rest.example.com",
+        "topic": "dq-stats",
+        "verify_ssl": False,
+    }
+    mock_session = _mock_session(
+        post_return=_response(200, {"offsets": [{"partition": 0, "offset": 1, "error_code": None}]}),
+    )
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        plugin.writer(_write_args=args)
+    call = mock_session.post.call_args
+    assert call.kwargs["headers"]["Content-Type"] == "application/vnd.kafka.json.v2+json"
+    assert call.kwargs["verify"] is False
+
+
+def test_writer_strips_trailing_slash_from_base_url():
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _write_args()
+    args["rest_write_options"]["base_url"] = "https://kafka-rest.example.com/"
+    mock_session = _mock_session(
+        post_return=_response(200, {"offsets": [{"partition": 0, "offset": 1, "error_code": None}]}),
+    )
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        plugin.writer(_write_args=args)
+    # No double slash in the resolved URL.
+    assert mock_session.post.call_args.args[0] == "https://kafka-rest.example.com/topics/dq-stats"

@@ -141,3 +141,128 @@ def test_rest_max_retries_defaults_to_three(spark):
 
     ctx = _ctx(spark, {user_config.se_streaming_rest_max_retries: "not-a-number"})
     assert ctx.get_rest_max_retries == 3
+
+
+def test_rest_max_retries_parses_int_and_string(spark):
+    ctx = _ctx(spark, {user_config.se_streaming_rest_max_retries: 5})
+    assert ctx.get_rest_max_retries == 5
+
+    ctx = _ctx(spark, {user_config.se_streaming_rest_max_retries: "7"})
+    assert ctx.get_rest_max_retries == 7
+
+
+def test_rest_backoff_factor_defaults_and_parses(spark):
+    ctx = _ctx(spark, {})
+    assert ctx.get_rest_backoff_factor == 0.5
+
+    ctx = _ctx(spark, {user_config.se_streaming_rest_backoff_factor: 1.25})
+    assert ctx.get_rest_backoff_factor == 1.25
+
+    ctx = _ctx(spark, {user_config.se_streaming_rest_backoff_factor: 2})
+    assert ctx.get_rest_backoff_factor == 2.0
+
+    ctx = _ctx(spark, {user_config.se_streaming_rest_backoff_factor: "0.75"})
+    assert ctx.get_rest_backoff_factor == 0.75
+
+    ctx = _ctx(spark, {user_config.se_streaming_rest_backoff_factor: "not-a-number"})
+    assert ctx.get_rest_backoff_factor == 0.5
+
+
+def test_rest_pool_connections_defaults_and_parses(spark):
+    ctx = _ctx(spark, {})
+    assert ctx.get_rest_pool_connections == 4
+
+    ctx = _ctx(spark, {user_config.se_streaming_rest_pool_connections: 8})
+    assert ctx.get_rest_pool_connections == 8
+
+    ctx = _ctx(spark, {user_config.se_streaming_rest_pool_connections: "16"})
+    assert ctx.get_rest_pool_connections == 16
+
+    ctx = _ctx(spark, {user_config.se_streaming_rest_pool_connections: "not-a-number"})
+    assert ctx.get_rest_pool_connections == 4
+
+
+def test_rest_pool_maxsize_defaults_and_parses(spark):
+    ctx = _ctx(spark, {})
+    assert ctx.get_rest_pool_maxsize == 10
+
+    ctx = _ctx(spark, {user_config.se_streaming_rest_pool_maxsize: 25})
+    assert ctx.get_rest_pool_maxsize == 25
+
+    ctx = _ctx(spark, {user_config.se_streaming_rest_pool_maxsize: "50"})
+    assert ctx.get_rest_pool_maxsize == 50
+
+    ctx = _ctx(spark, {user_config.se_streaming_rest_pool_maxsize: "not-a-number"})
+    assert ctx.get_rest_pool_maxsize == 10
+
+
+def test_rest_connect_timeout_sec_defaults_to_scalar_timeout(spark):
+    # Falls back to get_rest_timeout_sec when connect_timeout_sec is absent.
+    ctx = _ctx(spark, {user_config.se_streaming_rest_timeout_sec: 45})
+    assert ctx.get_rest_connect_timeout_sec == 45
+
+    ctx = _ctx(
+        spark,
+        {
+            user_config.se_streaming_rest_timeout_sec: 45,
+            user_config.se_streaming_rest_connect_timeout_sec: 10,
+        },
+    )
+    assert ctx.get_rest_connect_timeout_sec == 10
+
+    ctx = _ctx(spark, {user_config.se_streaming_rest_connect_timeout_sec: "12"})
+    assert ctx.get_rest_connect_timeout_sec == 12
+
+    # Invalid string falls back to scalar timeout, which itself defaults to 30.
+    ctx = _ctx(spark, {user_config.se_streaming_rest_connect_timeout_sec: "not-a-number"})
+    assert ctx.get_rest_connect_timeout_sec == 30
+
+
+def test_rest_read_timeout_sec_defaults_to_scalar_timeout(spark):
+    ctx = _ctx(spark, {user_config.se_streaming_rest_timeout_sec: 60})
+    assert ctx.get_rest_read_timeout_sec == 60
+
+    ctx = _ctx(
+        spark,
+        {
+            user_config.se_streaming_rest_timeout_sec: 60,
+            user_config.se_streaming_rest_read_timeout_sec: 20,
+        },
+    )
+    assert ctx.get_rest_read_timeout_sec == 20
+
+    ctx = _ctx(spark, {user_config.se_streaming_rest_read_timeout_sec: "22"})
+    assert ctx.get_rest_read_timeout_sec == 22
+
+    ctx = _ctx(spark, {user_config.se_streaming_rest_read_timeout_sec: "not-a-number"})
+    assert ctx.get_rest_read_timeout_sec == 30
+
+
+def test_transport_falls_back_to_default_for_non_string(spark):
+    # Non-string values (e.g., accidentally set to a bool or int) should be ignored.
+    ctx = _ctx(spark, {user_config.se_streaming_transport: 42})
+    assert ctx.get_streaming_transport == "kafka_native"
+
+    ctx = _ctx(spark, {user_config.se_streaming_transport: ""})
+    assert ctx.get_streaming_transport == "kafka_native"
+
+
+def test_rest_base_url_and_topic_return_none_when_absent(spark):
+    ctx = _ctx(spark, {})
+    assert ctx.get_rest_base_url_key is None
+    assert ctx.get_rest_base_url_direct is None
+    assert ctx.get_rest_topic_key is None
+    assert ctx.get_rest_topic_direct is None
+
+
+def test_rest_base_url_and_topic_ignore_non_string_values(spark):
+    # Non-string values should not be returned as if they were configured.
+    ctx = _ctx(
+        spark,
+        {
+            user_config.se_streaming_rest_base_url: 123,
+            user_config.se_streaming_rest_topic_name: False,
+        },
+    )
+    assert ctx.get_rest_base_url_direct is None
+    assert ctx.get_rest_topic_direct is None
