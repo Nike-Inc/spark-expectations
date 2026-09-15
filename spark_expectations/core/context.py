@@ -9,6 +9,16 @@ import ast
 from typing import Dict, Optional, List, Tuple, Any
 from pyspark.sql import DataFrame, SparkSession
 from spark_expectations import _log
+from spark_expectations.config.rest_streaming_defaults import (
+    DEFAULT_REST_API_VERSION,
+    DEFAULT_REST_BACKOFF_FACTOR,
+    DEFAULT_REST_EMBEDDED_FORMAT,
+    DEFAULT_REST_MAX_RETRIES,
+    DEFAULT_REST_POOL_CONNECTIONS,
+    DEFAULT_REST_POOL_MAXSIZE,
+    DEFAULT_REST_TIMEOUT_SEC,
+    DEFAULT_REST_VERIFY_SSL,
+)
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
 
@@ -1981,14 +1991,14 @@ class SparkExpectationsContext:
         value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_embedded_format)
         if isinstance(value, str) and value:
             return value
-        return "json"
+        return DEFAULT_REST_EMBEDDED_FORMAT
 
     @property
     def get_rest_api_version(self) -> str:
         value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_api_version)
         if isinstance(value, str) and value:
             return value
-        return "v2"
+        return DEFAULT_REST_API_VERSION
 
     @property
     def get_rest_cluster_id(self) -> Optional[str]:
@@ -2004,8 +2014,8 @@ class SparkExpectationsContext:
             try:
                 return int(value)
             except ValueError:
-                return 30
-        return 30
+                return DEFAULT_REST_TIMEOUT_SEC
+        return DEFAULT_REST_TIMEOUT_SEC
 
     @property
     def get_rest_verify_ssl(self) -> bool:
@@ -2014,7 +2024,7 @@ class SparkExpectationsContext:
             return value
         if isinstance(value, str):
             return value.strip().lower() != "false"
-        return True
+        return DEFAULT_REST_VERIFY_SSL
 
     @property
     def get_rest_max_retries(self) -> int:
@@ -2025,8 +2035,8 @@ class SparkExpectationsContext:
             try:
                 return int(value)
             except ValueError:
-                return 5
-        return 5
+                return DEFAULT_REST_MAX_RETRIES
+        return DEFAULT_REST_MAX_RETRIES
 
     @property
     def get_rest_backoff_factor(self) -> float:
@@ -2037,8 +2047,8 @@ class SparkExpectationsContext:
             try:
                 return float(value)
             except ValueError:
-                return 0.5
-        return 0.5
+                return DEFAULT_REST_BACKOFF_FACTOR
+        return DEFAULT_REST_BACKOFF_FACTOR
 
     @property
     def get_rest_pool_connections(self) -> int:
@@ -2049,8 +2059,8 @@ class SparkExpectationsContext:
             try:
                 return int(value)
             except ValueError:
-                return 4
-        return 4
+                return DEFAULT_REST_POOL_CONNECTIONS
+        return DEFAULT_REST_POOL_CONNECTIONS
 
     @property
     def get_rest_pool_maxsize(self) -> int:
@@ -2061,8 +2071,8 @@ class SparkExpectationsContext:
             try:
                 return int(value)
             except ValueError:
-                return 10
-        return 10
+                return DEFAULT_REST_POOL_MAXSIZE
+        return DEFAULT_REST_POOL_MAXSIZE
 
     @property
     def get_rest_connect_timeout_sec(self) -> int:

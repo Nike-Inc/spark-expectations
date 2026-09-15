@@ -141,3 +141,11 @@ def test_rest_verify_ssl_defaults_true_and_parses_false(spark):
 
     ctx = _ctx(spark, {user_config.se_streaming_rest_verify_ssl: "TRUE"})
     assert ctx.get_rest_verify_ssl is True
+
+
+def test_rest_max_retries_defaults_to_three(spark):
+    ctx = _ctx(spark, {})
+    assert ctx.get_rest_max_retries == 3
+
+    ctx = _ctx(spark, {user_config.se_streaming_rest_max_retries: "not-a-number"})
+    assert ctx.get_rest_max_retries == 3

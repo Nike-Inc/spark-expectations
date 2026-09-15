@@ -6,6 +6,9 @@ import pytest
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
 from spark_expectations.sinks.plugins.kafka_rest_writer import (
     SparkExpectationsKafkaRestWritePluginImpl,
+    _build_rest_headers,
+    _normalize_api_version,
+    _normalize_embedded_format,
 )
 
 
@@ -61,6 +64,29 @@ def _decode_post_body(data):
     return json.loads(data)
 
 
+def test_build_rest_headers_json_v2():
+    headers = _build_rest_headers("v2", "json")
+    assert headers == {
+        "Content-Type": "application/vnd.kafka.json.v2+json",
+        "Accept": "application/vnd.kafka.v2+json",
+    }
+
+
+def test_normalize_api_version_rejects_v3():
+    with pytest.raises(SparkExpectationsMiscException, match="only 'v2' is supported"):
+        _normalize_api_version("v3")
+
+
+def test_normalize_api_version_rejects_invalid():
+    with pytest.raises(SparkExpectationsMiscException, match="expected 'v2'"):
+        _normalize_api_version("v1")
+
+
+def test_normalize_embedded_format_rejects_binary():
+    with pytest.raises(SparkExpectationsMiscException, match="expected 'json'"):
+        _normalize_embedded_format("binary")
+
+
 def test_writer_posts_v2_json_body_and_headers():
     plugin = SparkExpectationsKafkaRestWritePluginImpl()
     mock_session = _mock_session(
@@ -82,6 +108,26 @@ def test_writer_posts_v2_json_body_and_headers():
     assert call.kwargs["verify"] is True
     body = _decode_post_body(call.kwargs["data"])
     assert body == {"records": [{"value": {"product_id": "p1", "count": 1}}]}
+
+
+def test_writer_rejects_binary_embedded_format():
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _write_args()
+    args["rest_write_options"]["embedded_format"] = "binary"
+    with patch("spark_expectations.sinks.plugins.kafka_rest_writer._build_session") as mock_build_session:
+        with pytest.raises(SparkExpectationsMiscException, match="expected 'json'"):
+            plugin.writer(_write_args=args)
+    mock_build_session.assert_not_called()
+
+
+def test_writer_rejects_v3_api_version():
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _write_args()
+    args["rest_write_options"]["api_version"] = "v3"
+    with patch("spark_expectations.sinks.plugins.kafka_rest_writer._build_session") as mock_build_session:
+        with pytest.raises(SparkExpectationsMiscException, match="only 'v2' is supported"):
+            plugin.writer(_write_args=args)
+    mock_build_session.assert_not_called()
 
 
 def test_writer_noops_when_transport_is_native():
