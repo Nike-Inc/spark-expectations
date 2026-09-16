@@ -9,6 +9,16 @@ import ast
 from typing import Dict, Optional, List, Tuple, Any
 from pyspark.sql import DataFrame, SparkSession
 from spark_expectations import _log
+from spark_expectations.config.rest_streaming_defaults import (
+    DEFAULT_REST_API_VERSION,
+    DEFAULT_REST_BACKOFF_FACTOR,
+    DEFAULT_REST_EMBEDDED_FORMAT,
+    DEFAULT_REST_MAX_RETRIES,
+    DEFAULT_REST_POOL_CONNECTIONS,
+    DEFAULT_REST_POOL_MAXSIZE,
+    DEFAULT_REST_TIMEOUT_SEC,
+    DEFAULT_REST_VERIFY_SSL,
+)
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
 
@@ -1932,6 +1942,156 @@ class SparkExpectationsContext:
             'UserConfig.cbs_topic_name' before 
             accessing it"""
         )
+
+    @property
+    def get_streaming_transport(self) -> str:
+        transport = self._se_streaming_stats_dict.get(user_config.se_streaming_transport)
+        if isinstance(transport, str) and transport:
+            return transport
+        return "kafka_native"
+
+    def _rest_secret_type(self) -> Optional[str]:
+        value = self._se_streaming_stats_dict.get(user_config.secret_type)
+        return value.lower() if isinstance(value, str) and value else None
+
+    @property
+    def get_rest_base_url_key(self) -> Optional[str]:
+        secret_type = self._rest_secret_type()
+        if secret_type == "cerberus":
+            key = self._se_streaming_stats_dict.get(user_config.cbs_rest_base_url)
+        elif secret_type == "databricks":
+            key = self._se_streaming_stats_dict.get(user_config.dbx_rest_base_url)
+        else:
+            key = None
+        return key if isinstance(key, str) and key else None
+
+    @property
+    def get_rest_base_url_direct(self) -> Optional[str]:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_base_url)
+        return value if isinstance(value, str) and value else None
+
+    @property
+    def get_rest_topic_key(self) -> Optional[str]:
+        secret_type = self._rest_secret_type()
+        if secret_type == "cerberus":
+            key = self._se_streaming_stats_dict.get(user_config.cbs_rest_topic_name)
+        elif secret_type == "databricks":
+            key = self._se_streaming_stats_dict.get(user_config.dbx_rest_topic_name)
+        else:
+            key = None
+        return key if isinstance(key, str) and key else None
+
+    @property
+    def get_rest_topic_direct(self) -> Optional[str]:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_topic_name)
+        return value if isinstance(value, str) and value else None
+
+    @property
+    def get_rest_embedded_format(self) -> str:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_embedded_format)
+        if isinstance(value, str) and value:
+            return value
+        return DEFAULT_REST_EMBEDDED_FORMAT
+
+    @property
+    def get_rest_api_version(self) -> str:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_api_version)
+        if isinstance(value, str) and value:
+            return value
+        return DEFAULT_REST_API_VERSION
+
+    @property
+    def get_rest_timeout_sec(self) -> int:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_timeout_sec)
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        if isinstance(value, str) and value:
+            try:
+                return int(value)
+            except ValueError:
+                return DEFAULT_REST_TIMEOUT_SEC
+        return DEFAULT_REST_TIMEOUT_SEC
+
+    @property
+    def get_rest_verify_ssl(self) -> bool:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_verify_ssl)
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            return value.strip().lower() != "false"
+        return DEFAULT_REST_VERIFY_SSL
+
+    @property
+    def get_rest_max_retries(self) -> int:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_max_retries)
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        if isinstance(value, str) and value:
+            try:
+                return int(value)
+            except ValueError:
+                return DEFAULT_REST_MAX_RETRIES
+        return DEFAULT_REST_MAX_RETRIES
+
+    @property
+    def get_rest_backoff_factor(self) -> float:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_backoff_factor)
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            return float(value)
+        if isinstance(value, str) and value:
+            try:
+                return float(value)
+            except ValueError:
+                return DEFAULT_REST_BACKOFF_FACTOR
+        return DEFAULT_REST_BACKOFF_FACTOR
+
+    @property
+    def get_rest_pool_connections(self) -> int:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_pool_connections)
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        if isinstance(value, str) and value:
+            try:
+                return int(value)
+            except ValueError:
+                return DEFAULT_REST_POOL_CONNECTIONS
+        return DEFAULT_REST_POOL_CONNECTIONS
+
+    @property
+    def get_rest_pool_maxsize(self) -> int:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_pool_maxsize)
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        if isinstance(value, str) and value:
+            try:
+                return int(value)
+            except ValueError:
+                return DEFAULT_REST_POOL_MAXSIZE
+        return DEFAULT_REST_POOL_MAXSIZE
+
+    @property
+    def get_rest_connect_timeout_sec(self) -> int:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_connect_timeout_sec)
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        if isinstance(value, str) and value:
+            try:
+                return int(value)
+            except ValueError:
+                return self.get_rest_timeout_sec
+        return self.get_rest_timeout_sec
+
+    @property
+    def get_rest_read_timeout_sec(self) -> int:
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_read_timeout_sec)
+        if isinstance(value, int) and not isinstance(value, bool):
+            return value
+        if isinstance(value, str) and value:
+            try:
+                return int(value)
+            except ValueError:
+                return self.get_rest_timeout_sec
+        return self.get_rest_timeout_sec
 
     def set_se_streaming_stats_kafka_custom_config_enable(self, se_streaming_stats_kafka_config_enable: bool) -> None:
         self._se_streaming_stats_kafka_custom_config_enable = se_streaming_stats_kafka_config_enable

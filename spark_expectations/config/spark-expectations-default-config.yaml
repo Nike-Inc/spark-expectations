@@ -40,4 +40,17 @@ se.streaming.dbx.secret.token.url: "se_streaming_auth_secret_token_url_key"
 se.streaming.dbx.secret.app.name: "se_streaming_auth_secret_appid_key"
 se.streaming.dbx.secret.token: "se_streaming_auth_secret_token_key"
 se.streaming.dbx.topic.name: "se_streaming_topic_name"
+se.streaming.transport: "kafka_native"
+se.streaming.rest.base.url: ""
+se.streaming.rest.topic.name: ""
+se.streaming.rest.embedded.format: "json"
+se.streaming.rest.api.version: "v2"
+se.streaming.rest.timeout.sec: 30
+se.streaming.rest.verify.ssl: true
+se.streaming.rest.max.retries: 3
+se.streaming.rest.backoff.factor: 0.5
+se.streaming.rest.pool.connections: 4
+se.streaming.rest.pool.maxsize: 10
+se.streaming.rest.connect.timeout.sec: 30
+se.streaming.rest.read.timeout.sec: 30
 spark.expectations.is.serverless : False

@@ -25,6 +25,10 @@ class SparkExpectationsKafkaWritePluginImpl(SparkExpectationsSinkWriter):
 
         """
 
+        transport = _write_args.get("transport")
+        if transport not in (None, "kafka_native"):
+            return
+
         try:
             # kafka_options = {
             #     "kafka.bootstrap.servers": "localhost:9092",

@@ -35,6 +35,17 @@ def test_kafka_writer_exception_missing_topic():
         kafka_writer_handler.writer(_write_args=write_args)
 
 
+def test_kafka_writer_noops_when_transport_is_kafka_rest():
+    kafka_writer_handler = SparkExpectationsKafkaWritePluginImpl()
+    kafka_writer_handler.writer(
+        _write_args={
+            "enable_se_streaming": True,
+            "transport": "kafka_rest",
+            "kafka_write_options": {"topic": "dq-sparkexpectations-stats"},
+        }
+    )
+
+
 def test_kafka_writer_exception_missing_servers():
     """Test Kafka writer exception when bootstrap servers are missing from options"""
     kafka_writer_handler = SparkExpectationsKafkaWritePluginImpl()
