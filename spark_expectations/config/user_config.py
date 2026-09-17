@@ -112,6 +112,10 @@ class Constants:
     se_streaming_rest_pool_maxsize = "se.streaming.rest.pool.maxsize"
     se_streaming_rest_connect_timeout_sec = "se.streaming.rest.connect.timeout.sec"
     se_streaming_rest_read_timeout_sec = "se.streaming.rest.read.timeout.sec"
+    se_streaming_rest_auth_type = "se.streaming.rest.auth.type"
+    se_streaming_rest_username = "se.streaming.rest.username"
+    dbx_rest_auth_secret = "se.streaming.dbx.rest.auth.secret"
+    cbs_rest_auth_secret = "se.streaming.cerberus.rest.auth.secret"
 
     # declare const user config variables for agg query dq detailed stats
     se_enable_agg_dq_detailed_result = "spark.expectations.agg.dq.detailed.stats"

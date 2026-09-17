@@ -68,6 +68,9 @@ When `user_config.secret_type` is `cerberus`, use the Cerberus equivalents:
 
 If a secret key is configured for the active `secret_type`, that key is resolved at runtime. Direct `se_streaming_rest_*` values remain available as a fallback when no secret key is set.
 
+!!! note "Secret backend precedence"
+    When both Cerberus and Databricks keys are populated in `user_conf`, SE resolves auth-related secret keys **Cerberus-first, then Databricks**. Base URL and topic keys follow the same discipline. `user_config.secret_type` selects which backend performs the lookup at runtime.
+
 ### REST client options
 
 !!! info "user_config.se_streaming_rest_embedded_format"
@@ -99,6 +102,24 @@ If a secret key is configured for the active `secret_type`, that key is resolved
 
 !!! info "user_config.se_streaming_rest_pool_maxsize"
     Maximum pooled connections per host for the REST HTTP client. Default: `10`.
+
+### Authentication
+
+Kafka REST auth is opt-in. When `auth_type` is `none` (default), no credential keys are read.
+
+!!! info "user_config.se_streaming_rest_auth_type"
+    HTTP auth mode used to POST to the REST proxy. One of `none` \| `basic` \| `bearer`. Default: `none`. Unrecognised values log a WARNING and fall back to `none`.
+
+!!! info "user_config.se_streaming_rest_username"
+    Direct username for `basic` auth. Required (together with an auth-secret) when `auth_type` is `basic`; ignored otherwise.
+
+!!! info "user_config.dbx_rest_auth_secret"
+    Databricks secret **key** whose value is the credential — password for `basic`, bearer token for `bearer`.
+
+!!! info "user_config.cbs_rest_auth_secret"
+    Cerberus secret **key** whose value is the credential — password for `basic`, bearer token for `bearer`.
+
+When `auth_type` is `basic` or `bearer`, SE resolves the auth-secret key using the same **Cerberus-first, then Databricks** precedence as base URL / topic. If a credentialed mode is selected but credentials do not resolve to non-empty values, SE raises `SparkExpectationsMiscException` — misconfiguration fails loudly rather than silently degrading to unauthenticated.
 
 ## Configuration Examples
 

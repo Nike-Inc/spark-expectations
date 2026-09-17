@@ -266,3 +266,88 @@ def test_rest_base_url_and_topic_ignore_non_string_values(spark):
     )
     assert ctx.get_rest_base_url_direct is None
     assert ctx.get_rest_topic_direct is None
+
+
+# ---------------------------------------------------------------------------
+# Auth getters (Phase 2 / PR-4-auth). These MUST default to a shape that
+# lets get_kafka_rest_write_options short-circuit without touching any
+# credential-related config or the secrets backend.
+# ---------------------------------------------------------------------------
+
+
+def test_rest_auth_type_defaults_to_none_when_unset(spark):
+    ctx = _ctx(spark, {})
+    assert ctx.get_rest_auth_type == "none"
+
+
+def test_rest_auth_type_defaults_to_none_when_empty(spark):
+    ctx = _ctx(spark, {user_config.se_streaming_rest_auth_type: "   "})
+    assert ctx.get_rest_auth_type == "none"
+
+
+def test_rest_auth_type_lowercased_and_stripped(spark):
+    ctx = _ctx(spark, {user_config.se_streaming_rest_auth_type: "  BASIC  "})
+    assert ctx.get_rest_auth_type == "basic"
+
+
+def test_rest_auth_type_unknown_value_defaults_to_none(spark, caplog):
+    ctx = _ctx(spark, {user_config.se_streaming_rest_auth_type: "mTLS"})
+    with caplog.at_level("WARNING"):
+        assert ctx.get_rest_auth_type == "none"
+    assert any("mtls" in rec.message.lower() for rec in caplog.records if rec.levelname == "WARNING")
+
+
+def test_rest_username_absent(spark):
+    ctx = _ctx(spark, {})
+    assert ctx.get_rest_username is None
+
+
+def test_rest_username_empty_string_treated_as_absent(spark):
+    ctx = _ctx(spark, {user_config.se_streaming_rest_username: ""})
+    assert ctx.get_rest_username is None
+
+
+def test_rest_username_present(spark):
+    ctx = _ctx(spark, {user_config.se_streaming_rest_username: "svc_dq"})
+    assert ctx.get_rest_username == "svc_dq"
+
+
+def test_rest_auth_secret_key_absent(spark):
+    ctx = _ctx(spark, {})
+    assert ctx.get_rest_auth_secret_key is None
+
+
+def test_rest_auth_secret_key_dbx(spark):
+    ctx = _ctx(
+        spark,
+        {
+            user_config.secret_type: "databricks",
+            user_config.dbx_rest_auth_secret: "dbx_rest_auth_secret_key",
+        },
+    )
+    assert ctx.get_rest_auth_secret_key == "dbx_rest_auth_secret_key"
+
+
+def test_rest_auth_secret_key_cerberus(spark):
+    ctx = _ctx(
+        spark,
+        {
+            user_config.secret_type: "cerberus",
+            user_config.cbs_rest_auth_secret: "cbs_rest_auth_secret_key",
+        },
+    )
+    assert ctx.get_rest_auth_secret_key == "cbs_rest_auth_secret_key"
+
+
+def test_rest_auth_secret_key_wrong_secret_type_returns_none(spark):
+    # secret_type=databricks but only cerberus key is populated → no key
+    # (mirrors the URL/topic behaviour so the writer utility's lazy-read
+    # invariant is deterministic).
+    ctx = _ctx(
+        spark,
+        {
+            user_config.secret_type: "databricks",
+            user_config.cbs_rest_auth_secret: "cbs_rest_auth_secret_key",
+        },
+    )
+    assert ctx.get_rest_auth_secret_key is None

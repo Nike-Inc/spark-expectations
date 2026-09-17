@@ -11,6 +11,7 @@ from pyspark.sql import DataFrame, SparkSession
 from spark_expectations import _log
 from spark_expectations.config.rest_streaming_defaults import (
     DEFAULT_REST_API_VERSION,
+    DEFAULT_REST_AUTH_TYPE,
     DEFAULT_REST_BACKOFF_FACTOR,
     DEFAULT_REST_EMBEDDED_FORMAT,
     DEFAULT_REST_MAX_RETRIES,
@@ -18,6 +19,7 @@ from spark_expectations.config.rest_streaming_defaults import (
     DEFAULT_REST_POOL_MAXSIZE,
     DEFAULT_REST_TIMEOUT_SEC,
     DEFAULT_REST_VERIFY_SSL,
+    REST_AUTH_TYPES,
 )
 from spark_expectations.config.user_config import Constants as user_config
 from spark_expectations.core.exceptions import SparkExpectationsMiscException
@@ -2092,6 +2094,62 @@ class SparkExpectationsContext:
             except ValueError:
                 return self.get_rest_timeout_sec
         return self.get_rest_timeout_sec
+
+    @property
+    def get_rest_auth_type(self) -> str:
+        """Resolve the Kafka REST proxy auth type.
+
+        Always returns one of :data:`REST_AUTH_TYPES` — ``"none"``, ``"basic"``,
+        or ``"bearer"``. When ``se.streaming.rest.auth.type`` is unset or empty,
+        returns :data:`DEFAULT_REST_AUTH_TYPE` (``"none"``). Unrecognised values
+        log a WARNING and also resolve to ``"none"`` so callers never need to
+        distinguish "missing config" from explicit ``auth_type=none``.
+        """
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_auth_type)
+        if not isinstance(value, str) or not value.strip():
+            return DEFAULT_REST_AUTH_TYPE
+        normalized = value.strip().lower()
+        if normalized in REST_AUTH_TYPES:
+            return normalized
+        _log.warning(
+            f"Kafka REST auth_type '{normalized}' is not recognised "
+            f"using '{DEFAULT_REST_AUTH_TYPE}'."
+        )
+        return DEFAULT_REST_AUTH_TYPE
+
+    @property
+    def get_rest_username(self) -> Optional[str]:
+        """Direct username for Kafka REST ``basic`` auth. ``None`` when unset.
+
+        MUST only be invoked once auth resolution has confirmed
+        ``auth_type == "basic"``. See the lazy-read invariant in
+        ``get_kafka_rest_write_options``.
+        """
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_username)
+        return value if isinstance(value, str) and value else None
+
+    @property
+    def get_rest_auth_secret_key(self) -> Optional[str]:
+        """Secret-key path for the Kafka REST auth credential.
+
+        Follows the Cerberus-first-then-Databricks pattern used by
+        :meth:`get_server_url_key` / :meth:`get_rest_base_url_key`. Returns
+        the raw key path (not the resolved secret) so the caller can drive
+        :class:`SparkExpectationsSecretsBackend`. Returns ``None`` when
+        neither the Cerberus nor the Databricks key is configured.
+
+        MUST only be invoked once auth resolution has confirmed a
+        credentialed ``auth_type`` (``basic`` / ``bearer``). See the lazy-read
+        invariant in ``get_kafka_rest_write_options``.
+        """
+        secret_type = self._rest_secret_type()
+        if secret_type == "cerberus":
+            key = self._se_streaming_stats_dict.get(user_config.cbs_rest_auth_secret)
+        elif secret_type == "databricks":
+            key = self._se_streaming_stats_dict.get(user_config.dbx_rest_auth_secret)
+        else:
+            key = None
+        return key if isinstance(key, str) and key else None
 
     def set_se_streaming_stats_kafka_custom_config_enable(self, se_streaming_stats_kafka_config_enable: bool) -> None:
         self._se_streaming_stats_kafka_custom_config_enable = se_streaming_stats_kafka_config_enable

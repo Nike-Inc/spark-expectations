@@ -20,6 +20,7 @@ from spark_expectations.sinks.plugins.base_writer import (
     SparkExpectationsSinkWriter,
     spark_expectations_writer_impl,
 )
+from spark_expectations.sinks.utils.stats_metadata import apply_se_job_metadata_struct
 
 _RETRYABLE_STATUS = (408, 429, 500, 502, 503, 504)
 
@@ -174,7 +175,17 @@ class SparkExpectationsKafkaRestWritePluginImpl(SparkExpectationsSinkWriter):
         verify = bool(rest_options.get("verify_ssl", True))
         url, headers, build_payload = _resolve_publish_context(rest_options)
 
+        auth = rest_options.get("auth")  # tuple(user, secret) for basic; None otherwise
+        auth_headers = rest_options.get("auth_headers") or {}
+        if auth_headers:
+            # Merge without letting auth headers overwrite Content-Type / Accept.
+            merged = dict(auth_headers)
+            merged.update(headers)
+            headers = merged
+
         stats_df = _write_args.get("stats_df")
+        # Convert se_job_metadata from JSON string to a proper struct so it appears as a nested object 
+        stats_df = apply_se_job_metadata_struct(stats_df)
         rows = stats_df.selectExpr("to_json(struct(*)) AS value").collect()
         total_rows = len(rows)
         _log.info(f"collected {total_rows} stats row(s) for kafka REST proxy publish to topic: {topic}")
@@ -184,10 +195,11 @@ class SparkExpectationsKafkaRestWritePluginImpl(SparkExpectationsSinkWriter):
         total_retries = 0
         api_version = rest_options.get("api_version", DEFAULT_REST_API_VERSION)
         embedded_format = rest_options.get("embedded_format", DEFAULT_REST_EMBEDDED_FORMAT)
+        auth_mode = "basic" if auth else ("bearer" if "Authorization" in headers else "none")
         _log.info(
             f"started write stats data into kafka REST proxy topic: {topic} "
             f"(rows={total_rows}, api_version={api_version}, embedded_format={embedded_format}, "
-            f"connect_timeout={timeout[0]}s, read_timeout={timeout[1]}s)"
+            f"connect_timeout={timeout[0]}s, read_timeout={timeout[1]}s, auth={auth_mode})"
         )
         try:
             for row in rows:
@@ -200,6 +212,7 @@ class SparkExpectationsKafkaRestWritePluginImpl(SparkExpectationsSinkWriter):
                         headers=headers,
                         timeout=timeout,
                         verify=verify,
+                        auth=auth,
                     )
                 except Exception as exc:  # pylint: disable=broad-except
                     raise SparkExpectationsMiscException(

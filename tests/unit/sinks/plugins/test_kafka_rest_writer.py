@@ -519,3 +519,115 @@ def test_writer_strips_trailing_slash_from_base_url():
         plugin.writer(_write_args=args)
     # No double slash in the resolved URL.
     assert mock_session.post.call_args.args[0] == "https://kafka-rest.example.com/topics/dq-stats"
+
+def test_writer_default_no_auth_regression_matches_pr324():
+    """When rest_write_options has neither ``auth`` nor ``auth_headers``,
+    the emitted POST MUST:
+    ``auth=None`` and only Content-Type / Accept in headers.
+    """
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    mock_session = _mock_session(
+        post_return=_response(200, {"offsets": [{"partition": 0, "offset": 1, "error_code": None}]}),
+    )
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        plugin.writer(_write_args=_write_args())
+
+    call = mock_session.post.call_args
+    # auth kwarg is present but None (byte-compat with pre-auth path).
+    assert call.kwargs.get("auth") is None
+    headers = call.kwargs["headers"]
+    assert "Authorization" not in headers
+    # Content-Type / Accept preserved.
+    assert headers["Content-Type"] == "application/vnd.kafka.json.v2+json"
+    assert headers["Accept"] == "application/vnd.kafka.v2+json"
+
+
+def test_writer_passes_basic_auth_tuple_to_requests_post():
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _write_args()
+    args["rest_write_options"]["auth"] = ("svc_dq", "s3cret")
+    mock_session = _mock_session(
+        post_return=_response(200, {"offsets": [{"partition": 0, "offset": 1, "error_code": None}]}),
+    )
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        plugin.writer(_write_args=args)
+
+    call = mock_session.post.call_args
+    assert call.kwargs["auth"] == ("svc_dq", "s3cret")
+    # basic auth does NOT add an Authorization header itself; requests handles it.
+    assert "Authorization" not in call.kwargs["headers"]
+
+
+def test_writer_merges_bearer_authorization_header_without_overwriting_content_type():
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _write_args()
+    args["rest_write_options"]["auth_headers"] = {"Authorization": "Bearer tok-abc"}
+    mock_session = _mock_session(
+        post_return=_response(200, {"offsets": [{"partition": 0, "offset": 1, "error_code": None}]}),
+    )
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        plugin.writer(_write_args=args)
+
+    call = mock_session.post.call_args
+    headers = call.kwargs["headers"]
+    assert headers["Authorization"] == "Bearer tok-abc"
+    # Auth headers must NOT overwrite the REST-protocol headers.
+    assert headers["Content-Type"] == "application/vnd.kafka.json.v2+json"
+    assert headers["Accept"] == "application/vnd.kafka.v2+json"
+    # bearer path does NOT populate the requests-level auth kwarg.
+    assert call.kwargs.get("auth") is None
+
+
+def test_writer_auth_headers_cannot_override_protocol_headers():
+    """Even if a caller tries to inject a rogue Content-Type via auth_headers,
+    the protocol headers from _build_rest_headers win."""
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _write_args()
+    args["rest_write_options"]["auth_headers"] = {
+        "Authorization": "Bearer tok",
+        "Content-Type": "text/plain",  # attempted override
+    }
+    mock_session = _mock_session(
+        post_return=_response(200, {"offsets": [{"partition": 0, "offset": 1, "error_code": None}]}),
+    )
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        plugin.writer(_write_args=args)
+
+    headers = mock_session.post.call_args.kwargs["headers"]
+    assert headers["Content-Type"] == "application/vnd.kafka.json.v2+json"
+    assert headers["Authorization"] == "Bearer tok"
+
+def test_writer_applies_se_job_metadata_struct_helper_before_serialisation():
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _write_args()
+    original_stats_df = args["stats_df"]
+
+    mock_session = _mock_session(
+        post_return=_response(200, {"offsets": [{"partition": 0, "offset": 1, "error_code": None}]}),
+    )
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer.apply_se_job_metadata_struct",
+        return_value=original_stats_df,
+    ) as mock_apply, patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        plugin.writer(_write_args=args)
+
+    # Helper is invoked exactly once, with the stats DataFrame the writer
+    # received — this pins the parity contract with the native transport.
+    mock_apply.assert_called_once_with(original_stats_df)
+    # And serialisation still runs against the (possibly rewritten) DataFrame.
+    original_stats_df.selectExpr.assert_called_once_with("to_json(struct(*)) AS value")
