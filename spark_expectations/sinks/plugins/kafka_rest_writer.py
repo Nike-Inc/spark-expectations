@@ -1,4 +1,5 @@
 import json
+from datetime import datetime, timezone
 from typing import Any, Callable, Dict, Tuple
 
 import requests
@@ -112,21 +113,34 @@ def _resolve_produce_url(rest_options: Dict[str, Any]) -> Tuple[str, str]:
     return _build_topic_url(base_url, topic, api_version), "base_url+topic"
 
 
-def _build_record_payload(raw_json: str, api_version: str, embedded_format: str) -> bytes:
+def _build_record_payload(
+    raw_json: str, key: str, api_version: str, embedded_format: str
+) -> bytes:
     """Wrap a single JSON row as a Kafka REST v2 records payload."""
     _normalize_api_version(api_version)
     _normalize_embedded_format(embedded_format)
-    body: Dict[str, Any] = {"records": [{"value": json.loads(raw_json)}]}
+    body: Dict[str, Any] = {"records": [{"key": key, "value": json.loads(raw_json)}]}
     return json.dumps(body).encode("utf-8")
+
+
+def _build_record_key(product_id: str, run_timestamp: str, row_index: int) -> str:
+    """Build the Kafka message key for one stats record.
+        Format: ``{product_id}:{run_timestamp}:{row_index}``.
+    """
+    pid = str(product_id) if product_id else "unknown"
+    return f"{pid}:{run_timestamp}:{row_index}"
 
 
 def _resolve_publish_context(
     rest_options: Dict[str, Any],
-) -> Tuple[str, str, Dict[str, str], Callable[[str], bytes]]:
+) -> Tuple[str, str, Dict[str, str], Callable[[str, str], bytes]]:
     """Resolve the produce URL, URL mode, headers, and payload builder.
 
     Returns ``(url, url_mode, headers, build_payload)`` where ``url_mode`` is
     one of ``"full_url"`` / ``"base_url+topic"`` (see :func:`_resolve_produce_url`).
+    ``build_payload`` is a ``(raw_json, key) -> bytes`` callable that wraps the
+    row value and message key into the Confluent v2 ``{"records": [...]}``
+    envelope.
     """
     api_version = rest_options.get("api_version", DEFAULT_REST_API_VERSION)
     embedded_format = rest_options.get("embedded_format", DEFAULT_REST_EMBEDDED_FORMAT)
@@ -134,8 +148,8 @@ def _resolve_publish_context(
     url, url_mode = _resolve_produce_url(rest_options)
     headers = _build_rest_headers(api_version, embedded_format)
 
-    def build_payload(raw_json: str) -> bytes:
-        return _build_record_payload(raw_json, api_version, embedded_format)
+    def build_payload(raw_json: str, key: str) -> bytes:
+        return _build_record_payload(raw_json, key, api_version, embedded_format)
 
     return url, url_mode, headers, build_payload
 
@@ -222,6 +236,11 @@ class SparkExpectationsKafkaRestWritePluginImpl(SparkExpectationsSinkWriter):
         total_rows = len(rows)
         _log.info(f"collected {total_rows} stats row(s) for kafka REST proxy publish to topic: {topic_label}")
 
+        # Kafka message key — always populated. Compacted topics
+        # (``cleanup.policy=compact``) reject value-only records
+        product_id = _write_args.get("product_id") or "unknown"
+        run_timestamp = datetime.now(timezone.utc).isoformat()
+
         session = _build_session(rest_options)
         total_bytes_sent = 0
         total_retries = 0
@@ -232,12 +251,14 @@ class SparkExpectationsKafkaRestWritePluginImpl(SparkExpectationsSinkWriter):
             f"started write stats data into kafka REST proxy topic: {topic_label} "
             f"(url_mode={url_mode}, url={url}, rows={total_rows}, "
             f"api_version={api_version}, embedded_format={embedded_format}, "
-            f"connect_timeout={timeout[0]}s, read_timeout={timeout[1]}s, auth={auth_mode})"
+            f"connect_timeout={timeout[0]}s, read_timeout={timeout[1]}s, auth={auth_mode}, "
+            f"key_prefix={product_id}:{run_timestamp})"
         )
         try:
-            for row in rows:
+            for idx, row in enumerate(rows):
                 raw_json = row["value"]
-                payload_bytes = build_payload(raw_json)
+                record_key = _build_record_key(product_id, run_timestamp, idx)
+                payload_bytes = build_payload(raw_json, record_key)
                 try:
                     response = session.post(
                         url,

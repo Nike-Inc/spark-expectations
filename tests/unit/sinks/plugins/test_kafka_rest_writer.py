@@ -69,6 +69,28 @@ def _decode_post_body(data):
     return json.loads(data)
 
 
+def _assert_record(body, expected_value, key_prefix="p1:", key_suffix=":0"):
+    """Assert the Confluent v2 payload envelope for a single record.
+
+    The message key contains a run-timestamp generated at write time, so tests
+    verify its shape (``{product_id}:{timestamp}:{row_index}``) rather than
+    an exact string. ``key_prefix`` pins the product_id + separator, and
+    ``key_suffix`` pins the row index at the end of the key.
+    """
+    assert isinstance(body, dict) and "records" in body
+    assert isinstance(body["records"], list) and len(body["records"]) == 1
+    record = body["records"][0]
+    assert record["value"] == expected_value
+    assert "key" in record, "REST proxy record must always include a message key"
+    assert isinstance(record["key"], str)
+    assert record["key"].startswith(key_prefix), (
+        f"key {record['key']!r} does not start with {key_prefix!r}"
+    )
+    assert record["key"].endswith(key_suffix), (
+        f"key {record['key']!r} does not end with {key_suffix!r}"
+    )
+
+
 def test_build_rest_headers_json_v2():
     headers = _build_rest_headers("v2", "json")
     assert headers == {
@@ -131,7 +153,7 @@ def test_writer_posts_v2_json_body_and_headers():
     assert call.kwargs["timeout"] == (30.0, 30.0)
     assert call.kwargs["verify"] is True
     body = _decode_post_body(call.kwargs["data"])
-    assert body == {"records": [{"value": {"product_id": "p1", "count": 1}}]}
+    _assert_record(body, expected_value={"product_id": "p1", "count": 1})
 
 
 def test_writer_rejects_binary_embedded_format():
@@ -228,7 +250,11 @@ def test_writer_iterates_all_rows():
         plugin.writer(_write_args=args)
     assert mock_session.post.call_count == 3
     for idx, call in enumerate(mock_session.post.call_args_list):
-        assert _decode_post_body(call.kwargs["data"]) == {"records": [{"value": {"i": idx}}]}
+        _assert_record(
+            _decode_post_body(call.kwargs["data"]),
+            expected_value={"i": idx},
+            key_suffix=f":{idx}",
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -676,7 +702,7 @@ def test_writer_uses_full_url_verbatim_without_appending_topics_segment():
     assert call.args[0] == "https://http-ingress.example.com/rest"
     # Body envelope stays the Confluent v2 shape so on-topic bytes match native.
     body = _decode_post_body(call.kwargs["data"])
-    assert body == {"records": [{"value": {"product_id": "p1", "count": 1}}]}
+    _assert_record(body, expected_value={"product_id": "p1", "count": 1})
     # Headers stay v2 JSON.
     assert call.kwargs["headers"]["Content-Type"] == "application/vnd.kafka.json.v2+json"
     assert call.kwargs["headers"]["Accept"] == "application/vnd.kafka.v2+json"
@@ -793,3 +819,98 @@ def test_writer_full_url_empty_string_falls_back_to_base_url_topic():
         plugin.writer(_write_args=args)
     # Composed URL — same as legacy behavior.
     assert mock_session.post.call_args.args[0] == "https://kafka-rest.example.com/topics/dq-stats"
+
+
+# ---------------------------------------------------------------------------
+# Message key — always populated, includes product_id + run timestamp + row
+# index. Compacted topics (``cleanup.policy=compact``) reject value-only
+# records; SE must always emit a keyed record regardless of transport shape.
+# ---------------------------------------------------------------------------
+
+
+def test_writer_always_emits_message_key_with_product_id_prefix():
+    """Every record in the produce envelope must carry a ``key`` field, and
+    the key MUST start with ``{product_id}:``."""
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _write_args(product_id="orders_gold")
+    mock_session = _mock_session(
+        post_return=_response(200, {"offsets": [{"partition": 0, "offset": 1, "error_code": None}]}),
+    )
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        plugin.writer(_write_args=args)
+
+    body = _decode_post_body(mock_session.post.call_args.kwargs["data"])
+    record = body["records"][0]
+    assert "key" in record
+    assert record["key"].startswith("orders_gold:"), record["key"]
+    # Key ends with row index 0 for a single-row batch.
+    assert record["key"].endswith(":0"), record["key"]
+
+
+def test_writer_key_falls_back_to_unknown_when_product_id_absent():
+    """``product_id`` is populated by SE core, but if it is ever missing the
+    plugin must still emit a valid non-empty key rather than crash."""
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _write_args()
+    args["product_id"] = None
+    mock_session = _mock_session(
+        post_return=_response(200, {"offsets": [{"partition": 0, "offset": 1, "error_code": None}]}),
+    )
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        plugin.writer(_write_args=args)
+
+    body = _decode_post_body(mock_session.post.call_args.kwargs["data"])
+    assert body["records"][0]["key"].startswith("unknown:")
+
+
+def test_writer_key_run_timestamp_shared_across_rows_in_single_publish():
+    """One writer invocation captures ``run_timestamp`` once; every record in
+    the batch must share it. Only the trailing row-index differs."""
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _write_args()
+    args["stats_df"] = _fake_stats_df([json.dumps({"i": i}) for i in range(3)])
+    mock_session = _mock_session(
+        post_return=_response(200, {"offsets": [{"partition": 0, "offset": 1, "error_code": None}]}),
+    )
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        plugin.writer(_write_args=args)
+
+    assert mock_session.post.call_count == 3
+    keys = [
+        _decode_post_body(c.kwargs["data"])["records"][0]["key"]
+        for c in mock_session.post.call_args_list
+    ]
+    # Row indices are dense 0..N-1 and unique.
+    assert [k.rsplit(":", 1)[1] for k in keys] == ["0", "1", "2"]
+    # The product_id + run_timestamp prefix (everything before the trailing
+    # ":{index}") is identical across all three records.
+    prefixes = {k.rsplit(":", 1)[0] for k in keys}
+    assert len(prefixes) == 1, f"run timestamp must be shared per publish; got prefixes={prefixes}"
+    # Prefix carries product_id.
+    assert next(iter(prefixes)).startswith("p1:")
+
+
+def test_writer_key_present_in_full_url_mode_as_well():
+    """``full_url`` transport (Nike NSP3 HTTP-ingress) uses the same envelope
+    shape, so the key MUST also be present when full_url is in play."""
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    mock_session = _mock_session(
+        post_return=_response(200, {"offsets": [{"partition": 0, "offset": 1, "error_code": None}]}),
+    )
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        plugin.writer(_write_args=_full_url_args())
+
+    body = _decode_post_body(mock_session.post.call_args.kwargs["data"])
+    _assert_record(body, expected_value={"product_id": "p1", "count": 1})
