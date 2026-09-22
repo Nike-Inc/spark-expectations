@@ -255,6 +255,78 @@ def test_rest_base_url_and_topic_return_none_when_absent(spark):
     assert ctx.get_rest_topic_direct is None
 
 
+# ---------------------------------------------------------------------------
+# full_url resolver — parallel to base_url. Enables HTTP-ingress endpoints
+# (e.g. Nike NSP3) where the stream URL is the produce endpoint and no
+# ``/topics/{topic}`` segment is appended.
+# ---------------------------------------------------------------------------
+
+
+def test_rest_full_url_direct_only(spark):
+    ctx = _ctx(
+        spark,
+        {
+            user_config.se_streaming_rest_full_url: (
+                "https://http-ingress.example.com/rest"
+            ),
+        },
+    )
+    assert ctx.get_rest_full_url_key is None
+    assert ctx.get_rest_full_url_direct == (
+        "https://http-ingress.example.com/rest"
+    )
+
+
+def test_rest_full_url_dbx_secret_key(spark):
+    ctx = _ctx(
+        spark,
+        {
+            user_config.secret_type: "databricks",
+            user_config.dbx_rest_full_url: "dbx_rest_full_url_secret_key",
+        },
+    )
+    assert ctx.get_rest_full_url_key == "dbx_rest_full_url_secret_key"
+
+
+def test_rest_full_url_cerberus_secret_key(spark):
+    ctx = _ctx(
+        spark,
+        {
+            user_config.secret_type: "cerberus",
+            user_config.cbs_rest_full_url: "cbs_rest_full_url_secret_key",
+        },
+    )
+    assert ctx.get_rest_full_url_key == "cbs_rest_full_url_secret_key"
+
+
+def test_rest_full_url_wrong_secret_type_returns_none(spark):
+    # secret_type=databricks but only cerberus key is populated → no key
+    # (mirrors the URL/topic behaviour).
+    ctx = _ctx(
+        spark,
+        {
+            user_config.secret_type: "databricks",
+            user_config.cbs_rest_full_url: "cbs_rest_full_url_secret_key",
+            user_config.se_streaming_rest_full_url: (
+                "https://direct.example.com/rest"
+            ),
+        },
+    )
+    assert ctx.get_rest_full_url_key is None
+    assert ctx.get_rest_full_url_direct == "https://direct.example.com/rest"
+
+
+def test_rest_full_url_absent(spark):
+    ctx = _ctx(spark, {})
+    assert ctx.get_rest_full_url_key is None
+    assert ctx.get_rest_full_url_direct is None
+
+
+def test_rest_full_url_ignores_non_string_values(spark):
+    ctx = _ctx(spark, {user_config.se_streaming_rest_full_url: 123})
+    assert ctx.get_rest_full_url_direct is None
+
+
 def test_rest_base_url_and_topic_ignore_non_string_values(spark):
     # Non-string values should not be returned as if they were configured.
     ctx = _ctx(

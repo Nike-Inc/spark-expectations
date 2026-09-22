@@ -1973,6 +1973,37 @@ class SparkExpectationsContext:
         return value if isinstance(value, str) and value else None
 
     @property
+    def get_rest_full_url_key(self) -> Optional[str]:
+        """Secret-key indirection for the Kafka REST fully-qualified produce URL.
+
+        Mirrors :meth:`get_rest_base_url_key` — Cerberus first, then Databricks.
+        Returns the raw key path (not the resolved secret) so the caller can drive
+        :class:`SparkExpectationsSecretsBackend`. Returns ``None`` when neither
+        the Cerberus nor the Databricks full-URL key is configured.
+        """
+        secret_type = self._rest_secret_type()
+        if secret_type == "cerberus":
+            key = self._se_streaming_stats_dict.get(user_config.cbs_rest_full_url)
+        elif secret_type == "databricks":
+            key = self._se_streaming_stats_dict.get(user_config.dbx_rest_full_url)
+        else:
+            key = None
+        return key if isinstance(key, str) and key else None
+
+    @property
+    def get_rest_full_url_direct(self) -> Optional[str]:
+        """Direct fully-qualified produce URL for the Kafka REST endpoint.
+
+        When set (directly or via :meth:`get_rest_full_url_key`), SE POSTs to
+        this URL verbatim and bypasses the Confluent-style
+        ``{base_url}/topics/{topic}`` composition. Enables HTTP-ingress
+        endpoints (e.g. Nike NSP3) that treat the stream URL as the produce
+        endpoint. Returns ``None`` when unset.
+        """
+        value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_full_url)
+        return value if isinstance(value, str) and value else None
+
+    @property
     def get_rest_topic_key(self) -> Optional[str]:
         secret_type = self._rest_secret_type()
         if secret_type == "cerberus":

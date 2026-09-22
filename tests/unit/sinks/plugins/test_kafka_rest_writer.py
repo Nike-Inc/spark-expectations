@@ -631,3 +631,165 @@ def test_writer_applies_se_job_metadata_struct_helper_before_serialisation():
     mock_apply.assert_called_once_with(original_stats_df)
     # And serialisation still runs against the (possibly rewritten) DataFrame.
     original_stats_df.selectExpr.assert_called_once_with("to_json(struct(*)) AS value")
+
+
+# ---------------------------------------------------------------------------
+# full_url mode — HTTP-ingress endpoints (e.g. Nike NSP3) that treat the
+# stream URL as the produce endpoint and do NOT expect /topics/{topic}
+# to be appended.
+# ---------------------------------------------------------------------------
+
+
+def _full_url_args(**overrides):
+    """Build ``_write_args`` for ``full_url`` mode (no base_url + topic)."""
+    payload = {"product_id": "p1", "count": 1}
+    args = {
+        "product_id": "p1",
+        "enable_se_streaming": True,
+        "transport": "kafka_rest",
+        "stats_df": _fake_stats_df([json.dumps(payload)]),
+        "rest_write_options": {
+            "full_url": "https://http-ingress.example.com/rest",
+            "embedded_format": "json",
+            "api_version": "v2",
+            "timeout_sec": 30,
+            "verify_ssl": True,
+        },
+    }
+    args.update(overrides)
+    return args
+
+
+def test_writer_uses_full_url_verbatim_without_appending_topics_segment():
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    mock_session = _mock_session(
+        post_return=_response(200, {"offsets": [{"partition": 0, "offset": 1, "error_code": None}]}),
+    )
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        plugin.writer(_write_args=_full_url_args())
+
+    call = mock_session.post.call_args
+    # URL is the resolved full_url — no /topics/{topic} suffix.
+    assert call.args[0] == "https://http-ingress.example.com/rest"
+    # Body envelope stays the Confluent v2 shape so on-topic bytes match native.
+    body = _decode_post_body(call.kwargs["data"])
+    assert body == {"records": [{"value": {"product_id": "p1", "count": 1}}]}
+    # Headers stay v2 JSON.
+    assert call.kwargs["headers"]["Content-Type"] == "application/vnd.kafka.json.v2+json"
+    assert call.kwargs["headers"]["Accept"] == "application/vnd.kafka.v2+json"
+
+
+def test_writer_full_url_strips_trailing_slash():
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _full_url_args()
+    args["rest_write_options"]["full_url"] = (
+        "https://http-ingress.example.com/rest/"
+    )
+    mock_session = _mock_session(
+        post_return=_response(200, {"offsets": [{"partition": 0, "offset": 1, "error_code": None}]}),
+    )
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        plugin.writer(_write_args=args)
+    assert mock_session.post.call_args.args[0] == (
+        "https://http-ingress.example.com/rest"
+    )
+
+
+def test_writer_full_url_wins_over_base_url_and_topic_when_both_set():
+    """When both shapes are present, ``full_url`` takes precedence — we do NOT
+    silently compose ``{base_url}/topics/{topic}`` alongside a full URL.
+    """
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _full_url_args()
+    args["rest_write_options"]["base_url"] = "https://kafka-rest.example.com"
+    args["rest_write_options"]["topic"] = "dq-stats"
+    mock_session = _mock_session(
+        post_return=_response(200, {"offsets": [{"partition": 0, "offset": 1, "error_code": None}]}),
+    )
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        plugin.writer(_write_args=args)
+    # No /topics/ segment — full_url won.
+    assert mock_session.post.call_args.args[0] == (
+        "https://http-ingress.example.com/rest"
+    )
+
+
+def test_writer_full_url_treats_topic_as_optional_logical_label_in_logs():
+    """In ``full_url`` mode ``topic`` is optional. When provided, it is used
+    ONLY for log messages — never for URL composition."""
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _full_url_args()
+    args["rest_write_options"]["topic"] = "dq-sparkexpectations-stats"
+    mock_session = _mock_session(
+        post_return=_response(200, {"offsets": [{"partition": 0, "offset": 1, "error_code": None}]}),
+    )
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ), patch("spark_expectations.sinks.plugins.kafka_rest_writer._log") as mock_log:
+        plugin.writer(_write_args=args)
+
+    # URL is unchanged (no /topics/ suffix).
+    assert mock_session.post.call_args.args[0] == (
+        "https://http-ingress.example.com/rest"
+    )
+    # Log lines mention the logical topic AND url_mode=full_url so operators
+    # can distinguish the two produce shapes at a glance.
+    info_calls = [c.args[0] for c in mock_log.info.call_args_list]
+    assert any(
+        "topic: dq-sparkexpectations-stats" in msg and "url_mode=full_url" in msg
+        for msg in info_calls
+    )
+
+
+def test_writer_full_url_error_message_includes_url_not_missing_topic():
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _full_url_args()
+    mock_session = _mock_session(post_return=_response(404, text="not found"))
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        with pytest.raises(
+            SparkExpectationsMiscException,
+            match=r"REST proxy HTTP 404 for topic '.*' at 'https://http-ingress\.example\.com/rest'",
+        ):
+            plugin.writer(_write_args=args)
+
+
+def test_writer_raises_when_neither_full_url_nor_base_url_topic_set():
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _write_args()
+    args["rest_write_options"] = {"embedded_format": "json", "api_version": "v2"}
+    with pytest.raises(
+        SparkExpectationsMiscException,
+        match=r"either 'full_url' OR both 'base_url' and 'topic' are required",
+    ):
+        plugin.writer(_write_args=args)
+
+
+def test_writer_full_url_empty_string_falls_back_to_base_url_topic():
+    """An explicitly empty ``full_url`` must not short-circuit; SE should fall
+    back to the Confluent-style ``base_url`` + ``topic`` composition."""
+    plugin = SparkExpectationsKafkaRestWritePluginImpl()
+    args = _write_args()
+    args["rest_write_options"]["full_url"] = ""  # explicitly empty
+    mock_session = _mock_session(
+        post_return=_response(200, {"offsets": [{"partition": 0, "offset": 1, "error_code": None}]}),
+    )
+    with patch(
+        "spark_expectations.sinks.plugins.kafka_rest_writer._build_session",
+        return_value=mock_session,
+    ):
+        plugin.writer(_write_args=args)
+    # Composed URL — same as legacy behavior.
+    assert mock_session.post.call_args.args[0] == "https://kafka-rest.example.com/topics/dq-stats"

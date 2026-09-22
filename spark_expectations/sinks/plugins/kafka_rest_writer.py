@@ -78,6 +78,40 @@ def _build_topic_url(base_url: str, topic: str, api_version: str) -> str:
     return f"{base}/topics/{topic}"
 
 
+def _resolve_produce_url(rest_options: Dict[str, Any]) -> Tuple[str, str]:
+    """Resolve the produce URL and the URL-composition mode.
+
+    Two modes are supported:
+
+    * ``full_url`` — when ``rest_options["full_url"]`` is non-empty, that value
+      is used verbatim (trailing slash trimmed) and topic is not appended.
+      Enables HTTP-ingress endpoints (e.g. Nike NSP3) where the stream URL is
+      the produce endpoint.
+    * ``base_url+topic`` — legacy Confluent REST Proxy v2 shape:
+      ``{base_url}/topics/{topic}``.
+
+    Returns a ``(url, mode)`` tuple where ``mode`` is one of
+    ``"full_url"`` / ``"base_url+topic"``.
+
+    Raises :class:`SparkExpectationsMiscException` when neither mode has the
+    inputs it needs.
+    """
+    full_url = rest_options.get("full_url")
+    if isinstance(full_url, str) and full_url.strip():
+        return str(full_url).rstrip("/"), "full_url"
+
+    base_url = rest_options.get("base_url")
+    topic = rest_options.get("topic")
+    if not base_url or not topic:
+        raise SparkExpectationsMiscException(
+            "error occurred while saving data into kafka (REST): "
+            "either 'full_url' OR both 'base_url' and 'topic' are required "
+            "in rest_write_options"
+        )
+    api_version = rest_options.get("api_version", DEFAULT_REST_API_VERSION)
+    return _build_topic_url(base_url, topic, api_version), "base_url+topic"
+
+
 def _build_record_payload(raw_json: str, api_version: str, embedded_format: str) -> bytes:
     """Wrap a single JSON row as a Kafka REST v2 records payload."""
     _normalize_api_version(api_version)
@@ -86,19 +120,24 @@ def _build_record_payload(raw_json: str, api_version: str, embedded_format: str)
     return json.dumps(body).encode("utf-8")
 
 
-def _resolve_publish_context(rest_options: Dict[str, Any]) -> Tuple[str, Dict[str, str], Callable[[str], bytes]]:
+def _resolve_publish_context(
+    rest_options: Dict[str, Any],
+) -> Tuple[str, str, Dict[str, str], Callable[[str], bytes]]:
+    """Resolve the produce URL, URL mode, headers, and payload builder.
+
+    Returns ``(url, url_mode, headers, build_payload)`` where ``url_mode`` is
+    one of ``"full_url"`` / ``"base_url+topic"`` (see :func:`_resolve_produce_url`).
+    """
     api_version = rest_options.get("api_version", DEFAULT_REST_API_VERSION)
     embedded_format = rest_options.get("embedded_format", DEFAULT_REST_EMBEDDED_FORMAT)
-    base_url = rest_options["base_url"]
-    topic = rest_options["topic"]
 
-    url = _build_topic_url(base_url, topic, api_version)
+    url, url_mode = _resolve_produce_url(rest_options)
     headers = _build_rest_headers(api_version, embedded_format)
 
     def build_payload(raw_json: str) -> bytes:
         return _build_record_payload(raw_json, api_version, embedded_format)
 
-    return url, headers, build_payload
+    return url, url_mode, headers, build_payload
 
 
 def _build_session(rest_options: Dict[str, Any]) -> requests.Session:
@@ -163,17 +202,10 @@ class SparkExpectationsKafkaRestWritePluginImpl(SparkExpectationsSinkWriter):
             return
 
         rest_options: Dict[str, Any] = _write_args.get("rest_write_options") or {}
-        base_url = rest_options.get("base_url")
-        topic = rest_options.get("topic")
-        if not base_url or not topic:
-            raise SparkExpectationsMiscException(
-                "error occurred while saving data into kafka (REST): "
-                "'base_url' and 'topic' are required in rest_write_options"
-            )
-
         timeout = _resolve_timeout(rest_options)
         verify = bool(rest_options.get("verify_ssl", True))
-        url, headers, build_payload = _resolve_publish_context(rest_options)
+        url, url_mode, headers, build_payload = _resolve_publish_context(rest_options)
+        topic_label = rest_options.get("topic") or url
 
         auth = rest_options.get("auth")  # tuple(user, secret) for basic; None otherwise
         auth_headers = rest_options.get("auth_headers") or {}
@@ -188,7 +220,7 @@ class SparkExpectationsKafkaRestWritePluginImpl(SparkExpectationsSinkWriter):
         stats_df = apply_se_job_metadata_struct(stats_df)
         rows = stats_df.selectExpr("to_json(struct(*)) AS value").collect()
         total_rows = len(rows)
-        _log.info(f"collected {total_rows} stats row(s) for kafka REST proxy publish to topic: {topic}")
+        _log.info(f"collected {total_rows} stats row(s) for kafka REST proxy publish to topic: {topic_label}")
 
         session = _build_session(rest_options)
         total_bytes_sent = 0
@@ -197,8 +229,9 @@ class SparkExpectationsKafkaRestWritePluginImpl(SparkExpectationsSinkWriter):
         embedded_format = rest_options.get("embedded_format", DEFAULT_REST_EMBEDDED_FORMAT)
         auth_mode = "basic" if auth else ("bearer" if "Authorization" in headers else "none")
         _log.info(
-            f"started write stats data into kafka REST proxy topic: {topic} "
-            f"(rows={total_rows}, api_version={api_version}, embedded_format={embedded_format}, "
+            f"started write stats data into kafka REST proxy topic: {topic_label} "
+            f"(url_mode={url_mode}, url={url}, rows={total_rows}, "
+            f"api_version={api_version}, embedded_format={embedded_format}, "
             f"connect_timeout={timeout[0]}s, read_timeout={timeout[1]}s, auth={auth_mode})"
         )
         try:
@@ -217,7 +250,7 @@ class SparkExpectationsKafkaRestWritePluginImpl(SparkExpectationsSinkWriter):
                 except Exception as exc:  # pylint: disable=broad-except
                     raise SparkExpectationsMiscException(
                         f"error occurred while saving data into kafka (REST) topic "
-                        f"'{topic}' at '{base_url}': {exc}"
+                        f"'{topic_label}' at '{url}': {exc}"
                     ) from exc
 
                 row_retries = _retry_count_from_response(response)
@@ -225,25 +258,26 @@ class SparkExpectationsKafkaRestWritePluginImpl(SparkExpectationsSinkWriter):
                 total_bytes_sent += len(payload_bytes)
                 if row_retries:
                     _log.warning(
-                        f"kafka REST proxy request to topic '{topic}' retried {row_retries} "
+                        f"kafka REST proxy request to topic '{topic_label}' retried {row_retries} "
                         f"time(s) before status {response.status_code}"
                     )
 
-                self._raise_for_record_errors(response, topic, base_url)
+                self._raise_for_record_errors(response, topic_label, url)
         finally:
             session.close()
 
         _log.info(
-            f"ended writing stats data into kafka REST proxy topic: {topic} "
-            f"(rows={total_rows}, bytes_sent={total_bytes_sent}, total_retries={total_retries})"
+            f"ended writing stats data into kafka REST proxy topic: {topic_label} "
+            f"(url_mode={url_mode}, rows={total_rows}, bytes_sent={total_bytes_sent}, "
+            f"total_retries={total_retries})"
         )
 
     @staticmethod
-    def _raise_for_record_errors(response: requests.Response, topic: str, base_url: str) -> None:
+    def _raise_for_record_errors(response: requests.Response, topic: str, url: str) -> None:
         if response.status_code >= 400:
             raise SparkExpectationsMiscException(
                 f"REST proxy HTTP {response.status_code} for topic '{topic}' at "
-                f"'{base_url}': {response.text}"
+                f"'{url}': {response.text}"
             )
         payload: Dict[str, Any] = {}
         try:
@@ -255,9 +289,9 @@ class SparkExpectationsKafkaRestWritePluginImpl(SparkExpectationsSinkWriter):
         for offset in payload.get("offsets", []) or []:
             if offset.get("error_code") is not None:
                 raise SparkExpectationsMiscException(
-                    f"REST proxy record error for topic '{topic}' at '{base_url}': {offset}"
+                    f"REST proxy record error for topic '{topic}' at '{url}': {offset}"
                 )
         if payload.get("error_code") is not None:
             raise SparkExpectationsMiscException(
-                f"REST proxy record error for topic '{topic}' at '{base_url}': {payload}"
+                f"REST proxy record error for topic '{topic}' at '{url}': {payload}"
             )

@@ -801,20 +801,47 @@ class SparkExpectationsWriter:
 
     def get_kafka_rest_write_options(self, se_stats_dict: dict) -> dict:
         """Gets Kafka REST write configuration options
+
+        Two produce-URL styles are supported:
+
+        * **Fully-qualified URL** (``se.streaming.rest.full.url`` — direct or
+          via ``se.streaming.{dbx,cerberus}.rest.full.url`` secret indirection):
+          SE POSTs to the resolved URL **verbatim** and skips the
+          ``{base_url}/topics/{topic}`` composition. Enables HTTP-ingress
+          endpoints (e.g. Nike NSP3) where the stream URL is the produce
+          endpoint. ``topic`` remains optional and, when set, is used only as a
+          logical label in log lines / metrics.
+        * **Confluent-style base + topic** (``se.streaming.rest.base.url`` +
+          ``se.streaming.rest.topic.name``, or their secret-indirection
+          equivalents): SE composes ``{base_url}/topics/{topic}``. This is the
+          default and matches the Confluent REST Proxy v2 contract.
+
+        ``full_url`` — when resolved to a non-empty value — wins over
+        ``base_url`` + ``topic``.
+
         Returns:
-            dict: Kafka REST write configuration options     
+            dict: Kafka REST write configuration options
         """
 
         secret_handler = SparkExpectationsSecretsBackend(se_stats_dict)
 
-        # ---- Step 1a: base URL (secret indirection is opt-in) --------------
+        # ---- Step 1a: fully-qualified URL (opt-in, overrides base+topic) ---
+        full_url_key = self._context.get_rest_full_url_key
+        if full_url_key:
+            full_url = secret_handler.get_secret(full_url_key)
+        else:
+            full_url = self._context.get_rest_full_url_direct
+
+        # ---- Step 1b: base URL (secret indirection is opt-in) --------------
         base_url_key = self._context.get_rest_base_url_key
         if base_url_key:
             base_url = secret_handler.get_secret(base_url_key)
         else:
             base_url = self._context.get_rest_base_url_direct
 
-        # ---- Step 1b: topic (same discipline as base URL) ------------------
+        # ---- Step 1c: topic (same discipline as base URL) ------------------
+        # In ``full_url`` mode this is an optional logical label used only for
+        # log lines / metrics; in ``base_url`` mode it is required.
         topic_key = self._context.get_rest_topic_key
         if topic_key:
             topic = secret_handler.get_secret(topic_key)
@@ -822,6 +849,7 @@ class SparkExpectationsWriter:
             topic = self._context.get_rest_topic_direct
 
         options: Dict[str, Any] = {
+            "full_url": full_url,
             "base_url": base_url,
             "topic": topic,
             "api_version": self._context.get_rest_api_version,

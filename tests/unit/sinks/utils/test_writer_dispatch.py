@@ -133,6 +133,124 @@ def test_options_dbx_secret_indirection_resolves_url_and_topic():
 
 
 # ---------------------------------------------------------------------------
+# get_kafka_rest_write_options — full_url mode (HTTP-ingress endpoints)
+# ---------------------------------------------------------------------------
+
+
+def test_options_direct_full_url_short_circuits_base_url_topic():
+    """When ``se.streaming.rest.full.url`` is a direct value, it flows through
+    ``rest_write_options["full_url"]`` verbatim and no secret backend calls
+    are made for URL/topic even if ``base_url`` / ``topic`` are also set.
+    """
+    stats = {
+        user_config.se_streaming_transport: "kafka_rest",
+        user_config.se_streaming_rest_full_url: (
+            "https://http-ingress.example.com/rest"
+        ),
+        # These are still accepted (their values pass through) but must not
+        # be used to compose the URL — that is the plugin's responsibility.
+        user_config.se_streaming_rest_base_url: "https://kafka-rest.example.com",
+        user_config.se_streaming_rest_topic_name: "dq-stats",
+    }
+    writer = _writer_with_stats(stats)
+
+    with patch(
+        "spark_expectations.sinks.utils.writer.SparkExpectationsSecretsBackend",
+        _SecretSpy,
+    ):
+        options = writer.get_kafka_rest_write_options(stats)
+
+    assert options["full_url"] == (
+        "https://http-ingress.example.com/rest"
+    )
+    # base_url / topic still flow through untouched (plugin ignores them when
+    # full_url is set) so downstream code paths remain stable.
+    assert options["base_url"] == "https://kafka-rest.example.com"
+    assert options["topic"] == "dq-stats"
+    assert _SecretSpy.calls == []
+
+
+def test_options_dbx_secret_indirection_resolves_full_url_before_base_url():
+    """Cerberus/Databricks secret indirection resolves ``full_url`` in
+    lock-step with ``base_url`` / ``topic``. All three keys are probed once
+    each — ``full_url`` first — so operators can migrate incrementally."""
+    stats = {
+        user_config.se_streaming_transport: "kafka_rest",
+        user_config.secret_type: "databricks",
+        user_config.dbx_rest_full_url: "dbx_full_url_key",
+        user_config.dbx_rest_base_url: "dbx_url_key",
+        user_config.dbx_rest_topic_name: "dbx_topic_key",
+    }
+    _SecretSpy.resolved = {
+        "dbx_full_url_key": "https://from-dbx.example.com/nsp/rest",
+        "dbx_url_key": "https://from-dbx.example.com",
+        "dbx_topic_key": "dq-from-dbx",
+    }
+    writer = _writer_with_stats(stats)
+
+    with patch(
+        "spark_expectations.sinks.utils.writer.SparkExpectationsSecretsBackend",
+        _SecretSpy,
+    ):
+        options = writer.get_kafka_rest_write_options(stats)
+
+    assert options["full_url"] == "https://from-dbx.example.com/nsp/rest"
+    assert options["base_url"] == "https://from-dbx.example.com"
+    assert options["topic"] == "dq-from-dbx"
+    # Read order: full_url → base_url → topic. Auth secret NOT probed.
+    assert _SecretSpy.calls == ["dbx_full_url_key", "dbx_url_key", "dbx_topic_key"]
+
+
+def test_options_cbs_full_url_secret_uses_cerberus_key_not_dbx():
+    """When ``secret_type=cerberus``, the Cerberus full-URL key is probed;
+    the Databricks key MUST be ignored."""
+    stats = {
+        user_config.se_streaming_transport: "kafka_rest",
+        user_config.secret_type: "cerberus",
+        user_config.cbs_rest_full_url: "cbs_full_url_key",
+        user_config.dbx_rest_full_url: "dbx_full_url_key",  # must be ignored
+    }
+    _SecretSpy.resolved = {
+        "cbs_full_url_key": "https://from-cerberus.example.com/nsp/rest",
+        "dbx_full_url_key": "MUST-NOT-APPEAR",
+    }
+    writer = _writer_with_stats(stats)
+
+    with patch(
+        "spark_expectations.sinks.utils.writer.SparkExpectationsSecretsBackend",
+        _SecretSpy,
+    ):
+        options = writer.get_kafka_rest_write_options(stats)
+
+    assert options["full_url"] == "https://from-cerberus.example.com/nsp/rest"
+    # Only the Cerberus key was probed.
+    assert _SecretSpy.calls == ["cbs_full_url_key"]
+
+
+def test_options_no_full_url_config_leaves_full_url_none():
+    """Neither direct nor secret-key full_url configured → options["full_url"]
+    is ``None`` and the plugin will compose ``{base_url}/topics/{topic}``.
+    Backward-compatibility check for existing Confluent REST Proxy users.
+    """
+    stats = {
+        user_config.se_streaming_transport: "kafka_rest",
+        user_config.se_streaming_rest_base_url: "https://kafka-rest.example.com",
+        user_config.se_streaming_rest_topic_name: "dq-stats",
+    }
+    writer = _writer_with_stats(stats)
+
+    with patch(
+        "spark_expectations.sinks.utils.writer.SparkExpectationsSecretsBackend",
+        _SecretSpy,
+    ):
+        options = writer.get_kafka_rest_write_options(stats)
+
+    assert options["full_url"] is None
+    assert options["base_url"] == "https://kafka-rest.example.com"
+    assert options["topic"] == "dq-stats"
+
+
+# ---------------------------------------------------------------------------
 # get_kafka_rest_write_options — auth matrix (opt-in) + read avoidance
 # ---------------------------------------------------------------------------
 
