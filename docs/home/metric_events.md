@@ -38,7 +38,7 @@ flowchart TB
 
     broker[("Kafka broker")]:::infra
     topic[("Topic: dq-sparkexpectations-stats")]:::infra
-    record["Identical on-topic event<br/>key = null, value = JSON bytes"]:::obs
+    record["On-topic event<br/>value = JSON bytes (identical across transports)<br/>key: native = null · REST = product_id:run_ts:row_idx"]:::obs
 
     SE ==>|"transport = kafka_native"| nativeClient
     nativeClient --> tcp
@@ -66,7 +66,7 @@ flowchart TB
     linkStyle 8 stroke:#B89968,stroke-width:1.5px,stroke-dasharray:5 5
 ```
 
-The transport is selected via `user_config.se_streaming_transport` (default: **`kafka_native`**). Both paths reuse `to_json(struct(*))` to serialise the event — and both apply the same `se_job_metadata` struct conversion beforehand — so **on-topic bytes are byte-identical** across the two transports.
+The transport is selected via `user_config.se_streaming_transport` (default: **`kafka_native`**). Both paths reuse `to_json(struct(*))` to serialise the event — and both apply the same `se_job_metadata` struct conversion beforehand — so the **`value` bytes are identical** across the two transports. The record **key** differs by transport (see [Key & Partitioning](#key--partitioning) below).
 
 ---
 
@@ -195,7 +195,7 @@ Both transports are configured through the same `user_conf` dict passed to `Spar
 
 ## The Metric Event Payload
 
-Each event is a single flat JSON document. The Kafka record itself has `key = null`, no headers, and `value` set to the UTF-8 JSON bytes below — this is what consumers read regardless of which transport produced it.
+Each event is a single flat JSON document. The Kafka record has no headers and `value` set to the UTF-8 JSON bytes below — identical across transports. The record `key` is transport-specific: **`null` on native**, and **`{product_id}:{run_timestamp_iso}:{row_index}`** on REST (needed for compacted topics; see [Key & Partitioning](#key--partitioning)).
 
 !!! example "Sample metric event"
     ```json
@@ -275,15 +275,24 @@ Each event is a single flat JSON document. The Kafka record itself has `key = nu
 
     The exact stats-row shape is built in `SparkExpectationsWriter.write_error_stats` in [`spark_expectations/sinks/utils/writer.py`](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/sinks/utils/writer.py); the on-topic bytes are the `to_json(struct(*))` projection of that row.
 
-`se_job_metadata` is converted from a JSON string to a nested struct **before** the `to_json(struct(*))` projection, so it appears as a real nested object (not a double-escaped string) in the event. Both transports call the same [`apply_se_job_metadata_struct`](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/sinks/utils/stats_metadata.py) helper, which is the single source of truth for the transformation and guarantees byte-identical payloads across `kafka_native` and `kafka_rest`.
+`se_job_metadata` is converted from a JSON string to a nested struct **before** the `to_json(struct(*))` projection, so it appears as a real nested object (not a double-escaped string) in the event. Both transports call the same [`apply_se_job_metadata_struct`](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/sinks/utils/stats_metadata.py) helper, which guarantees the **`value` bytes are identical** across `kafka_native` and `kafka_rest`.
 
-**On-topic guarantees — same for both transports:**
+**On-topic guarantees:**
 
-- [x] Value is `to_json(struct(*))` UTF-8 bytes — no schema-registry magic byte
-- [x] `key` is `null`; partitioning is round-robin
-- [x] No Kafka headers are attached
-- [x] Byte-for-byte identical whether produced via native TCP or HTTP/REST
-- [x] Existing consumers (e.g. NSP data-quality consumer) work unchanged when the transport changes
+- [x] `value` is `to_json(struct(*))` UTF-8 bytes — no schema-registry magic byte — **identical across transports**
+- [x] No Kafka headers are attached — same on both transports
+- [x] Consumers that read only `value` (e.g. the NSP data-quality consumer) work unchanged when the transport changes
+
+### Key & Partitioning
+
+The record `key` and resulting partitioning differ by transport. This is intentional — the REST path must key every record so it can produce to topics with `cleanup.policy=compact`, which the Confluent REST Proxy rejects when `key` is null.
+
+| Transport | `key` | Partitioning |
+|---|---|---|
+| `kafka_native` | `null` (only the `value` column is projected before `.write.format("kafka")`) | Round-robin across partitions |
+| `kafka_rest` | `"{product_id}:{run_timestamp_iso}:{row_index}"` — built once per publish in [`_build_record_key`](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/sinks/plugins/kafka_rest_writer.py); `run_timestamp_iso` is the UTC ISO-8601 timestamp captured at the start of the publish | Hash of the key by the broker |
+
+**Consumer impact** — consumers that parse only `value` are unaffected. Consumers or downstream tooling that rely on `key == null` (e.g. for round-robin fan-out) or on a stable key format will see different behavior on the REST path.
 
 ---
 
@@ -295,7 +304,7 @@ Each event is a single flat JSON document. The Kafka record itself has `key = nu
     | Endpoint | `kafka.bootstrap.servers` (broker list) | `POST /topics/{topic}` (Confluent REST Proxy v2) |
     | Client requirement | JVM + Spark Kafka connector JARs | Any HTTP client (curl, `requests`, browser) |
     | Auth | SASL_SSL + OAUTHBEARER to the broker | HTTP auth to the proxy; proxy holds broker credentials |
-    | Message envelope | Spark columns `key` / `value` / `partition` / `headers` | JSON `{ "records": [ { "value": {...} } ] }` (v2) |
+    | Message envelope | Spark columns `key` / `value` / `partition` / `headers` (only `value` is projected → key is `null`) | JSON `{ "records": [ { "key": "...", "value": {...} } ] }` (v2) — key always populated |
     | Value encoding | Raw UTF-8 bytes of the JSON string | JSON object (v2 `embedded_format=json`) |
     | Schema Registry | Not used | Not used (JSON-only pipeline; no schema id / subject registration) |
     | Response semantics | Spark task success / failure | HTTP status + per-record `offsets[].error_code` |
@@ -304,6 +313,8 @@ Each event is a single flat JSON document. The Kafka record itself has `key = nu
     | Ops footprint | Brokers only | Extra REST Proxy tier to run, scale, secure, monitor |
     | Network reach | Every executor :material-arrow-right: every broker leader | Single HTTPS endpoint |
     | Ordering | Per-partition | Per-partition (proxy) — pin via `/partitions/{id}` if strict |
+    | Compaction (`cleanup.policy=compact`) | Not supported — null key is rejected by compacted topics | Supported — key is always populated |
+    | Partitioning | Round-robin (null key) | Hash of `{product_id}:{run_timestamp_iso}:{row_index}` |
 
     **Rule of thumb** — use **Native** when SE runs inside Spark/Databricks with broker connectivity and event volume matters; use **REST** when broker connectivity is not available/allowed, when a thin/non-JVM client must publish, or when a single governed HTTPS egress is a hard requirement.
 
