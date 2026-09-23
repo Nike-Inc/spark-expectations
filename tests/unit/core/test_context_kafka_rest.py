@@ -257,7 +257,7 @@ def test_rest_base_url_and_topic_return_none_when_absent(spark):
 
 # ---------------------------------------------------------------------------
 # full_url resolver — parallel to base_url. Enables HTTP-ingress endpoints
-# (e.g. Nike NSP3) where the stream URL is the produce endpoint and no
+# where the stream URL is the produce endpoint and no
 # ``/topics/{topic}`` segment is appended.
 # ---------------------------------------------------------------------------
 

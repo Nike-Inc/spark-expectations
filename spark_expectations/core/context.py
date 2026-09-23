@@ -1997,7 +1997,7 @@ class SparkExpectationsContext:
         When set (directly or via :meth:`get_rest_full_url_key`), SE POSTs to
         this URL verbatim and bypasses the Confluent-style
         ``{base_url}/topics/{topic}`` composition. Enables HTTP-ingress
-        endpoints (e.g. Nike NSP3) that treat the stream URL as the produce
+        endpoints that treat the stream URL as the produce
         endpoint. Returns ``None`` when unset.
         """
         value = self._se_streaming_stats_dict.get(user_config.se_streaming_rest_full_url)

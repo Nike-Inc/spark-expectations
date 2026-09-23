@@ -86,7 +86,7 @@ def _resolve_produce_url(rest_options: Dict[str, Any]) -> Tuple[str, str]:
 
     * ``full_url`` — when ``rest_options["full_url"]`` is non-empty, that value
       is used verbatim (trailing slash trimmed) and topic is not appended.
-      Enables HTTP-ingress endpoints (e.g. Nike NSP3) where the stream URL is
+      Enables HTTP-ingress endpoints where the stream URL is
       the produce endpoint.
     * ``base_url+topic`` — legacy Confluent REST Proxy v2 shape:
       ``{base_url}/topics/{topic}``.

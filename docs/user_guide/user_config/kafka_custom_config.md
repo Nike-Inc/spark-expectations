@@ -14,7 +14,7 @@ Spark Expectations can publish DQ stats to Kafka using either the **native Kafka
     | Value | Behavior |
     |-------|----------|
     | `kafka_native` | Spark `write.format("kafka")` over the binary protocol (**default**) |
-    | `kafka_rest` | HTTP `POST` to a Confluent-compatible Kafka REST Proxy (`/topics/{topic}`) **or** a fully-qualified HTTP-ingress produce URL (e.g. Nike NSP3) |
+    | `kafka_rest` | HTTP `POST` to a Confluent-compatible Kafka REST Proxy (`/topics/{topic}`) **or** a fully-qualified HTTP-ingress produce URL |
 
     Default: `kafka_native` (see `spark_expectations/config/spark-expectations-default-config.yaml`).
 
@@ -196,9 +196,9 @@ stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
 }
 ```
 
-### Kafka REST — fully-qualified produce URL (Nike NSP3 HTTP ingress)
+### Kafka REST — fully-qualified produce URL (HTTP ingress)
 
-Nike's NSP3 HTTP-ingress bridge exposes the stream URL as the produce endpoint. Do **not** append `/topics/{topic}` — configure `se_streaming_rest_full_url` and SE will POST to the URL verbatim.
+The HTTP-ingress bridge exposes the stream URL as the produce endpoint. Do **not** append `/topics/{topic}` — configure `se_streaming_rest_full_url` and SE will POST to the URL verbatim.
 
 ```python
 from typing import Dict, Union
@@ -213,11 +213,11 @@ stats_streaming_config_dict: Dict[str, Union[bool, str, int]] = {
     ),
     # Optional: logical topic label used ONLY in log lines / metrics.
     user_config.se_streaming_rest_topic_name: "dq-sparkexpectations-stats",
-    # NSP3 HTTP ingress typically requires bearer-token auth.
+    # HTTP ingress typically requires bearer-token auth.
     user_config.se_streaming_rest_auth_type: "bearer",
     user_config.secret_type: "databricks",
     user_config.dbx_secret_scope: "sole_common_prod",
-    user_config.dbx_rest_auth_secret: "nsp3_bearer_token_secret_key",
+    user_config.dbx_rest_auth_secret: "rest_bearer_token_secret_key",
 }
 ```
 

@@ -808,7 +808,7 @@ class SparkExpectationsWriter:
           via ``se.streaming.{dbx,cerberus}.rest.full.url`` secret indirection):
           SE POSTs to the resolved URL **verbatim** and skips the
           ``{base_url}/topics/{topic}`` composition. Enables HTTP-ingress
-          endpoints (e.g. Nike NSP3) where the stream URL is the produce
+          endpoints where the stream URL is the produce
           endpoint. ``topic`` remains optional and, when set, is used only as a
           logical label in log lines / metrics.
         * **Confluent-style base + topic** (``se.streaming.rest.base.url`` +

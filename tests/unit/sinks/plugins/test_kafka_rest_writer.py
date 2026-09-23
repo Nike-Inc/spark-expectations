@@ -660,7 +660,7 @@ def test_writer_applies_se_job_metadata_struct_helper_before_serialisation():
 
 
 # ---------------------------------------------------------------------------
-# full_url mode — HTTP-ingress endpoints (e.g. Nike NSP3) that treat the
+# full_url mode — HTTP-ingress endpoints that treat the
 # stream URL as the produce endpoint and do NOT expect /topics/{topic}
 # to be appended.
 # ---------------------------------------------------------------------------
@@ -900,7 +900,7 @@ def test_writer_key_run_timestamp_shared_across_rows_in_single_publish():
 
 
 def test_writer_key_present_in_full_url_mode_as_well():
-    """``full_url`` transport (Nike NSP3 HTTP-ingress) uses the same envelope
+    """``full_url`` transport (HTTP-ingress) uses the same envelope
     shape, so the key MUST also be present when full_url is in play."""
     plugin = SparkExpectationsKafkaRestWritePluginImpl()
     mock_session = _mock_session(
