@@ -97,10 +97,15 @@ class Constants:
 
     se_streaming_rest_base_url = "se.streaming.rest.base.url"
     se_streaming_rest_topic_name = "se.streaming.rest.topic.name"
+    # Optional fully-qualified produce URL. 
+    # SE POSTs to this URL verbatim and skips the Confluent-style ``{base_url}/topics/{topic}`` composition.
+    se_streaming_rest_full_url = "se.streaming.rest.full.url"
     dbx_rest_base_url = "se.streaming.dbx.rest.base.url"
     dbx_rest_topic_name = "se.streaming.dbx.rest.topic.name"
+    dbx_rest_full_url = "se.streaming.dbx.rest.full.url"
     cbs_rest_base_url = "se.streaming.cerberus.rest.base.url"
     cbs_rest_topic_name = "se.streaming.cerberus.rest.topic.name"
+    cbs_rest_full_url = "se.streaming.cerberus.rest.full.url"
 
     se_streaming_rest_embedded_format = "se.streaming.rest.embedded.format"
     se_streaming_rest_api_version = "se.streaming.rest.api.version"
@@ -112,6 +117,10 @@ class Constants:
     se_streaming_rest_pool_maxsize = "se.streaming.rest.pool.maxsize"
     se_streaming_rest_connect_timeout_sec = "se.streaming.rest.connect.timeout.sec"
     se_streaming_rest_read_timeout_sec = "se.streaming.rest.read.timeout.sec"
+    se_streaming_rest_auth_type = "se.streaming.rest.auth.type"
+    se_streaming_rest_username = "se.streaming.rest.username"
+    dbx_rest_auth_secret = "se.streaming.dbx.rest.auth.secret"
+    cbs_rest_auth_secret = "se.streaming.cerberus.rest.auth.secret"
 
     # declare const user config variables for agg query dq detailed stats
     se_enable_agg_dq_detailed_result = "spark.expectations.agg.dq.detailed.stats"
