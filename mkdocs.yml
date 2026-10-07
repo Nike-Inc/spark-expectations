@@ -46,6 +46,7 @@ nav:
   - Home:
       - Overview: index.md
       - Why Spark-Expectations: home/why_spark_expectations.md
+      - Metric Events: home/metric_events.md
   - Getting Started:
       - Installation & Prerequisites: user_guide/getting_started.md
       - Quickstart: user_guide/quickstart.md

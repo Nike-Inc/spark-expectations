@@ -571,6 +571,9 @@ def test_collect_stats_on_success_failure(
         WrappedDataFrameWriter().mode("overwrite").format("delta").build(),
     )
     setattr(_mock_context, "get_se_streaming_stats_dict", {"se.streaming.enable": True})
+    # Default streaming transport for Mock context — real context resolves this
+    # from `se.streaming.transport` in the stats dict (default "kafka_native").
+    setattr(_mock_context, "get_streaming_transport", "kafka_native")
     setattr(_mock_context, "get_topic_name", "dq-sparkexpectations-stats")
     setattr(_mock_context, "get_dbr_workspace_id", "local")
     setattr(_mock_context, "get_dbr_workspace_url", "local")
@@ -1114,6 +1117,7 @@ def test_collect_stats_on_success_failure_exception(
         WrappedDataFrameWriter().mode("overwrite").format("delta").build(),
     )
     setattr(_mock_context, "get_se_streaming_stats_dict", {"se.streaming.enable": True})
+    setattr(_mock_context, "get_streaming_transport", "kafka_native")
     setattr(_mock_context, "get_topic_name", "dq-sparkexpectations-stats")
     setattr(_mock_context, "get_dbr_workspace_id", "local")
     setattr(_mock_context, "get_dbr_workspace_url", "local")

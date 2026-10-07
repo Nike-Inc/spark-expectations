@@ -30,6 +30,7 @@ from spark_expectations.utils.udf import remove_passing_status_maps
 from spark_expectations.core.context import SparkExpectationsContext
 from spark_expectations.sinks import _sink_hook
 from spark_expectations.config.user_config import Constants as user_config
+from spark_expectations.config.rest_streaming_defaults import DEFAULT_REST_AUTH_TYPE
 
 
 @dataclass
@@ -798,6 +799,109 @@ class SparkExpectationsWriter:
 
         return options
 
+    def get_kafka_rest_write_options(self, se_stats_dict: dict) -> dict:
+        """Gets Kafka REST write configuration options
+
+        Two produce-URL styles are supported:
+
+        * **Fully-qualified URL** (``se.streaming.rest.full.url`` — direct or
+          via ``se.streaming.{dbx,cerberus}.rest.full.url`` secret indirection):
+          SE POSTs to the resolved URL **verbatim** and skips the
+          ``{base_url}/topics/{topic}`` composition. Enables HTTP-ingress
+          endpoints where the stream URL is the produce
+          endpoint. ``topic`` remains optional and, when set, is used only as a
+          logical label in log lines / metrics.
+        * **Confluent-style base + topic** (``se.streaming.rest.base.url`` +
+          ``se.streaming.rest.topic.name``, or their secret-indirection
+          equivalents): SE composes ``{base_url}/topics/{topic}``. This is the
+          default and matches the Confluent REST Proxy v2 contract.
+
+        ``full_url`` — when resolved to a non-empty value — wins over
+        ``base_url`` + ``topic``.
+
+        Returns:
+            dict: Kafka REST write configuration options
+        """
+
+        secret_handler = SparkExpectationsSecretsBackend(se_stats_dict)
+
+        # ---- Step 1a: fully-qualified URL (opt-in, overrides base+topic) ---
+        full_url_key = self._context.get_rest_full_url_key
+        if full_url_key:
+            full_url = secret_handler.get_secret(full_url_key)
+        else:
+            full_url = self._context.get_rest_full_url_direct
+
+        # ---- Step 1b: base URL (secret indirection is opt-in) --------------
+        base_url_key = self._context.get_rest_base_url_key
+        if base_url_key:
+            base_url = secret_handler.get_secret(base_url_key)
+        else:
+            base_url = self._context.get_rest_base_url_direct
+
+        # ---- Step 1c: topic (same discipline as base URL) ------------------
+        # In ``full_url`` mode this is an optional logical label used only for
+        # log lines / metrics; in ``base_url`` mode it is required.
+        topic_key = self._context.get_rest_topic_key
+        if topic_key:
+            topic = secret_handler.get_secret(topic_key)
+        else:
+            topic = self._context.get_rest_topic_direct
+
+        options: Dict[str, Any] = {
+            "full_url": full_url,
+            "base_url": base_url,
+            "topic": topic,
+            "api_version": self._context.get_rest_api_version,
+            "embedded_format": self._context.get_rest_embedded_format,
+            "timeout_sec": self._context.get_rest_timeout_sec,
+            "connect_timeout_sec": self._context.get_rest_connect_timeout_sec,
+            "read_timeout_sec": self._context.get_rest_read_timeout_sec,
+            "verify_ssl": self._context.get_rest_verify_ssl,
+            "max_retries": self._context.get_rest_max_retries,
+            "backoff_factor": self._context.get_rest_backoff_factor,
+            "pool_connections": self._context.get_rest_pool_connections,
+            "pool_maxsize": self._context.get_rest_pool_maxsize,
+        }
+
+        # ---- Step 2: auth resolution (lazy, opt-in) ------------------------
+        # get_rest_auth_type always returns "none" | "basic" | "bearer".
+        auth_type = self._context.get_rest_auth_type
+
+        if auth_type == DEFAULT_REST_AUTH_TYPE:
+            _log.debug("Kafka REST auth disabled (auth_type=none); publishing unauthenticated.")
+            return options
+
+        # ---- Step 3: credentialed auth (only "basic" or "bearer") ----------
+        if auth_type == "basic":
+            username = self._context.get_rest_username
+            secret_key = self._context.get_rest_auth_secret_key
+            secret_value = secret_handler.get_secret(secret_key) if secret_key else None
+            if not username or not secret_value:
+                raise SparkExpectationsMiscException(
+                    "Kafka REST auth_type=basic but credentials missing: "
+                    "'se.streaming.rest.username' and one of "
+                    "'se.streaming.{cerberus,dbx}.rest.auth.secret' must both resolve to non-empty values."
+                )
+            options["auth"] = (username, secret_value)
+            return options
+
+        if auth_type == "bearer":
+            secret_key = self._context.get_rest_auth_secret_key
+            secret_value = secret_handler.get_secret(secret_key) if secret_key else None
+            if not secret_value:
+                raise SparkExpectationsMiscException(
+                    "Kafka REST auth_type=bearer but credentials missing: "
+                    "one of 'se.streaming.{cerberus,dbx}.rest.auth.secret' must resolve to a non-empty token."
+                )
+            options["auth_headers"] = {"Authorization": f"Bearer {secret_value}"}
+            return options
+
+        raise SparkExpectationsMiscException(
+            f"Kafka REST auth_type '{auth_type}' is not supported; "
+            f"expected one of none, basic, bearer."
+        )
+
     def write_error_stats(self) -> None:
         """
         This functions takes the stats table and write it into error table
@@ -981,16 +1085,20 @@ class SparkExpectationsWriter:
             _se_stats_dict = self._context.get_se_streaming_stats_dict
             if _se_stats_dict[user_config.se_enable_streaming]:
                 try:
-                    _log.info("Attempting to write stats to Kafka...")
-                    kafka_write_options: dict = self.get_kafka_write_options(_se_stats_dict)
-                    _sink_hook.writer(
-                        _write_args={
-                            "product_id": self._context.product_id,
-                            "enable_se_streaming": _se_stats_dict[user_config.se_enable_streaming],
-                            "kafka_write_options": kafka_write_options,
-                            "stats_df": df,
-                        }
-                    )
+                    transport = self._context.get_streaming_transport
+                    _write_args: Dict[str, Any] = {
+                        "product_id": self._context.product_id,
+                        "enable_se_streaming": _se_stats_dict[user_config.se_enable_streaming],
+                        "stats_df": df,
+                        "transport": transport,
+                    }
+                    if transport == "kafka_rest":
+                        _log.info("Attempting to write stats to Kafka via REST proxy...")
+                        _write_args["rest_write_options"] = self.get_kafka_rest_write_options(_se_stats_dict)
+                    else:
+                        _log.info("Attempting to write stats to Kafka...")
+                        _write_args["kafka_write_options"] = self.get_kafka_write_options(_se_stats_dict)
+                    _sink_hook.writer(_write_args=_write_args)
                     self._context.set_kafka_write_status("Success")
                     _log.info("Successfully wrote stats to Kafka")
                 except Exception as kafka_error:

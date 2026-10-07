@@ -14,9 +14,17 @@ Spark Expectations can publish DQ stats to Kafka using either the **native Kafka
     | Value | Behavior |
     |-------|----------|
     | `kafka_native` | Spark `write.format("kafka")` over the binary protocol (**default**) |
-    | `kafka_rest` | HTTP `POST` to a Confluent-compatible Kafka REST Proxy (`/topics/{topic}`) |
+    | `kafka_rest` | HTTP `POST` to a Confluent-compatible Kafka REST Proxy (`/topics/{topic}`) **or** a fully-qualified HTTP-ingress produce URL |
 
     Default: `kafka_native` (see `spark_expectations/config/spark-expectations-default-config.yaml`).
+
+!!! tip "Two REST URL shapes"
+    The `kafka_rest` transport supports **two** produce-URL styles:
+
+    * **Confluent REST Proxy v2** — configure `se_streaming_rest_base_url` + `se_streaming_rest_topic_name`; SE composes `{base_url}/topics/{topic}`.
+    * **Fully-qualified produce URL** — configure `se_streaming_rest_full_url`; SE POSTs to that URL **verbatim**, skipping the `/topics/{topic}` composition. Use this for HTTP-ingress endpoints where the stream URL is already the produce endpoint.
+
+    When `full_url` resolves to a non-empty value it **wins** over the base+topic pair.
 
 ## Native Kafka Custom Configuration Parameters
 
@@ -43,20 +51,28 @@ Connection details resolve **secret-scope-first** (when `user_config.secret_type
 ### Direct configuration
 
 !!! info "user_config.se_streaming_rest_base_url"
-    Kafka REST Proxy base URL (for example, `https://kafka-rest.example.com` or `http://localhost:8082`). No trailing slash required.
+    Kafka REST Proxy base URL (for example, `https://kafka-rest.example.com` or `http://localhost:8082`). No trailing slash required. Used only when `se_streaming_rest_full_url` is not set.
 
 !!! info "user_config.se_streaming_rest_topic_name"
-    Topic name to publish to via the REST proxy.
+    Topic name to publish to via the REST proxy. **Required** when using `se_streaming_rest_base_url`. **Optional** when using `se_streaming_rest_full_url` — in that mode it is used only as a logical label in log lines / metrics.
+
+!!! info "user_config.se_streaming_rest_full_url"
+    Fully-qualified produce URL. When set, SE POSTs to this URL **verbatim** and skips the `{base_url}/topics/{topic}` composition. Enables HTTP-ingress endpoints that treat the stream URL as the produce endpoint. Trailing slashes are trimmed.
+
+    When both `se_streaming_rest_full_url` and `se_streaming_rest_base_url` are set, `full_url` wins.
 
 ### Secret key configuration
 
-When `user_config.secret_type` is `databricks`, SE reads the REST base URL and topic from Databricks secret scope keys:
+When `user_config.secret_type` is `databricks`, SE reads the REST URLs and topic from Databricks secret scope keys:
 
 !!! info "user_config.dbx_rest_base_url"
     Databricks secret **key** whose value is the Kafka REST base URL.
 
 !!! info "user_config.dbx_rest_topic_name"
     Databricks secret **key** whose value is the REST topic name.
+
+!!! info "user_config.dbx_rest_full_url"
+    Databricks secret **key** whose value is the fully-qualified produce URL. Same semantics as `se_streaming_rest_full_url` — when this key resolves to a non-empty value, SE POSTs verbatim.
 
 When `user_config.secret_type` is `cerberus`, use the Cerberus equivalents:
 
@@ -66,7 +82,13 @@ When `user_config.secret_type` is `cerberus`, use the Cerberus equivalents:
 !!! info "user_config.cbs_rest_topic_name"
     Cerberus secret **key** whose value is the REST topic name.
 
+!!! info "user_config.cbs_rest_full_url"
+    Cerberus secret **key** whose value is the fully-qualified produce URL.
+
 If a secret key is configured for the active `secret_type`, that key is resolved at runtime. Direct `se_streaming_rest_*` values remain available as a fallback when no secret key is set.
+
+!!! note "Secret backend precedence"
+    When both Cerberus and Databricks keys are populated in `user_conf`, SE resolves auth-related secret keys **Cerberus-first, then Databricks**. Base URL and topic keys follow the same discipline. `user_config.secret_type` selects which backend performs the lookup at runtime.
 
 ### REST client options
 
@@ -99,6 +121,24 @@ If a secret key is configured for the active `secret_type`, that key is resolved
 
 !!! info "user_config.se_streaming_rest_pool_maxsize"
     Maximum pooled connections per host for the REST HTTP client. Default: `10`.
+
+### Authentication
+
+Kafka REST auth is opt-in. When `auth_type` is `none` (default), no credential keys are read.
+
+!!! info "user_config.se_streaming_rest_auth_type"
+    HTTP auth mode used to POST to the REST proxy. One of `none` \| `basic` \| `bearer`. Default: `none`. Unrecognised values log a WARNING and fall back to `none`.
+
+!!! info "user_config.se_streaming_rest_username"
+    Direct username for `basic` auth. Required (together with an auth-secret) when `auth_type` is `basic`; ignored otherwise.
+
+!!! info "user_config.dbx_rest_auth_secret"
+    Databricks secret **key** whose value is the credential — password for `basic`, bearer token for `bearer`.
+
+!!! info "user_config.cbs_rest_auth_secret"
+    Cerberus secret **key** whose value is the credential — password for `basic`, bearer token for `bearer`.
+
+When `auth_type` is `basic` or `bearer`, SE resolves the auth-secret key using the same **Cerberus-first, then Databricks** precedence as base URL / topic. If a credentialed mode is selected but credentials do not resolve to non-empty values, SE raises `SparkExpectationsMiscException` — misconfiguration fails loudly rather than silently degrading to unauthenticated.
 
 ## Configuration Examples
 
@@ -155,5 +195,32 @@ stats_streaming_config_dict: Dict[str, Union[bool, str]] = {
     user_config.dbx_rest_topic_name: "se_streaming_rest_topic_secret_key",
 }
 ```
+
+### Kafka REST — fully-qualified produce URL (HTTP ingress)
+
+The HTTP-ingress bridge exposes the stream URL as the produce endpoint. Do **not** append `/topics/{topic}` — configure `se_streaming_rest_full_url` and SE will POST to the URL verbatim.
+
+```python
+from typing import Dict, Union
+from spark_expectations.config.user_config import Constants as user_config
+
+stats_streaming_config_dict: Dict[str, Union[bool, str, int]] = {
+    user_config.se_enable_streaming: True,
+    user_config.se_streaming_transport: "kafka_rest",
+    # HTTP-ingress URL — used verbatim. No /topics/{topic} suffix appended.
+    user_config.se_streaming_rest_full_url: (
+        "https://123.ingest.abc.com/rest"
+    ),
+    # Optional: logical topic label used ONLY in log lines / metrics.
+    user_config.se_streaming_rest_topic_name: "dq-sparkexpectations-stats",
+    # HTTP ingress typically requires bearer-token auth.
+    user_config.se_streaming_rest_auth_type: "bearer",
+    user_config.secret_type: "databricks",
+    user_config.dbx_secret_scope: "sole_common_prod",
+    user_config.dbx_rest_auth_secret: "rest_bearer_token_secret_key",
+}
+```
+
+Fully-qualified URLs can also be sourced from a secret scope. Use `user_config.dbx_rest_full_url` (or `user_config.cbs_rest_full_url` for Cerberus) whose value is the Databricks / Cerberus secret **key** that resolves at runtime to the actual URL.
 
 For end-to-end event shape and transport comparison, see [Metric Events](../../home/metric_events.md).

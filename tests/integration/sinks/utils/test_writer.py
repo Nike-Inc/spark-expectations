@@ -2222,6 +2222,7 @@ def test_write_error_stats(
 
     else:
         setattr(_mock_context, "get_se_streaming_stats_dict", {"se.streaming.enable": True})
+        setattr(_mock_context, "get_streaming_transport", "kafka_native")
         _fixture_writer.write_error_stats()
         stats_table = spark.table("test_dq_stats_table")
         assert stats_table.count() == 1
