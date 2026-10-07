@@ -8,7 +8,7 @@ Metric events are the streaming, real-time counterpart of the stats table. They 
     A metric event is emitted **once per decorated function call**, not per row and not per rule. Row-level failures still land in the `_error` table; the event summarises the run so consumers do not need to scan Delta tables to react.
 
 !!! info "Enabled by `se_enable_streaming`"
-    Publishing is controlled by [`user_config.se_enable_streaming`](../user_guide/configuration_reference.md#streaming-kafka). When `False`, no events are produced (status = `Disabled`) and neither transport is invoked. When `True`, exactly one event per run is published to the topic named `dq-sparkexpectations-stats` by default (see [Kafka Streaming Config](../user_guide/user_config/kafka_custom_config.md) for local / custom overrides).
+    Publishing is controlled by `[user_config.se_enable_streaming](../user_guide/configuration_reference.md#streaming-kafka)`. When `False`, no events are produced (status = `Disabled`) and neither transport is invoked. When `True`, exactly one event per run is published to the topic named `dq-sparkexpectations-stats` by default (see [Kafka Streaming Config](../user_guide/user_config/kafka_custom_config.md) for local / custom overrides).
 
 ---
 
@@ -16,8 +16,8 @@ Metric events are the streaming, real-time counterpart of the stats table. They 
 
 Spark-Expectations supports **two transports** for publishing metric events. Both land the **same bytes** on the same topic — consumers cannot tell them apart — so the choice is driven purely by the network and runtime environment where SE runs.
 
-- **Native Kafka (TCP)** &nbsp;·&nbsp; the Spark Kafka DataSource + `kafka-clients` producer, using the Kafka binary protocol over TCP with SASL/OAUTHBEARER.
-- **HTTP / REST Stream API** &nbsp;·&nbsp; a thin HTTPS `POST` to a Kafka REST Proxy that wraps the event in a `records[]` envelope and forwards it to the broker.
+- **Native Kafka (TCP)**  ·  the Spark Kafka DataSource + `kafka-clients` producer, using the Kafka binary protocol over TCP with SASL/OAUTHBEARER.
+- **HTTP / REST Stream API**  ·  a thin HTTPS `POST` to a Kafka REST Proxy that wraps the event in a `records[]` envelope and forwards it to the broker.
 
 ```mermaid
 flowchart TB
@@ -66,7 +66,7 @@ flowchart TB
     linkStyle 8 stroke:#B89968,stroke-width:1.5px,stroke-dasharray:5 5
 ```
 
-The transport is selected via `user_config.se_streaming_transport` (default: **`kafka_native`**). Both paths reuse `to_json(struct(*))` to serialise the event — and both apply the same `se_job_metadata` struct conversion beforehand — so the **`value` bytes are identical** across the two transports. The record **key** differs by transport (see [Key & Partitioning](#key--partitioning) below).
+The transport is selected via `user_config.se_streaming_transport` (default: **`kafka_native`**). Both paths reuse `to_json(struct(*))` to serialise the event — and both apply the same `se_job_metadata` struct conversion beforehand — so the *`*value` bytes are identical** across the two transports. The record **key** differs by transport (see [Key & Partitioning](#key--partitioning) below).
 
 ---
 
@@ -74,31 +74,31 @@ The transport is selected via `user_config.se_streaming_transport` (default: **`
 
 <div class="grid cards" markdown>
 
--   :material-lan-connect:{ .lg .middle } &nbsp;__Native Kafka (TCP)__
+-   :material-lan-connect:{ .lg .middle }  __Native Kafka (TCP)__
 
     ---
 
-    **Transport** &nbsp;·&nbsp; Kafka binary protocol over TCP :material-arrow-right: broker `:9092/:9093`
-    **Endpoint** &nbsp;·&nbsp; `kafka.bootstrap.servers` (broker list)
-    **Client requirement** &nbsp;·&nbsp; JVM + Spark Kafka connector JARs
-    **Auth** &nbsp;·&nbsp; SASL_SSL / OAUTHBEARER negotiated at the broker
-    **Best for** &nbsp;·&nbsp; in-Spark / Databricks runs with broker connectivity and high event volume; executor-parallel produce with native batching and idempotent producer guarantees.
+    **Transport**  ·  Kafka binary protocol over TCP :material-arrow-right: broker `:9092/:9093`
+    **Endpoint**  ·  `kafka.bootstrap.servers` (broker list)
+    **Client requirement**  ·  JVM + Spark Kafka connector JARs
+    **Auth**  ·  SASL_SSL / OAUTHBEARER negotiated at the broker
+    **Best for**  ·  in-Spark / Databricks runs with broker connectivity and high event volume; executor-parallel produce with native batching and idempotent producer guarantees.
 
--   :material-web:{ .lg .middle } &nbsp;__HTTP / REST Stream API__
+-   :material-web:{ .lg .middle }  __HTTP / REST Stream API__
 
     ---
 
-    **Transport** &nbsp;·&nbsp; HTTPS `POST` :material-arrow-right: Confluent REST Proxy :material-arrow-right: broker
-    **Endpoint** &nbsp;·&nbsp; `POST /topics/{topic}` (Confluent REST Proxy v2)
-    **Payload** &nbsp;·&nbsp; JSON only (`embedded_format: json`, `api_version: v2`)
-    **Client requirement** &nbsp;·&nbsp; any HTTP client — no Kafka client libraries needed
-    **Auth** &nbsp;·&nbsp; HTTP layer to the proxy (Basic / Bearer); proxy holds broker credentials
-    **Best for** &nbsp;·&nbsp; restricted-network / non-JVM contexts, or a single governed HTTPS egress.
+    **Transport**  ·  HTTPS `POST` :material-arrow-right: Confluent REST Proxy :material-arrow-right: broker
+    **Endpoint**  ·  `POST /topics/{topic}` (Confluent REST Proxy v2)
+    **Payload**  ·  JSON only (`embedded_format: json`, `api_version: v2`)
+    **Client requirement**  ·  any HTTP client — no Kafka client libraries needed
+    **Auth**  ·  HTTP layer to the proxy (Basic / Bearer); proxy holds broker credentials
+    **Best for**  ·  restricted-network / non-JVM contexts, or a single governed HTTPS egress.
 
 </div>
 
 !!! note "Future — Confluent v3 / binary / Schema Registry"
-    The REST writer is intentionally scoped to the **Confluent v2 Produce API with JSON embedded format** today. `_normalize_api_version` and `_normalize_embedded_format` in [`kafka_rest_writer.py`](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/sinks/plugins/kafka_rest_writer.py) explicitly reject anything else so misconfiguration fails loudly rather than silently degrading to a different transport. The following are on the roadmap but **not yet implemented** — do not set these config values today:
+    The REST writer is intentionally scoped to the **Confluent v2 Produce API with JSON embedded format** today. `_normalize_api_version` and `_normalize_embedded_format` in `[kafka_rest_writer.py](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/sinks/plugins/kafka_rest_writer.py)` explicitly reject anything else so misconfiguration fails loudly rather than silently degrading to a different transport. The following are on the roadmap but **not yet implemented** — do not set these config values today:
 
     - `api_version: "v3"` — Confluent v3 Produce API (`/kafka/v3/clusters/{id}/topics/{topic}/records`). Requires a new `cluster_id` config, a different request envelope (`{"value": {"type": "JSON", "data": {...}}}`), and a different response shape.
     - `embedded_format: "binary"` — base64-encoded JSON bytes on the wire.
@@ -273,15 +273,15 @@ Each event is a single flat JSON document. The Kafka record has no headers and `
     }
     ```
 
-    The exact stats-row shape is built in `SparkExpectationsWriter.write_error_stats` in [`spark_expectations/sinks/utils/writer.py`](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/sinks/utils/writer.py); the on-topic bytes are the `to_json(struct(*))` projection of that row.
+    The exact stats-row shape is built in `SparkExpectationsWriter.write_error_stats` in `[spark_expectations/sinks/utils/writer.py](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/sinks/utils/writer.py)`; the on-topic bytes are the `to_json(struct(*))` projection of that row.
 
-`se_job_metadata` is converted from a JSON string to a nested struct **before** the `to_json(struct(*))` projection, so it appears as a real nested object (not a double-escaped string) in the event. Both transports call the same [`apply_se_job_metadata_struct`](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/sinks/utils/stats_metadata.py) helper, which guarantees the **`value` bytes are identical** across `kafka_native` and `kafka_rest`.
+`se_job_metadata` is converted from a JSON string to a nested struct **before** the `to_json(struct(*))` projection, so it appears as a real nested object (not a double-escaped string) in the event. Both transports call the same `[apply_se_job_metadata_struct](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/sinks/utils/stats_metadata.py)` helper, which guarantees the *`*value` bytes are identical** across `kafka_native` and `kafka_rest`.
 
 **On-topic guarantees:**
 
 - [x] `value` is `to_json(struct(*))` UTF-8 bytes — no schema-registry magic byte — **identical across transports**
 - [x] No Kafka headers are attached — same on both transports
-- [x] Consumers that read only `value` (e.g. the NSP data-quality consumer) work unchanged when the transport changes
+- [x] Consumers that read only `value` (e.g. data-quality consumer) work unchanged when the transport changes
 
 ### Key & Partitioning
 
@@ -290,7 +290,7 @@ The record `key` and resulting partitioning differ by transport. This is intenti
 | Transport | `key` | Partitioning |
 |---|---|---|
 | `kafka_native` | `null` (only the `value` column is projected before `.write.format("kafka")`) | Round-robin across partitions |
-| `kafka_rest` | `"{product_id}:{run_timestamp_iso}:{row_index}"` — built once per publish in [`_build_record_key`](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/sinks/plugins/kafka_rest_writer.py); `run_timestamp_iso` is the UTC ISO-8601 timestamp captured at the start of the publish | Hash of the key by the broker |
+| `kafka_rest` | `"{product_id}:{run_timestamp_iso}:{row_index}"` — built once per publish in `[_build_record_key](https://github.com/Nike-Inc/spark-expectations/blob/main/spark_expectations/sinks/plugins/kafka_rest_writer.py)`; `run_timestamp_iso` is the UTC ISO-8601 timestamp captured at the start of the publish | Hash of the key by the broker |
 
 **Consumer impact** — consumers that parse only `value` are unaffected. Consumers or downstream tooling that rely on `key == null` (e.g. for round-robin fan-out) or on a stable key format will see different behavior on the REST path.
 

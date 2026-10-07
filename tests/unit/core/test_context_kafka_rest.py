@@ -363,10 +363,21 @@ def test_rest_auth_type_lowercased_and_stripped(spark):
 
 
 def test_rest_auth_type_unknown_value_defaults_to_none(spark, caplog):
+    import logging
+    from spark_expectations import _log as se_log
+
     ctx = _ctx(spark, {user_config.se_streaming_rest_auth_type: "mTLS"})
-    with caplog.at_level("WARNING"):
-        assert ctx.get_rest_auth_type == "none"
-    assert any("mtls" in rec.message.lower() for rec in caplog.records if rec.levelname == "WARNING")
+    se_log.propagate = True
+    try:
+        with caplog.at_level(logging.WARNING, logger="spark_expectations"):
+            assert ctx.get_rest_auth_type == "none"
+        assert any(
+            "mtls" in rec.message.lower()
+            for rec in caplog.records
+            if rec.levelname == "WARNING"
+        )
+    finally:
+        se_log.propagate = False
 
 
 def test_rest_username_absent(spark):
