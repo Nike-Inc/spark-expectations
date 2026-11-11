@@ -324,6 +324,8 @@ class SparkExpectationsReport:
             ]
             df_stats_detailed = df_stats_detailed.drop(*columns_to_remove)
 
+            valid_records = safe_cast(ansi_enabled, "valid_records", "double")
+            total_records = safe_cast(ansi_enabled, "total_records", "double")
             df_stats_detailed = (
                 df_stats_detailed.withColumnRenamed("source_dq_row_count", "total_records")
                 .withColumnRenamed("source_dq_status", "status")
@@ -331,7 +333,9 @@ class SparkExpectationsReport:
                 .withColumnRenamed("source_dq_error_row_count", "failed_records")
                 .withColumn(
                     "success_percentage",
-                    (safe_cast(ansi_enabled, "valid_records", "double") / safe_cast(ansi_enabled, "total_records", "double")) * 100,
+                    when((total_records == 0) & valid_records.isNotNull(), lit(0.0)).otherwise(
+                        (valid_records / total_records) * 100
+                    ),
                 )
             )
 
