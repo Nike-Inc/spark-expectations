@@ -1,3 +1,5 @@
+from datetime import date, datetime
+from decimal import Decimal
 from unittest.mock import Mock, MagicMock
 from unittest.mock import patch
 
@@ -382,3 +384,76 @@ def test_agg_query_dq_detailed_result_query_dq_sql_compare_generic_exception(_fi
     with pytest.raises(SparkExpectationsMiscException):
         SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
 
+
+@pytest.mark.parametrize(
+    "raw_value, expected_actual, expected_literal",
+    [
+        (True, True, "true"),
+        (False, False, "false"),
+        (0, 0, "0"),
+        (42, 42, "42"),
+        (0.5, 0.5, "0.5"),
+        (0.45, 0.45, "0.45"),
+        (1.1, 1.1, "1.1"),
+        (float("nan"), None, "CAST('NaN' AS DOUBLE)"),
+        (float("inf"), float("inf"), "CAST('Infinity' AS DOUBLE)"),
+        (float("-inf"), float("-inf"), "CAST('-Infinity' AS DOUBLE)"),
+        (Decimal("10.50"), Decimal("10.50"), "10.50"),
+        (Decimal("0.0000001"), Decimal("0.0000001"), "0.0000001"),
+        ("it's ok", None, "'it''s ok'"),
+        (date(2025, 1, 15), None, "to_date('2025-01-15')"),
+        (datetime(2025, 1, 15, 12, 30, 0), None, "to_date('2025-01-15')"),
+    ],
+)
+def test_format_agg_dq_value_preserves_precision_and_types(raw_value, expected_actual, expected_literal):
+    actual_val, literal_str = SparkExpectationsActions._format_agg_dq_value(raw_value)
+    if expected_actual is None and isinstance(raw_value, float):
+        assert actual_val != actual_val
+    else:
+        assert actual_val == expected_actual
+    assert literal_str == expected_literal
+
+
+def test_format_agg_dq_value_none_raises_value_error():
+    with pytest.raises(ValueError, match="Aggregation result is None"):
+        SparkExpectationsActions._format_agg_dq_value(None)
+
+
+@pytest.mark.parametrize("invalid_value", [["unexpected"], {"k": "v"}])
+def test_format_agg_dq_value_invalid_type_raises_type_error(invalid_value):
+    with pytest.raises(TypeError, match="Unexpected type for aggregation result"):
+        SparkExpectationsActions._format_agg_dq_value(invalid_value)
+
+
+def test_agg_query_dq_detailed_result_range_none_raises_exception(_fixture_agg_dq_rule):
+    ctx = Mock(spec=SparkExpectationsContext)
+    ctx.get_agg_dq_rule_type_name = "agg_dq"
+    ctx.get_agg_dq_detailed_stats_status = True
+
+    _fixture_agg_dq_rule["expectation"] = "sum(col1)>0 and sum(col1)<10"
+
+    mock_df = MagicMock()
+    mock_agg_result = MagicMock()
+    mock_df.agg.return_value = mock_agg_result
+    mock_agg_result.collect.return_value = [[None]]
+
+    with pytest.raises(SparkExpectationsMiscException, match="Aggregation result is None"):
+        SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])
+
+
+@pytest.mark.parametrize(
+    "expectation",
+    [
+        "avg(x) > 1 and avg(x) < 2 and avg(x) != 1.5",
+        "not_a_valid_expectation",
+    ],
+)
+def test_agg_query_dq_detailed_result_unsupported_expectation_raises(_fixture_agg_dq_rule, expectation):
+    ctx = Mock(spec=SparkExpectationsContext)
+    ctx.get_agg_dq_rule_type_name = "agg_dq"
+    ctx.get_agg_dq_detailed_stats_status = True
+    _fixture_agg_dq_rule["expectation"] = expectation
+
+    mock_df = MagicMock()
+    with pytest.raises(SparkExpectationsMiscException, match="Unsupported aggregate expectation format"):
+        SparkExpectationsActions().agg_query_dq_detailed_result(ctx, _fixture_agg_dq_rule, mock_df, [])

@@ -127,8 +127,8 @@ class Constants:
     # ex). count(*), count(), count(col1), sum(col1), col1
     allowed_functions = r"(\w+\(\*\)|\w+\(\w+\)|\w+)"
     and_clause = r"(\s+and\s+)"
-    # ex). col1 > 1, col 1 < 10
-    operator_with_value = r"(\s*[><]\s*\d+)"
+    # ex). col1 > 1, col1 < 10, avg(col1) >= .5, avg(col1) < 4e-1
+    operator_with_value = r"(\s*(?:<>|[><]=?)\s*[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?)"
 
     se_agg_dq_expectation_range_regex_pattern = (
         allowed_functions + operator_with_value + and_clause + allowed_functions + operator_with_value

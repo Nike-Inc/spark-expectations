@@ -1,8 +1,10 @@
+from decimal import Decimal
 from unittest.mock import Mock
 from unittest.mock import patch
 
 import pytest
 from pyspark.sql.functions import lit, struct, array, udf, create_map
+from pyspark.sql.types import BooleanType, DecimalType, DoubleType, IntegerType, StructField, StructType
 
 from spark_expectations.core import get_spark_session
 from spark_expectations.core.context import SparkExpectationsContext
@@ -2009,3 +2011,184 @@ def test_agg_query_dq_detailed_result_type_error_line_210(_fixture_agg_dq_rule, 
                 _fixture_mock_context, _fixture_agg_dq_rule, df, []
             )
 
+
+def _make_agg_dq_rule(expectation: str, column_name: str = "col1", rule: str = "test_agg_rule") -> dict:
+    return {
+        "rule_type": "agg_dq",
+        "rule": rule,
+        "column_name": column_name,
+        "expectation": expectation,
+        "action_if_failed": "ignore",
+        "table_name": "test_table",
+        "tag": "validity",
+        "enable_for_source_dq_validation": True,
+        "description": "aggregate detailed stats check",
+        "product_id": "product_1",
+    }
+
+
+@pytest.mark.parametrize(
+    "values, expectation, expected_status, expected_actual",
+    [
+        # False-pass regression cases when round() turned 0.50 -> 0 and 0.6 -> 1
+        ([0.50], "avg(err) <= 0.05", "fail", 0.50),
+        ([0.60], "avg(err) >= 0.7", "fail", 0.60),
+        # False-fail regression cases when round() turned 0.45 -> 0 and 0.55 -> 1
+        ([0.45], "avg(err) >= 0.4", "pass", 0.45),
+        ([0.55], "avg(err) <= 0.6", "pass", 0.55),
+        # Additional exact float threshold checks
+        ([0.04, 0.06], "avg(err) <= 0.05", "pass", 0.05),
+        ([0.45], "avg(err) between 0.4 and 0.6", "pass", 0.45),
+    ],
+)
+def test_agg_query_dq_detailed_result_float_comparisons(
+    _fixture_mock_context, values, expectation, expected_status, expected_actual
+):
+    schema = StructType([StructField("err", DoubleType(), True)])
+    df = spark.createDataFrame([(v,) for v in values], schema=schema)
+    rule = _make_agg_dq_rule(expectation=expectation, column_name="err")
+
+    _, detailed_result = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context, rule, df, [])
+
+    assert detailed_result[9] == expected_status
+    assert detailed_result[10] == pytest.approx(expected_actual)
+
+
+@pytest.mark.parametrize(
+    "values, expectation, expected_status, expected_actual",
+    [
+        # Regression case when int(1.1) truncated to 1 and failed "avg(x) > 1 and avg(x) < 2"
+        ([1.1], "avg(x) > 1 and avg(x) < 2", "pass", 1.1),
+        ([1.1], "avg(x) > 0.5 and avg(x) < 1.5", "pass", 1.1),
+        ([1.6], "avg(x) > 0.5 and avg(x) < 1.5", "fail", 1.6),
+        ([0.5], "avg(x) >= 0.5 and avg(x) <= 1.5", "pass", 0.5),
+        ([0.49], "avg(x) >= 0.5 and avg(x) <= 1.5", "fail", 0.49),
+        ([0.35], "avg(x) > .2 and avg(x) < 4e-1", "pass", 0.35),
+        ([0.45], "avg(x) > .2 and avg(x) < 4e-1", "fail", 0.45),
+        ([1.5], "avg(x) > 1 and avg(x) <> 2", "pass", 1.5),
+        ([2.0], "avg(x) > 1 and avg(x) <> 2", "fail", 2.0),
+        ([1.5], "avg(x) <> 1.5", "fail", 1.5),
+        ([1.5], "avg(x) <> 2.0", "pass", 1.5),
+    ],
+)
+def test_agg_query_dq_detailed_result_float_range_expressions(
+    _fixture_mock_context, values, expectation, expected_status, expected_actual
+):
+    schema = StructType([StructField("x", DoubleType(), True)])
+    df = spark.createDataFrame([(v,) for v in values], schema=schema)
+    rule = _make_agg_dq_rule(expectation=expectation, column_name="x")
+
+    _, detailed_result = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context, rule, df, [])
+
+    assert detailed_result[9] == expected_status
+    assert detailed_result[10] == pytest.approx(expected_actual)
+
+
+@pytest.mark.parametrize(
+    "values, expectation, expected_status, expected_actual",
+    [
+        ([True, False], "bool_and(b) = false", "pass", False),
+        ([True, False], "bool_and(b) = true", "fail", False),
+        ([True, False], "every(b) != true", "pass", False),
+        ([True, True], "every(b) != true", "fail", True),
+        ([True, False], "max(b) = true", "pass", True),
+        ([False, False], "max(b) = true", "fail", False),
+    ],
+)
+def test_agg_query_dq_detailed_result_boolean_aggregates(
+    _fixture_mock_context, values, expectation, expected_status, expected_actual
+):
+    schema = StructType([StructField("b", BooleanType(), True)])
+    df = spark.createDataFrame([(v,) for v in values], schema=schema)
+    rule = _make_agg_dq_rule(expectation=expectation, column_name="b")
+
+    _, detailed_result = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context, rule, df, [])
+
+    assert detailed_result[9] == expected_status
+    assert detailed_result[10] is expected_actual
+
+
+@pytest.mark.parametrize(
+    "values, expectation, expected_status, expected_actual",
+    [
+        ([Decimal("5.25"), Decimal("5.25")], "sum(amount) >= 10.50", "pass", Decimal("10.50")),
+        ([Decimal("5.24"), Decimal("5.25")], "sum(amount) >= 10.50", "fail", Decimal("10.49")),
+        ([Decimal("0.50")], "avg(amount) <= 0.05", "fail", Decimal("0.500000")),
+        ([Decimal("1.25")], "avg(amount) > 1 and avg(amount) < 2", "pass", Decimal("1.250000")),
+        ([Decimal("1.25")], "avg(amount) > 1.0 and avg(amount) < 1.2", "fail", Decimal("1.250000")),
+    ],
+)
+def test_agg_query_dq_detailed_result_decimal_aggregates(
+    _fixture_mock_context, values, expectation, expected_status, expected_actual
+):
+    schema = StructType([StructField("amount", DecimalType(10, 2), True)])
+    df = spark.createDataFrame([(v,) for v in values], schema=schema)
+    rule = _make_agg_dq_rule(expectation=expectation, column_name="amount")
+
+    _, detailed_result = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context, rule, df, [])
+
+    assert detailed_result[9] == expected_status
+    assert detailed_result[10] == expected_actual
+
+
+@pytest.mark.parametrize(
+    "expectation, expected_status",
+    [
+        ("count(*) == 0", "pass"),
+        ("count(*) >= 0", "pass"),
+        ("count(*) > 0", "fail"),
+        ("count(*) >= 0 and count(*) < 5", "pass"),
+        ("count(*) > 0 and count(*) < 5", "fail"),
+    ],
+)
+def test_agg_query_dq_detailed_result_empty_dataframe_counts(
+    _fixture_mock_context, expectation, expected_status
+):
+    schema = StructType([StructField("col1", IntegerType(), True)])
+    empty_df = spark.createDataFrame([], schema=schema)
+    _fixture_mock_context.get_input_count = 0
+    rule = _make_agg_dq_rule(expectation=expectation, column_name="")
+
+    _, detailed_result = SparkExpectationsActions.agg_query_dq_detailed_result(
+        _fixture_mock_context, rule, empty_df, [], _source_dq_status=True
+    )
+
+    assert detailed_result[9] == expected_status
+    assert detailed_result[10] == 0
+    assert detailed_result[12] == (0 if expected_status == "pass" else None)
+    assert detailed_result[13] == 0
+    assert detailed_result[14] == 0
+
+
+def test_agg_query_dq_detailed_result_empty_dataframe_null_aggregate_raises(_fixture_mock_context):
+    schema = StructType([StructField("col1", IntegerType(), True)])
+    empty_df = spark.createDataFrame([], schema=schema)
+    rule = _make_agg_dq_rule(expectation="sum(col1) >= 0", column_name="col1")
+
+    with pytest.raises(SparkExpectationsMiscException, match="Aggregation result is None"):
+        SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context, rule, empty_df, [])
+
+
+@pytest.mark.parametrize(
+    "rows, expectation, expected_status, expected_actual",
+    [
+        ([(1, 10), (2, 20), (3, 30)], "count(distinct id) = count(*)", "pass", 3),
+        ([(1, 10), (1, 20), (2, 30)], "count(distinct id) = count(*)", "fail", 2),
+        ([(1, 10), (2, 20), (3, 30)], "count(id) = count(*)", "pass", 3),
+        ([(1, 10), (None, 20), (3, 30)], "count(id) = count(*)", "fail", 2),
+        ([(1, 10), (2, 20), (3, 30)], "max(a) > min(a)", "pass", 30),
+        ([(1, 10), (2, 10), (3, 10)], "max(a) > min(a)", "fail", 10),
+        ([(1, 10), (2, 20), (3, 30)], "sum(a) > avg(a) * 2", "pass", 60),
+    ],
+)
+def test_agg_query_dq_detailed_result_rhs_table_aggregates(
+    _fixture_mock_context, rows, expectation, expected_status, expected_actual
+):
+    schema = StructType([StructField("id", IntegerType(), True), StructField("a", IntegerType(), True)])
+    df = spark.createDataFrame(rows, schema=schema)
+    rule = _make_agg_dq_rule(expectation=expectation, column_name="id")
+
+    _, detailed_result = SparkExpectationsActions.agg_query_dq_detailed_result(_fixture_mock_context, rule, df, [])
+
+    assert detailed_result[9] == expected_status
+    assert detailed_result[10] == expected_actual
