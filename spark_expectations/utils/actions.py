@@ -1,5 +1,7 @@
+import math
 import re
 from datetime import datetime, date
+from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 from pyspark.sql import DataFrame
@@ -124,6 +126,68 @@ class SparkExpectationsActions:
         return not _parentheses_branch_check  # return True if no unmatched left parentheses remain
 
     @staticmethod
+    def _format_agg_dq_value(raw_value: Any) -> Tuple[Any, str]:
+        """
+        Format a collected aggregate result into a Spark SQL literal without losing numeric precision.
+
+        Args:
+            raw_value (Any): The scalar value returned by evaluating an aggregate expression.
+
+        Returns:
+            Tuple[Any, str]: A tuple of (actual_outcome_value, sql_literal).
+        """
+        if raw_value is None:
+            raise ValueError("Aggregation result is None (possibly due to empty data).")
+
+        actual_value: Any = raw_value
+        if isinstance(raw_value, bool):
+            literal_str = "true" if raw_value else "false"
+        elif isinstance(raw_value, Decimal):
+            literal_str = format(raw_value, "f")
+        elif isinstance(raw_value, float):
+            if math.isfinite(raw_value):
+                literal_str = str(raw_value)
+            elif math.isnan(raw_value):
+                literal_str = "CAST('NaN' AS DOUBLE)"
+            else:
+                literal_str = "CAST('Infinity' AS DOUBLE)" if raw_value > 0 else "CAST('-Infinity' AS DOUBLE)"
+        elif isinstance(raw_value, int):
+            literal_str = str(raw_value)
+        elif isinstance(raw_value, str):
+            escaped = raw_value.replace("'", "''")
+            actual_value = None
+            literal_str = f"'{escaped}'"
+        elif isinstance(raw_value, (date, datetime)):
+            date_str = raw_value.strftime("%Y-%m-%d")
+            actual_value = None
+            literal_str = f"to_date('{date_str}')"
+        else:
+            raise TypeError(f"Unexpected type for aggregation result: {type(raw_value)}, value: {raw_value}")
+
+        return actual_value, literal_str
+
+    @staticmethod
+    def _evaluate_agg_dq_expression(
+        df: DataFrame,
+        expression_str: str,
+    ) -> str:
+        """
+        Evaluate a substituted aggregate expectation expression with df.agg so empty DataFrames
+        and right-hand-side aggregate references both evaluate accurately.
+
+        Args:
+            df (DataFrame): Input DataFrame on which the aggregate expectation is evaluated.
+            expression_str (str): Spark SQL boolean expression string to evaluate.
+
+        Returns:
+            str: "pass" if the expression evaluates to True, otherwise "fail".
+        """
+        is_passed = df.agg(
+            when(expr(expression_str), True).otherwise(False).alias("agg_dq_aggregation_check")
+        ).collect()[0][0]
+        return "pass" if is_passed else "fail"
+
+    @staticmethod
     def agg_query_dq_detailed_result(
         _context: SparkExpectationsContext,
         _dq_rule: Dict[str, str],
@@ -169,147 +233,89 @@ class SparkExpectationsActions:
                 _dq_rule["rule_type"] == _context.get_agg_dq_rule_type_name
                 and _context.get_agg_dq_detailed_stats_status is True
             ):
-                if not (">" in _dq_rule["expectation"] and "<" in _dq_rule["expectation"]):
+                _expectation = _dq_rule["expectation"].strip()
+                _range_pattern = rf"{constant_config.se_agg_dq_expectation_range_regex_pattern}"
+                _range_match = re.fullmatch(_range_pattern, _expectation)
+                _expectation_without_ne = _expectation.replace("<>", "")
+                if _range_match is None and not (">" in _expectation_without_ne and "<" in _expectation_without_ne):
                     _pattern = rf"{constant_config.se_agg_dq_expectation_regex_pattern}"
-                    _re_compile = re.compile(_pattern)
-                    _agg_dq_expectation_match = re.match(_re_compile, _dq_rule["expectation"])
-                    _agg_dq_expectation_expr = None
-                    if _agg_dq_expectation_match:
-                        _agg_dq_expectation_aggstring = _agg_dq_expectation_match.group(1)
-                        _agg_dq_expectation_expr = _agg_dq_expectation_match.group(2)
-                        _agg_dq_expectation_cond_expr = expr(_agg_dq_expectation_aggstring)
-                        try:
-                            _agg_dq_actual_count_value_raw = df.agg(_agg_dq_expectation_cond_expr).collect()[0][0]
-                        except Exception as e:
-                            raise_if_ansi_exception(e, _dq_rule["rule"], _dq_rule["expectation"])
-                            raise
+                    _agg_dq_expectation_match = re.fullmatch(_pattern, _expectation)
+                    if not _agg_dq_expectation_match:
+                        raise ValueError(f"Unsupported aggregate expectation format: {_dq_rule['expectation']}")
 
-                        # Handle NoneType (nulls)
-                        if _agg_dq_actual_count_value_raw is None:
-                            raise ValueError("Aggregation result is None (possibly due to empty data).")
+                    _agg_dq_expectation_aggstring = _agg_dq_expectation_match.group(1)
+                    _agg_dq_expectation_expr = _agg_dq_expectation_match.group(2)
+                    _agg_dq_expectation_cond_expr = expr(_agg_dq_expectation_aggstring)
+                    try:
+                        _agg_dq_actual_count_value_raw = df.agg(_agg_dq_expectation_cond_expr).collect()[0][0]
+                    except Exception as e:
+                        raise_if_ansi_exception(e, _dq_rule["rule"], _dq_rule["expectation"])
+                        raise
 
-                        _agg_dq_actual_count_value = None
+                    (
+                        _agg_dq_actual_count_value,
+                        _agg_dq_value_literal,
+                    ) = SparkExpectationsActions._format_agg_dq_value(_agg_dq_actual_count_value_raw)
+                    _agg_dq_expression_str = f"{_agg_dq_value_literal}{_agg_dq_expectation_expr}"
 
-                        if isinstance(_agg_dq_actual_count_value_raw, (int, float)):
-                            # Optionally: warn if float is not integral
-                            if (
-                                isinstance(_agg_dq_actual_count_value_raw, float)
-                                and not _agg_dq_actual_count_value_raw.is_integer()
-                            ):
-                                print(
-                                    f"Warning: aggregation result { _agg_dq_actual_count_value_raw } is a float and will be rounded."
-                                )
-                            _agg_dq_actual_count_value = round(_agg_dq_actual_count_value_raw)
-                            _agg_dq_expression_str = str(_agg_dq_actual_count_value) + _agg_dq_expectation_expr
-                        elif isinstance(_agg_dq_actual_count_value_raw, str):
-                            # Escape single quotes
-                            escaped = _agg_dq_actual_count_value_raw.replace("'", "''")
-                            _agg_dq_expression_str = f"'{escaped}' {_agg_dq_expectation_expr}"
-                        elif isinstance(_agg_dq_actual_count_value_raw, (date, datetime)):
-                            date_str = _agg_dq_actual_count_value_raw.strftime("%Y-%m-%d")
-                            _agg_dq_expression_str = f"to_date('{date_str}')  {_agg_dq_expectation_expr}"
-                        else:
-                            raise TypeError(
-                                f"Unexpected type for aggregation result: {type(_agg_dq_actual_count_value_raw)}, "
-                                f"value: {_agg_dq_actual_count_value_raw}"
-                            )
+                    status = SparkExpectationsActions._evaluate_agg_dq_expression(df, _agg_dq_expression_str)
 
-                        _agg_dq_expr_condition = []
+                    if _source_dq_status:
+                        row_count = _context.get_input_count
+                    elif _target_dq_status:
+                        row_count = _context.get_output_count
+                    else:
+                        row_count = None
 
-                        _agg_dq_expr_condition.append(
-                            when(expr(_agg_dq_expression_str), True).otherwise(False).alias("agg_dq_aggregation_check")
-                        )
+                    actual_row_count = row_count if status == "pass" else None
+                    error_row_count = 0 if status == "pass" else row_count
 
-                        _df_agg_dq_expr_result = df.select(*_agg_dq_expr_condition)
-
-                        # status = "pass" if eval(_agg_dq_expression_str) else "fail"
-
-                        status = (
-                            "pass"
-                            if _df_agg_dq_expr_result.filter(_df_agg_dq_expr_result["agg_dq_aggregation_check"]).count()
-                            > 0
-                            else "fail"
-                        )
-
-                        if _source_dq_status:
-                            row_count = _context.get_input_count
-                        elif _target_dq_status:
-                            row_count = _context.get_output_count
-                        else:
-                            row_count = None
-
-                        actual_row_count = row_count if status == "pass" else None
-                        error_row_count = 0 if status == "pass" else row_count
-
-                        actual_outcome = (
-                            _agg_dq_actual_count_value if (_agg_dq_actual_count_value is not None) else None
-                        )
-                        expected_outcome = (
-                            str(_agg_dq_expectation_expr) if (_agg_dq_expectation_expr is not None) else None
-                        )
+                    actual_outcome = _agg_dq_actual_count_value if (_agg_dq_actual_count_value is not None) else None
+                    expected_outcome = str(_agg_dq_expectation_expr) if (_agg_dq_expectation_expr is not None) else None
                 else:
-                    pattern = rf"{constant_config.se_agg_dq_expectation_range_regex_pattern}"
-                    matches = re.match(pattern, _dq_rule["expectation"])
-                    result = None
-                    if matches:
-                        result = matches.groups()
-                        _agg_dq_expectation_aggstring = result[0]
-                        _agg_dq_expectation_expr_lowerbound = result[1]
-                        _agg_dq_expectation_expr_upperbound = result[4]
+                    if not _range_match:
+                        raise ValueError(f"Unsupported aggregate expectation format: {_dq_rule['expectation']}")
 
-                        _agg_dq_expectation_cond_expr = expr(_agg_dq_expectation_aggstring)
+                    result = _range_match.groups()
+                    _agg_dq_expectation_aggstring = result[0]
+                    _agg_dq_expectation_expr_lowerbound = result[1]
+                    _agg_dq_expectation_expr_upperbound = result[4]
 
-                        try:
-                            _agg_dq_actual_count_value = int(df.agg(_agg_dq_expectation_cond_expr).collect()[0][0])
-                        except Exception as e:
-                            raise_if_ansi_exception(e, _dq_rule["rule"], _agg_dq_expectation_aggstring)
-                            raise
+                    _agg_dq_expectation_cond_expr = expr(_agg_dq_expectation_aggstring)
 
-                        _agg_dq_expression_str_lower = (
-                            str(_agg_dq_actual_count_value) + _agg_dq_expectation_expr_lowerbound
-                        )
+                    try:
+                        _agg_dq_actual_count_value_raw = df.agg(_agg_dq_expectation_cond_expr).collect()[0][0]
+                    except Exception as e:
+                        raise_if_ansi_exception(e, _dq_rule["rule"], _agg_dq_expectation_aggstring)
+                        raise
 
-                        _agg_dq_expression_str_upper = (
-                            str(_agg_dq_actual_count_value) + _agg_dq_expectation_expr_upperbound
-                        )
+                    (
+                        _agg_dq_actual_count_value,
+                        _agg_dq_value_literal,
+                    ) = SparkExpectationsActions._format_agg_dq_value(_agg_dq_actual_count_value_raw)
 
-                        _agg_dq_expr_condition = []
+                    _agg_dq_expression_str_lower = f"{_agg_dq_value_literal}{_agg_dq_expectation_expr_lowerbound}"
+                    _agg_dq_expression_str_upper = f"{_agg_dq_value_literal}{_agg_dq_expectation_expr_upperbound}"
+                    _agg_dq_expression_str = f"{_agg_dq_expression_str_lower} and {_agg_dq_expression_str_upper}"
 
-                        _agg_dq_expression_str = (
-                            f"{str(_agg_dq_expression_str_lower)}" " and " f"{str(_agg_dq_expression_str_upper)}"
-                        )
+                    status = SparkExpectationsActions._evaluate_agg_dq_expression(df, _agg_dq_expression_str)
 
-                        _agg_dq_expr_condition.append(
-                            when(expr(_agg_dq_expression_str), True).otherwise(False).alias("agg_dq_aggregation_check")
-                        )
+                    if _source_dq_status:
+                        row_count = _context.get_input_count
+                    elif _target_dq_status:
+                        row_count = _context.get_output_count
+                    else:
+                        row_count = None
+                    actual_row_count = row_count if status == "pass" else None
+                    error_row_count = 0 if status == "pass" else row_count
 
-                        _df_agg_dq_expr_result = df.select(*_agg_dq_expr_condition)
+                    actual_outcome = _agg_dq_actual_count_value if (_agg_dq_actual_count_value is not None) else None
 
-                        status = (
-                            "pass"
-                            if _df_agg_dq_expr_result.filter(_df_agg_dq_expr_result["agg_dq_aggregation_check"]).count()
-                            > 0
-                            else "fail"
-                        )
-
-                        if _source_dq_status:
-                            row_count = _context.get_input_count
-                        elif _target_dq_status:
-                            row_count = _context.get_output_count
-                        else:
-                            row_count = None
-                        actual_row_count = row_count if status == "pass" else None
-                        error_row_count = 0 if status == "pass" else row_count
-
-                        actual_outcome = (
-                            _agg_dq_actual_count_value if (_agg_dq_actual_count_value is not None) else None
-                        )
-
-                        expected_outcome = (
-                            _agg_dq_expression_str
-                            if (_agg_dq_expression_str_lower is not None and _agg_dq_expression_str_upper is not None)
-                            else None
-                        )
+                    expected_outcome = (
+                        _agg_dq_expression_str
+                        if (_agg_dq_expression_str_lower is not None and _agg_dq_expression_str_upper is not None)
+                        else None
+                    )
             elif (
                 _dq_rule["rule_type"] == _context.get_query_dq_rule_type_name
                 and _context.get_query_dq_detailed_stats_status is True
